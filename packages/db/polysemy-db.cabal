@@ -1,0 +1,86 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           polysemy-db
+version:        0.1.0.0
+synopsis:       Polysemy effects for databases
+description:    Please see the README on Github at <https://github.com/tek/polysemy-db>
+category:       Database
+author:         Torsten Schmits
+maintainer:     tek@tryp.io
+copyright:      2020 Torsten Schmits
+license:        BSD-2-Clause-Patent
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    Changelog.md
+
+library
+  exposed-modules:
+      Polysemy.Db.Atomic
+      Polysemy.Db.Data.ColumnParams
+      Polysemy.Db.Data.Columns
+      Polysemy.Db.Data.Id
+      Polysemy.Db.Data.Store
+      Polysemy.Db.Data.StoreError
+      Polysemy.Db.Data.StoreQuery
+      Polysemy.Db.Data.TableStructure
+      Polysemy.Db.Data.Uid
+      Polysemy.Db.Id
+      Polysemy.Db.Prelude
+      Polysemy.Db.Random
+      Polysemy.Db.SOP.Constraint
+      Polysemy.Db.Test
+      Polysemy.Db.Test.Assert
+      Polysemy.Db.Text.Case
+      Polysemy.Db.Text.Quote
+      Paths_polysemy_db
+  other-modules:
+      Prelude
+  autogen-modules:
+      Paths_polysemy_db
+  hs-source-dirs:
+      lib
+  default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
+  ghc-options: -O2 -Wall -Werror -flate-specialise -fspecialise-aggressively
+  build-depends:
+      aeson
+    , base-noprelude
+    , bytestring
+    , chronos
+    , comonad
+    , composition
+    , composition-extra
+    , composition-prelude
+    , containers
+    , data-default
+    , either
+    , generics-sop
+    , ghc-prim
+    , hedgehog
+    , lens
+    , polysemy
+    , random
+    , relude
+    , scientific
+    , sop-core
+    , string-interpolate
+    , tasty
+    , tasty-hedgehog
+    , template-haskell
+    , text
+    , time
+    , type-errors
+    , type-errors-pretty
+    , unordered-containers
+    , uuid
+    , vector
+  if !arch(arm) && !arch(aarch64)
+    ghc-options: -fplugin=Polysemy.Plugin
+    build-depends:
+        polysemy-plugin
+  default-language: Haskell2010

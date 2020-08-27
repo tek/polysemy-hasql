@@ -1,0 +1,12 @@
+version: 0.1.0.0
+description: Please see the README on Github at <https://github.com/tek/polysemy-db>
+license: BSD-2-Clause-Patent
+license-file: LICENSE
+author: "Torsten Schmits"
+maintainer: "tek@tryp.io"
+copyright: "2020 Torsten Schmits"
+category: Database
+build-type: Simple
+extra-source-files:
+  - README.md
+  - Changelog.md

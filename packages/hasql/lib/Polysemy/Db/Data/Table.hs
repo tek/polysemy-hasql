@@ -1,0 +1,25 @@
+module Polysemy.Db.Data.Table where
+
+import Control.Lens (Lens')
+import Hasql.Decoders (Row)
+import Hasql.Encoders (Params)
+
+import Polysemy.Db.Data.TableName (TableName)
+import Polysemy.Db.Data.TableStructure (TableStructure)
+import qualified Text.Show as Show
+
+data Table a =
+  Table {
+    _structure :: TableStructure,
+    _row :: Row a,
+    _params :: Params a
+  }
+makeClassy ''Table
+
+tableName :: Lens' (Table a) TableName
+tableName =
+  structure . name
+
+instance Show (Table a) where
+  show (Table struct _ _) =
+    [i|Table { structure = #{struct}, row = Row, params = Params }|]

@@ -1,0 +1,38 @@
+name: polysemy-hasql
+synopsis: Polysemy effects for Hasql
+<<: !include shared/meta.yaml
+defaults:
+  local: shared/polysemy.yaml
+
+library:
+  source-dirs: lib
+  generated-exposed-modules:
+    - Paths_polysemy_hasql
+
+tests:
+  polysemy-hasql-unit:
+    <<: !include shared/unit.yaml
+    dependencies:
+    - polysemy-hasql
+    - streaming
+  polysemy-hasql-integration:
+    <<: !include shared/integration.yaml
+    dependencies:
+    - polysemy-hasql
+
+dependencies:
+  - name: polysemy-db
+    mixin:
+      - hiding (Polysemy.Db.Prelude)
+      - (Polysemy.Db.Prelude as Prelude)
+  - chronos
+  - comonad
+  - ghc-prim
+  - hasql
+  - path
+  - scientific
+  - time
+  - type-errors
+  - type-errors-pretty
+  - uuid
+  - vector
