@@ -28,6 +28,7 @@ library
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreError
       Polysemy.Db.Data.StoreQuery
+      Polysemy.Db.Data.TableName
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Data.Uid
       Polysemy.Db.Id

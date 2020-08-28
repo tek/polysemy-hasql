@@ -18,7 +18,7 @@ type UidStore i e d =
 type UuidStore e d =
   Store UUID e (Uuid d)
 
-type family StoreEffects i e ds :: [k -> * -> *] where
+type family StoreEffects i e ds :: EffectRow where
   StoreEffects i e '[] = '[]
   StoreEffects i e (d : ds) = (UidStore i e d : StoreEffects i e ds)
 

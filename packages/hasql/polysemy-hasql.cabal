@@ -41,7 +41,6 @@ library
       Polysemy.Db.Data.SqlCode
       Polysemy.Db.Data.StoreTable
       Polysemy.Db.Data.Table
-      Polysemy.Db.Data.TableName
       Polysemy.Db.Database
       Polysemy.Db.DbConnection
       Polysemy.Db.Query.Many
