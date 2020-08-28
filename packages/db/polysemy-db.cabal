@@ -22,16 +22,22 @@ extra-source-files:
 library
   exposed-modules:
       Polysemy.Db.Atomic
+      Polysemy.Db.Data.Column
       Polysemy.Db.Data.ColumnParams
       Polysemy.Db.Data.Columns
-      Polysemy.Db.Data.Id
+      Polysemy.Db.Data.DbConfig
+      Polysemy.Db.Data.DbError
+      Polysemy.Db.Data.DbHost
+      Polysemy.Db.Data.DbName
+      Polysemy.Db.Data.DbPassword
+      Polysemy.Db.Data.DbPort
+      Polysemy.Db.Data.DbUser
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreError
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Data.TableName
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Data.Uid
-      Polysemy.Db.Id
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint

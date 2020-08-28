@@ -24,17 +24,8 @@ library
       Polysemy.Db.Accounts
       Polysemy.Db.Collect
       Polysemy.Db.ColumnParams
-      Polysemy.Db.Data.Column
       Polysemy.Db.Data.Database
-      Polysemy.Db.Data.DbConfig
       Polysemy.Db.Data.DbConnection
-      Polysemy.Db.Data.DbEnum
-      Polysemy.Db.Data.DbError
-      Polysemy.Db.Data.DbHost
-      Polysemy.Db.Data.DbName
-      Polysemy.Db.Data.DbPassword
-      Polysemy.Db.Data.DbPort
-      Polysemy.Db.Data.DbUser
       Polysemy.Db.Data.QueryTable
       Polysemy.Db.Data.QueryWhere
       Polysemy.Db.Data.Schema
