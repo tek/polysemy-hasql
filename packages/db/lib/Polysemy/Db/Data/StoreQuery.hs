@@ -8,8 +8,9 @@ data StoreQuery q o e m a where
 makeSem ''StoreQuery
 
 basicQuery ::
+  ∀ q o e r .
   Members [Error (StoreError e), StoreQuery q o e] r =>
   q ->
   Sem r o
 basicQuery =
-  fromEither <=< basic
+  fromEither <=< basic @q @o @e

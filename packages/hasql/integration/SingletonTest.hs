@@ -17,6 +17,7 @@ module SingletonTest where
 -- import Polysemy.Db.Schema.Generic (interpretSchemaSingleton)
 -- import Polysemy.Db.Store (interpretStoreDb)
 -- import Polysemy.Db.Table.Table (genTable)
+import Polysemy.Db.Test (UnitTest)
 -- import Polysemy.Db.Test (UnitTest, assertRight, evalEither)
 -- import Polysemy.Db.Test.Database (withTestPlainTable)
 
@@ -58,3 +59,7 @@ module SingletonTest where
 --         prog
 --   (a, b) <- evalEither =<< evalEither r
 --   assertRight (Just (pure a)) b
+
+test_foo :: UnitTest
+test_foo =
+  pure ()

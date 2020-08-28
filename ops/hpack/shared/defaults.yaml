@@ -3,19 +3,12 @@
 dependencies:
   - aeson
   - base-noprelude
-  - bytestring
-  - composition
-  - composition-extra
-  - composition-prelude
   - containers
-  - data-default
-  - either
+  - generics-sop
   - lens
-  - relude
-  - sop-core
+  - polysemy
   - text
 
 ghc-options:
   - -Wall
   - -Werror
-  - -fconstraint-solver-iterations=10

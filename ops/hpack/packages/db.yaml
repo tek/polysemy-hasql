@@ -2,7 +2,7 @@ name: polysemy-db
 synopsis: Polysemy effects for databases
 <<: !include shared/meta.yaml
 defaults:
-  local: shared/polysemy.yaml
+  local: shared/defaults.yaml
 
 library:
   source-dirs: lib
@@ -12,17 +12,16 @@ library:
     - Paths_polysemy_db
 
 dependencies:
-  - chronos
   - comonad
-  - ghc-prim
+  - composition
+  - data-default
+  - either
   - hedgehog
   - random
-  - scientific
+  - relude
   - string-interpolate
+  - tasty
+  - tasty-hedgehog
   - template-haskell
-  - time
-  - type-errors
-  - type-errors-pretty
   - unordered-containers
   - uuid
-  - vector
