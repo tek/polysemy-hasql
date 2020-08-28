@@ -102,10 +102,11 @@ test-suite polysemy-hasql-integration
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      ArrayTest
+      Polysemy.Db.Test.ArrayTest
       Polysemy.Db.Test.DbConfig
       Polysemy.Db.Test.InitTest
-      SingletonTest
+      Polysemy.Db.Test.Run
+      Polysemy.Db.Test.SingletonTest
       Paths_polysemy_hasql
   hs-source-dirs:
       integration

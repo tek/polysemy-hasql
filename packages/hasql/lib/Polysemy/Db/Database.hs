@@ -14,7 +14,7 @@ import Polysemy.Db.Table (initTable)
 import Polysemy.Db.Table.TableStructure (GenTableStructure(genTableStructure))
 
 initOnReconnect ::
-  Members '[State Bool, Error DbError, Embed IO] r =>
+  Members [State Bool, Error DbError, Embed IO] r =>
   Connection ->
   TableStructure ->
   Sem r ()
@@ -24,9 +24,9 @@ initOnReconnect connection table =
     put False
 
 connect ::
-  Members '[DbConnection c, State Bool, Error DbError, Embed IO] r =>
+  Members [DbConnection Connection, State Bool, Error DbError, Embed IO] r =>
   TableStructure ->
-  Sem r c
+  Sem r Connection
 connect table =
   check =<< DbConnection.connect
   where
@@ -48,8 +48,8 @@ resetConnection = \case
     pure (Left err)
 
 interpretDatabaseState ::
-  ∀ d c r .
-  Members [DbConnection c, State Bool, Embed IO] r =>
+  ∀ d r .
+  Members [DbConnection Connection, State Bool, Embed IO] r =>
   TableStructure ->
   InterpreterFor (Database d DbError) r
 interpretDatabaseState table =
@@ -62,17 +62,17 @@ interpretDatabaseState table =
           pure (Left err)
 
 interpretDatabase ::
-  ∀ d c r .
-  Members [DbConnection c, Embed IO] r =>
+  ∀ d r .
+  Members [DbConnection Connection, Embed IO] r =>
   TableStructure ->
   InterpreterFor (Database d DbError) r
 interpretDatabase table =
   evalState True . interpretDatabaseState table . raiseUnder
 
 interpretDatabaseGen ::
-  ∀ d rep c r .
+  ∀ d rep r .
   GenTableStructure d rep =>
-  Members [Embed IO, DbConnection c] r =>
+  Members [Embed IO, DbConnection Connection] r =>
   InterpreterFor (Database d DbError) r
 interpretDatabaseGen =
   interpretDatabase (genTableStructure @d @rep)

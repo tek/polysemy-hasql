@@ -1,21 +1,16 @@
 module Polysemy.Db.Test.InitTest where
 
 import Control.Lens (view)
-import Hasql.Session (QueryError)
-import Polysemy.Db.Random (runRandomIO)
-import Polysemy.Fail (failToEmbed)
-import Polysemy.Resource (resourceToIOFinal)
 
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.Columns (Column(Column), Columns(Columns))
 import qualified Polysemy.Db.Data.DbConnection as DbConnection
 import Polysemy.Db.Data.Table (tableName)
 import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
-import Polysemy.Db.DbConnection (interpretDbConnection)
 import Polysemy.Db.Table (initTable, tableColumns)
 import Polysemy.Db.Test (UnitTest, assertJust, evalEither)
 import Polysemy.Db.Test.Database (withTestTableGen)
-import Polysemy.Db.Test.DbConfig (dbConfig)
+import Polysemy.Db.Test.Run (integrationTest)
 
 data Init =
   Init {
@@ -35,22 +30,12 @@ deriveGeneric ''InitRep
 
 test_initTable :: UnitTest
 test_initTable = do
-  conf <- dbConfig
-  r <-
-    lift $
-    runFinal $
-    embedToFinal $
-    resourceToIOFinal $
-    runError $
-    runError @QueryError $
-    runRandomIO $
-    failToEmbed $
-    interpretDbConnection conf $
+  r <- integrationTest do
     withTestTableGen @Init @InitRep $ \(view tableName -> name) -> do
       Right conn <- DbConnection.connect
       initTable conn (TableStructure name newColumns)
       tableColumns conn name
-  assertJust (columns <> extra) =<< evalEither =<< evalEither r
+  assertJust (columns <> extra) =<< evalEither r
   where
     columns =
       Column "f1" "text" def :| []

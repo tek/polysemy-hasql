@@ -1,10 +1,7 @@
 module Polysemy.Db.Store where
 
-import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store)
-import qualified Polysemy.Db.Data.StoreError as StoreError
-import Polysemy.Db.Data.StoreError (StoreError)
-import Polysemy.Db.Data.Uid (Uid)
+import Hasql.Connection (Connection)
+
 import Polysemy.Db.Data.Column (PK, PKQuery(PKQuery), PKRep, pkToUid, uidToPK)
 import Polysemy.Db.Data.Database (Database)
 import Polysemy.Db.Data.DbConfig (DbConfig)
@@ -12,12 +9,17 @@ import Polysemy.Db.Data.DbConnection (DbConnection)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Db.Data.Schema (Schema(..))
+import qualified Polysemy.Db.Data.Store as Store
+import Polysemy.Db.Data.Store (Store)
+import qualified Polysemy.Db.Data.StoreError as StoreError
+import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.Table (Table(Table))
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Database (interpretDatabase)
 import Polysemy.Db.DbConnection (interpretDbConnection)
-import Polysemy.Db.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Db.Schema.Generic (interpretSchema)
-import Polysemy.Db.Store.Statement (insert, upsert, delete, fetch, fetchAll)
+import Polysemy.Db.Store.Statement (delete, fetch, fetchAll, insert, upsert)
+import Polysemy.Db.Table.QueryTable (GenQueryTable, genQueryTable)
 
 interpretStoreDb ::
   Members [Schema q d, Database d DbError] r =>
@@ -84,7 +86,7 @@ dbConnectionError err =
         pure (Left (StoreError.Backend err))
 
 type StoreDeps =
-  [DbConnection, Embed IO]
+  [DbConnection Connection, Embed IO]
 
 interpretStoreDbFullAs ::
   Members StoreDeps r =>
