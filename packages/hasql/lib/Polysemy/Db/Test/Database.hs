@@ -39,7 +39,7 @@ suffixedTable lens suffix table =
       view lens table
 
 bracketTestTable ::
-  Members [Resource, Embed IO, DbConnection, Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   Lens' t (Table d) ->
   t ->
   (t -> Sem r a) ->
@@ -56,7 +56,7 @@ bracketTestTable lens t use connection =
       view lens t
 
 withTestTable ::
-  Members [Resource, Embed IO, DbConnection, Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   Lens' t (Table d) ->
   t ->
   (t -> Sem r a) ->
@@ -67,7 +67,7 @@ withTestTable lens table use = do
   bracketTestTable lens (suffixedTable (lens . tableName) suffix table) use connection
 
 withTestPlainTable ::
-  Members [Resource, Embed IO, DbConnection, Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   Table d ->
   (Table d -> Sem r a) ->
   Sem r a
@@ -76,7 +76,7 @@ withTestPlainTable =
 
 withTestTableGen ::
   ∀ d rep a r .
-  Members [Resource, Embed IO, DbConnection, Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   GenTable d rep =>
   (Table d -> Sem r a) ->
   Sem r a
@@ -84,7 +84,7 @@ withTestTableGen =
   withTestPlainTable (genTable @_ @rep)
 
 withTestQueryTable ::
-  Members [Resource, Embed IO, DbConnection, Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   QueryTable d q ->
   (QueryTable d q -> Sem r a) ->
   Sem r a
@@ -93,7 +93,7 @@ withTestQueryTable =
 
 withTestQueryTableGen ::
   ∀ d rep q a r .
-  Members [Resource, Embed IO, DbConnection, Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   GenQueryTable d rep q =>
   (QueryTable d q -> Sem r a) ->
   Sem r a
@@ -101,7 +101,7 @@ withTestQueryTableGen =
   withTestQueryTable (genQueryTable @_ @rep)
 
 createTestDb ::
-  Members [Random, DbConnection, Error DbError, Embed IO] r =>
+  Members [Random, (DbConnection Connection), Error DbError, Embed IO] r =>
   DbConfig ->
   Connection ->
   Sem r DbConfig
@@ -131,7 +131,7 @@ withTestDb baseConfig f =
 withTestConnection ::
   Members [Error DbError, Embed IO, Resource] r =>
   DbConfig ->
-  Sem (DbConnection : r) a ->
+  Sem (DbConnection Connection : r) a ->
   Sem r a
 withTestConnection baseConfig ma =
   withTestDb baseConfig \ dbConfig ->

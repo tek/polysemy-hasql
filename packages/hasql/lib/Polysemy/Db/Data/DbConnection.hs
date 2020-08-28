@@ -1,11 +1,9 @@
 module Polysemy.Db.Data.DbConnection where
 
-import Hasql.Connection (Connection)
-
 import Polysemy.Db.Data.DbError (DbError)
 
-data DbConnection m a where
-  Connect :: DbConnection m (Either DbError Connection)
-  Reset :: DbConnection m ()
+data DbConnection c :: Effect where
+  Connect :: DbConnection c m (Either DbError c)
+  Reset :: DbConnection c m ()
 
 makeSem ''DbConnection

@@ -50,7 +50,7 @@ cachedConnect config =
 interpretDbConnectionSingleton ::
   Member (Embed IO) r =>
   DbConfig ->
-  InterpreterFor DbConnection r
+  InterpreterFor (DbConnection Connection) r
 interpretDbConnectionSingleton config =
   interpret \case
     DbConnection.Connect ->
@@ -61,7 +61,7 @@ interpretDbConnectionSingleton config =
 interpretDbConnectionCached ::
   Members [AtomicState (Maybe Connection), Embed IO] r =>
   DbConfig ->
-  InterpreterFor DbConnection r
+  InterpreterFor (DbConnection Connection) r
 interpretDbConnectionCached config =
   interpret \case
     DbConnection.Connect ->
@@ -74,7 +74,7 @@ interpretDbConnectionCached config =
 interpretDbConnection ::
   Member (Embed IO) r =>
   DbConfig ->
-  InterpreterFor DbConnection r
+  InterpreterFor (DbConnection Connection) r
 interpretDbConnection config =
   interpretAtomic Nothing .
   interpretDbConnectionCached config .

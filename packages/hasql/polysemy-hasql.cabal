@@ -103,7 +103,8 @@ test-suite polysemy-hasql-integration
   main-is: Main.hs
   other-modules:
       ArrayTest
-      InitTest
+      Polysemy.Db.Test.DbConfig
+      Polysemy.Db.Test.InitTest
       SingletonTest
       Paths_polysemy_hasql
   hs-source-dirs:

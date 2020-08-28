@@ -10,5 +10,6 @@ nix-shell $*[6,$] --pure -A 'ghcid.run' \
   --argstr name $name \
   --argstr 'type' $type_ \
   --argstr 'runner' $runner \
-  --arg 'flags' '["dev"]' \
+  --keep polysemy_db_test_host \
+  --keep polysemy_db_test_port \
   --run exit

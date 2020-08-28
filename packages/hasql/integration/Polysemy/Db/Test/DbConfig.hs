@@ -1,0 +1,18 @@
+module Polysemy.Db.Test.DbConfig where
+
+import System.Environment (lookupEnv)
+
+import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
+
+dbConfig ::
+  MonadIO m =>
+  m DbConfig
+dbConfig = do
+  host <- fromMaybe "localhost" <$> liftIO (lookupEnv "polysemy_db_test_host")
+  port <- parsePort =<< (fromMaybe "4321" <$> liftIO (lookupEnv "polysemy_db_test_port"))
+  pure (DbConfig (fromString host) port "polysemy-db-test" "polysemy-db-test" "polysemy-db-test")
+  where
+    parsePort p =
+      case readMaybe p of
+        Just a -> pure a
+        Nothing -> error [i|invalid port in env var $polysemy_db_test_port: #{p}|]

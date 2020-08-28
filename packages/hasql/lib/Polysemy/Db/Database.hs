@@ -24,9 +24,9 @@ initOnReconnect connection table =
     put False
 
 connect ::
-  Members '[DbConnection, State Bool, Error DbError, Embed IO] r =>
+  Members '[DbConnection c, State Bool, Error DbError, Embed IO] r =>
   TableStructure ->
-  Sem r Connection
+  Sem r c
 connect table =
   check =<< DbConnection.connect
   where
@@ -37,7 +37,7 @@ connect table =
         put True *> throw err
 
 resetConnection ::
-  Member (DbConnection) r =>
+  Member (DbConnection c) r =>
   DbError ->
   Sem r (Either DbError a)
 resetConnection = \case
@@ -48,8 +48,8 @@ resetConnection = \case
     pure (Left err)
 
 interpretDatabaseState ::
-  ∀ d r .
-  Members [DbConnection, State Bool, Embed IO] r =>
+  ∀ d c r .
+  Members [DbConnection c, State Bool, Embed IO] r =>
   TableStructure ->
   InterpreterFor (Database d DbError) r
 interpretDatabaseState table =
@@ -62,17 +62,17 @@ interpretDatabaseState table =
           pure (Left err)
 
 interpretDatabase ::
-  ∀ d r .
-  Members [DbConnection, Embed IO] r =>
+  ∀ d c r .
+  Members [DbConnection c, Embed IO] r =>
   TableStructure ->
   InterpreterFor (Database d DbError) r
 interpretDatabase table =
   evalState True . interpretDatabaseState table . raiseUnder
 
 interpretDatabaseGen ::
-  ∀ d rep r .
+  ∀ d rep c r .
   GenTableStructure d rep =>
-  Members [Embed IO, DbConnection] r =>
+  Members [Embed IO, DbConnection c] r =>
   InterpreterFor (Database d DbError) r
 interpretDatabaseGen =
   interpretDatabase (genTableStructure @d @rep)
