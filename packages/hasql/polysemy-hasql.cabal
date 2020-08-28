@@ -21,8 +21,6 @@ extra-source-files:
 
 library
   exposed-modules:
-      Polysemy.Db.Accounts
-      Polysemy.Db.Collect
       Polysemy.Db.ColumnParams
       Polysemy.Db.Data.Database
       Polysemy.Db.Data.DbConnection
