@@ -119,13 +119,15 @@ test-suite polysemy-hasql-integration
     , containers
     , generics-sop
     , hasql
+    , hedgehog
     , lens
     , path
     , polysemy
     , polysemy-db
-    , polysemy-hasql
+    , polysemy-test
     , scientific
     , tasty
+    , tasty-hedgehog
     , text
     , time
     , type-errors
@@ -167,7 +169,6 @@ test-suite polysemy-hasql-unit
     , polysemy-db
     , polysemy-hasql
     , scientific
-    , tasty
     , text
     , time
     , type-errors

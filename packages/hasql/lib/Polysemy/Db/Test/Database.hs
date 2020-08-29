@@ -15,12 +15,14 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
 import qualified Polysemy.Db.Data.QueryTable as QueryTable
 import Polysemy.Db.Data.QueryTable (QueryTable)
+import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Table as Table
 import Polysemy.Db.Data.Table (Table, tableName)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.DbConnection (interpretDbConnection)
 import Polysemy.Db.Session (convertQueryError)
 import qualified Polysemy.Db.Statement as Statement
+import Polysemy.Db.Store (interpretStoreDbFull)
 import Polysemy.Db.Table (createTable, dropTable, runStatement)
 import Polysemy.Db.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Db.Table.Table (GenTable, genTable)
@@ -136,3 +138,13 @@ withTestConnection ::
 withTestConnection baseConfig ma =
   withTestDb baseConfig \ dbConfig ->
     interpretDbConnection dbConfig ma
+
+withTestStoreGen ::
+  ∀ rep d q r a .
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  GenQueryTable d rep q =>
+  Sem (Store q DbError d : r) a ->
+  Sem r a
+withTestStoreGen prog = do
+  withTestQueryTableGen @d @rep \ table ->
+    interpretStoreDbFull table prog

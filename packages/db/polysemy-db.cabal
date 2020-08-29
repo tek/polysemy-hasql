@@ -41,8 +41,6 @@ library
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint
-      Polysemy.Db.Test
-      Polysemy.Db.Test.Assert
       Polysemy.Db.Text.Case
       Polysemy.Db.Text.Quote
       Paths_polysemy_db
@@ -63,14 +61,11 @@ library
     , data-default
     , either
     , generics-sop
-    , hedgehog
     , lens
     , polysemy
     , random
     , relude
     , string-interpolate
-    , tasty
-    , tasty-hedgehog
     , template-haskell
     , text
     , unordered-containers

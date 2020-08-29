@@ -7,16 +7,17 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Store (interpretStoreDbFullGen)
-import Polysemy.Db.Test (UnitTest, assertRight, evalEither)
+import Polysemy.Db.Test.Database (withTestStoreGen)
 import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Test (UnitTest, evalEither)
+import Polysemy.Test.Hedgehog (assertJust)
 
 data ArrayField =
   ArrayField {
     id :: UUID,
     f1 :: [Int]
   }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show)
 
 deriveGeneric ''ArrayField
 
@@ -29,21 +30,24 @@ data ArrayFieldRep =
 
 deriveGeneric ''ArrayFieldRep
 
+id' :: UUID
+id' =
+  Uid.uuid 555
+
+array :: ArrayField
+array =
+  ArrayField id' [1, 2, 3]
+
 prog ::
   Member (Store IdQuery DbError ArrayField) r =>
-  Sem r (ArrayField, (Either (StoreError DbError) (Maybe ArrayField)))
+  Sem r (Either (StoreError DbError) (Maybe ArrayField))
 prog = do
-  let a = ArrayField id' [1, 2, 3]
-  Store.upsert a
-  b <- Store.fetch (IdQuery id')
-  pure (a, b)
-  where
-    id' = Uid.uuid 555
+  _ <- Store.upsert array
+  Store.fetch (IdQuery id')
 
 
 test_arrayField :: UnitTest
-test_arrayField = do
-  r <- integrationTest $
-    interpretStoreDbFullGen @ArrayField @ArrayFieldRep prog
-  (a, b) <- evalEither r
-  assertRight (Just a) b
+test_arrayField =
+  integrationTest do
+    result <- withTestStoreGen @ArrayFieldRep prog
+    assertJust array =<< evalEither result

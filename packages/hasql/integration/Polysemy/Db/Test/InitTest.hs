@@ -8,9 +8,10 @@ import qualified Polysemy.Db.Data.DbConnection as DbConnection
 import Polysemy.Db.Data.Table (tableName)
 import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
 import Polysemy.Db.Table (initTable, tableColumns)
-import Polysemy.Db.Test (UnitTest, assertJust, evalEither)
 import Polysemy.Db.Test.Database (withTestTableGen)
 import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Test (UnitTest)
+import Polysemy.Test.Hedgehog (assertJust)
 
 data Init =
   Init {
@@ -29,13 +30,12 @@ data InitRep =
 deriveGeneric ''InitRep
 
 test_initTable :: UnitTest
-test_initTable = do
-  r <- integrationTest do
+test_initTable =
+  integrationTest do
     withTestTableGen @Init @InitRep $ \(view tableName -> name) -> do
       Right conn <- DbConnection.connect
       initTable conn (TableStructure name newColumns)
-      tableColumns conn name
-  assertJust (columns <> extra) =<< evalEither r
+      assertJust (columns <> extra) =<< tableColumns conn name
   where
     columns =
       Column "f1" "text" def :| []

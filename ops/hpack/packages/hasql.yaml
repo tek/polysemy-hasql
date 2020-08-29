@@ -11,15 +11,15 @@ library:
 
 tests:
   polysemy-hasql-unit:
-    <<: !include shared/unit.yaml
+    <<: !include shared/test.yaml
+    source-dirs: test
     dependencies:
       - polysemy-hasql
-      - tasty
   polysemy-hasql-integration:
-    <<: !include shared/integration.yaml
-    dependencies:
-      - polysemy-hasql
-      - tasty
+    <<: !include shared/test.yaml
+    source-dirs: integration
+    # dependencies:
+    #   - polysemy-hasql
 
 dependencies:
   - chronos

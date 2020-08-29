@@ -11,7 +11,7 @@ import Polysemy.Db.Database (interpretDatabase)
 import Polysemy.Db.Schema.Generic (interpretSchemaSingleton)
 import Polysemy.Db.Store (interpretStoreDb)
 import Polysemy.Db.Table.Table (genTable)
-import Polysemy.Db.Test (UnitTest, assertRight, evalEither)
+import Polysemy.Test (UnitTest, assertRight)
 import Polysemy.Db.Test.Database (withTestPlainTable)
 import Polysemy.Db.Test.Run (integrationTest)
 
@@ -45,12 +45,11 @@ prog = do
     id' = Uid.uuid 333
 
 test_singletonDb :: UnitTest
-test_singletonDb = do
-  r <- integrationTest $
-    withTestPlainTable (genTable @Dat @DatRep) $ \table@(Table structure _ _) -> do
+test_singletonDb =
+  integrationTest do
+    (a, b) <- withTestPlainTable (genTable @Dat @DatRep) $ \table@(Table structure _ _) -> do
       interpretDatabase structure $
         interpretSchemaSingleton table $
         interpretStoreDb $
         prog
-  (a, b) <- evalEither r
-  assertRight (Just (pure a)) b
+    assertRight (Just (pure a)) b
