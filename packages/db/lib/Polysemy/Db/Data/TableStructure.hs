@@ -6,7 +6,7 @@ import Polysemy.Db.Data.TableName (TableName)
 data TableStructure =
   TableStructure {
     _name :: TableName,
-    _fields :: Columns
+    _columns :: Columns
   }
   deriving (Eq, Show)
 

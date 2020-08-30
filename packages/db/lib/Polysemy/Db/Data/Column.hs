@@ -26,10 +26,6 @@ data Prim a =
   Prim
   deriving (Eq, Show)
 
-data Compound a =
-  Compound
-  deriving (Eq, Show)
-
 -- this could be used as a functorial parameter in logic.
 -- @f Archive@, with the store being @Store f e Archive@ or @Store i f e Archive@
 data PK i a =

@@ -5,15 +5,15 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
-import Polysemy.Db.Data.Table (Table(Table))
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Database (interpretDatabase)
-import Polysemy.Db.Schema.Generic (interpretSchemaSingleton)
-import Polysemy.Db.Store (interpretStoreDb)
-import Polysemy.Db.Table.Table (genTable)
-import Polysemy.Test (UnitTest, assertRight)
-import Polysemy.Db.Test.Database (withTestPlainTable)
 import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Data.Table (Table(Table))
+import Polysemy.Hasql.Database (interpretDatabase)
+import Polysemy.Hasql.Schema.Generic (interpretSchemaSingleton)
+import Polysemy.Hasql.Store (interpretStoreDb)
+import Polysemy.Hasql.Table.Table (genTable)
+import Polysemy.Hasql.Test.Database (withTestPlainTable)
+import Polysemy.Test (UnitTest, assertRight)
 
 data Dat =
   Dat {
@@ -47,7 +47,7 @@ prog = do
 test_singletonDb :: UnitTest
 test_singletonDb =
   integrationTest do
-    (a, b) <- withTestPlainTable (genTable @Dat @DatRep) $ \table@(Table structure _ _) -> do
+    (a, b) <- withTestPlainTable (genTable @DatRep) $ \table@(Table structure _ _) ->
       interpretDatabase structure $
         interpretSchemaSingleton table $
         interpretStoreDb $

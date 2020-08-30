@@ -13,18 +13,15 @@ tests:
   polysemy-hasql-unit:
     <<: !include shared/test.yaml
     source-dirs: test
-    dependencies:
-      - polysemy-hasql
   polysemy-hasql-integration:
     <<: !include shared/test.yaml
     source-dirs: integration
-    # dependencies:
-    #   - polysemy-hasql
 
 dependencies:
   - chronos
   - hasql
   - path
+  - polysemy-plugin
   - scientific
   - time
   - type-errors
@@ -36,12 +33,8 @@ dependencies:
       - hiding (Polysemy.Db.Prelude)
       - (Polysemy.Db.Prelude as Prelude)
 
-when:
-  - condition: '!arch(arm) && !arch(aarch64)'
-    ghc-options:
-      - -fplugin=Polysemy.Plugin
-      - -O2
-      - -flate-specialise
-      - -fspecialise-aggressively
-    dependencies:
-      - polysemy-plugin
+ghc-options:
+  - -fplugin=Polysemy.Plugin
+  - -O2
+  - -flate-specialise
+  - -fspecialise-aggressively

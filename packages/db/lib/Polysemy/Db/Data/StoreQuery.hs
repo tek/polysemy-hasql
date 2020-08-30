@@ -2,15 +2,15 @@ module Polysemy.Db.Data.StoreQuery where
 
 import Polysemy.Db.Data.StoreError (StoreError)
 
-data StoreQuery q o e m a where
-  Basic :: q -> StoreQuery q o e m (Either (StoreError e) o)
+data StoreQuery q e o m a where
+  Basic :: q -> StoreQuery q e o m (Either (StoreError e) o)
 
 makeSem ''StoreQuery
 
 basicQuery ::
   ∀ q o e r .
-  Members [Error (StoreError e), StoreQuery q o e] r =>
+  Members [Error (StoreError e), StoreQuery q e o] r =>
   q ->
   Sem r o
 basicQuery =
-  fromEither <=< basic @q @o @e
+  fromEither <=< basic @q @e @o

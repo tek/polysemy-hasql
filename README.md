@@ -1,170 +1,162 @@
 # About
 
-This Haskell library provides a [Polysemy] effect for running HTTP requests
-with [http-client].
+This Haskell library provides [Polysemy] effects for [Hasql], a bit of
+abstraction of databases and some generic derivation utilities for database
+schemas.
 
-# Example
+At this time, two use cases for schemas are addressed:
+
+* CRUD operations on data type-mapped tables
+* simple data type-mapped queries on data type-mapped tables
+
+# Basic Example
 
 ```haskell
+import Generics.SOP.TH (deriveGeneric)
 import Polysemy (runM, resourceToIO)
-import qualified Polysemy.Http as Http
-import Polysemy.Http (interpretHttpNative, interpretLogStdout)
+import Polysemy.Db
+import Polysemy.Hasql
+
+data Dat = Dat { number :: Int }
+deriveGeneric ''Dat
+
+prog :: Member (Store Int e Dat) r => Sem r (Either e (Maybe Dat))
+prog = do
+  Store.upsert (Dat 5)
+  Store.fetch 5
+
+table :: QueryTable Dat Int
+table =
+  QueryTable (Table (TableStructure "dats" columns row params)) (QueryWhere statement)
+  where
+    row =
+      Dat <$> Decoder.int8
+    params =
+      number >$< Encoder.int8
+    columns =
+      Columns (pure (Column "number" "bigint" def { primaryKey = True }))
+    statement =
+      SqlCode "number = $1"
 
 main :: IO ()
 main = do
-  result <- runM $
-    resourceToIO $
-    interpretLogStdout $
-    interpretHttpNative $
-    Http.request (Http.get "hackage.haskell.org" "package/polysemy-http")
+  result <- runM $ interpretDbConnection $ interpretStoreDbFull table prog
   print result
 ```
 
-# API
+As is apparent in `prog`, the business logic only uses a very simple
+abstraction of database actions, encoded in the Polysemy effect `Store`.
+The integration with Postgres is done by the interpreters in `main`, which use
+[Hasql] to connect to a database and translate the queries into SQL.
+Additionally, a potentially existing schema is examined upon connection and
+compared to the declaration in the `TableStructure`, adding missing columns and
+terminating with an error if there are any unsolvable incompatibilities.
 
-## Request
+Obviously, writing and maintaining these `QueryTable` definitions is messy and
+error-prone, so the library offers a generic derivation mechanism to automate
+it.
 
-The effect constructor `Http.request` takes an argument of type
-`Polysemy.Http.Data.Request.Request`:
+# Schemas
+
+Deriving a table definition from the simple data type only would make it
+impossible to configure columns.
+Configuring them implicitly, by writing instances for some column metadata
+class, might be a solution, but the idea for this library is to use a second
+data type for the table configuration that is then typechecked against the
+record type.
+
+Given a data type:
 
 ```haskell
-data Request =
-  Request {
-    _method :: Method,
-    _host :: Host,
-    _port :: Maybe Port,
-    _tls :: Tls,
-    _path :: Path,
-    _headers :: [(HeaderName, HeaderValue)],
-    _query :: [(QueryKey, Maybe QueryValue)],
-    _body :: Body
+data Nested =
+  Nested {
+    elems :: [Text],
+    num :: Double
   }
-```
+deriveGeneric ''Nested
 
-Most of these fields are just newtypes, except for `Method`, which is an enum:
-
-```haskell
-data Method =
-  Get | Post | ... | Custom Text
-```
-
-It has an `IsString` instance, so you can just write `"GET"` or `"delete"`.
-
-All `Text` newtypes have `IsString` as well, and they will be converted to
-`CI` and `ByteString` if needed when they are passed to [http-client].
-`Body` is an `LByteString` newtype since that is what [aeson] typically
-produces.
-The port field is intended for nonstandard ports – if it is `Nothing`, the port
-will be determined from `tls`.
-
-## Response
-
-`Http.request` returns `Either HttpError (Response LByteString)`, with
-`Polysemy.Http.Data.Response.Response` looking like this:
-
-```haskell
-data Response b =
-  Response {
-    status :: Status,
-    body :: b,
-    headers :: [Header]
+data Record =
+  Record {
+    id :: Int,
+    nested :: Nested
   }
+deriveGeneric ''Record
+```
 
-data Header =
-  Header {
-    name :: HeaderName,
-    value :: HeaderValue
+we define a database representation type:
+
+```haskell
+data NestedRep {
+  elems :: Prim Auto,
+  num :: Prim Auto
+}
+deriveGeneric ''NestedRep
+
+data RecordRep =
+  RecordRep {
+    id :: Prim PrimaryKey,
+    nested :: Flatten
   }
+deriveGeneric ''RecordRep
 ```
 
-`Status` is from `http-types`, because it has some helpful combinators. Its
-`Header` is just an alias, so this newtype is provided.
-The parameter `b` is intended to allow you to write interpreters that produce
-`Text` or something else, for example for [#testing].
-
-# Streaming
-
-The higher-order constructor `Http.stream` opens and closes the request
-manually and passes the response to a handler function.
-The function `streamResponse` provides a simpler interface for this mechanism
-that runs a loop that passes individual chunks produced by [http-client] to
-a callback handler of type `∀ x . StreamEvent r c h x -> Sem r x` that should
-look like this:
+and then pass it explicitly to a generic constructor:
 
 ```haskell
-handle ::
-  StreamEvent Double (IO ByteString) Int a ->
-  Sem r a
-handle = \case
-  StreamEvent.Acquire (Response status body headers) ->
-    pure 1
-  StreamEvent.Chunk handle (StreamChunk c) ->
-    pure ()
-  StreamEvent.Result (Response status body headers) handle ->
-    pure 5.5
-  StreamEvent.Release handle ->
-    pure ()
-
-run :: Sem r Double
-run =
-  Http.streamResponse (Request.get "host.com" "path/to/file") handle
+table = genTable @RecordRep
+queryTable = genQueryTable @RecordRep @Int
+-- TODO
+genTable @Auto
 ```
 
-If you were e.g. to write the data to disk, you would open the file in the
-`Acquire` block, write the `ByteString` `c` in `Chunk`, and close the file in
-`Release`.
-The parameter `h` could then be `Handle`.
-The callbacks are wrapped in `Resource.bracket`, so `Release` is guaranteed to
-be called (as much as `Resource` is reliable).
-The `Result` block is called when the transfer is complete; its returned value
-is finally returned from `streamHandler.`
-The `handle` is an arbitrary identifier that the user can return from
-`Acquire`; it is not needed for the machinery and may be `()`.
-
-# Entity
-
-The library also provides effects for request and response entity de/encoding,
-`EntityDecode d m a` and `EntityEncode d m a`, making it possible to abstract
-over json implementations or content types using interpreters.
-Since the effects are parameterized by the codec data type, one interpreter per
-type must be used.
-
-Implementations for [aeson] are available as `interpretEntityDecodeAeson` and
-`interpretEntityEncodeAeson`:
+or use one of the interpreters:
 
 ```haskell
-import Polysemy (run)
-import qualified Polysemy.Http as Http
-import Polysemy.Http (interpretEntityDecodeAeson)
+main :: IO ()
+main = do
+  result <- runM $ runError $ interpretStoreDbSingle @RecordRep prog
+  print result
+```
 
-data Dat { a :: Maybe Int, b :: Text }
-deriving (Show, FromJSON)
+This will derive the Postgres column type, like `bigint`, and the [Hasql] `Row`
+and `Params` codecs, based on the type used for the fields in the
+representation type.
+The field names are checked for congruence and smart type errors will be
+emitted if they don't match:
 
-main :: IO
+```haskell
+-- TODO
+```
+
+The types `Prim`, `Auto` etc. are just simple singleton markers that are used
+to match in instances of `GenColumns`.
+You can easily add your own markers to implement custom column metadata:
+
+```haskell
+-- TODO
+```
+
+# Queries
+
+Non-CRUD queries are handled by the effect `StoreQuery`, defined by another
+data type whose fields are a subset of the table type's:
+
+```haskell
+data RecordQuery =
+  RecordQuery {
+    elems :: [Text],
+    number :: Double
+  }
+deriveGeneric ''RecordQuery
+
+prog :: Member (StoreQuery RecordQuery (Maybe Record)) r => Sem r (Maybe Record)
+prog =
+  StoreQuery.basic (RecordQuery ["one", "two"] 5.5)
+
+main :: IO ()
 main =
-  print $ run $ interpretEntityDecodeAeson $ Http.decode "{ \"b\": \"hello\" }"
-```
-
-There is not integration with the `Http` effect for this.
-
-# Testing
-
-Polysemy makes it very easy to switch the native interpreter for a mock, and
-there is a convenience interpreter named `interpretHttpStrict` that allows you
-to specify a list of responses and chunks that should be produced:
-
-```haskell
-main :: IO ()
-main = do
-  result <- runM $
-    resourceToIO $
-    interpretLogStdout $
-    interpretHttpStrict [Response (toEnum 200) "foo" []] [] $
-    Http.request (Http.get "hackage.haskell.org" "package/polysemy-http")
-  print result
+  print =<< (runM $ interpretDatabase $ interpretOneGen prog)
 ```
 
 [Polysemy]: https://hackage.haskell.org/package/polysemy
-[http-client]: https://hackage.haskell.org/package/http-client
-[http-types]: https://hackage.haskell.org/package/http-types
-[aeson]: https://hackage.haskell.org/package/aeson
+[Hasql]: https://hackage.haskell.org/package/hasql

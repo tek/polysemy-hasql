@@ -2,12 +2,12 @@ module Polysemy.Db.Test.ArrayTest where
 
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.Schema (IdQuery(IdQuery))
+import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Db.Test.Run (integrationTest)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)

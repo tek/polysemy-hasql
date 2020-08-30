@@ -8,3 +8,4 @@ dependencies:
   - polysemy-test
   - tasty
   - tasty-hedgehog
+  - polysemy-hasql

@@ -4,11 +4,11 @@ import Control.Lens (view)
 
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.Columns (Column(Column), Columns(Columns))
-import qualified Polysemy.Db.Data.DbConnection as DbConnection
-import Polysemy.Db.Data.Table (tableName)
+import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
+import Polysemy.Hasql.Data.Table (tableName)
 import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
-import Polysemy.Db.Table (initTable, tableColumns)
-import Polysemy.Db.Test.Database (withTestTableGen)
+import Polysemy.Hasql.Table (initTable, tableColumns)
+import Polysemy.Hasql.Test.Database (withTestTableGen)
 import Polysemy.Db.Test.Run (integrationTest)
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)

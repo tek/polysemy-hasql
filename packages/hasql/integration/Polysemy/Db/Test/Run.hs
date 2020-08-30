@@ -9,9 +9,10 @@ import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
 
-import Polysemy.Db.Data.DbConnection (DbConnection)
+import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.DbConnection (interpretDbConnection)
+import Polysemy.Db.Data.StoreError (StoreError)
+import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Db.Random (Random, runRandomIO)
 import Polysemy.Db.Test.DbConfig (dbConfig)
 
@@ -20,6 +21,7 @@ type TestEffects =
     DbConnection Connection,
     Fail,
     Random,
+    Error (StoreError DbError),
     Error DbError,
     Error QueryError,
     Error Text,
@@ -43,6 +45,7 @@ integrationTest thunk = do
           runError @Text $
           mapError @QueryError @Text show $
           mapError @DbError @Text show $
+          mapError @(StoreError DbError) @Text show $
           runRandomIO $
           failToEmbed $
           interpretDbConnection conf $
