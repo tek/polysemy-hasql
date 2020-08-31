@@ -70,7 +70,7 @@ interpretDatabase table =
   evalState True . interpretDatabaseState table . raiseUnder
 
 interpretDatabaseGen ::
-  ∀ d rep r .
+  ∀ rep d r .
   GenTableStructure d rep =>
   Members [Embed IO, DbConnection Connection] r =>
   InterpreterFor (Database DbError d) r
