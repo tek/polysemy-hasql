@@ -115,13 +115,6 @@ interpretStoreNull =
     FetchAll ->
       pure (Right Nothing)
 
-newtype UidList i a =
-  UidList { _uidRecords :: [Uid i a] }
-  deriving (Eq, Show)
-  deriving newtype (Default)
-
-makeClassy ''UidList
-
 elem ::
   ∀ i e d r .
   Members [Store i e d, Error (StoreError e)] r =>

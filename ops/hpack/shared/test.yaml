@@ -5,7 +5,7 @@ ghc-options:
 - -with-rtsopts=-N
 dependencies:
   - hedgehog
+  - polysemy-hasql
   - polysemy-test
   - tasty
   - tasty-hedgehog
-  - polysemy-hasql

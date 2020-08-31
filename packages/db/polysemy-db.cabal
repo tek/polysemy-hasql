@@ -42,6 +42,7 @@ library
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint
       Polysemy.Db.Store
+      Polysemy.Db.StoreQuery
       Polysemy.Db.Text.Case
       Polysemy.Db.Text.Quote
       Paths_polysemy_db
