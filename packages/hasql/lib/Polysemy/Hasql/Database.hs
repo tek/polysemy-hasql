@@ -3,12 +3,12 @@ module Polysemy.Hasql.Database where
 import Hasql.Connection (Connection)
 import qualified Hasql.Session as Session (statement)
 
-import Polysemy.Hasql.Data.Database (Database(..))
-import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
-import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.TableStructure (TableStructure)
+import Polysemy.Hasql.Data.Database (Database(..))
+import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
+import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Session (runSession)
 import Polysemy.Hasql.Table (initTable)
 import Polysemy.Hasql.Table.TableStructure (GenTableStructure(genTableStructure))
@@ -71,8 +71,8 @@ interpretDatabase table =
 
 interpretDatabaseGen ::
   ∀ rep d r .
-  GenTableStructure d rep =>
+  GenTableStructure rep d =>
   Members [Embed IO, DbConnection Connection] r =>
   InterpreterFor (Database DbError d) r
 interpretDatabaseGen =
-  interpretDatabase (genTableStructure @d @rep)
+  interpretDatabase (genTableStructure @rep @d)
