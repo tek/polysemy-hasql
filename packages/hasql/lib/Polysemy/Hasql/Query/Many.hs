@@ -13,7 +13,7 @@ import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 execute ::
   ∀ qOut qIn dIn dOut dResult e r .
-  Member (Database dIn e) r =>
+  Member (Database e dIn) r =>
   ([dOut] -> dResult) ->
   (qOut -> qIn) ->
   (dIn -> dOut) ->
@@ -25,7 +25,7 @@ execute result fromQ toD table params =
 
 interpretManyWith ::
   ∀ qOut qIn dIn dOut dResult e r .
-  Member (Database dIn e) r =>
+  Member (Database e dIn) r =>
   ([dOut] -> dResult) ->
   (qOut -> qIn) ->
   (dIn -> dOut) ->
@@ -38,7 +38,7 @@ interpretManyWith result fromQ toD table =
 
 interpretManyAs ::
   ∀ qOut qIn dIn dOut e r .
-  Member (Database dIn e) r =>
+  Member (Database e dIn) r =>
   (qOut -> qIn) ->
   (dIn -> dOut) ->
   QueryTable qIn dIn ->
@@ -49,7 +49,7 @@ interpretManyAs =
 interpretManyGenAs ::
   ∀ dIn dOut rep qOut qIn e r .
   GenQueryTable rep qIn dIn =>
-  Member (Database dIn e) r =>
+  Member (Database e dIn) r =>
   (qOut -> qIn) ->
   (dIn -> dOut) ->
   InterpreterFor (StoreQuery qOut e [dOut]) r
@@ -59,7 +59,7 @@ interpretManyGenAs fromQ toD =
 interpretManyGenUidAs ::
   ∀ rep i qOut qIn d e r .
   GenQueryTable (PKRep i rep) qIn (PK i d) =>
-  Member (Database (PK i d) e) r =>
+  Member (Database e (PK i d)) r =>
   (qOut -> qIn) ->
   InterpreterFor (StoreQuery qOut e [Uid i d]) r
 interpretManyGenUidAs fromQ =
@@ -68,13 +68,13 @@ interpretManyGenUidAs fromQ =
 interpretManyGenUid ::
   ∀ rep i q d e r .
   GenQueryTable (PKRep i rep) q (PK i d) =>
-  Member (Database (PK i d) e) r =>
+  Member (Database e (PK i d)) r =>
   InterpreterFor (StoreQuery q e [Uid i d]) r
 interpretManyGenUid =
   interpretManyAs id pkToUid (genQueryTable @(PKRep i rep) @q @(PK i d))
 
 interpretMany ::
-  Member (Database d e) r =>
+  Member (Database e d) r =>
   QueryTable q d ->
   InterpreterFor (StoreQuery q e [d]) r
 interpretMany table =
@@ -85,7 +85,7 @@ interpretMany table =
 interpretManyGen ::
   ∀ rep q d e r .
   GenQueryTable rep q d =>
-  Member (Database d e) r =>
+  Member (Database e d) r =>
   InterpreterFor (StoreQuery q e [d]) r
 interpretManyGen =
   interpretMany (genQueryTable @rep)

@@ -12,12 +12,12 @@ import Polysemy.Hasql.Data.Schema (Schema(..))
 import qualified Polysemy.Db.Data.StoreError as StoreError
 import Polysemy.Db.Data.StoreError (StoreError)
 
-class Members [Schema q d, Database d DbError] r => StatementEffects q r d where
+class Members [Schema q d, Database DbError d] r => StatementEffects q r d where
 
-instance Members [Schema q d, Database d DbError] r => StatementEffects q r d where
+instance Members [Schema q d, Database DbError d] r => StatementEffects q r d where
 
 runStatement ::
-  Member (Database d e) r =>
+  Member (Database e d) r =>
   Sem r (Statement q o) ->
   q ->
   Sem r (Either (StoreError e) o)

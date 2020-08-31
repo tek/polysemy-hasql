@@ -145,7 +145,7 @@ withTestStoreTableGen ::
   ∀ rep q d r a .
   Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   GenQueryTable rep q d =>
-  (QueryTable q d -> Sem (Store q DbError d : Schema q d : Database d DbError : r) a) ->
+  (QueryTable q d -> Sem (Store q DbError d : Schema q d : Database DbError d : r) a) ->
   Sem r a
 withTestStoreTableGen prog = do
   withTestQueryTableGen @rep \ table ->
@@ -155,7 +155,7 @@ withTestStoreGen ::
   ∀ rep q d r a .
   Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   GenQueryTable rep q d =>
-  Sem (Store q DbError d : Schema q d : Database d DbError : r) a ->
+  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
   Sem r a
 withTestStoreGen prog = do
   withTestQueryTableGen @rep \ table ->

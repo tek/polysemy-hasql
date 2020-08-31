@@ -22,7 +22,7 @@ import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 interpretStoreDb ::
-  Members [Schema q d, Database d DbError] r =>
+  Members [Schema q d, Database DbError d] r =>
   InterpreterFor (Store q DbError d) r
 interpretStoreDb =
   interpret \case
@@ -57,7 +57,7 @@ interpretStoreDbAs' toD fromD fromQ =
       (fmap . fmap . fmap) toD <$> Store.fetchAll
 
 interpretStoreDbAs ::
-  Members [Schema qIn dIn, Database dIn DbError] r =>
+  Members [Schema qIn dIn, Database DbError dIn] r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
@@ -123,7 +123,7 @@ interpretStoreDbFullGenUid =
 interpretStoreDbFull ::
   Members StoreDeps r =>
   QueryTable q d ->
-  Sem (Store q DbError d : Schema q d : Database d DbError : r) a ->
+  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
   Sem r a
 interpretStoreDbFull qTable@(QueryTable (Table structure _ _) _ _) =
   interpretDatabase structure .
@@ -134,7 +134,7 @@ interpretStoreDbFullGen ::
   ∀ rep q d r a .
   GenQueryTable rep q d =>
   Members StoreDeps r =>
-  Sem (Store q DbError d : Schema q d : Database d DbError : r) a ->
+  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
   Sem r a
 interpretStoreDbFullGen =
   interpretStoreDbFull (genQueryTable @rep)
@@ -144,7 +144,7 @@ interpretStoreDbSingle ::
   GenQueryTable rep q d =>
   Members [Error DbError, Embed IO] r =>
   DbConfig ->
-  Sem (Store q DbError d : Schema q d : Database d DbError : DbConnection Connection : r) a ->
+  Sem (Store q DbError d : Schema q d : Database DbError d : DbConnection Connection : r) a ->
   Sem r a
 interpretStoreDbSingle host =
   interpretDbConnection host .

@@ -51,7 +51,7 @@ interpretDatabaseState ::
   ∀ d r .
   Members [DbConnection Connection, State Bool, Embed IO] r =>
   TableStructure ->
-  InterpreterFor (Database d DbError) r
+  InterpreterFor (Database DbError d) r
 interpretDatabaseState table =
   interpret \case
     Run q statement ->
@@ -65,7 +65,7 @@ interpretDatabase ::
   ∀ d r .
   Members [DbConnection Connection, Embed IO] r =>
   TableStructure ->
-  InterpreterFor (Database d DbError) r
+  InterpreterFor (Database DbError d) r
 interpretDatabase table =
   evalState True . interpretDatabaseState table . raiseUnder
 
@@ -73,6 +73,6 @@ interpretDatabaseGen ::
   ∀ d rep r .
   GenTableStructure d rep =>
   Members [Embed IO, DbConnection Connection] r =>
-  InterpreterFor (Database d DbError) r
+  InterpreterFor (Database DbError d) r
 interpretDatabaseGen =
   interpretDatabase (genTableStructure @d @rep)
