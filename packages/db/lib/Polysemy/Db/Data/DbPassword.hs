@@ -1,5 +1,3 @@
- {-# OPTIONS_GHC -fclear-plugins #-}
-
 module Polysemy.Db.Data.DbPassword where
 
 newtype DbPassword =

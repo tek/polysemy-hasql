@@ -1,5 +1,3 @@
- {-# OPTIONS_GHC -fclear-plugins #-}
-
 module Polysemy.Db.Data.Uid where
 
 import Data.Aeson (Value(Object), genericParseJSON, object, withObject, (.:), (.=))

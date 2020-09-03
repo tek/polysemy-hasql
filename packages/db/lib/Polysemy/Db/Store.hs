@@ -37,7 +37,7 @@ interpretStoreAtomicState getId =
     Fetch id' ->
       atomicGets @(StrictStore d) (Right . views records (find ((id' ==) . getId)))
     FetchAll ->
-      atomicGets @(StrictStore d) $ Right . nonEmpty . view records
+      atomicGets @(StrictStore d) (Right . nonEmpty . view records)
 
 interpretStoreAtomicWith ::
   Eq i =>
