@@ -58,6 +58,16 @@ interpretStoreAtomic getId init' sem = do
   tvar <- newTVarIO init'
   interpretStoreAtomicWith getId tvar sem
 
+interpretStoreUidAtomic ::
+  ∀ d i r .
+  Eq i =>
+  Eq d =>
+  Member (Embed IO) r =>
+  StrictStore (Uid i d) ->
+  InterpreterFor (Store i () (Uid i d)) r
+interpretStoreUidAtomic =
+  interpretStoreAtomic Uid._id
+
 interpretStoreStrictState ::
   ∀ i d e r .
   Eq i =>
@@ -97,8 +107,8 @@ interpretStoreUidStrict ::
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
   InterpreterFor (Store i () (Uid i d)) r
-interpretStoreUidStrict init' = do
-  evalState init' . interpretStoreStrictState Uid._id . raiseUnder
+interpretStoreUidStrict =
+  interpretStoreStrict Uid._id
 
 interpretStoreNull ::
   InterpreterFor (Store i e d) r
