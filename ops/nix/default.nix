@@ -20,8 +20,10 @@ let
     compiler = "ghc884";
     cabal2nixOptions = "--no-hpack";
     overrides = import ./overrides.nix niv;
-    ghciArgs = ["-hide-package" "base" "-Wall" "-Werror"];
-    options_ghc = "-fplugin=Polysemy.Plugin";
+    ghci = {
+      basicArgs = ["-hide-package" "base" "-Wall" "-Werror"];
+      options_ghc = "-fplugin=Polysemy.Plugin";
+    };
     packageDir = "packages";
   };
 in
