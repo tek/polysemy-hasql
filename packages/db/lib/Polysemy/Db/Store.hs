@@ -184,6 +184,37 @@ upsert ::
 upsert =
   fromEither <=< Store.upsert @i @e @d
 
+alter ::
+  ∀ i e d r .
+  Members [Store i e d, Error (StoreError e)] r =>
+  i ->
+  (d -> d) ->
+  Sem r ()
+alter id' f = do
+  cur <- fetch @i @e id'
+  traverse_ (upsert @i @e . f) cur
+
+alterOr ::
+  ∀ i e d r .
+  Members [Store i e d, Error (StoreError e)] r =>
+  d ->
+  i ->
+  (d -> d) ->
+  Sem r ()
+alterOr fallback id' f = do
+  cur <- fetch @i @e id'
+  upsert @i @e (f (fromMaybe fallback cur))
+
+alterDefault ::
+  ∀ i e d r .
+  Members [Store i e d, Error (StoreError e)] r =>
+  Default d =>
+  i ->
+  (d -> d) ->
+  Sem r ()
+alterDefault =
+  alterOr @i @e def
+
 delete ::
   ∀ i e d r .
   Members [Store i e d, Error (StoreError e)] r =>
