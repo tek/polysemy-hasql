@@ -2,7 +2,9 @@
 
 dependencies:
   - aeson
-  - base-noprelude
+  - name: base
+    mixin:
+      - hiding (Prelude)
   - containers
   - generics-sop
   - lens

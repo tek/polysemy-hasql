@@ -78,7 +78,7 @@ library
   ghc-options: -Wall -Werror -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively
   build-depends:
       aeson
-    , base-noprelude
+    , base
     , chronos
     , containers
     , contravariant
@@ -98,7 +98,8 @@ library
     , uuid
     , vector
   mixins:
-      polysemy-db hiding (Polysemy.Db.Prelude)
+      base hiding (Prelude)
+    , polysemy-db hiding (Polysemy.Db.Prelude)
     , polysemy-db (Polysemy.Db.Prelude as Prelude)
   default-language: Haskell2010
 
@@ -120,7 +121,7 @@ test-suite polysemy-hasql-integration
   ghc-options: -Wall -Werror -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , base-noprelude
+    , base
     , chronos
     , containers
     , contravariant
@@ -145,7 +146,8 @@ test-suite polysemy-hasql-integration
     , uuid
     , vector
   mixins:
-      polysemy-db hiding (Polysemy.Db.Prelude)
+      base hiding (Prelude)
+    , polysemy-db hiding (Polysemy.Db.Prelude)
     , polysemy-db (Polysemy.Db.Prelude as Prelude)
   default-language: Haskell2010
 
@@ -165,7 +167,7 @@ test-suite polysemy-hasql-unit
   ghc-options: -Wall -Werror -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , base-noprelude
+    , base
     , chronos
     , containers
     , contravariant
@@ -190,6 +192,7 @@ test-suite polysemy-hasql-unit
     , uuid
     , vector
   mixins:
-      polysemy-db hiding (Polysemy.Db.Prelude)
+      base hiding (Prelude)
+    , polysemy-db hiding (Polysemy.Db.Prelude)
     , polysemy-db (Polysemy.Db.Prelude as Prelude)
   default-language: Haskell2010

@@ -56,7 +56,7 @@ library
   ghc-options: -Wall -Werror
   build-depends:
       aeson
-    , base-noprelude
+    , base
     , comonad
     , composition
     , containers
@@ -72,4 +72,6 @@ library
     , text
     , unordered-containers
     , uuid
+  mixins:
+      base hiding (Prelude)
   default-language: Haskell2010

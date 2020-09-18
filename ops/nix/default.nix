@@ -22,8 +22,6 @@ let
     overrides = import ./overrides.nix niv;
     ghci = {
       basicArgs = [
-        "-hide-package"
-        "base"
         "-Wall"
         "-Werror"
         "-fmax-relevant-binds=1"
@@ -31,6 +29,9 @@ let
         "-fprint-potential-instances"
       ];
       options_ghc = "-fplugin=Polysemy.Plugin";
+    };
+    ghcid = {
+      prelude = base + /packages/db/lib/Prelude;
     };
     packageDir = "packages";
   };
