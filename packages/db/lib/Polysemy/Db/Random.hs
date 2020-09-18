@@ -40,7 +40,7 @@ runRandom q = runState q . reinterpret (\case
     put q'
     pure a
                                        )
-{-# INLINE runRandom #-}
+{-# inline runRandom #-}
 
 
 ------------------------------------------------------------------------------
@@ -49,4 +49,4 @@ runRandomIO :: Member (Embed IO) r => Sem (Random ': r) a -> Sem r a
 runRandomIO m = do
   q <- embed R.newStdGen
   snd <$> runRandom q m
-{-# INLINE runRandomIO #-}
+{-# inline runRandomIO #-}

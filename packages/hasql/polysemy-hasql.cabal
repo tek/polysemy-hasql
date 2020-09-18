@@ -22,6 +22,8 @@ extra-source-files:
 library
   exposed-modules:
       Polysemy.Hasql.ColumnParams
+      Polysemy.Hasql.Data.AlignColumns
+      Polysemy.Hasql.Data.ColumnType
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
       Polysemy.Hasql.Data.QueryTable
@@ -41,10 +43,12 @@ library
       Polysemy.Hasql.Store
       Polysemy.Hasql.Store.Statement
       Polysemy.Hasql.Table
+      Polysemy.Hasql.Table.ColumnParams
       Polysemy.Hasql.Table.Columns
       Polysemy.Hasql.Table.ColumnType
       Polysemy.Hasql.Table.Enum
       Polysemy.Hasql.Table.Identifier
+      Polysemy.Hasql.Table.Orphans
       Polysemy.Hasql.Table.Query.Delete
       Polysemy.Hasql.Table.Query.Fragment
       Polysemy.Hasql.Table.Query.Insert
@@ -53,11 +57,12 @@ library
       Polysemy.Hasql.Table.Query.Text
       Polysemy.Hasql.Table.Query.Where
       Polysemy.Hasql.Table.QueryFields
+      Polysemy.Hasql.Table.QueryParam
       Polysemy.Hasql.Table.QueryParams
       Polysemy.Hasql.Table.QueryRow
+      Polysemy.Hasql.Table.QueryRows
       Polysemy.Hasql.Table.QueryTable
       Polysemy.Hasql.Table.ResultShape
-      Polysemy.Hasql.Table.Row
       Polysemy.Hasql.Table.Table
       Polysemy.Hasql.Table.TableName
       Polysemy.Hasql.Table.TableStructure
@@ -76,7 +81,9 @@ library
     , base-noprelude
     , chronos
     , containers
+    , contravariant
     , generics-sop
+    , ghc-prim
     , hasql
     , lens
     , path
@@ -105,6 +112,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Db.Test.QueryTest
       Polysemy.Db.Test.Run
       Polysemy.Db.Test.SingletonTest
+      Polysemy.Db.Test.SumFieldTest
       Paths_polysemy_hasql
   hs-source-dirs:
       integration
@@ -115,7 +123,9 @@ test-suite polysemy-hasql-integration
     , base-noprelude
     , chronos
     , containers
+    , contravariant
     , generics-sop
+    , ghc-prim
     , hasql
     , hedgehog
     , lens
@@ -146,6 +156,7 @@ test-suite polysemy-hasql-unit
       Polysemy.Db.Test.EnumTest
       Polysemy.Db.Test.Q1
       Polysemy.Db.Test.StatementTest
+      Polysemy.Db.Test.SumTest
       Polysemy.Db.Test.TableTest
       Paths_polysemy_hasql
   hs-source-dirs:
@@ -157,7 +168,9 @@ test-suite polysemy-hasql-unit
     , base-noprelude
     , chronos
     , containers
+    , contravariant
     , generics-sop
+    , ghc-prim
     , hasql
     , hedgehog
     , lens

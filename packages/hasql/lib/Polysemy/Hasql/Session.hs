@@ -14,7 +14,7 @@ convertQueryError (QueryError template (Text.intercalate "," -> args) cmdError) 
     ClientError err ->
       DbError.Connection (maybe "no error" decodeUtf8 err)
     ResultError err ->
-      DbError.Query [i|#{template} #{args} #{err}|]
+      DbError.Query [qt|#{template} #{args} #{err}|]
 
 runSession ::
   Member (Embed IO) r =>

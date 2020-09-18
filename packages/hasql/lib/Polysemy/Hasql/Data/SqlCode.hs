@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Data.SqlCode where
 
-data SqlCode =
+newtype SqlCode =
   SqlCode { unSqlCode :: Text }
   deriving (Eq, Show)
+  deriving newtype (IsString, Semigroup, Monoid)

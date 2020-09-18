@@ -9,8 +9,8 @@ module Polysemy.Db.Prelude (
   module Data.Default,
   module Data.Either.Combinators,
   module Data.Foldable,
+  module Data.List.NonEmpty,
   module Data.Map.Strict,
-  module Data.String.Interpolate,
   module Data.UUID,
   module Debug.Trace,
   module GHC.Err,
@@ -33,6 +33,7 @@ import Data.Composition ((.:), (.:.), (.::))
 import Data.Default (Default(def))
 import Data.Either.Combinators (mapLeft)
 import Data.Foldable (foldl, traverse_)
+import Data.List.NonEmpty ((<|))
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, lookup)
 import Data.String.Interpolate (i)
@@ -74,6 +75,7 @@ import Polysemy.State (State, evalState, get, gets, modify, modify', put, runSta
 import Relude hiding (
   Reader,
   State,
+  Sum,
   Type,
   ask,
   asks,
@@ -99,24 +101,24 @@ dbg :: Monad m => Text -> m ()
 dbg msg = do
   () <- return $ unsafePerformIO (putStrLn (toString msg))
   return ()
-{-# INLINE dbg #-}
+{-# inline dbg #-}
 
 dbgs :: Monad m => Show a => a -> m ()
 dbgs a =
   dbg (show a)
-{-# INLINE dbgs_ #-}
+{-# inline dbgs_ #-}
 
 dbgs_ :: Monad m => Show a => a -> m a
 dbgs_ a =
   a <$ dbg (show a)
-{-# INLINE dbgs #-}
+{-# inline dbgs #-}
 
 unit ::
   Applicative f =>
   f ()
 unit =
   pure ()
-{-# INLINE unit #-}
+{-# inline unit #-}
 
 tuple ::
   Applicative f =>
@@ -125,22 +127,27 @@ tuple ::
   f (a, b)
 tuple fa fb =
   (,) <$> fa <*> fb
-{-# INLINE tuple #-}
+{-# inline tuple #-}
 
 unsafeLogSAnd :: Show a => a -> b -> b
 unsafeLogSAnd a b =
   unsafePerformIO $ print a >> return b
-{-# INLINE unsafeLogSAnd #-}
+{-# inline unsafeLogSAnd #-}
 
 unsafeLogAnd :: Text -> b -> b
 unsafeLogAnd a b =
   unsafePerformIO $ putStrLn (toString a) >> return b
-{-# INLINE unsafeLogAnd #-}
+{-# inline unsafeLogAnd #-}
 
 unsafeLogS :: Show a => a -> a
 unsafeLogS a =
   unsafePerformIO $ print a >> return a
-{-# INLINE unsafeLogS #-}
+{-# inline unsafeLogS #-}
+
+unsafeLog :: Text -> Text
+unsafeLog a =
+  unsafePerformIO $ putStrLn (toString a) >> return a
+{-# inline unsafeLog #-}
 
 liftT ::
   forall m f r e a .
@@ -149,7 +156,7 @@ liftT ::
   Sem (WithTactics e f m r) (f a)
 liftT =
   pureT <=< raise
-{-# INLINE liftT #-}
+{-# inline liftT #-}
 
 hoistEither ::
   Member (Error e2) r =>
@@ -158,7 +165,7 @@ hoistEither ::
   Sem r a
 hoistEither f =
   fromEither . mapLeft f
-{-# INLINE hoistEither #-}
+{-# inline hoistEither #-}
 
 hoistEitherWith ::
   (e -> Sem r a) ->
@@ -166,7 +173,7 @@ hoistEitherWith ::
   Sem r a
 hoistEitherWith f =
   either f pure
-{-# INLINE hoistEitherWith #-}
+{-# inline hoistEitherWith #-}
 
 hoistEitherShow ::
   Show e1 =>
@@ -176,7 +183,7 @@ hoistEitherShow ::
   Sem r a
 hoistEitherShow f =
   fromEither . mapLeft (f . Text.replace "\\" "" . show)
-{-# INLINE hoistEitherShow #-}
+{-# inline hoistEitherShow #-}
 
 hoistErrorWith ::
   (e -> Sem r a) ->
@@ -184,7 +191,7 @@ hoistErrorWith ::
   Sem r a
 hoistErrorWith f =
   hoistEitherWith f <=< runError
-{-# INLINE hoistErrorWith #-}
+{-# inline hoistErrorWith #-}
 
 tryAny ::
   Member (Embed IO) r =>
@@ -192,7 +199,7 @@ tryAny ::
   Sem r (Either Text a)
 tryAny =
   embed . fmap (mapLeft show) . try @SomeException
-{-# INLINE tryAny #-}
+{-# inline tryAny #-}
 
 tryHoist ::
   Member (Embed IO) r =>
@@ -201,7 +208,7 @@ tryHoist ::
   Sem r (Either e a)
 tryHoist f =
   fmap (mapLeft f) . tryAny
-{-# INLINE tryHoist #-}
+{-# inline tryHoist #-}
 
 tryThrow ::
   Members [Embed IO, Error e] r =>
@@ -210,17 +217,17 @@ tryThrow ::
   Sem r a
 tryThrow f =
   fromEither <=< tryHoist f
-{-# INLINE tryThrow #-}
+{-# inline tryThrow #-}
 
 throwTextIO :: Text -> IO a
 throwTextIO =
   throwIO . userError . toString
-{-# INLINE throwTextIO #-}
+{-# inline throwTextIO #-}
 
 throwEitherIO :: Either Text a -> IO a
 throwEitherIO =
   traverseLeft throwTextIO
-{-# INLINE throwEitherIO #-}
+{-# inline throwEitherIO #-}
 
 basicOptions :: Aeson.Options
 basicOptions =
@@ -237,12 +244,12 @@ jsonOptions =
 defaultJson :: TH.Name -> TH.Q [TH.Dec]
 defaultJson =
   deriveJSON jsonOptions
-{-# INLINE defaultJson #-}
+{-# inline defaultJson #-}
 
 unaryRecordJson :: TH.Name -> TH.Q [TH.Dec]
 unaryRecordJson =
   deriveJSON basicOptions
-{-# INLINE unaryRecordJson #-}
+{-# inline unaryRecordJson #-}
 
 type Basic a =
   (Eq a, Show a)
@@ -271,7 +278,7 @@ type a ++ b =
 rightOr :: (a -> b) -> Either a b -> b
 rightOr f =
   either f id
-{-# INLINE rightOr #-}
+{-# inline rightOr #-}
 
 traverseLeft ::
   Applicative m =>
@@ -280,7 +287,7 @@ traverseLeft ::
   m b
 traverseLeft f =
   either f pure
-{-# INLINE traverseLeft #-}
+{-# inline traverseLeft #-}
 
 jsonDecode ::
   FromJSON a =>
@@ -288,7 +295,7 @@ jsonDecode ::
   Either Text a
 jsonDecode =
   mapLeft toText . Aeson.eitherDecodeStrict'
-{-# INLINE jsonDecode #-}
+{-# inline jsonDecode #-}
 
 jsonDecodeL ::
   FromJSON a =>
@@ -296,7 +303,7 @@ jsonDecodeL ::
   Either Text a
 jsonDecodeL =
   mapLeft toText . Aeson.eitherDecode'
-{-# INLINE jsonDecodeL #-}
+{-# inline jsonDecodeL #-}
 
 jsonDecodeText ::
   FromJSON a =>
@@ -304,7 +311,7 @@ jsonDecodeText ::
   Either Text a
 jsonDecodeText =
   mapLeft toText . Aeson.eitherDecodeStrict' . encodeUtf8
-{-# INLINE jsonDecodeText #-}
+{-# inline jsonDecodeText #-}
 
 jsonEncode ::
   ToJSON a =>
@@ -312,7 +319,7 @@ jsonEncode ::
   ByteString
 jsonEncode =
   toStrict . Aeson.encode
-{-# INLINE jsonEncode #-}
+{-# inline jsonEncode #-}
 
 jsonEncodeText ::
   ToJSON a =>
@@ -320,7 +327,7 @@ jsonEncodeText ::
   Text
 jsonEncodeText =
   decodeUtf8 . jsonEncode
-{-# INLINE jsonEncodeText #-}
+{-# inline jsonEncodeText #-}
 
 as ::
   Functor m =>
@@ -329,17 +336,17 @@ as ::
   m a
 as =
   (<$)
-{-# INLINE as #-}
+{-# inline as #-}
 
 mneToList :: Maybe (NonEmpty a) -> [a]
 mneToList =
   maybe [] toList
-{-# INLINE mneToList #-}
+{-# inline mneToList #-}
 
 qt :: QuasiQuoter
 qt =
   i
-{-# INLINE qt #-}
+{-# inline qt #-}
 
 safeDiv ::
   Eq a =>
@@ -351,7 +358,7 @@ safeDiv _ 0 =
   Nothing
 safeDiv n d =
   Just (n / d)
-{-# INLINE safeDiv #-}
+{-# inline safeDiv #-}
 
 divOr0 ::
   Eq a =>
@@ -361,7 +368,7 @@ divOr0 ::
   a
 divOr0 =
   fromMaybe 0 .: safeDiv
-{-# INLINE divOr0 #-}
+{-# inline divOr0 #-}
 
 mapBy ::
   Ord k =>

@@ -71,7 +71,7 @@ test_selectStatement =
     target === unSqlCode stmtText
   where
     target =
-      [i|select "field_one", "field_two", "field_three" from "rec" where "field_one" = $1 and "field_three" = $2|]
+      [qt|select "field_one", "field_two", "field_three" from "rec" where "field_one" = $1 and "field_three" = $2|]
     stmtText :: SqlCode
     stmtText =
       Statement.selectWhereSql (genQueryTable @RecRep @Q1 @Rec)
@@ -82,7 +82,7 @@ test_createStatement =
     target === unSqlCode stmtText
   where
     target =
-      [i|create table "rec" ("field_one" text not null, "field_two" bigint not null, "field_three" double precision)|]
+      [qt|create table "rec" ("field_one" text not null, "field_two" bigint not null, "field_three" double precision)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (genTableStructure @RecRep @Rec)

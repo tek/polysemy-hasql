@@ -16,4 +16,4 @@ dbConfig = do
     parsePort p =
       case readMaybe p of
         Just a -> pure a
-        Nothing -> error [i|invalid port in env var $polysemy_db_test_port: #{p}|]
+        Nothing -> error [qt|invalid port in env var $polysemy_db_test_port: #{p}|]

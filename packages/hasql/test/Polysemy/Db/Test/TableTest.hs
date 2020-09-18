@@ -1,8 +1,7 @@
 module Polysemy.Db.Test.TableTest where
 
 import Polysemy.Db.Data.Column (Auto)
-import Polysemy.Db.Data.Columns (Column(Column), Columns(Columns))
-import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
+import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import Polysemy.Hasql.Table (missingColumns)
 import Polysemy.Hasql.Table.Identifier (dbIdentifier)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure)
@@ -28,7 +27,7 @@ test_recColumns =
     target === recTable
   where
     target =
-      TableStructure "rec" (Columns (Column "field1" "text" def :| [Column "field2" "bigint" def]))
+      TableStructure "rec" [Column "field1" "text" def Nothing, Column "field2" "bigint" def Nothing]
 
 data UuidCol =
   UuidCol { uuid :: UUID }
@@ -43,7 +42,7 @@ uuidColTable =
 test_uuidColTable :: UnitTest
 test_uuidColTable =
   runTestAuto do
-    TableStructure "uuid_col" (Columns (Column "uuid" "uuid" def :| [])) === uuidColTable
+    TableStructure "uuid_col" [Column "uuid" "uuid" def Nothing] === uuidColTable
 
 test_tableName :: UnitTest
 test_tableName =
@@ -53,15 +52,15 @@ test_tableName =
 
 targetMissing :: [Column]
 targetMissing =
-  [Column "f4" "text" def]
+  [Column "f4" "text" def Nothing]
 
 updateColumnsExisting :: NonEmpty Column
 updateColumnsExisting =
-  Column "f1" "bigint" def :| [Column "f2" "uuid" def, Column "f3" "text" def]
+  [Column "f1" "bigint" def Nothing, Column "f2" "uuid" def Nothing, Column "f3" "text" def Nothing]
 
-updateColumnsTarget :: Columns
+updateColumnsTarget :: NonEmpty Column
 updateColumnsTarget =
-  Columns (Column "f1" "bigint" def :| [Column "f2" "text" def, Column "f4" "text" def])
+  [Column "f1" "bigint" def Nothing, Column "f2" "text" def Nothing, Column "f4" "text" def Nothing]
 
 test_updateTasks :: UnitTest
 test_updateTasks =

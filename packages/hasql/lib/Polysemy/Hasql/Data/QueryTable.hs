@@ -24,4 +24,4 @@ structure =
 
 instance Show (QueryTable q a) where
   show (QueryTable tbl _ qw) =
-    [i|QueryTable { table = #{tbl}, qparams = Params, qwhere = #{qw} }|]
+    [qt|QueryTable { table = #{tbl}, qparams = Params, qwhere = #{qw} }|]

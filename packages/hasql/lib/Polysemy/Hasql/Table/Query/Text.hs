@@ -2,10 +2,10 @@ module Polysemy.Hasql.Table.Query.Text where
 
 import qualified Data.Text as Text
 
-import Polysemy.Db.Data.Columns (Columns(Columns))
-import qualified Polysemy.Db.Data.Columns as Column
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode, unSqlCode))
+import qualified Polysemy.Db.Data.TableStructure as Column
+import Polysemy.Db.Data.TableStructure (Column)
 import Polysemy.Db.Text.Quote (dquote)
+import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode, unSqlCode))
 
 commaSeparated ::
   Foldable t =>
@@ -22,14 +22,15 @@ commaFields =
   commaSeparated . fmap dquote . toList
 
 commaColumns ::
-  Columns ->
+  NonEmpty Column ->
   Text
-commaColumns (Columns columns) =
-  commaFields (Column.name <$> columns)
+commaColumns columns =
+  commaFields (Column.columnName <$> columns)
 
 commaSeparatedSql ::
+  Functor t =>
   Foldable t =>
   t SqlCode ->
   SqlCode
 commaSeparatedSql =
-  SqlCode . commaSeparated . fmap unSqlCode . toList
+  SqlCode . commaSeparated . fmap unSqlCode

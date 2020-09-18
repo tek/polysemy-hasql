@@ -26,6 +26,14 @@ data Prim a =
   Prim
   deriving (Eq, Show)
 
+data Sum a =
+  Sum
+  deriving (Eq, Show)
+
+data Enum a =
+  Enum
+  deriving (Eq, Show)
+
 -- this could be used as a functorial parameter in logic.
 -- @f Archive@, with the store being @Store f e Archive@ or @Store i f e Archive@
 data PK i a =

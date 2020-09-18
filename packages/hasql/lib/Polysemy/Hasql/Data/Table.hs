@@ -23,4 +23,4 @@ tableName =
 
 instance Show (Table a) where
   show (Table struct _ _) =
-    [i|Table { structure = #{struct}, row = Row, params = Params }|]
+    [qt|Table { structure = #{struct}, row = Row, params = Params }|]

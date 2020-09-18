@@ -1,7 +1,7 @@
 module Polysemy.Db.SOP.Constraint where
 
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
-import Generics.SOP (All, DatatypeInfoOf, IsProductType)
+import Generics.SOP (All, Code, DatatypeInfoOf, IsProductType)
 import Generics.SOP.Type.Metadata (
   ConstructorInfo(Record),
   DatatypeInfo(ADT, Newtype),
@@ -45,14 +45,22 @@ instance IsRecordT ('Newtype mod name ('Record ctor names)) name names where
 
 instance IsRecordT ('ADT mod name '[ 'Record ctor names] strictness) name names where
 
-class IsRecord a types name names | a -> types name names where
+class IsRecord (a :: *) (types :: [*]) (name :: Symbol) (fields :: [FieldInfo]) | a -> types name fields where
 
 instance
   (
   IsProductType a types,
-  IsRecordT (DatatypeInfoOf a) name names
+  IsRecordT (DatatypeInfoOf a) name fields
   ) =>
-    IsRecord a types name names where
+    IsRecord a types name fields where
+
+class CtorsT (d :: DatatypeInfo) (ctors :: [ConstructorInfo]) | d -> ctors where
+
+instance CtorsT ('ADT mod name ctors strictness) ctors where
+
+class Ctors (d :: *) (ctors :: [ConstructorInfo]) (types :: [[*]]) | d -> ctors types where
+
+instance (CtorsT (DatatypeInfoOf d) ctors, types ~ Code d) => Ctors d ctors types where
 
 class DataName a where
   dataName :: String
@@ -74,12 +82,25 @@ dataSlug ::
 dataSlug =
   unCamelCase '-' (dataName @a)
 
+dataSlugString_ ::
+  String ->
+  Text
+dataSlugString_ =
+  unCamelCase '_'
+
+dataSlugSymbol_ ::
+  ∀ a .
+  KnownSymbol a =>
+  Text
+dataSlugSymbol_ =
+  dataSlugString_ (symbolVal (Proxy @a))
+
 dataSlug_ ::
   ∀ a .
   DataName a =>
   Text
 dataSlug_ =
-  unCamelCase '_' (dataName @a)
+  dataSlugString_ (dataName @a)
 
 class RecordFields a (names :: [FieldInfo]) types | a -> names types where
 

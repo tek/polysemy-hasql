@@ -38,7 +38,7 @@ suffixedTable lens suffix table =
   set lens suffixedName table
   where
     suffixedName =
-      TableName [i|#{canonicalName}-#{suffix}|]
+      TableName [qt|#{canonicalName}-#{suffix}|]
     TableName canonicalName =
       view lens table
 
@@ -79,7 +79,7 @@ withTestPlainTable =
   withTestTable id
 
 withTestTableGen ::
-  ∀ d rep a r .
+  ∀ rep d a r .
   Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   GenTable rep d =>
   (Table d -> Sem r a) ->
@@ -112,7 +112,7 @@ createTestDb ::
 createTestDb dbConfig@(DbConfig _ _ (DbName name) _ _) connection = do
   suffix <- UUID.toText <$> random
   let
-    suffixedName = [i|#{name}-#{suffix}|]
+    suffixedName = [qt|#{name}-#{suffix}|]
     suffixed = dbConfig & DbConfig.name .~ suffixedName
   mapError convertQueryError (runStatement connection () (Statement.createDb suffixedName))
   pure suffixed

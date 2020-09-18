@@ -19,6 +19,8 @@ tests:
 
 dependencies:
   - chronos
+  - contravariant
+  - ghc-prim
   - hasql
   - path
   - polysemy-plugin

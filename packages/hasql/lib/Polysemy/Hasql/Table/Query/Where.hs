@@ -15,7 +15,7 @@ concatWhereFields =
   Text.intercalate " and " . zipWith filterField [(1 :: Int)..] . toList
   where
     filterField index n =
-      [i|"#{n}" = $#{index}|]
+      [qt|"#{n}" = $#{index}|]
 
 where' ::
   NonEmpty Text ->

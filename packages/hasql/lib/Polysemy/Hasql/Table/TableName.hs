@@ -7,7 +7,7 @@ import Polysemy.Db.SOP.Constraint (DataName, dataSlug_)
 class GenTableName d where
   genTableName :: TableName
 
-instance {-# OVERLAPPABLE #-} DataName d => GenTableName d where
+instance {-# overlappable #-} DataName d => GenTableName d where
   genTableName =
     TableName (dataSlug_ @d)
 

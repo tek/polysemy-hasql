@@ -1,8 +1,7 @@
 module Polysemy.Db.Test.EnumTest where
 
 import Polysemy.Db.Data.Column (Auto)
-import Polysemy.Db.Data.Columns (Column(Column), Columns(Columns))
-import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
+import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import Polysemy.Hasql.Table.TableStructure (genTableStructure)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
@@ -35,7 +34,7 @@ enumColTable =
 test_enumColTable :: UnitTest
 test_enumColTable =
   runTestAuto do
-    TableStructure "enum_col" (Columns (Column "e" "text" def :| [])) === enumColTable
+    TableStructure "enum_col" [Column "e" "text" def Nothing] === enumColTable
 
 enumsColTable :: TableStructure
 enumsColTable =
@@ -44,4 +43,4 @@ enumsColTable =
 test_enumsColTable :: UnitTest
 test_enumsColTable =
   runTestAuto do
-    TableStructure "enums_col" (Columns (Column "e" "text[]" def :| [])) === enumsColTable
+    TableStructure "enums_col" [Column "e" "text[]" def Nothing] === enumsColTable

@@ -21,7 +21,15 @@ let
     cabal2nixOptions = "--no-hpack";
     overrides = import ./overrides.nix niv;
     ghci = {
-      basicArgs = ["-hide-package" "base" "-Wall" "-Werror"];
+      basicArgs = [
+        "-hide-package"
+        "base"
+        "-Wall"
+        "-Werror"
+        "-fmax-relevant-binds=1"
+        "-fmax-valid-hole-fits=1"
+        "-fprint-potential-instances"
+      ];
       options_ghc = "-fplugin=Polysemy.Plugin";
     };
     packageDir = "packages";

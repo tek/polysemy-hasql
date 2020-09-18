@@ -17,27 +17,27 @@ values =
   value . array
 
 instance ValueDecoder a => QueryRow [a] where
-  {-# INLINE queryRow #-}
   queryRow =
     value (listArray (nonNullable valueDecoder))
+  {-# inline queryRow #-}
 
 instance ValueDecoder a => QueryRow (Vector a) where
-  {-# INLINE queryRow #-}
   queryRow =
     value (vectorArray (nonNullable valueDecoder))
+  {-# inline queryRow #-}
 
 instance ValueDecoder a => QueryRow (NonEmpty a) where
-  {-# INLINE queryRow #-}
   queryRow = do
     result <- nonEmpty <$> value (listArray (nonNullable valueDecoder))
     maybe (fail "no elements in NonEmpty field") pure result
+  {-# inline queryRow #-}
 
 instance ValueDecoder a => QueryRow (Maybe a) where
-  {-# INLINE queryRow #-}
   queryRow =
     column (nullable valueDecoder)
+  {-# inline queryRow #-}
 
-instance {-# OVERLAPPABLE #-} ValueDecoder a => QueryRow a where
-  {-# INLINE queryRow #-}
+instance {-# overlappable #-} ValueDecoder a => QueryRow a where
   queryRow =
     value valueDecoder
+  {-# inline queryRow #-}

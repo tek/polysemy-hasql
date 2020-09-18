@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 {-# LANGUAGE UndecidableSuperClasses #-}
 
 module Polysemy.Hasql.Table.ColumnType where
@@ -7,6 +6,7 @@ import qualified Chronos as Chronos
 import Generics.SOP (Code, Generic)
 import Path (Path)
 import Prelude hiding (Generic)
+
 
 class ColumnType a where
   columnType :: Text
@@ -26,7 +26,7 @@ instance (Coercible c a, Generic a, Code a ~ '[ '[c]], ColumnType c) => GenColum
   genColumnType =
     columnType @c
 
-instance {-# OVERLAPPABLE #-} (Generic a, GenColumnType a b) => ColumnType a where
+instance {-# overlappable #-} (Generic a, GenColumnType a b) => ColumnType a where
   columnType =
     genColumnType @a
 

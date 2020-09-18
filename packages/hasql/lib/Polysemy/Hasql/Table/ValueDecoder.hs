@@ -3,7 +3,6 @@
 module Polysemy.Hasql.Table.ValueDecoder where
 
 import qualified Chronos as Chronos
-import qualified Data.Map.Strict as Map
 import Data.Scientific (Scientific)
 import Data.Time (
   Day,
@@ -23,7 +22,6 @@ import Hasql.Decoders (
   char,
   custom,
   date,
-  enum,
   float4,
   float8,
   int2,
@@ -41,7 +39,8 @@ import Hasql.Decoders (
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
 import Prelude hiding (Generic, bool)
 
-import Polysemy.Hasql.SOP.Enum (EnumTable(enumTable))
+import Polysemy.Hasql.SOP.Enum (EnumTable)
+import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 
 class ValueDecoder a where
   valueDecoder :: Value a
@@ -49,120 +48,116 @@ class ValueDecoder a where
 class (Generic a, b ~ Code a) => GenDecoder a b where
   genDecoder :: Value a
 
-enumDecoder ::
-  EnumTable a =>
-  Value a
-enumDecoder =
-  enum (`Map.lookup` enumTable)
-
 -- necessary to disambiguate the enum instances from the newtype instance
 instance (EnumTable a, Generic a, Code a ~ '[ '[] ]) => GenDecoder a '[ '[] ] where
   genDecoder =
-    enumDecoder
+    enumDecodeValue
 
 instance (EnumTable a, Generic a, Code a ~ ('[] : cs)) => GenDecoder a ('[] : cs) where
   genDecoder =
-    enumDecoder
+    enumDecodeValue
 
 instance (Coercible c a, Generic a, Code a ~ '[ '[c]], ValueDecoder c) => GenDecoder a '[ '[c]] where
   genDecoder =
     coerce <$> valueDecoder @c
 
-instance
-  {-# OVERLAPPABLE #-}
-  (Generic a, GenDecoder a b) => ValueDecoder a where
+instance {-# overlappable #-} (
+    Generic a,
+    GenDecoder a b
+  ) => ValueDecoder a where
   valueDecoder =
     genDecoder @a
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Bool where
   valueDecoder =
     bool
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Int16 where
   valueDecoder =
     int2
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Int32 where
   valueDecoder =
     int4
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Int64 where
   valueDecoder =
     int8
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Int where
   valueDecoder =
     fromIntegral <$> int8
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Float where
   valueDecoder =
     float4
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Double where
   valueDecoder =
     float8
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Scientific where
   valueDecoder =
     numeric
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Char where
   valueDecoder =
     char
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Text where
   valueDecoder =
     text
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder ByteString where
   valueDecoder =
     bytea
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Day where
   valueDecoder =
     date
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder LocalTime where
   valueDecoder =
     timestamp
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder UTCTime where
   valueDecoder =
     timestamptz
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder TimeOfDay where
   valueDecoder =
     time
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder (TimeOfDay, TimeZone) where
   valueDecoder =
     timetz
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder DiffTime where
   valueDecoder =
     interval
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder UUID where
   valueDecoder =
     uuid
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 decodePath ::
   Show e =>
@@ -176,29 +171,29 @@ decodePath parse _ =
 instance ValueDecoder (Path Abs File) where
   valueDecoder =
     custom (decodePath parseAbsFile)
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder (Path Abs Dir) where
   valueDecoder =
     custom (decodePath parseAbsDir)
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder (Path Rel File) where
   valueDecoder =
     custom (decodePath parseRelFile)
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder (Path Rel Dir) where
   valueDecoder =
     custom (decodePath parseRelDir)
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Chronos.Date where
   valueDecoder =
     Chronos.dayToDate . Chronos.Day . fromIntegral . toModifiedJulianDay <$> date
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}
 
 instance ValueDecoder Chronos.Time where
   valueDecoder =
     Chronos.Time <$> int8
-  {-# INLINE valueDecoder #-}
+  {-# inline valueDecoder #-}

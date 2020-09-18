@@ -1,2 +1,2 @@
-packages: packages/polysemy-db
-          packages/polysemy-hasql
+packages: packages/db
+          packages/hasql

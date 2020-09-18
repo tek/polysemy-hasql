@@ -8,4 +8,4 @@ deleteSql ::
   TableStructure ->
   SqlCode
 deleteSql (TableStructure (fromFragment -> SqlCode from) _) =
-  SqlCode [i|delete #{from}|]
+  SqlCode [qt|delete #{from}|]

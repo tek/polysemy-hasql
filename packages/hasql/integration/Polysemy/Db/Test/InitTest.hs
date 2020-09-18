@@ -3,7 +3,7 @@ module Polysemy.Db.Test.InitTest where
 import Control.Lens (view)
 
 import Polysemy.Db.Data.Column (Auto, Prim)
-import Polysemy.Db.Data.Columns (Column(Column), Columns(Columns))
+import Polysemy.Db.Data.TableStructure (Column(Column))
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.Table (tableName)
 import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
@@ -32,14 +32,12 @@ deriveGeneric ''InitRep
 test_initTable :: UnitTest
 test_initTable =
   integrationTest do
-    withTestTableGen @Init @InitRep $ \(view tableName -> name) -> do
+    withTestTableGen @InitRep @Init \ (view tableName -> name) -> do
       Right conn <- DbConnection.connect
-      initTable conn (TableStructure name newColumns)
-      assertJust (columns <> extra) =<< tableColumns conn name
+      initTable conn (TableStructure name extra)
+      assertJust (extra <> columns) =<< tableColumns conn name
   where
     columns =
-      Column "f1" "text" def :| []
-    newColumns =
-      Columns ((Column "f1" "text" def :| []) <> extra)
+      [Column "f1" "text" def Nothing]
     extra =
-      Column "f2" "bigint" def :| [Column "f3" "uuid" def]
+      [Column "f2" "bigint" def Nothing, Column "f3" "uuid" def Nothing]

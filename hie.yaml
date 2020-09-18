@@ -1,3 +1,13 @@
 cradle:
-  bios:
-    program: hie-bios.sh
+  cabal:
+    - path: "./packages/db/lib"
+      component: "lib:polysemy-db"
+
+    - path: "./packages/hasql/lib"
+      component: "lib:polysemy-hasql"
+
+    - path: "./packages/hasql/test"
+      component: "polysemy-hasql:test:polysemy-hasql-unit"
+
+    - path: "./packages/hasql/integration"
+      component: "polysemy-hasql:test:polysemy-hasql-integration"

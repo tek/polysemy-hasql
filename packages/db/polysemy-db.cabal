@@ -24,7 +24,6 @@ library
       Polysemy.Db.Atomic
       Polysemy.Db.Data.Column
       Polysemy.Db.Data.ColumnParams
-      Polysemy.Db.Data.Columns
       Polysemy.Db.Data.DbConfig
       Polysemy.Db.Data.DbError
       Polysemy.Db.Data.DbHost
@@ -41,6 +40,7 @@ library
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint
+      Polysemy.Db.SOP.Contravariant
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery
       Polysemy.Db.Text.Case
