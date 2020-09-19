@@ -1,7 +1,8 @@
 module Polysemy.Hasql.Table.QueryParams where
 
 import Data.Functor.Contravariant.Divisible (choose)
-import Generics.SOP (All,
+import Generics.SOP (
+  All,
   Code,
   Generic,
   I(I),
@@ -30,8 +31,7 @@ import Hasql.Encoders (Params)
 import Prelude hiding (All, Generic)
 
 import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Sum)
-import Polysemy.Hasql.Table.QueryParam (Null2, QueryParam(queryParam), allNulls, nullsSum)
-import Polysemy.Hasql.Table.ValueEncoder (ValueEncoder)
+import Polysemy.Hasql.Table.QueryParam (Null, Null2, QueryParam(queryParam), allNulls, nullsSum)
 
 class GenParams reps (ds :: [*]) where
   genParams :: NP Params ds
@@ -145,13 +145,13 @@ instance SumParams '[] '[] where
 
 instance (
   All Top ds,
-  All ValueEncoder ds,
-  Null2 (NP I ds) dss,
+  Null reps (NS (NP I) dss) ds,
+  Null2 repss (NP I ds) dss,
   SumParams repss dss,
   GenParams reps ds
   ) => SumParams (reps : repss) (ds : dss) where
   sumParams =
-    choose unconsNS (sequenceContravariantNP (genParams @reps) <> allNulls @ds @dss) (nullsSum @ds <> sumParams @repss)
+    choose unconsNS (sequenceContravariantNP (genParams @reps) <> allNulls @repss @ds @dss) (nullsSum @reps @ds @dss <> sumParams @repss)
 
 sumIndex ::
   Params (NS (NP I) dss)

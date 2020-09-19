@@ -34,7 +34,7 @@ test_initTable =
   integrationTest do
     withTestTableGen @InitRep @Init \ (view tableName -> name) -> do
       Right conn <- DbConnection.connect
-      initTable conn (TableStructure name extra)
+      initTable conn (TableStructure name (toList extra))
       assertJust (extra <> columns) =<< tableColumns conn name
   where
     columns =

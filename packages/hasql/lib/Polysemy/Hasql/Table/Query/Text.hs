@@ -22,7 +22,7 @@ commaFields =
   commaSeparated . fmap dquote . toList
 
 commaColumns ::
-  NonEmpty Column ->
+  [Column] ->
   Text
 commaColumns columns =
   commaFields (Column.columnName <$> columns)

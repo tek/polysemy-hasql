@@ -7,18 +7,18 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.Table.Query.Fragment (fromFragment)
 import Polysemy.Hasql.Table.Query.Text (commaSeparated)
 
-assembleVariant :: Text -> TableStructure -> NonEmpty Text
+assembleVariant :: Text -> TableStructure -> [Text]
 assembleVariant name (TableStructure (TableName variantName) columns) =
   column <$> columns
   where
     column (Column colName _ _ _) =
       [qt|(#{dquote name}).#{dquote variantName}.#{dquote colName}|]
 
-assembleComposite :: Text -> CompositeType -> NonEmpty Text
+assembleComposite :: Text -> CompositeType -> [Text]
 assembleComposite name (CompositeType _ _ variants) =
   pure [qt|(#{dquote name}).sum_index|] <> (variants >>= assembleVariant name)
 
-assembleColumns :: NonEmpty Column -> Text
+assembleColumns :: [Column] -> Text
 assembleColumns =
   commaSeparated . (>>= column)
   where

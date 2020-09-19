@@ -11,22 +11,26 @@ import Generics.SOP.Type.Metadata (
   FieldInfo,
   demoteFieldInfo,
   )
-import Prelude hiding (Generic, Enum)
+import Prelude hiding (Enum, Generic)
 
 import Polysemy.Db.Data.Column (Auto, Enum(Enum), Flatten, Prim, Sum)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Db.SOP.Constraint (Ctors, DataName, IsRecord, dataName, dataSlugSymbol_)
 import Polysemy.Hasql.Data.AlignColumns (AlignColumns)
-import Polysemy.Hasql.Data.ColumnType (Auto', AutoInternal, HeadRep, TailRep)
+import Polysemy.Hasql.Data.ColumnType (Auto', Auto'', AutoInternal, HeadRep, HeadRep2, TailRep, TailRep2)
 import Polysemy.Hasql.Table.ColumnParams (
   ExplicitColumnParams(explicitColumnParams),
   ImplicitColumnParams(implicitColumnParams),
   )
-import Polysemy.Hasql.Table.ColumnType (ColumnType(columnType))
+import Polysemy.Hasql.Table.ColumnType (ColumnCode, ColumnType(columnType), EnumColumn, PrimColumn, SumColumn, SumRep)
 import Polysemy.Hasql.Table.Identifier (dbIdentifier)
 import Polysemy.Hasql.Table.Orphans ()
 import Polysemy.Hasql.Table.TableName (GenTableName(genTableName))
+
+type family RepCode a where
+  RepCode Auto = Auto''
+  RepCode a = Code a
 
 columnName ::
   ∀ n t .
@@ -119,117 +123,77 @@ instance (
     genColumnAuto =
       genColumnAutoSum @n @d @(SumStyle (d1 : d2 : dss))
 
-instance (
-    Generic d,
-    Code d ~ '[ds],
-    GenColumn (Prim Auto) n d
-  ) => GenColumnAuto n d '[ds] where
-    genColumnAuto =
-      genColumn @(Prim Auto) @n @d
+-- instance (
+--     Generic d,
+--     Code d ~ '[ds],
+--     GenColumn (Prim Auto) n d
+--   ) => GenColumnAuto n d '[ds] where
+--     genColumnAuto =
+--       genColumn @(Prim Auto) @n @d
 
-instance {-# incoherent #-} (
-    Generic d,
-    Code d ~ ds,
-    GenColumn (Prim Auto) n d
-  ) => GenColumnAuto n d ds where
-    genColumnAuto =
-      genColumn @(Prim Auto) @n @d
+-- instance {-# incoherent #-} (
+--     Generic d,
+--     Code d ~ ds,
+--     GenColumn (Prim Auto) n d
+--   ) => GenColumnAuto n d ds where
+--     genColumnAuto =
+--       genColumn @(Prim Auto) @n @d
 
-class GenColumn (columnRepType :: *) (columnField :: FieldInfo) (columnType :: *) where
+class GenColumn (columnField :: FieldInfo) (columnType :: *) where
   genColumn :: Column
-
-instance {-# incoherent #-} (
-    Generic d,
-    GenColumnAuto n d (Code d)
-  ) => GenColumn AutoInternal n d where
-    genColumn =
-      genColumnAuto @n @d @(Code d)
-
-instance {-# incoherent #-} (
-    Generic d,
-    GenColumnAuto n d (Code d)
-  ) => GenColumn Auto n d where
-    genColumn =
-      genColumnAuto @n @d @(Code d)
-
-instance {-# incoherent #-} (
-    GenColumnPrim (Prim r) n d
-  ) => GenColumn (Prim r) n d where
-  genColumn =
-    genColumnPrim @(Prim r) @n @d
 
 instance (
     DataName d,
-    DemoteFieldInfo n d,
+    DemoteFieldInfo field d,
     GenCompositeType r d,
     ExplicitColumnParams (Sum r),
     ImplicitColumnParams d
-  ) => GenColumn (Sum r) n d where
+  ) => GenColumn field (SumColumn r d dss) where
   genColumn =
-    genColumnSum @r @d @n
+    genColumnSum @r @d @field
 
-instance GenColumnPrim r n Int => GenColumn r n Int where
+instance (
+    GenColumnPrim r field d
+  ) => GenColumn field (PrimColumn r d) where
   genColumn =
-    genColumnPrim @r @n @Int
+    genColumnPrim @r @field @d
 
-instance GenColumnPrim r n Float => GenColumn r n Float where
+instance (
+    GenColumnPrim r field d
+  ) => GenColumn field (EnumColumn r d dss) where
   genColumn =
-    genColumnPrim @r @n @Float
-
-instance GenColumnPrim r n Double => GenColumn r n Double where
-  genColumn =
-    genColumnPrim @r @n @Double
-
-instance GenColumnPrim r n Text => GenColumn r n Text where
-  genColumn =
-    genColumnPrim @r @n @Text
-
-instance GenColumnPrim r n UUID => GenColumn r n UUID where
-  genColumn =
-    genColumnPrim @r @n @UUID
+    genColumnPrim @r @field @d
 
 class GenColumns' columnRepTypes (columnFields :: [FieldInfo]) (columnTypes :: [*]) where
-  genColumns' :: NonEmpty Column
+  genColumns' :: [Column]
 
-instance {-# overlappable #-} (
-    GenColumn r n d
-  ) => GenColumns' '[r] '[n] '[d] where
+instance GenColumns' rep '[] '[] where
     genColumns' =
-      pure (genColumn @r @n @d)
+      mempty
 
 instance (
-    GenColumn Auto n d
-  ) => GenColumns' Auto '[n] '[d] where
+    GenColumn n (ColumnCode Auto d),
+    GenColumns' Auto ns ds
+  ) => GenColumns' Auto (n : ns) (d : ds) where
     genColumns' =
-      pure (genColumn @Auto @n @d)
-
-instance (
-    GenColumn Auto n d,
-    GenColumns' Auto (n1 : ns) (d1 : ds)
-  ) => GenColumns' Auto (n : n1 : ns) (d : d1 : ds) where
-    genColumns' =
-      pure (genColumn @Auto @n @d) <> genColumns' @Auto @(n1 : ns) @(d1 : ds)
-
-instance GenColumns rep d => GenColumns' '[Flatten rep] '[n] '[d] where
-    genColumns' =
-      genColumns @rep @d
+      pure (genColumn @n @(ColumnCode Auto d)) <> genColumns' @Auto @ns @ds
 
 instance {-# overlappable #-} (
-    GenColumn (HeadRep reps) n d,
-    GenColumns' (TailRep reps) (n1 : ns) (d1 : ds)
-  ) => GenColumns' reps (n : n1 : ns) (d : d1 : ds) where
+    GenColumn n (ColumnCode (HeadRep reps) d),
+    GenColumns' (TailRep reps) ns ds
+  ) => GenColumns' reps (n : ns) (d : ds) where
     genColumns' =
-      genColumn @(HeadRep reps) @n @d :| toList (genColumns' @(TailRep reps) @(n1 : ns) @(d1 : ds))
+      genColumn @n @(ColumnCode (HeadRep reps) d) : genColumns' @(TailRep reps) @ns @ds
 
 instance (
     GenColumns rep d,
-    GenColumns' (r1 : reps) (n1 : ns) (d1 : ds)
-  ) => GenColumns' (Flatten rep : r1 : reps) (n : n1 : ns) (d : d1 : ds) where
+    GenColumns' reps ns ds
+  ) => GenColumns' (Flatten rep : reps) (n : ns) (d : ds) where
     genColumns' =
-      genColumns @rep @d <> genColumns' @(r1 : reps) @(n1 : ns) @(d1 : ds)
+      genColumns @rep @d <> genColumns' @reps @ns @ds
 
 class GenColumns (rowRepType :: *) (rowRecordType :: *) where
-  genColumns :: NonEmpty Column
+  genColumns :: [Column]
 
 instance {-# overlappable #-} (
     IsRecord d ds name ns,
@@ -259,47 +223,28 @@ instance (
     TableStructure (TableName (dataSlugSymbol_ @n)) (genColumns' @rep @fs @ts)
 
 class GenSumCtorsColumns repTypes (columnTypes :: [[*]]) (dataCtors :: [ConstructorInfo]) where
-  genSumCtorsColumns :: NonEmpty TableStructure
+  genSumCtorsColumns :: [TableStructure]
 
-instance GenCtorType rep t c => GenSumCtorsColumns '[rep] '[t] '[c] where
+instance GenSumCtorsColumns rep '[] '[] where
   genSumCtorsColumns =
-    pure (genCtorType @rep @t @c)
-
-instance GenCtorType Auto t c => GenSumCtorsColumns Auto '[t] '[c] where
-  genSumCtorsColumns =
-    pure (genCtorType @Auto @t @c)
+    mempty
 
 instance (
-    GenCtorType r t c,
-    GenSumCtorsColumns rep ts (c1 : cs)
-  ) => GenSumCtorsColumns (r : rep) (t : ts) (c : c1 : cs) where
+    GenCtorType (HeadRep2 (r : rep)) t c,
+    GenSumCtorsColumns (TailRep2 (r : rep)) ts cs
+  ) => GenSumCtorsColumns (r : rep) (t : ts) (c : cs) where
   genSumCtorsColumns =
-    pure (genCtorType @r @t @c) <> genSumCtorsColumns @rep @ts @(c1 : cs)
-
-instance (
-    GenCtorType Auto t c,
-    GenSumCtorsColumns Auto ts (c1 : cs)
-  ) => GenSumCtorsColumns Auto (t : ts) (c : c1 : cs) where
-  genSumCtorsColumns =
-    pure (genCtorType @Auto @t @c) <> genSumCtorsColumns @Auto @ts @(c1 : cs)
+    pure (genCtorType @(HeadRep2 (r : rep)) @t @c) <> genSumCtorsColumns @(TailRep2 (r : rep)) @ts @cs
 
 class GenSumColumns (sumRepType :: *) (sumType :: *) where
-  genSumColumns :: NonEmpty TableStructure
-
-instance {-# overlappable #-} (
-    Ctors rep rCtors rTypes,
-    Ctors d ctors dTypes,
-    GenSumCtorsColumns rTypes dTypes ctors
-  ) => GenSumColumns rep d where
-    genSumColumns =
-      genSumCtorsColumns @rTypes @dTypes @ctors
+  genSumColumns :: [TableStructure]
 
 instance (
     Ctors d ctors dTypes,
-    GenSumCtorsColumns Auto dTypes ctors
-  ) => GenSumColumns Auto d where
+    GenSumCtorsColumns (RepCode rep) dTypes ctors
+  ) => GenSumColumns rep d where
     genSumColumns =
-      genSumCtorsColumns @Auto @dTypes @ctors
+      genSumCtorsColumns @(RepCode rep) @dTypes @ctors
 
 class GenCompositeType (rep :: *) (d :: *) where
   genCompositeType :: CompositeType

@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Table.QueryRows where
 
-import Generics.SOP (All,
+import Generics.SOP (
+  All,
   Code,
   Generic,
   I,
@@ -33,51 +34,60 @@ instance (
     GenRows Auto ds
   ) => GenRows Auto (d : ds) where
     genRows =
-      queryRow @d :* (genRows @Auto @ds)
+      queryRow @d :* genRows @Auto @ds
 
 instance (
     QueryRow d,
     GenRows reps ds
   ) => GenRows (Auto : reps) (d : ds) where
     genRows =
-      queryRow @d :* (genRows @reps @ds)
+      queryRow @d :* genRows @reps @ds
 
 instance (
     QueryRow d,
     GenRows reps ds
   ) => GenRows (Prim flags : reps) (d : ds) where
     genRows =
-      queryRow @d :* (genRows @reps @ds)
+      queryRow @d :* genRows @reps @ds
 
 instance (
     QueryRows rep d,
     GenRows reps ds
   ) => GenRows (Sum rep : reps) (d : ds) where
     genRows =
-      queryRows @rep @d :* (genRows @reps @ds)
+      queryRows @rep @d :* genRows @reps @ds
 
 instance (
     QueryRows reps' d,
     GenRows reps ds
   ) => GenRows (Flatten reps' : reps) (d : ds) where
     genRows =
-      queryRows @reps' @d :* (genRows @reps @ds)
+      queryRows @reps' @d :* genRows @reps @ds
 
-class Nulls2 (ds :: [*]) where
+class Nulls2 reps (ds :: [*]) where
   nulls2 :: Row ()
 
-instance Nulls2 '[] where
+instance Nulls2 rep '[] where
   nulls2 =
     unit
 
 -- doing this with 'hcpure' seems to send ghc spinning because of the necessity of the constraint being @QueryRow d@
 -- instead of @QueryRow (Maybe d)@
-instance (
-    Nulls2 ds,
+instance {-# overlappable #-} (
+    Nulls2 reps ds,
     QueryRow (Maybe d)
-  ) => Nulls2 (d : ds) where
+  ) => Nulls2 (rep : reps) (d : ds) where
   nulls2 =
-    void (queryRow @(Maybe d)) *> nulls2 @ds
+    void (queryRow @(Maybe d)) *> nulls2 @reps @ds
+
+instance (
+    Code rep ~ '[rSub],
+    Code d ~ '[dSub],
+    Nulls2 rSub dSub,
+    Nulls2 reps ds
+  ) => Nulls2 (Flatten rep : reps) (d : ds) where
+  nulls2 =
+    nulls2 @rSub @dSub *> nulls2 @reps @ds
 
 class SumRows (repss :: [[*]]) (dss :: [[*]]) where
   sumRows :: Int -> Row (NS (NP I) dss)
@@ -88,15 +98,15 @@ instance SumRows '[] '[] where
 
 instance (
     All Top ds,
+    Nulls2 reps ds,
     GenRows reps ds,
-    Nulls2 ds,
     SumRows repss dss
   ) => SumRows (reps : repss) (ds : dss) where
   sumRows = \case
     0 ->
       Z <$> hsequence (genRows @reps @ds)
     index -> do
-      nulls2 @ds
+      nulls2 @reps @ds
       S <$> sumRows @repss @dss (index - 1)
 
 genRowNP ::

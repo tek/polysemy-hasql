@@ -90,11 +90,11 @@ columnMap cols =
       (k, v)
 
 missingColumns ::
-  NonEmpty Column ->
-  NonEmpty Column ->
+  [Column] ->
+  [Column] ->
   Maybe (NonEmpty Column)
 missingColumns dbColumns dataColumns =
-  nonEmpty $ filter missingColumn (toList dataColumns)
+  nonEmpty $ filter missingColumn dataColumns
   where
     missingColumn (Column name _ _ _) =
       not (Map.member name dbMap)
@@ -108,8 +108,8 @@ sameType dbType dataType =
   dbType == dataType
 
 mismatchedColumns ::
-  NonEmpty Column ->
-  NonEmpty Column ->
+  [Column] ->
+  [Column] ->
   Maybe (NonEmpty (Text, Column))
 mismatchedColumns dbColumns dataColumns =
   nonEmpty $ catMaybes (mismatchedColumn <$> toList dataColumns)
@@ -139,7 +139,7 @@ updateTable ::
   Connection ->
   TableStructure ->
   Sem r ()
-updateTable existing connection (TableStructure name target) = do
+updateTable (toList -> existing) connection (TableStructure name target) = do
   mapError (DbError.Query . show) $ traverse_ alter missing
   traverse_ (reportMismatchedColumns name) (mismatchedColumns existing target)
   where

@@ -7,25 +7,29 @@ import Polysemy.Hasql.Data.ColumnType (AutoInternal)
 class ExplicitColumnParams r where
   explicitColumnParams :: ColumnParams
 
-instance ExplicitColumnParams (Prim Unique) where
+instance {-# overlappable #-} ExplicitColumnParams a where
+  explicitColumnParams =
+    def
+
+instance ExplicitColumnParams Unique where
   explicitColumnParams =
     def { unique = True }
 
-instance ExplicitColumnParams (Prim PrimaryKey) where
+instance ExplicitColumnParams PrimaryKey where
   explicitColumnParams =
     def { primaryKey = True }
-
-instance ExplicitColumnParams (Prim Auto) where
-  explicitColumnParams =
-    def
-
-instance ExplicitColumnParams (Sum a) where
-  explicitColumnParams =
-    def
 
 instance ExplicitColumnParams Auto where
   explicitColumnParams =
     def
+
+instance {-# overlappable #-} ExplicitColumnParams a => ExplicitColumnParams (Sum a) where
+  explicitColumnParams =
+    explicitColumnParams @a
+
+instance {-# overlappable #-} ExplicitColumnParams a => ExplicitColumnParams (Prim a) where
+  explicitColumnParams =
+    explicitColumnParams @a
 
 instance ExplicitColumnParams AutoInternal where
   explicitColumnParams =

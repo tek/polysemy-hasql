@@ -16,14 +16,14 @@ data CompositeType =
   CompositeType {
     _name :: TableName,
     _index :: Column,
-    _variants :: NonEmpty TableStructure
+    _variants :: [TableStructure]
   }
   deriving (Eq, Show)
 
 data TableStructure =
   TableStructure {
     _name :: TableName,
-    _columns :: NonEmpty Column
+    _columns :: [Column]
   }
   deriving (Eq, Show)
 

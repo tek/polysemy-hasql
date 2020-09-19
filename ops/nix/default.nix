@@ -22,7 +22,6 @@ let
     overrides = import ./overrides.nix niv;
     ghci = {
       basicArgs = [
-        "-Wall"
         "-Werror"
         "-fmax-relevant-binds=1"
         "-fmax-valid-hole-fits=1"

@@ -1,12 +1,12 @@
 module Polysemy.Hasql.Table.Query.Fragment where
 
-import qualified Polysemy.Hasql.ColumnParams as ColumnParams
 import Polysemy.Db.Data.ColumnParams (ColumnParams(ColumnParams))
-import Polysemy.Db.Data.TableStructure (Column(Column))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Db.Data.TableName (TableName(TableName))
-import Polysemy.Hasql.Table.Query.Text (commaFields)
+import Polysemy.Db.Data.TableStructure (Column(Column))
 import Polysemy.Db.Text.Quote (dquote)
+import qualified Polysemy.Hasql.ColumnParams as ColumnParams
+import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
+import Polysemy.Hasql.Table.Query.Text (commaFields)
 
 uniqueOrPrimary :: ColumnParams -> Bool
 uniqueOrPrimary (ColumnParams u _ p) =
@@ -40,7 +40,7 @@ addFragment (Column (dquote -> name) type' (ColumnParams.format -> params) _) =
   SqlCode [qt|add #{name} #{type'}#{params}|]
 
 conflictFragment ::
-  NonEmpty Column ->
+  [Column] ->
   Text ->
   SqlCode
 conflictFragment columns setters =
@@ -51,4 +51,4 @@ conflictFragment columns setters =
     format (Just (commaFields -> cols)) =
       [qt|on conflict (#{cols}) do update #{setters}|]
     uniques =
-      nonEmpty [n | UniqueName n <- toList columns]
+      nonEmpty [n | UniqueName n <- columns]

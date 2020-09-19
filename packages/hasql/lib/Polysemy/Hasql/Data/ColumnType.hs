@@ -1,7 +1,6 @@
 module Polysemy.Hasql.Data.ColumnType where
 
-import Type.Errors (ErrorMessage(Text, ShowType), TypeError)
-import Type.Errors.Pretty (type (<>))
+import Type.Errors (ErrorMessage(Text), TypeError)
 
 import Polysemy.Db.Data.Column (Auto)
 
@@ -10,12 +9,22 @@ data AutoInternal =
   deriving (Eq, Show)
 
 type Auto' = '[AutoInternal]
+type Auto'' = '[ '[AutoInternal]]
 
 type family HeadRep rep where
   HeadRep Auto' = Auto
-  HeadRep (r : r1 : reps) = r
+  HeadRep (r : reps) = r
 
 type family TailRep rep where
   TailRep Auto' = Auto'
-  TailRep (r : r1 : reps) = r1 : reps
-  TailRep '[r] = TypeError ('Text "too few types in rep for GenColumns after '" <> 'ShowType r <> "'")
+  TailRep (r : reps) = reps
+  TailRep '[] = TypeError ('Text "too few types in rep for GenColumns")
+
+type family HeadRep2 rep where
+  HeadRep2 Auto'' = Auto'
+  HeadRep2 (r : reps) = r
+
+type family TailRep2 rep where
+  TailRep2 Auto'' = Auto''
+  TailRep2 (r : reps) = reps
+  TailRep2 '[] = TypeError ('Text "too few types in rep for GenColumns")

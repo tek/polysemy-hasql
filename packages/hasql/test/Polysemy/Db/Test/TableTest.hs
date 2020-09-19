@@ -54,11 +54,11 @@ targetMissing :: [Column]
 targetMissing =
   [Column "f4" "text" def Nothing]
 
-updateColumnsExisting :: NonEmpty Column
+updateColumnsExisting :: [Column]
 updateColumnsExisting =
   [Column "f1" "bigint" def Nothing, Column "f2" "uuid" def Nothing, Column "f3" "text" def Nothing]
 
-updateColumnsTarget :: NonEmpty Column
+updateColumnsTarget :: [Column]
 updateColumnsTarget =
   [Column "f1" "bigint" def Nothing, Column "f2" "text" def Nothing, Column "f4" "text" def Nothing]
 

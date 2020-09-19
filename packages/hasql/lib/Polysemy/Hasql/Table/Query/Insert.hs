@@ -15,7 +15,7 @@ dollar :: Int -> Text
 dollar i =
   [qt|$#{i}|]
 
-compositeConstructor :: Int -> NonEmpty Column -> (Int, Text)
+compositeConstructor :: Int -> [Column] -> (Int, Text)
 compositeConstructor index columns =
   (newIndex, row cols)
   where
@@ -24,16 +24,16 @@ compositeConstructor index columns =
     newIndex =
       index + length columns
 
-compositeColumns :: Int -> NonEmpty TableStructure -> (Int, Text)
+compositeColumns :: Int -> [TableStructure] -> (Int, Text)
 compositeColumns index structs =
-  (newIndex, row (commaSeparated (sumIndex <| conss)))
+  (newIndex, row (commaSeparated (sumIndex : conss)))
   where
     sumIndex =
       dollar index
     (newIndex, conss) =
       mapAccumL compositeConstructor (index + 1) (TableStructure._columns <$> structs)
 
-compositeColumnCount :: NonEmpty TableStructure -> Int
+compositeColumnCount :: [TableStructure] -> Int
 compositeColumnCount =
   sum . fmap (length . TableStructure._columns)
 
