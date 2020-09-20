@@ -26,8 +26,6 @@ dependencies:
   - polysemy-plugin
   - scientific
   - time
-  - type-errors
-  - type-errors-pretty
   - uuid
   - vector
   - name: polysemy-db

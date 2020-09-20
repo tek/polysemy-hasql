@@ -1,7 +1,6 @@
 module Polysemy.Db.Test.SumFieldTest where
 
 import Generics.SOP (Code, I, NP, NS)
-import Generics.SOP.Type.Metadata (ConstructorInfo(Record), FieldInfo(FieldInfo))
 import Hasql.Decoders (Row)
 
 import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Sum)
@@ -9,20 +8,19 @@ import Polysemy.Db.Data.ColumnParams (ColumnParams(unique))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
-import Polysemy.Db.Data.TableStructure (Column, CompositeType, TableStructure)
+import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Db.Test.Run (integrationTest)
-import Polysemy.Hasql.Data.ColumnType (Auto'')
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Table.ColumnParams (ExplicitColumnParams(..))
-import Polysemy.Hasql.Table.Columns (genColumns', genCompositeType, genCtorType, genSumCtorsColumns)
-import Polysemy.Hasql.Table.QueryRows (GenQueryRows(genQueryRows), GenRows(genRows), QueryRows(queryRows), nulls2, sumRows)
+import Polysemy.Hasql.Table.QueryRows (genQueryRows, genRows, nulls2, queryRows, sumRows)
 import Polysemy.Hasql.Table.QueryTable (genQueryTable)
+import Polysemy.Hasql.Table.Representation (Explicit, ProdCode, ProdColumn, ReifySumType)
 import Polysemy.Hasql.Table.Table (genTable)
-import Polysemy.Hasql.Table.TableStructure (genTableStructure)
+import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
@@ -83,29 +81,13 @@ data SumFieldRep =
 
 deriveGeneric ''SumFieldRep
 
-ctorColumns :: [Column]
-ctorColumns =
-  genColumns' @Auto @['FieldInfo "lInt", 'FieldInfo "lSinister"] @[Int, Sinister]
-
-ctorType :: TableStructure
-ctorType =
-  genCtorType @Auto @[Int, Sinister] @('Record "Laevus" ['FieldInfo "lInt", 'FieldInfo "lSinster"])
-
-sumCtorColumns :: [TableStructure]
-sumCtorColumns =
-  genSumCtorsColumns @Auto'' @[[Int, Sinister], [Text, Int, Double]] @['Record "Laevus" ['FieldInfo "lInt", 'FieldInfo "lSinster"], 'Record "Dexter" ['FieldInfo "rText", 'FieldInfo "rInt", 'FieldInfo "rDouble"]]
-
-compo :: CompositeType
-compo =
-  genCompositeType @Auto @Summy
-
 struct :: TableStructure
 struct =
-  genTableStructure @Auto @SumField
+  tableStructure @SumField
 
 row_queryRows_Sinister :: Row Sinister
 row_queryRows_Sinister =
-  queryRows @SinisterRep @Sinister
+  queryRows @SinisterRep
 
 row_genRows_Laevus :: NP Row [Int, Sinister]
 row_genRows_Laevus =
@@ -113,23 +95,22 @@ row_genRows_Laevus =
 
 nulls2_Flatten_Sinister :: Row ()
 nulls2_Flatten_Sinister =
-  nulls2 @'[Flatten SinisterRep] @'[Sinister]
+  nulls2 @'[Flatten (ProdColumn (ProdCode (Code SinisterRep)))] @'[Sinister]
 
 row_sumRows_Sinister :: Row (NS (NP I) '[ '[Sinister]])
 row_sumRows_Sinister =
-  sumRows @'[ '[Flatten SinisterRep]] @'[ '[Sinister]] 0
+  sumRows @'[ '[Flatten (ProdColumn (ProdCode (Code SinisterRep)))]] @'[ '[Sinister]] 0
 
 row_sumRows_Summy :: Row (NS (NP I) '[ '[Int, Sinister], '[Text, Int, Double]])
 row_sumRows_Summy =
-  sumRows @'[ '[Prim Auto, Flatten SinisterRep], '[Prim Auto, Prim Auto, Prim Auto]] @'[ '[Int, Sinister], '[Text, Int, Double]] 0
+  sumRows @'[
+    '[Prim Auto, Flatten (ProdColumn (ProdCode (Code SinisterRep)))],
+    '[Prim Auto, Prim Auto, Prim Auto]] @'[ '[Int, Sinister], '[Text, Int, Double]
+  ] 0
 
 row_genQuery_Summy :: Row Summy
 row_genQuery_Summy =
-  genQueryRows @(Code SummyRep) @Summy @(Code Summy)
-
-row_query_Summy :: Row Summy
-row_query_Summy =
-  queryRows @SummyRep
+  genQueryRows @(ReifySumType (Explicit SummyRep Summy) Summy) @Summy @(Code Summy)
 
 row_genRows_SumField :: NP Row '[UUID, Summy]
 row_genRows_SumField =

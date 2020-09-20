@@ -41,6 +41,8 @@ library
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint
       Polysemy.Db.SOP.Contravariant
+      Polysemy.Db.SOP.Error
+      Polysemy.Db.SOP.FieldNames
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery
       Polysemy.Db.Text.Case
@@ -70,6 +72,8 @@ library
     , string-interpolate
     , template-haskell
     , text
+    , type-errors
+    , type-errors-pretty
     , unordered-containers
     , uuid
   mixins:

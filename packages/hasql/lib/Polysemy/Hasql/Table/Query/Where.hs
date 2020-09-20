@@ -3,22 +3,22 @@ module Polysemy.Hasql.Table.Query.Where where
 import qualified Data.Text as Text
 import Generics.SOP.Type.Metadata (FieldInfo)
 
+import Polysemy.Db.SOP.Constraint (RecordFields)
 import qualified Polysemy.Hasql.Data.QueryWhere as Data (QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Db.SOP.Constraint (RecordFields)
 import Polysemy.Hasql.Table.Columns (ColumnNames(columnNames))
 
 concatWhereFields ::
-  NonEmpty Text ->
+  [Text] ->
   Text
 concatWhereFields =
-  Text.intercalate " and " . zipWith filterField [(1 :: Int)..] . toList
+  Text.intercalate " and " . zipWith filterField [(1 :: Int)..]
   where
     filterField index n =
       [qt|"#{n}" = $#{index}|]
 
 where' ::
-  NonEmpty Text ->
+  [Text] ->
   Data.QueryWhere a query
 where' fields =
   Data.QueryWhere (SqlCode (concatWhereFields fields))

@@ -18,7 +18,7 @@ type family HeadRep rep where
 type family TailRep rep where
   TailRep Auto' = Auto'
   TailRep (r : reps) = reps
-  TailRep '[] = TypeError ('Text "too few types in rep for GenColumns")
+  TailRep '[] = TypeError ('Text "too few types in rep for Columns")
 
 type family HeadRep2 rep where
   HeadRep2 Auto'' = Auto'
@@ -27,4 +27,4 @@ type family HeadRep2 rep where
 type family TailRep2 rep where
   TailRep2 Auto'' = Auto''
   TailRep2 (r : reps) = reps
-  TailRep2 '[] = TypeError ('Text "too few types in rep for GenColumns")
+  TailRep2 '[] = TypeError ('Text "too few types in rep for Columns")

@@ -22,7 +22,6 @@ extra-source-files:
 library
   exposed-modules:
       Polysemy.Hasql.ColumnParams
-      Polysemy.Hasql.Data.AlignColumns
       Polysemy.Hasql.Data.ColumnType
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
@@ -158,6 +157,7 @@ test-suite polysemy-hasql-unit
   other-modules:
       Polysemy.Db.Test.EnumTest
       Polysemy.Db.Test.Q1
+      Polysemy.Db.Test.RepTest
       Polysemy.Db.Test.StatementTest
       Polysemy.Db.Test.SumTest
       Polysemy.Db.Test.TableTest

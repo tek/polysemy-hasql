@@ -14,6 +14,7 @@ module Polysemy.Db.Prelude (
   module Data.UUID,
   module Debug.Trace,
   module GHC.Err,
+  module GHC.TypeLits,
   module Generics.SOP.TH,
   module Polysemy,
   module Polysemy.AtomicState,
@@ -42,6 +43,7 @@ import Data.UUID (UUID)
 import Debug.Trace (trace, traceShow)
 import GHC.Err (undefined)
 import GHC.IO.Unsafe (unsafePerformIO)
+import GHC.TypeLits (Symbol)
 import Generics.SOP.TH (deriveGeneric)
 import Language.Haskell.TH.Quote (QuasiQuoter)
 import qualified Language.Haskell.TH.Syntax as TH

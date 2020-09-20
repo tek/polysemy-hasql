@@ -1,18 +1,17 @@
 module Polysemy.Db.Test.StatementTest where
 
-import GHC.TypeLits (Symbol)
 import qualified Generics.SOP as SOP
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
 import Polysemy.Db.Data.Column (Auto, Prim)
-import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
+import Polysemy.Db.Test.Q1 (Q1)
+import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.QueryFields (QueryFields)
 import Polysemy.Hasql.Table.QueryTable (genQueryTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure)
-import Polysemy.Db.Test.Q1 (Q1)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data WithMaybe =

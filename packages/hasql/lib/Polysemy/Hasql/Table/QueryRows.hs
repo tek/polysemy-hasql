@@ -15,8 +15,9 @@ import Generics.SOP (
 import Hasql.Decoders (Row)
 import Prelude hiding (All, Generic)
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Sum)
+import Polysemy.Db.Data.Column (Flatten, Prim, Sum)
 import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
+import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, ReifySumType)
 
 class GenRows rep (ds :: [*]) where
   genRows :: NP Row ds
@@ -25,23 +26,23 @@ instance GenRows '[] '[] where
   genRows =
     Nil
 
-instance GenRows Auto '[] where
-  genRows =
-    Nil
+-- instance GenRows Auto '[] where
+--   genRows =
+--     Nil
 
-instance (
-    QueryRow d,
-    GenRows Auto ds
-  ) => GenRows Auto (d : ds) where
-    genRows =
-      queryRow @d :* genRows @Auto @ds
+-- instance (
+--     QueryRow d,
+--     GenRows Auto ds
+--   ) => GenRows Auto (d : ds) where
+--     genRows =
+--       queryRow @d :* genRows @Auto @ds
 
-instance (
-    QueryRow d,
-    GenRows reps ds
-  ) => GenRows (Auto : reps) (d : ds) where
-    genRows =
-      queryRow @d :* genRows @reps @ds
+-- instance (
+--     QueryRow d,
+--     GenRows reps ds
+--   ) => GenRows (Auto : reps) (d : ds) where
+--     genRows =
+--       queryRow @d :* genRows @reps @ds
 
 instance (
     QueryRow d,
@@ -51,11 +52,11 @@ instance (
       queryRow @d :* genRows @reps @ds
 
 instance (
-    QueryRows rep d,
+    GenQueryRows (ReifySumType rep d) d (Code d),
     GenRows reps ds
   ) => GenRows (Sum rep : reps) (d : ds) where
     genRows =
-      queryRows @rep @d :* genRows @reps @ds
+      genQueryRows @(ReifySumType rep d) @d @(Code d) :* genRows @reps @ds
 
 instance (
     QueryRows reps' d,
@@ -81,11 +82,17 @@ instance {-# overlappable #-} (
     void (queryRow @(Maybe d)) *> nulls2 @reps @ds
 
 instance (
-    Code rep ~ '[rSub],
+    Nulls2 reps ds,
+    QueryRow (Maybe d)
+  ) => Nulls2 (ProdColumn (rep : reps)) (d : ds) where
+  nulls2 =
+    void (queryRow @(Maybe d)) *> nulls2 @reps @ds
+
+instance (
     Code d ~ '[dSub],
     Nulls2 rSub dSub,
     Nulls2 reps ds
-  ) => Nulls2 (Flatten rep : reps) (d : ds) where
+  ) => Nulls2 (Flatten rSub : reps) (d : ds) where
   nulls2 =
     nulls2 @rSub @dSub *> nulls2 @reps @ds
 
@@ -127,7 +134,7 @@ genRowNS ::
 genRowNS =
   to . SOP <$> (sumRows @repss =<< queryRow)
 
-class GenQueryRows repss (d :: *) (dss :: [[*]]) where
+class GenQueryRows (repss :: [[*]]) (d :: *) (dss :: [[*]]) where
   genQueryRows :: Row d
 
 instance (
@@ -149,17 +156,8 @@ instance (
 class QueryRows rep d where
   queryRows :: Row d
 
-instance {-# overlappable #-} (
-    Generic d,
-    GenQueryRows (Code rep) d (Code d)
+instance (
+    GenQueryRows '[ReifyRepTable rep d] d (Code d)
   ) => QueryRows rep d where
     queryRows =
-      genQueryRows @(Code rep) @d @(Code d)
-
-instance (
-    Generic d,
-    Code d ~ '[ds],
-    GenRows Auto ds
-  ) => QueryRows Auto d where
-    queryRows =
-      genRowNP @Auto @ds
+      genQueryRows @'[ReifyRepTable rep d] @d @(Code d)
