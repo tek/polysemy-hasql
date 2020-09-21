@@ -1,10 +1,11 @@
-{-# LANGUAGE UndecidableSuperClasses #-}
-
 module Polysemy.Hasql.Table.ColumnType where
 
 import qualified Chronos as Chronos
 import Generics.SOP.GGP (GCode)
 import Path (Path)
+import Prelude hiding (Enum)
+
+import Polysemy.Db.Data.Column (Enum, Flatten, Prim, Sum)
 
 class ColumnType a where
   columnType :: Text
@@ -67,3 +68,22 @@ instance ColumnType a => ColumnType (NonEmpty a) where
 instance ColumnType (Path b t) where
   columnType =
     "text"
+
+data Done =
+  Done
+  deriving (Show)
+
+data Single (tail :: [*]) =
+  Single
+  deriving (Show)
+
+data Multi (head :: *) (tail :: [*]) =
+  Multi
+  deriving (Show)
+
+type family UnconsRep (reps :: [*]) :: *
+type instance UnconsRep '[] = Done
+type instance UnconsRep (Sum r : reps) = Multi r reps
+type instance UnconsRep (Flatten r : reps) = Multi r reps
+type instance UnconsRep (Prim r : reps) = Single reps
+type instance UnconsRep (Enum r : reps) = Single reps

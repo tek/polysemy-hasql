@@ -56,13 +56,6 @@ instance NullVariants rep '[] where
 -- doing this with 'hcpure' seems to send ghc spinning because of the necessity of the constraint being @QueryRow d@
 -- instead of @QueryRow (Maybe d)@
 
--- instance {-# overlappable #-} (
---     NullVariants reps ds,
---     QueryRow (Maybe d)
---   ) => NullVariants (rep : reps) (d : ds) where
---   readNulls2 =
---     void (queryRow @(Maybe d)) *> readNulls2 @reps @ds
-
 instance (
     NullVariants (ProdColumn reps) ds,
     QueryRow (Maybe d)

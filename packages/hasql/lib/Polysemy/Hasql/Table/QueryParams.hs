@@ -23,30 +23,11 @@ import Generics.SOP.GGP (GCode, gfrom)
 import Hasql.Encoders (Params)
 import Prelude hiding (All, Enum)
 
-import Polysemy.Db.Data.Column (Enum, Flatten, Prim, Sum)
 import Polysemy.Db.SOP.Constraint (ConstructSOP)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
+import Polysemy.Hasql.Table.ColumnType (Done, Multi, Single, UnconsRep)
 import Polysemy.Hasql.Table.QueryParam (NullVariant, NullVariants, QueryParam(queryParam), writeNulls, writeNulls2)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
-
-data Done =
-  Done
-  deriving (Show)
-
-data Single (tail :: [*]) =
-  Single
-  deriving (Show)
-
-data Multi (head :: *) (tail :: [*]) =
-  Multi
-  deriving (Show)
-
-type family UnconsRep (reps :: [*]) :: *
-type instance UnconsRep '[] = Done
-type instance UnconsRep (Sum r : reps) = Multi r reps
-type instance UnconsRep (Flatten r : reps) = Multi r reps
-type instance UnconsRep (Prim r : reps) = Single reps
-type instance UnconsRep (Enum r : reps) = Single reps
 
 class GenParams (reps :: *) (ds :: [*]) where
   genParams :: NP Params ds
