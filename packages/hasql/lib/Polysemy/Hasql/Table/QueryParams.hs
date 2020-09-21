@@ -29,30 +29,30 @@ import Polysemy.Hasql.Table.ColumnType (Done, Multi, Single, UnconsRep)
 import Polysemy.Hasql.Table.QueryParam (NullVariant, NullVariants, QueryParam(queryParam), writeNulls, writeNulls2)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 
-class GenParams (reps :: *) (ds :: [*]) where
+class ProductParams (reps :: *) (ds :: [*]) where
   genParams :: NP Params ds
 
-instance GenParams Done '[] where
+instance ProductParams Done '[] where
   genParams =
     Nil
 
 instance (
     QueryParam d,
-    GenParams (UnconsRep reps) ds
-  ) => GenParams (Single reps) (d : ds) where
+    ProductParams (UnconsRep reps) ds
+  ) => ProductParams (Single reps) (d : ds) where
     genParams =
       queryParam @d :* genParams @(UnconsRep reps) @ds
 
 instance (
-    GenQueryParams head d (GCode d),
-    GenParams (UnconsRep tail) ds
-  ) => GenParams (Multi head tail) (d : ds) where
+    ColumnParams head d (GCode d),
+    ProductParams (UnconsRep tail) ds
+  ) => ProductParams (Multi head tail) (d : ds) where
     genParams =
       genQueryParams @head @d @(GCode d) :* genParams @(UnconsRep tail) @ds
 
 queryParamsNP ::
   ∀ (reps :: *) ds d .
-  GenParams reps ds =>
+  ProductParams reps ds =>
   ConstructSOP d '[ds] =>
   Params d
 queryParamsNP =
@@ -90,7 +90,7 @@ instance (
     NullVariant reps ds,
     NullVariants repss dss,
     SumParams repss dss,
-    GenParams (UnconsRep reps) ds
+    ProductParams (UnconsRep reps) ds
   ) => SumParams (ProdColumn reps : repss) (ds : dss) where
   sumParams =
     choose unconsNS inhabited uninhabited
@@ -113,26 +113,26 @@ queryParamsNS ::
 queryParamsNS =
   contramap (unSOP . gfrom) (sumIndex <> sumParams @repss)
 
-class GenQueryParams (rep :: *) (d :: *) (dss :: [[*]]) where
+class ColumnParams (rep :: *) (d :: *) (dss :: [[*]]) where
   genQueryParams :: Params d
 
 instance (
     ConstructSOP d '[ds],
-    GenParams (UnconsRep reps) ds
-  ) => GenQueryParams (ProdColumn reps) d '[ds] where
+    ProductParams (UnconsRep reps) ds
+  ) => ColumnParams (ProdColumn reps) d '[ds] where
   genQueryParams =
     queryParamsNP @(UnconsRep reps) @ds
 
 instance (
     ConstructSOP d dss,
     SumParams reps dss
-  ) => GenQueryParams (SumColumn reps) d dss where
+  ) => ColumnParams (SumColumn reps) d dss where
     genQueryParams =
       queryParamsNS @d @reps @dss
 
 class QueryParams (rep :: *) (d :: *) where
   queryParams :: Params d
 
-instance GenQueryParams (ReifyRepTable rep d) d (GCode d) => QueryParams rep d where
+instance ColumnParams (ReifyRepTable rep d) d (GCode d) => QueryParams rep d where
     queryParams =
       genQueryParams @(ReifyRepTable rep d) @d @(GCode d)

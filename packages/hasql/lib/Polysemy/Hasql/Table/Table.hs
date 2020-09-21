@@ -13,8 +13,7 @@ instance (
     QueryRows rep d,
     QueryParams rep d,
     GenTableStructure rep d
-  ) =>
-  GenTable rep d where
+  ) => GenTable rep d where
     genTable =
       Table (genTableStructure @rep @d) (queryRows @rep @d) (queryParams @rep @d)
 
