@@ -17,6 +17,7 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Table.ColumnParams (ExplicitColumnParams(..))
+import Polysemy.Hasql.Table.ColumnType (UnconsRep)
 import Polysemy.Hasql.Table.QueryRows (genQueryRows, genRows, queryRows, readNulls2, sumRows)
 import Polysemy.Hasql.Table.QueryTable (genQueryTable)
 import Polysemy.Hasql.Table.Representation (ExplicitSum, NestedSum, ProdCode, ProdColumn, ReifySumType, SumColumn)
@@ -94,7 +95,7 @@ type SinisterRepFlatten =
 
 row_genRows_Laevus :: NP Row [Int, Sinister]
 row_genRows_Laevus =
-  genRows @[Prim Auto, SinisterRepFlatten] @[Int, Sinister]
+  genRows @(UnconsRep [Prim Auto, SinisterRepFlatten]) @[Int, Sinister]
 
 nulls2_Flatten_Sinister :: Row ()
 nulls2_Flatten_Sinister =
@@ -121,11 +122,7 @@ row_genQuery_Summy =
 
 row_genRows_SumField :: NP Row '[UUID, Summy]
 row_genRows_SumField =
-  genRows @'[Prim Auto, Sum SummyRep] @'[UUID, Summy]
-
-row_genQueryRows_SumField :: Row SumField
-row_genQueryRows_SumField =
-  genQueryRows @(ProdColumn (ProdCode (GCode SumFieldRep))) @SumField @(GCode SumField)
+  genRows @(UnconsRep [Prim Auto, Sum (SumColumn (NestedSum (ExplicitSum Summy SummyRep)))]) @'[UUID, Summy]
 
 row_query :: Row SumField
 row_query =

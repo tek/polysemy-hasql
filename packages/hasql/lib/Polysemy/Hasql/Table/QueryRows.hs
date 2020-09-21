@@ -13,38 +13,46 @@ import Generics.SOP.GGP (GCode, gto)
 import Hasql.Decoders (Row)
 import Prelude hiding (All)
 
-import Polysemy.Db.Data.Column (Flatten, Prim, Sum)
+import Polysemy.Db.Data.Column (Flatten)
 import Polysemy.Db.SOP.Constraint (ProductCoded, ReifySOP)
+import Polysemy.Hasql.Table.ColumnType (Done, Multi, Single, UnconsRep)
 import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
-import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, ReifySumType, SumColumn)
+import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 
-class GenRows (rep :: [*]) (ds :: [*]) where
+class GenRows (rep :: *) (ds :: [*]) where
   genRows :: NP Row ds
 
-instance GenRows '[] '[] where
+instance GenRows Done '[] where
   genRows =
     Nil
 
 instance (
     QueryRow d,
-    GenRows reps ds
-  ) => GenRows (Prim flags : reps) (d : ds) where
+    GenRows (UnconsRep reps) ds
+  ) => GenRows (Single reps) (d : ds) where
     genRows =
-      queryRow @d :* genRows @reps @ds
+      queryRow @d :* genRows @(UnconsRep reps) @ds
 
 instance (
-    GenQueryRows (ReifySumType rep d) d (GCode d),
-    GenRows reps ds
-  ) => GenRows (Sum rep : reps) (d : ds) where
+    GenQueryRows head d (GCode d),
+    GenRows (UnconsRep tail) ds
+  ) => GenRows (Multi head tail) (d : ds) where
     genRows =
-      genQueryRows @(ReifySumType rep d) @d @(GCode d) :* genRows @reps @ds
+      genQueryRows @head @d @(GCode d) :* genRows @(UnconsRep tail) @ds
 
-instance (
-    GenQueryRows rep d (GCode d),
-    GenRows reps ds
-  ) => GenRows (Flatten rep : reps) (d : ds) where
-    genRows =
-      genQueryRows @rep @d @(GCode d) :* genRows @reps @ds
+-- instance (
+--     GenQueryRows (ReifySumType rep d) d (GCode d),
+--     GenRows (UnconsRep reps) ds
+--   ) => GenRows (Sum rep : reps) (d : ds) where
+--     genRows =
+--       genQueryRows @(ReifySumType rep d) @d @(GCode d) :* genRows @reps @ds
+
+-- instance (
+--     GenQueryRows rep d (GCode d),
+--     GenRows (UnconsRep reps) ds
+--   ) => GenRows (Flatten rep : reps) (d : ds) where
+--     genRows =
+--       genQueryRows @rep @d @(GCode d) :* genRows @reps @ds
 
 class NullVariants reps (ds :: [*]) where
   readNulls2 :: Row ()
@@ -88,12 +96,12 @@ instance SumRows '[] '[] where
 instance (
     All Top ds,
     NullVariants (ProdColumn reps) ds,
-    GenRows reps ds,
+    GenRows (UnconsRep reps) ds,
     SumRows repss dss
   ) => SumRows (ProdColumn reps : repss) (ds : dss) where
   sumRows = \case
     0 ->
-      Z <$> hsequence (genRows @reps @ds)
+      Z <$> hsequence (genRows @(UnconsRep reps) @ds)
     index -> do
       readNulls2 @(ProdColumn reps) @ds
       S <$> sumRows @repss @dss (index - 1)
@@ -103,10 +111,10 @@ class GenQueryRows (repss :: *) (d :: *) (dss :: [[*]]) where
 
 instance (
     ReifySOP d '[ds],
-    GenRows reps ds
+    GenRows (UnconsRep reps) ds
   ) => GenQueryRows (ProdColumn reps) d '[ds] where
     genQueryRows =
-      gto . SOP . Z <$> hsequence (genRows @reps @ds)
+      gto . SOP . Z <$> hsequence (genRows @(UnconsRep reps) @ds)
 
 instance (
     ReifySOP d dss,
@@ -115,6 +123,7 @@ instance (
     genQueryRows =
       gto . SOP <$> (sumRows @repss =<< queryRow)
 
+-- TODO replace with function
 class QueryRows rep d where
   queryRows :: Row d
 
