@@ -22,7 +22,6 @@ extra-source-files:
 library
   exposed-modules:
       Polysemy.Hasql.ColumnParams
-      Polysemy.Hasql.Data.ColumnType
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
       Polysemy.Hasql.Data.QueryTable
