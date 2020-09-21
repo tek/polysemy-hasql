@@ -1,10 +1,9 @@
 module Polysemy.Db.Test.TableTest where
 
-import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import Polysemy.Hasql.Table (missingColumns)
 import Polysemy.Hasql.Table.Identifier (dbIdentifier)
-import Polysemy.Hasql.Table.TableStructure (genTableStructure)
+import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
@@ -13,13 +12,11 @@ data Rec =
     field1 :: Text,
     field2 :: Int
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''Rec
+  deriving (Eq, Show, Generic)
 
 recTable :: TableStructure
 recTable =
-  genTableStructure @Auto @Rec
+  tableStructure @Rec
 
 test_recColumns :: UnitTest
 test_recColumns =
@@ -31,13 +28,11 @@ test_recColumns =
 
 data UuidCol =
   UuidCol { uuid :: UUID }
-  deriving (Eq, Show)
-
-deriveGeneric ''UuidCol
+  deriving (Eq, Show, Generic)
 
 uuidColTable :: TableStructure
 uuidColTable =
-  genTableStructure @Auto @UuidCol
+  tableStructure @UuidCol
 
 test_uuidColTable :: UnitTest
 test_uuidColTable =

@@ -3,6 +3,7 @@ module Polysemy.Hasql.Table.Table where
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Table.QueryParams (QueryParams(queryParams))
 import Polysemy.Hasql.Table.QueryRows (QueryRows(queryRows))
+import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.TableStructure (GenTableStructure(genTableStructure))
 
 class GenTable rep d where
@@ -16,3 +17,10 @@ instance (
   GenTable rep d where
     genTable =
       Table (genTableStructure @rep @d) (queryRows @rep @d) (queryParams @rep @d)
+
+table ::
+  ∀ (d :: *) .
+  GenTable (Rep d) d =>
+  Table d
+table =
+  genTable @(Rep d)

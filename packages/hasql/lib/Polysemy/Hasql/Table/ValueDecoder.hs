@@ -1,5 +1,3 @@
-{-# LANGUAGE UndecidableSuperClasses #-}
-
 module Polysemy.Hasql.Table.ValueDecoder where
 
 import qualified Chronos as Chronos
@@ -13,8 +11,7 @@ import Data.Time (
   UTCTime,
   toModifiedJulianDay,
   )
-import Generics.SOP (Generic)
-import Generics.SOP.Universe (Code)
+import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (
   Value,
   bool,
@@ -37,7 +34,7 @@ import Hasql.Decoders (
   uuid,
   )
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
-import Prelude hiding (Generic, bool)
+import Prelude hiding (bool)
 
 import Polysemy.Hasql.SOP.Enum (EnumTable)
 import Polysemy.Hasql.Table.Enum (enumDecodeValue)
@@ -45,19 +42,19 @@ import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 class ValueDecoder a where
   valueDecoder :: Value a
 
-class (Generic a, b ~ Code a) => GenDecoder a b where
+class (Generic a, b ~ GCode a) => GenDecoder a b where
   genDecoder :: Value a
 
 -- necessary to disambiguate the enum instances from the newtype instance
-instance (EnumTable a, Generic a, Code a ~ '[ '[] ]) => GenDecoder a '[ '[] ] where
+instance (EnumTable a, Generic a, GCode a ~ '[ '[] ]) => GenDecoder a '[ '[] ] where
   genDecoder =
     enumDecodeValue
 
-instance (EnumTable a, Generic a, Code a ~ ('[] : cs)) => GenDecoder a ('[] : cs) where
+instance (EnumTable a, Generic a, GCode a ~ ('[] : cs)) => GenDecoder a ('[] : cs) where
   genDecoder =
     enumDecodeValue
 
-instance (Coercible c a, Generic a, Code a ~ '[ '[c]], ValueDecoder c) => GenDecoder a '[ '[c]] where
+instance (Coercible c a, Generic a, GCode a ~ '[ '[c]], ValueDecoder c) => GenDecoder a '[ '[c]] where
   genDecoder =
     coerce <$> valueDecoder @c
 

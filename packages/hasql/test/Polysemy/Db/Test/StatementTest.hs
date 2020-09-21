@@ -50,9 +50,7 @@ data Rec =
     fieldTwo :: NT,
     fieldThree :: Maybe Double
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''Rec
+  deriving (Eq, Show, Generic)
 
 data RecRep =
   RecRep {
@@ -60,9 +58,7 @@ data RecRep =
     fieldTwo :: Prim Auto,
     fieldThree :: Prim Auto
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''RecRep
+  deriving (Eq, Show, Generic)
 
 test_selectStatement :: UnitTest
 test_selectStatement =

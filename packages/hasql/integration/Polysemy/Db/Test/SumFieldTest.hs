@@ -1,6 +1,7 @@
 module Polysemy.Db.Test.SumFieldTest where
 
-import Generics.SOP (Code, I, NP, NS)
+import Generics.SOP (I, NP, NS)
+import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (Row)
 
 import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Sum)
@@ -16,30 +17,30 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Table.ColumnParams (ExplicitColumnParams(..))
-import Polysemy.Hasql.Table.QueryRows (genQueryRows, genRows, nulls2, queryRows, sumRows)
+import Polysemy.Hasql.Table.QueryRows (genQueryRows, genRows, queryRows, readNulls2, sumRows)
 import Polysemy.Hasql.Table.QueryTable (genQueryTable)
-import Polysemy.Hasql.Table.Representation (Explicit, ProdCode, ProdColumn, ReifySumType)
+import Polysemy.Hasql.Table.Representation (ExplicitSum, NestedSum, ProdCode, ProdColumn, ReifySumType, SumColumn)
 import Polysemy.Hasql.Table.Table (genTable)
-import Polysemy.Hasql.Table.TableStructure (tableStructure)
+import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
 
 data Sinister =
   Sinister {
-     sInt :: Int,
-     sText :: Text
+     sId :: UUID,
+     sText :: Maybe Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 deriveGeneric ''Sinister
 
 data SinisterRep =
   SinisterRep {
-    sInt :: Prim Auto,
+    sId :: Prim Auto,
     sText :: Prim Auto
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 deriveGeneric ''SinisterRep
 
@@ -47,7 +48,7 @@ data Summy =
   Laevus { lInt :: Int, lSinister :: Sinister }
   |
   Dexter { rText :: Text, rInt :: Int, rDouble :: Double }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 deriveGeneric ''Summy
 
@@ -55,7 +56,7 @@ data SummyRep =
   LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
   |
   DexterRep { rText :: Prim Auto, rInt :: Prim Auto, rDouble :: Prim Auto }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 deriveGeneric ''SummyRep
 
@@ -68,7 +69,7 @@ data SumField =
     id :: UUID,
     f1 :: Summy
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
 deriveGeneric ''SumField
 
@@ -77,40 +78,41 @@ data SumFieldRep =
     id :: Prim Auto,
     f1 :: Sum SummyRep
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''SumFieldRep
-
-struct :: TableStructure
-struct =
-  tableStructure @SumField
+  deriving (Eq, Show, Generic)
 
 row_queryRows_Sinister :: Row Sinister
 row_queryRows_Sinister =
   queryRows @SinisterRep
 
+type SinisterRepFlatten =
+  Flatten (ProdColumn (ProdCode (GCode SinisterRep)))
+
 row_genRows_Laevus :: NP Row [Int, Sinister]
 row_genRows_Laevus =
-  genRows @[Prim Auto, Flatten SinisterRep] @[Int, Sinister]
+  genRows @[Prim Auto, SinisterRepFlatten] @[Int, Sinister]
 
 nulls2_Flatten_Sinister :: Row ()
 nulls2_Flatten_Sinister =
-  nulls2 @'[Flatten (ProdColumn (ProdCode (Code SinisterRep)))] @'[Sinister]
+  readNulls2 @(ProdColumn '[SinisterRepFlatten]) @'[Sinister]
+
+nulls2_Flatten_Summy :: Row ()
+nulls2_Flatten_Summy =
+  readNulls2 @(ProdColumn [Prim Auto, SinisterRepFlatten]) @'[Int, Sinister]
 
 row_sumRows_Sinister :: Row (NS (NP I) '[ '[Sinister]])
 row_sumRows_Sinister =
-  sumRows @'[ '[Flatten (ProdColumn (ProdCode (Code SinisterRep)))]] @'[ '[Sinister]] 0
+  sumRows @'[ ProdColumn '[SinisterRepFlatten]] @'[ '[Sinister]] 0
 
 row_sumRows_Summy :: Row (NS (NP I) '[ '[Int, Sinister], '[Text, Int, Double]])
 row_sumRows_Summy =
   sumRows @'[
-    '[Prim Auto, Flatten (ProdColumn (ProdCode (Code SinisterRep)))],
-    '[Prim Auto, Prim Auto, Prim Auto]] @'[ '[Int, Sinister], '[Text, Int, Double]
-  ] 0
+    ProdColumn '[Prim Auto, SinisterRepFlatten],
+    ProdColumn '[Prim Auto, Prim Auto, Prim Auto]
+  ] @'[ '[Int, Sinister], '[Text, Int, Double]] 0
 
 row_genQuery_Summy :: Row Summy
 row_genQuery_Summy =
-  genQueryRows @(ReifySumType (Explicit SummyRep Summy) Summy) @Summy @(Code Summy)
+  genQueryRows @(ReifySumType (SumColumn (NestedSum (ExplicitSum Summy SummyRep))) Summy) @Summy @(GCode Summy)
 
 row_genRows_SumField :: NP Row '[UUID, Summy]
 row_genRows_SumField =
@@ -118,11 +120,19 @@ row_genRows_SumField =
 
 row_genQueryRows_SumField :: Row SumField
 row_genQueryRows_SumField =
-  genQueryRows @(Code SumFieldRep) @SumField @(Code SumField)
+  genQueryRows @(ProdColumn (ProdCode (GCode SumFieldRep))) @SumField @(GCode SumField)
 
 row_query :: Row SumField
 row_query =
   queryRows @SumFieldRep
+
+struct :: TableStructure
+struct =
+  tableStructure @SumField
+
+structManual :: TableStructure
+structManual =
+  genTableStructure @SumFieldRep @SumField
 
 table :: Table SumField
 table =
@@ -138,7 +148,7 @@ id' =
 
 laevus :: SumField
 laevus =
-  SumField id' (Laevus 2 (Sinister 12 "water"))
+  SumField id' (Laevus 2 (Sinister (Uid.uuid 12) (Just "water")))
 
 dexter :: SumField
 dexter =

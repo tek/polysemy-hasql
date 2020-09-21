@@ -3,87 +3,76 @@ module Polysemy.Hasql.Table.QueryParams where
 import Data.Functor.Contravariant.Divisible (choose)
 import Generics.SOP (
   All,
-  Code,
-  Generic,
-  I(I),
+  I,
   K(K),
   NP(Nil, (:*)),
   NS,
   NS(Z, S),
   Projection,
-  SameShapeAs,
   Top,
-  from,
   hcollapse,
   hindex,
-  hmap,
   hzipWith,
   projections,
   type (-.->)(Fn),
-  unComp,
   unI,
   unSOP,
   unZ,
-  (:.:),
-  (:.:)(Comp),
   )
+import Generics.SOP.GGP (GCode, gfrom)
 import Hasql.Encoders (Params)
-import Prelude hiding (All, Generic)
+import Prelude hiding (All, Enum)
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Sum)
-import Polysemy.Hasql.Table.QueryParam (Null, Null2, QueryParam(queryParam), allNulls, nullsSum)
+import Polysemy.Db.Data.Column (Enum, Flatten, Prim, Sum)
+import Polysemy.Db.SOP.Constraint (ConstructSOP)
+import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
+import Polysemy.Hasql.Table.QueryParam (NullVariant, NullVariants, QueryParam(queryParam), writeNulls, writeNulls2)
+import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 
-class GenParams reps (ds :: [*]) where
+data Done =
+  Done
+  deriving (Show)
+
+data Single (tail :: [*]) =
+  Single
+  deriving (Show)
+
+data Multi (head :: *) (tail :: [*]) =
+  Multi
+  deriving (Show)
+
+type family UnconsRep (reps :: [*]) :: *
+type instance UnconsRep '[] = Done
+type instance UnconsRep (Sum r : reps) = Multi r reps
+type instance UnconsRep (Flatten r : reps) = Multi r reps
+type instance UnconsRep (Prim r : reps) = Single reps
+type instance UnconsRep (Enum r : reps) = Single reps
+
+class GenParams (reps :: *) (ds :: [*]) where
   genParams :: NP Params ds
 
-instance GenParams '[] '[] where
-  genParams =
-    Nil
-
-instance GenParams Auto '[] where
+instance GenParams Done '[] where
   genParams =
     Nil
 
 instance (
     QueryParam d,
-    GenParams Auto ds
-  ) => GenParams Auto (d : ds) where
+    GenParams (UnconsRep reps) ds
+  ) => GenParams (Single reps) (d : ds) where
     genParams =
-      queryParam @d :* genParams @Auto @ds
-
-instance {-# overlappable #-} (
-    QueryParam d,
-    GenParams reps ds
-  ) => GenParams (r : reps) (d : ds) where
-    genParams =
-      queryParam @d :* genParams @reps @ds
+      queryParam @d :* genParams @(UnconsRep reps) @ds
 
 instance (
-    QueryParam d,
-    GenParams reps ds
-  ) => GenParams (Prim r : reps) (d : ds) where
+    GenQueryParams head d (GCode d),
+    GenParams (UnconsRep tail) ds
+  ) => GenParams (Multi head tail) (d : ds) where
     genParams =
-      queryParam @d :* genParams @reps @ds
-
-instance (
-    QueryParams r d,
-    GenParams reps ds
-  ) => GenParams (Sum r : reps) (d : ds) where
-    genParams =
-      queryParams @r @d :* genParams @reps @ds
-
-instance (
-    QueryParams reps' d,
-    GenParams reps ds
-  ) => GenParams (Flatten reps' : reps) (d : ds) where
-    genParams =
-      queryParams @reps' @d :* genParams @reps @ds
+      genQueryParams @head @d @(GCode d) :* genParams @(UnconsRep tail) @ds
 
 queryParamsNP ::
-  ∀ reps ds d .
-  Generic d =>
-  Code d ~ '[ds] =>
+  ∀ (reps :: *) ds d .
   GenParams reps ds =>
+  ConstructSOP d '[ds] =>
   Params d
 queryParamsNP =
   contramap unpackSOP res
@@ -93,41 +82,13 @@ queryParamsNP =
     clps =
       hcollapse qps
     unpackSOP =
-      unZ . unSOP . from
+      unZ . unSOP . gfrom
     qps :: NP (K (Params (NP I ds))) ds
     qps =
       hzipWith qp (genParams @reps @ds :: NP Params ds) (projections :: NP (Projection I ds) ds)
     qp :: ∀ a . Params a -> Projection I ds a -> K (Params (NP I ds)) a
     qp par (Fn proj) =
       K (contramap (unI . proj . K) par)
-
-sequenceContravariantNPF ::
-  ∀ (ds :: [*]) (cv :: * -> *) (f :: * -> *) .
-  All Top ds =>
-  Contravariant cv =>
-  (∀ a . Monoid (cv a)) =>
-  NP (cv :.: f) ds ->
-  cv (NP (I :.: f) ds)
-sequenceContravariantNPF contrs =
-  mconcat (hcollapse rows)
-  where
-    rows =
-      hzipWith row contrs projections
-    row :: ∀ a . (cv :.: f) a -> Projection f ds a -> K (cv (NP (I :.: f) ds)) a
-    row (Comp par) (Fn proj) =
-      K (contramap (proj . K . hmap (unI . unComp)) par)
-
-sequenceContravariantNP ::
-  ∀ (ds :: [*]) (cv :: * -> *) .
-  All Top ds =>
-  Contravariant cv =>
-  (∀ a . Monoid (cv a)) =>
-  NP cv ds ->
-  cv (NP I ds)
-sequenceContravariantNP =
-  contramap (hmap (Comp .  I)) .
-  sequenceContravariantNPF .
-  hmap (Comp . contramap unI)
 
 unconsNS ::
   NS (NP I) (ds : dss) ->
@@ -136,7 +97,7 @@ unconsNS = \case
   Z x -> Left x
   S x -> Right x
 
-class SumParams (repss :: [[*]]) (dss :: [[*]]) where
+class SumParams (repss :: [*]) (dss :: [[*]]) where
   sumParams :: Params (NS (NP I) dss)
 
 instance SumParams '[] '[] where
@@ -144,14 +105,19 @@ instance SumParams '[] '[] where
     mempty
 
 instance (
-  All Top ds,
-  Null reps (NS (NP I) dss) ds,
-  Null2 repss (NP I ds) dss,
-  SumParams repss dss,
-  GenParams reps ds
-  ) => SumParams (reps : repss) (ds : dss) where
+    All Top ds,
+    NullVariant reps ds,
+    NullVariants repss dss,
+    SumParams repss dss,
+    GenParams (UnconsRep reps) ds
+  ) => SumParams (ProdColumn reps : repss) (ds : dss) where
   sumParams =
-    choose unconsNS (sequenceContravariantNP (genParams @reps) <> allNulls @repss @ds @dss) (nullsSum @reps @ds @dss <> sumParams @repss)
+    choose unconsNS inhabited uninhabited
+    where
+      inhabited =
+        sequenceContravariantNP (genParams @(UnconsRep reps)) <> writeNulls2 @repss @dss
+      uninhabited =
+        writeNulls @reps @ds <> sumParams @repss
 
 sumIndex ::
   Params (NS (NP I) dss)
@@ -159,48 +125,33 @@ sumIndex =
   contramap hindex queryParam
 
 queryParamsNS ::
-  ∀ (a :: *) (repss :: [[*]]) (dss :: [[*]]) .
-  Generic a =>
-  Code a ~ dss =>
+  ∀ (d :: *) (repss :: [*]) (dss :: [[*]]) .
+  ConstructSOP d dss =>
   SumParams repss dss =>
-  Params a
+  Params d
 queryParamsNS =
-  contramap (unSOP . from) (sumIndex <> sumParams @repss)
+  contramap (unSOP . gfrom) (sumIndex <> sumParams @repss)
 
-class GenQueryParams repss d dss where
+class GenQueryParams (rep :: *) (d :: *) (dss :: [[*]]) where
   genQueryParams :: Params d
 
 instance (
-    Generic d,
-    Code d ~ '[ds],
-    GenParams reps ds,
-    SameShapeAs reps ds
-  ) => GenQueryParams '[reps] d '[ds] where
+    ConstructSOP d '[ds],
+    GenParams (UnconsRep reps) ds
+  ) => GenQueryParams (ProdColumn reps) d '[ds] where
   genQueryParams =
-    queryParamsNP @reps @ds
+    queryParamsNP @(UnconsRep reps) @ds
 
 instance (
-    Generic d,
-    Code d ~ (d1 : d2 : dss),
-    SumParams (r1 : r2 : repss) (d1 : d2 : dss)
-  ) => GenQueryParams (r1 : r2 : repss) d (d1 : d2 : dss) where
+    ConstructSOP d dss,
+    SumParams reps dss
+  ) => GenQueryParams (SumColumn reps) d dss where
     genQueryParams =
-      queryParamsNS @d @(r1 : r2 : repss) @(d1 : d2 : dss)
+      queryParamsNS @d @reps @dss
 
 class QueryParams (rep :: *) (d :: *) where
   queryParams :: Params d
 
-instance {-# overlappable #-} (
-    Generic d,
-    GenQueryParams (Code rep) d (Code d)
-  ) => QueryParams rep d where
+instance GenQueryParams (ReifyRepTable rep d) d (GCode d) => QueryParams rep d where
     queryParams =
-      genQueryParams @(Code rep) @d @(Code d)
-
-instance (
-    Generic d,
-    Code d ~ '[ds],
-    GenParams Auto ds
-  ) => QueryParams Auto d where
-    queryParams =
-      queryParamsNP @Auto @ds
+      genQueryParams @(ReifyRepTable rep d) @d @(GCode d)

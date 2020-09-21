@@ -159,7 +159,6 @@ test-suite polysemy-hasql-unit
       Polysemy.Db.Test.Q1
       Polysemy.Db.Test.RepTest
       Polysemy.Db.Test.StatementTest
-      Polysemy.Db.Test.SumTest
       Polysemy.Db.Test.TableTest
       Paths_polysemy_hasql
   hs-source-dirs:

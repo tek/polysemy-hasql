@@ -17,18 +17,14 @@ data ArrayField =
     id :: UUID,
     f1 :: [Int]
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''ArrayField
+  deriving (Eq, Show, Generic)
 
 data ArrayFieldRep =
   ArrayFieldRep {
     id :: Prim Auto,
     f1 :: Prim Auto
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''ArrayFieldRep
+  deriving (Eq, Show, Generic)
 
 id' :: UUID
 id' =

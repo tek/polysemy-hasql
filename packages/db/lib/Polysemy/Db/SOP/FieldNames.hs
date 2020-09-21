@@ -1,8 +1,7 @@
 module Polysemy.Db.SOP.FieldNames where
 
-import Generics.SOP (DatatypeInfoOf, Generic)
+import Generics.SOP.GGP (GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo(Record), DatatypeInfo(ADT), FieldInfo(FieldInfo))
-import Prelude hiding (Generic)
 
 type family CtorFieldSymbols (fs :: [FieldInfo]) :: [Symbol] where
   CtorFieldSymbols '[] = '[]
@@ -22,5 +21,5 @@ type family ADTCtorsFields dt :: [[FieldInfo]] where
 class DemoteFieldNames (d :: *) where
   type FieldNames d :: [[Symbol]]
 
-instance Generic d => DemoteFieldNames d where
-  type FieldNames d = CtorsFieldSymbols (ADTCtorsFields (DatatypeInfoOf d))
+instance DemoteFieldNames d where
+  type FieldNames d = CtorsFieldSymbols (ADTCtorsFields (GDatatypeInfoOf d))

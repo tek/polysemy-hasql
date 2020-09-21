@@ -10,7 +10,7 @@ import Data.Time (
   TimeZone,
   UTCTime,
   )
-import Generics.SOP.Universe (Code)
+import Generics.SOP.GGP (GCode)
 import Hasql.Encoders
 import Path (Path, toFilePath)
 import Prelude hiding (bool)
@@ -18,7 +18,7 @@ import Prelude hiding (bool)
 class ValueEncoder a where
   valueEncoder :: Value a
 
-class (Generic a, b ~ Code a) => GenEncoder a b where
+class (Generic a, b ~ GCode a) => GenEncoder a b where
   genEncoder :: Value a
 
 enumEncoder ::
@@ -28,15 +28,15 @@ enumEncoder =
   enum show
 
 -- necessary to disambiguate the enum instances from the newtype instance
-instance (Show a, Generic a, Code a ~ '[ '[] ]) => GenEncoder a '[ '[] ] where
+instance (Show a, Generic a, GCode a ~ '[ '[] ]) => GenEncoder a '[ '[] ] where
   genEncoder =
     enumEncoder
 
-instance {-# overlappable #-} (Show a, Generic a, Code a ~ ('[] : cs)) => GenEncoder a ('[] : cs) where
+instance {-# overlappable #-} (Show a, Generic a, GCode a ~ ('[] : cs)) => GenEncoder a ('[] : cs) where
   genEncoder =
     enumEncoder
 
-instance (Coercible c a, Generic a, Code a ~ '[ '[c]], ValueEncoder c) => GenEncoder a '[ '[c]] where
+instance (Coercible c a, Generic a, GCode a ~ '[ '[c]], ValueEncoder c) => GenEncoder a '[ '[c]] where
   genEncoder =
     coerce >$< valueEncoder @c
 

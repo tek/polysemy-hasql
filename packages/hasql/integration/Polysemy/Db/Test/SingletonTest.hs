@@ -20,18 +20,14 @@ data Dat =
      id :: UUID,
      content :: Text
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''Dat
+  deriving (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
     id :: Prim Auto,
     content :: Prim Auto
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''DatRep
+  deriving (Eq, Show, Generic)
 
 prog ::
   Member (Store () DbError Dat) r =>
@@ -47,9 +43,9 @@ prog = do
 test_singletonDb :: UnitTest
 test_singletonDb =
   integrationTest do
-    (a, b) <- withTestPlainTable (genTable @DatRep) $ \table@(Table structure _ _) ->
+    (a, b) <- withTestPlainTable (genTable @DatRep) $ \ table@(Table structure _ _) ->
       interpretDatabase structure $
-        interpretSchemaSingleton table $
+        interpretSchemaSingleton  table $
         interpretStoreDb $
         prog
     assertRight (Just (pure a)) b

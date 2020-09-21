@@ -2,17 +2,17 @@ module Polysemy.Db.Test.QueryTest where
 
 import Polysemy.Db.Data.Column (Auto, Prim, PrimaryKey)
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.Schema (IdQuery)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
+import Polysemy.Db.Test.Run (integrationTest)
+import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
+import Polysemy.Hasql.Data.Schema (IdQuery)
 import Polysemy.Hasql.Query.One (interpretOneWith)
 import Polysemy.Hasql.Test.Database (withTestStoreTableGen)
-import Polysemy.Db.Test.Run (integrationTest)
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
 
@@ -22,9 +22,7 @@ data Dat =
      content :: Text,
      number :: Int
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''Dat
+  deriving (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
@@ -32,17 +30,14 @@ data DatRep =
     content :: Prim Auto,
     number :: Prim Auto
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''DatRep
+  deriving (Eq, Show, Generic)
 
 data ContentNumber =
   ContentNumber {
     content :: Text,
     number :: Int
   }
-
-deriveGeneric ''ContentNumber
+  deriving (Eq, Show, Generic)
 
 prog ::
   Member (Error (StoreError DbError)) r =>

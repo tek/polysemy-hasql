@@ -4,7 +4,6 @@ import qualified Data.Text as Text
 import GHC.TypeLits (KnownSymbol)
 import Generics.SOP (fieldName)
 import Generics.SOP.Type.Metadata (
-  ConstructorInfo,
   ConstructorInfo(Record),
   DemoteFieldInfo,
   FieldInfo,
@@ -16,7 +15,6 @@ import Polysemy.Db.Data.Column (Flatten, Prim, Sum)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Db.SOP.Constraint (Ctors, DataName, IsRecord, dataName, dataSlugSymbol_)
-import Polysemy.Hasql.Data.ColumnType (HeadRep2, TailRep2)
 import Polysemy.Hasql.Table.ColumnParams (
   ExplicitColumnParams(explicitColumnParams),
   ImplicitColumnParams(implicitColumnParams),
@@ -24,7 +22,7 @@ import Polysemy.Hasql.Table.ColumnParams (
 import Polysemy.Hasql.Table.ColumnType (ColumnType(columnType))
 import Polysemy.Hasql.Table.Identifier (dbIdentifier)
 import Polysemy.Hasql.Table.Orphans ()
-import Polysemy.Hasql.Table.Representation (ReifyRepTable, SumColumn)
+import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 import Polysemy.Hasql.Table.TableName (GenTableName(genTableName))
 
 sumIndexColumn :: Column
@@ -109,39 +107,39 @@ instance (
   genColumn =
     genColumnSum @rep @field @d
 
-class GenColumns (columnRepTypes :: [*]) (columnFields :: [FieldInfo]) (columnTypes :: [*]) where
-  genColumns :: [Column]
+class GenProdColumns (columnRepTypes :: [*]) (columnFields :: [FieldInfo]) (columnTypes :: [*]) where
+  genProdColumns :: [Column]
 
-instance GenColumns rep '[] '[] where
-    genColumns =
+instance GenProdColumns rep '[] '[] where
+    genProdColumns =
       mempty
 
 instance {-# overlappable #-} (
     GenColumn field rep d,
-    GenColumns reps fields ds
-  ) => GenColumns (rep : reps) (field : fields) (d : ds) where
-    genColumns =
-      genColumn @field @rep @d : genColumns @reps @fields @ds
+    GenProdColumns reps fields ds
+  ) => GenProdColumns (rep : reps) (field : fields) (d : ds) where
+    genProdColumns =
+      genColumn @field @rep @d : genProdColumns @reps @fields @ds
 
 instance (
     Columns rep d,
-    GenColumns reps ns ds
-  ) => GenColumns (Flatten rep : reps) (field : ns) (d : ds) where
-    genColumns =
-      columns @rep @d <> genColumns @reps @ns @ds
+    GenProdColumns reps ns ds
+  ) => GenProdColumns (Flatten rep : reps) (field : ns) (d : ds) where
+    genProdColumns =
+      columns @rep @d <> genProdColumns @reps @ns @ds
 
 class GenCtorType columnRepTypes (columnTypes :: [*]) (dataCtor :: ConstructorInfo) where
   genCtorType :: TableStructure
 
 instance (
-    GenColumns rep fs ts,
+    GenProdColumns rep fs ts,
     d ~ 'Record n fs,
     KnownSymbol n
   ) => GenCtorType rep ts d where
   genCtorType =
-    TableStructure (TableName (dataSlugSymbol_ @n)) (genColumns @rep @fs @ts)
+    TableStructure (TableName (dataSlugSymbol_ @n)) (genProdColumns @rep @fs @ts)
 
-class GenSumCtorsColumns repTypes (columnTypes :: [[*]]) (dataCtors :: [ConstructorInfo]) where
+class GenSumCtorsColumns (repTypes :: [*]) (columnTypes :: [[*]]) (dataCtors :: [ConstructorInfo]) where
   genSumCtorsColumns :: [TableStructure]
 
 instance GenSumCtorsColumns rep '[] '[] where
@@ -149,13 +147,13 @@ instance GenSumCtorsColumns rep '[] '[] where
     mempty
 
 instance (
-    GenCtorType (HeadRep2 (r : rep)) t c,
-    GenSumCtorsColumns (TailRep2 (r : rep)) ts cs
-  ) => GenSumCtorsColumns (r : rep) (t : ts) (c : cs) where
+    GenCtorType r t c,
+    GenSumCtorsColumns reps ts cs
+  ) => GenSumCtorsColumns (ProdColumn r : reps) (t : ts) (c : cs) where
   genSumCtorsColumns =
-    pure (genCtorType @(HeadRep2 (r : rep)) @t @c) <> genSumCtorsColumns @(TailRep2 (r : rep)) @ts @cs
+    pure (genCtorType @r @t @c) <> genSumCtorsColumns @reps @ts @cs
 
-class GenSumColumns (sumRepType :: [[*]]) (sumType :: *) where
+class GenSumColumns (sumRepType :: [*]) (sumType :: *) where
   genSumColumns :: [TableStructure]
 
 instance (
@@ -165,12 +163,21 @@ instance (
     genSumColumns =
       genSumCtorsColumns @rep @dTypes @ctors
 
-class GenCompositeType (rep :: [[*]]) (d :: *) where
+class GenCompositeType (rep :: [*]) (d :: *) where
   genCompositeType :: CompositeType
 
 instance (GenTableName d, GenSumColumns rep d) => GenCompositeType rep d where
   genCompositeType =
     CompositeType (genTableName @d) sumIndexColumn (genSumColumns @rep @d)
+
+class GenColumns (rep :: *) (ns :: [FieldInfo]) (ds :: [*]) where
+  genColumns :: [Column]
+
+instance (
+    GenProdColumns rep ns ds
+  ) => GenColumns (ProdColumn rep) ns ds where
+  genColumns =
+    genProdColumns @rep @ns @ds
 
 class Columns (rowRepType :: *) (rowRecordType :: *) where
   columns :: [Column]

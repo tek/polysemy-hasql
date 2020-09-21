@@ -18,6 +18,7 @@ module Polysemy.Db.Prelude (
   module Generics.SOP.TH,
   module Polysemy,
   module Polysemy.AtomicState,
+  module Polysemy.Db.Debug,
   module Polysemy.Error,
   module Polysemy.Internal.Bundle,
   module Polysemy.Reader,
@@ -70,6 +71,7 @@ import Polysemy (
   runFinal,
   )
 import Polysemy.AtomicState (AtomicState, atomicGet, atomicGets, atomicModify', atomicPut, runAtomicStateTVar)
+import Polysemy.Db.Debug (dbg, dbgs, dbgs_)
 import Polysemy.Error (Error, fromEither, mapError, note, runError, throw)
 import Polysemy.Internal.Bundle (Append)
 import Polysemy.Reader (Reader)
@@ -98,22 +100,6 @@ import Relude hiding (
   undefined,
   )
 import System.IO.Error (userError)
-
-dbg :: Monad m => Text -> m ()
-dbg msg = do
-  () <- return $ unsafePerformIO (putStrLn (toString msg))
-  return ()
-{-# inline dbg #-}
-
-dbgs :: Monad m => Show a => a -> m ()
-dbgs a =
-  dbg (show a)
-{-# inline dbgs_ #-}
-
-dbgs_ :: Monad m => Show a => a -> m a
-dbgs_ a =
-  a <$ dbg (show a)
-{-# inline dbgs #-}
 
 unit ::
   Applicative f =>

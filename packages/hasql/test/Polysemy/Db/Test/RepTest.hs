@@ -1,24 +1,22 @@
 module Polysemy.Db.Test.RepTest where
 
-import Generics.SOP (Code)
+import Generics.SOP.GGP (GCode)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, Prim, Sum)
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Table.Columns (columns)
 import Polysemy.Hasql.Table.Representation (
+  ColumnCode,
   ColumnCodes,
   ColumnCodess,
-  ColumnRepss,
-  EnumColumn,
-  PrimColumn,
+  NestedSum,
   ProdCode,
   ProdColumn,
   ProdTable,
-  Rep,
   ReifyRepTable,
-  SumTable,
-  TableRep,
+  Rep,
+  SumColumn,
   )
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
@@ -28,31 +26,27 @@ data Nummy =
   Twosy
   |
   Threesy
-  deriving (Eq, Show)
-
-deriveGeneric ''Nummy
+  deriving (Eq, Show, Generic)
 
 data Inside =
   Inside {
     ii :: Int,
     tt :: Text
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''Inside
+  deriving (Eq, Show, Generic)
 
 data InsideRep =
   InsideRep {
     ii :: Prim Auto,
     tt :: Prim Auto
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''InsideRep
+  deriving (Eq, Show, Generic)
 
 testInside ::
-  ColumnCodes [Int, Inside] ~ [PrimColumn, ProdColumn [PrimColumn, PrimColumn]] =>
-  Rep Inside ~ ProdTable (ProdCode (Code InsideRep)) =>
+  ColumnCodes '[Int] ~ '[Prim Auto] =>
+  ColumnCode Inside ~ Flatten (ProdColumn [Prim Auto, Prim Auto]) =>
+  ColumnCodes [Int, Inside] ~ [Prim Auto, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
+  Rep Inside ~ ProdTable (ProdCode (GCode InsideRep)) =>
   ()
 testInside =
   ()
@@ -63,9 +57,7 @@ data Summy =
   M { mi :: Int, mt :: Text }
   |
   R { ri :: Int, rt :: Inside }
-  deriving (Eq, Show)
-
-deriveGeneric ''Summy
+  deriving (Eq, Show, Generic)
 
 data SummyRep =
   LRep { li :: Prim Auto, nummy :: Enum Auto }
@@ -73,28 +65,17 @@ data SummyRep =
   MRep { mi :: Prim Auto, mt :: Prim Auto }
   |
   RRep { ri :: Prim Auto, rt :: Flatten InsideRep }
-  deriving (Eq, Show)
-
-deriveGeneric ''SummyRep
+  deriving (Eq, Show, Generic)
 
 data SummyRepAuto =
   LRepAuto { li :: Prim Auto, nummy :: Enum Auto }
   |
   MRepAuto { mi :: Prim Auto, mt :: Prim Auto }
   |
-  RRepAuto { ri :: Prim Auto, rt :: Flatten (ProdColumn (ProdCode (Code InsideRep))) }
-  deriving (Eq, Show)
-
-deriveGeneric ''SummyRepAuto
+  RRepAuto { ri :: Prim Auto, rt :: Flatten (ProdColumn (ProdCode (GCode InsideRep))) }
+  deriving (Eq, Show, Generic)
 
 type SummyCodess =
-  [
-    [PrimColumn, EnumColumn],
-    [PrimColumn, PrimColumn],
-    [PrimColumn, ProdColumn [PrimColumn, PrimColumn]]
-  ]
-
-type SummyRepss =
   [
     [Prim Auto, Enum Auto],
     [Prim Auto, Prim Auto],
@@ -102,57 +83,51 @@ type SummyRepss =
   ]
 
 testSummy ::
-  ColumnCodess (Code Summy) ~ SummyCodess =>
-  TableRep (ColumnRepss (ColumnCodess (Code Summy))) ~ SumTable SummyRepss =>
-  Rep Summy ~ SumTable (Code SummyRepAuto) =>
+  ColumnCodess (GCode Summy) ~ SummyCodess =>
+  ColumnCode Summy ~ Sum (SumColumn (NestedSum (GCode SummyRepAuto))) =>
   ()
 testSummy =
   ()
 
-data Dat =
-  Dat {
+data SumField =
+  SumField {
     id :: UUID,
     int :: Int,
     sum :: Summy
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
-deriveGeneric ''Dat
-
-data DatRepAuto =
-  DatRepAuto {
+data SumFieldRepAuto =
+  SumFieldRepAuto {
     id :: Prim Auto,
     int :: Prim Auto,
-    sum :: Sum (Code SummyRepAuto)
+    sum :: Sum (SumColumn (NestedSum (GCode SummyRepAuto)))
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
-deriveGeneric ''DatRepAuto
-
-data DatRep =
-  DatRep {
+data SumFieldRep =
+  SumFieldRep {
     id :: Prim Auto,
     int :: Prim Auto,
     sum :: Sum SummyRep
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic)
 
-deriveGeneric ''DatRep
-
-testDat ::
-  Rep Dat ~ ProdTable (ProdCode (Code DatRepAuto)) =>
-  ReifyRepTable (Rep Dat) Dat ~ (ProdCode (Code DatRepAuto)) =>
+testSumField ::
+  Rep SumField ~ ProdTable (ProdCode (GCode SumFieldRepAuto)) =>
+  ReifyRepTable (Rep SumField) SumField ~ ProdColumn (ProdCode (GCode SumFieldRepAuto)) =>
+  (ReifyRepTable SumFieldRep SumField) ~ ProdColumn (ProdCode (GCode SumFieldRepAuto)) =>
   ()
-testDat =
+testSumField =
   ()
 
 columnsExplicit :: [Column]
 columnsExplicit =
-  columns @DatRep @Dat
+  columns @SumFieldRep @SumField
 
 columnsImplicit :: [Column]
 columnsImplicit =
-  columns @(Rep Dat) @Dat
+  columns @(Rep SumField) @SumField
 
 targetComposite :: CompositeType
 targetComposite =
@@ -179,6 +154,6 @@ test_rep = do
   runTestAuto do
     pure testInside
     pure testSummy
-    pure testDat
+    pure testSumField
     targetColumns === columnsImplicit
     columnsExplicit === columnsImplicit

@@ -37,6 +37,7 @@ library
       Polysemy.Db.Data.TableName
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Data.Uid
+      Polysemy.Db.Debug
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint

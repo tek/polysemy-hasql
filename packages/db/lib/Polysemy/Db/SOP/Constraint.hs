@@ -1,19 +1,35 @@
 module Polysemy.Db.SOP.Constraint where
 
 import GHC.TypeLits (KnownSymbol, symbolVal)
-import Generics.SOP (All, Code, DatatypeInfoOf, IsProductType)
+import Generics.SOP (All, All2, IsProductType, Top)
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo)
 import Generics.SOP.Type.Metadata (
   ConstructorInfo(Record),
   DatatypeInfo(ADT, Newtype),
   DemoteFieldInfos,
   FieldInfo,
   )
-import Prelude hiding (All, Generic)
+import Prelude hiding (All)
 
 import Polysemy.Db.Text.Case (unCamelCase)
 
+type Coded (d :: *) (dss :: [[*]]) =
+  (GCode d ~ dss)
+
+type ProductCoded (d :: *) (ds :: [*]) =
+  Coded d '[ds]
+
+type ReifySOP (d :: *) (dss :: [[*]]) =
+  (Generic d, GTo d, GCode d ~ dss, All2 Top dss)
+
+type ConstructSOP (d :: *) (dss :: [[*]]) =
+  (Generic d, GFrom d, GCode d ~ dss, All2 Top dss)
+
 type IsNullary =
   (~) '[]
+
+type IsEnum a =
+  All IsNullary (GCode a)
 
 type AllProduct (c :: * -> Constraint) a (xs :: [*]) =
   (IsProductType a xs, All c xs)
@@ -32,10 +48,9 @@ instance IsDataT ('ADT mod name ctors strictness) name where
 
 class IsData a types name | a -> types name where
 
-instance
-  (
-  IsProductType a types,
-  IsDataT (DatatypeInfoOf a) name
+instance (
+    ProductCoded a types,
+    IsDataT (GDatatypeInfoOf a) name
   ) =>
     IsData a types name where
 
@@ -47,10 +62,9 @@ instance IsRecordT ('ADT mod name '[ 'Record ctor names] strictness) name names 
 
 class IsRecord (a :: *) (types :: [*]) (name :: Symbol) (fields :: [FieldInfo]) | a -> types name fields where
 
-instance
-  (
-  IsProductType a types,
-  IsRecordT (DatatypeInfoOf a) name fields
+instance (
+    ProductCoded a types,
+    IsRecordT (GDatatypeInfoOf a) name fields
   ) =>
     IsRecord a types name fields where
 
@@ -60,7 +74,7 @@ instance CtorsT ('ADT mod name ctors strictness) ctors where
 
 class Ctors (d :: *) (ctors :: [ConstructorInfo]) (types :: [[*]]) | d -> ctors types where
 
-instance (CtorsT (DatatypeInfoOf d) ctors, types ~ Code d) => Ctors d ctors types where
+instance (CtorsT (GDatatypeInfoOf d) ctors, types ~ GCode d) => Ctors d ctors types where
 
 class DataName a where
   dataName :: String
@@ -69,7 +83,7 @@ instance
   ∀ a name .
   (
   KnownSymbol name,
-  IsDataT (DatatypeInfoOf a) name
+  IsDataT (GDatatypeInfoOf a) name
   ) =>
   DataName a where
     dataName =

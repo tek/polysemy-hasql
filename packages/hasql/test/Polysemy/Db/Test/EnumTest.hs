@@ -13,19 +13,13 @@ data En =
   Three
   deriving (Eq, Show, Generic)
 
-deriveGeneric ''En
-
 data EnumCol =
   EnumCol { e :: En }
-  deriving (Eq, Show)
-
-deriveGeneric ''EnumCol
+  deriving (Eq, Show, Generic)
 
 data EnumsCol =
   EnumsCol { e :: NonEmpty En }
-  deriving (Eq, Show)
-
-deriveGeneric ''EnumsCol
+  deriving (Eq, Show, Generic)
 
 enumColTable :: TableStructure
 enumColTable =

@@ -3,29 +3,28 @@
 module Polysemy.Hasql.Table.ColumnType where
 
 import qualified Chronos as Chronos
-import Generics.SOP (Code, Generic)
+import Generics.SOP.GGP (GCode)
 import Path (Path)
-import Prelude hiding (Generic)
 
 class ColumnType a where
   columnType :: Text
 
-class (Generic a, b ~ Code a) => GenColumnType a b where
+class b ~ GCode a => GenColumnType a b where
   genColumnType :: Text
 
-instance (Generic a, Code a ~ '[ '[] ]) => GenColumnType a '[ '[] ] where
+instance GCode a ~ '[ '[] ] => GenColumnType a '[ '[] ] where
   genColumnType =
     "text"
 
-instance (Generic a, Code a ~ ('[] : cs)) => GenColumnType a ('[] : cs) where
+instance GCode a ~ ('[] : cs) => GenColumnType a ('[] : cs) where
   genColumnType =
     "text"
 
-instance (Coercible c a, Generic a, Code a ~ '[ '[c]], ColumnType c) => GenColumnType a '[ '[c]] where
+instance (Coercible c a, GCode a ~ '[ '[c]], ColumnType c) => GenColumnType a '[ '[c]] where
   genColumnType =
     columnType @c
 
-instance {-# overlappable #-} (Generic a, GenColumnType a b) => ColumnType a where
+instance {-# overlappable #-} (GenColumnType a b) => ColumnType a where
   columnType =
     genColumnType @a
 
