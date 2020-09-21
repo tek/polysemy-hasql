@@ -9,7 +9,6 @@ import Generics.SOP.Type.Metadata (
   FieldInfo,
   demoteFieldInfo,
   )
-import Prelude hiding (Generic)
 
 import Polysemy.Db.Data.Column (Flatten, Prim, Sum)
 import Polysemy.Db.Data.TableName (TableName(TableName))
