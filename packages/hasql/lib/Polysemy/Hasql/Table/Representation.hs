@@ -1,7 +1,8 @@
 module Polysemy.Hasql.Table.Representation where
 
 import Data.Vector (Vector)
-import Generics.SOP.GGP (GCode)
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
+import Generics.SOP.Type.Metadata (DatatypeInfo, DatatypeInfo(ADT, Newtype))
 import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(Text, ShowType), TypeError)
 import Type.Errors.Pretty (type (<>))
@@ -38,13 +39,25 @@ type family CtorsColumnCode (dss :: [[*]]) :: [*] where
   CtorsColumnCode '[] = '[]
   CtorsColumnCode (ds : dss) = ProdColumn (CtorColumnCode ds) : CtorsColumnCode dss
 
-type family DataColumnCode (dss :: [[*]]) (initial :: [[*]]) :: * where
-  DataColumnCode '[d1 : ds] '[d1 : ds] = Flatten (ProdColumn (ColumnCodes (d1 : ds)))
-  DataColumnCode ('[] : dss) initial = DataColumnCode dss initial
-  DataColumnCode '[] initial = Enum Auto
-  DataColumnCode ((d1 : ds) : dss) initial = Sum (SumColumn (CtorsColumnCode initial))
-  DataColumnCode dss initial =
+type family SumColumnCode (dss :: [[*]]) (initial :: [[*]]) :: * where
+  SumColumnCode ('[] : dss) initial =
+    SumColumnCode dss initial
+  SumColumnCode '[] initial =
+    Enum Auto
+  SumColumnCode ((d1 : ds) : dss) initial =
+    Sum (SumColumn (CtorsColumnCode initial))
+  SumColumnCode dss initial =
     TypeError ('Text "could not match sum type column: " <> 'ShowType initial)
+
+type family ADTColumnCode (dss :: [[*]]) :: * where
+  ADTColumnCode '[d1 : ds] =
+    Flatten (ProdColumn (ColumnCodes (d1 : ds)))
+  ADTColumnCode dss =
+    SumColumnCode dss dss
+
+type family DataColumnCode (dss :: [[*]]) (info :: DatatypeInfo) :: * where
+  DataColumnCode dss ('Newtype _ _ _) = Prim Auto
+  DataColumnCode dss ('ADT _ _ _ _) = ADTColumnCode dss
 
 type family ColumnCode (d :: *) :: * where
   ColumnCode Int = Prim Auto
@@ -58,7 +71,7 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode [d] = Prim Auto
   ColumnCode (NonEmpty d) = Prim Auto
   ColumnCode (Vector d) = Prim Auto
-  ColumnCode d = DataColumnCode (GCode d) (GCode d)
+  ColumnCode d = DataColumnCode (GCode d) (GDatatypeInfoOf d)
 
 type family ColumnCodes (ds :: [*]) :: [*] where
   ColumnCodes '[] = '[]

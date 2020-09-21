@@ -26,6 +26,11 @@ import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
 
+newtype Newt =
+  Newt Int
+  deriving (Eq, Show, Generic)
+  deriving newtype (Num)
+
 data Sinister =
   Sinister {
      sId :: UUID,
@@ -47,7 +52,7 @@ deriveGeneric ''SinisterRep
 data Summy =
   Laevus { lInt :: Int, lSinister :: Sinister }
   |
-  Dexter { rText :: Text, rInt :: Int, rDouble :: Double }
+  Dexter { rText :: Text, rNewt :: Newt, rDouble :: Double }
   deriving (Eq, Show, Generic)
 
 deriveGeneric ''Summy
@@ -55,7 +60,7 @@ deriveGeneric ''Summy
 data SummyRep =
   LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
   |
-  DexterRep { rText :: Prim Auto, rInt :: Prim Auto, rDouble :: Prim Auto }
+  DexterRep { rText :: Prim Auto, rNewt :: Prim Auto, rDouble :: Prim Auto }
   deriving (Eq, Show, Generic)
 
 deriveGeneric ''SummyRep
