@@ -10,7 +10,7 @@ import Generics.SOP.Type.Metadata (
   demoteFieldInfo,
   )
 
-import Polysemy.Db.Data.Column (Flatten, Prim, Sum)
+import Polysemy.Db.Data.Column (Flatten, Sum)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Db.SOP.Constraint (Ctors, DataName, IsRecord, dataName, dataSlugSymbol_)
@@ -88,13 +88,6 @@ instance {-# overlappable #-} (
     BasicColumn r field d,
     ColumnType d
   ) => GenColumn field r d where
-  genColumn =
-    genColumnPrim @r @field @d
-
-instance (
-    BasicColumn r field d,
-    ColumnType d
-  ) => GenColumn field (Prim r) d where
   genColumn =
     genColumnPrim @r @field @d
 
