@@ -4,6 +4,7 @@ import Generics.SOP.GGP (GCode)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, Prim, Sum)
+import Polysemy.Db.Data.ColumnParams (notNull)
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Table.Columns (columns)
 import Polysemy.Hasql.Table.Representation (
@@ -31,22 +32,29 @@ data Nummy =
 data Inside =
   Inside {
     ii :: Int,
-    tt :: Text
+    tt :: Maybe Text
   }
   deriving (Eq, Show, Generic)
+
+data InsideRepAuto =
+  InsideRepAuto {
+    ii :: Prim Auto,
+    tt :: Prim Auto
+  }
+  deriving (Show, Generic)
 
 data InsideRep =
   InsideRep {
     ii :: Prim Auto,
     tt :: Prim Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 testInside ::
   ColumnCodes '[Int] ~ '[Prim Auto] =>
   ColumnCode Inside ~ Flatten (ProdColumn [Prim Auto, Prim Auto]) =>
   ColumnCodes [Int, Inside] ~ [Prim Auto, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
-  Rep Inside ~ ProdTable (ProdCode (GCode InsideRep)) =>
+  Rep Inside ~ ProdTable (ProdCode (GCode InsideRepAuto)) =>
   ()
 testInside =
   ()
@@ -72,7 +80,7 @@ data SummyRepAuto =
   |
   MRepAuto { mi :: Prim Auto, mt :: Prim Auto }
   |
-  RRepAuto { ri :: Prim Auto, rt :: Flatten (ProdColumn (ProdCode (GCode InsideRep))) }
+  RRepAuto { ri :: Prim Auto, rt :: Flatten (ProdColumn (ProdCode (GCode InsideRepAuto))) }
   deriving (Eq, Show, Generic)
 
 type SummyCodess =
@@ -103,7 +111,7 @@ data SumFieldRepAuto =
     int :: Prim Auto,
     sum :: Sum (SumColumn (NestedSum (GCode SummyRepAuto)))
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 data SumFieldRep =
   SumFieldRep {
@@ -111,7 +119,7 @@ data SumFieldRep =
     int :: Prim Auto,
     sum :: Sum SummyRep
   }
-  deriving (Eq, Show, Generic)
+  deriving (Show, Generic)
 
 testSumField ::
   Rep SumField ~ ProdTable (ProdCode (GCode SumFieldRepAuto)) =>
@@ -137,7 +145,7 @@ targetComposite =
     TableStructure "r" [
       Column "ri" "bigint" def Nothing,
       Column "ii" "bigint" def Nothing,
-      Column "tt" "text" def Nothing
+      Column "tt" "text" def { notNull = False } Nothing
     ]
   ]
 
