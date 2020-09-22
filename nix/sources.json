@@ -12,10 +12,16 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
-        "ref": "bodhi",
-        "repo": "git@gitlab.tryp.io:nix/nixpkgs",
-        "rev": "41f90ca6709e241ce33afaa9332629883c3f290d",
-        "type": "git"
+        "branch": "nixos-20.03",
+        "description": "Nix Packages collection",
+        "homepage": null,
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "773ef5ae78339db744b917c2b35d28812028bd8c",
+        "sha256": "0j07y007g2yk2mmp56xhdbwhjlnpdmp1lvsmx5nzfakcp8n3q7ci",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/773ef5ae78339db744b917c2b35d28812028bd8c.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "polysemy": {
         "branch": "master",
@@ -29,16 +35,28 @@
         "url": "https://github.com/polysemy-research/polysemy/archive/de19721ef5d3dc64d50a1571c45d933e7f17305a.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "polysemy-test": {
+        "branch": "master",
+        "description": "Utilities for testing Polysemy programs",
+        "homepage": null,
+        "owner": "tek",
+        "repo": "polysemy-test",
+        "rev": "7a8d6c01f2bbf21ef424c8b41d1709395c9dbaf4",
+        "sha256": "0fgvl9gvl7wyrp04rz4k686x0sn1cjvmf3qnfl1y2zx0g746xb9f",
+        "type": "tarball",
+        "url": "https://github.com/tek/polysemy-test/archive/7a8d6c01f2bbf21ef424c8b41d1709395c9dbaf4.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "tryp-hs": {
         "branch": "master",
         "description": null,
         "homepage": null,
         "owner": "tek",
         "repo": "tryp-hs",
-        "rev": "9611e883161fcec50710741c2edd39849c88d00a",
-        "sha256": "0cdxnaif4q01b3p44xbfx5iglwyb9rb8a0c5gr8giac76r1jp4kf",
+        "rev": "031846fd7aec30ff2c46916f76d3f3592b005781",
+        "sha256": "1ijk4cx9piymwl4apsq16j0qrh6cjp33xdsl5p9p2idi7jmqy5jy",
         "type": "tarball",
-        "url": "https://github.com/tek/tryp-hs/archive/9611e883161fcec50710741c2edd39849c88d00a.tar.gz",
+        "url": "https://github.com/tek/tryp-hs/archive/031846fd7aec30ff2c46916f76d3f3592b005781.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
