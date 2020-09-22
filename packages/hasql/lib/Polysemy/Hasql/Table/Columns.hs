@@ -20,7 +20,6 @@ import Polysemy.Hasql.Table.ColumnParams (
   )
 import Polysemy.Hasql.Table.ColumnType (ColumnType(columnType))
 import Polysemy.Hasql.Table.Identifier (dbIdentifier)
-import Polysemy.Hasql.Table.Orphans ()
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 import Polysemy.Hasql.Table.TableName (GenTableName(genTableName))
 

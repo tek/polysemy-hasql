@@ -40,8 +40,6 @@ data Sinister =
   }
   deriving (Eq, Show, Generic)
 
-deriveGeneric ''Sinister
-
 data SinisterRep =
   SinisterRep {
     sId :: Prim Auto,
@@ -49,23 +47,17 @@ data SinisterRep =
   }
   deriving (Eq, Show, Generic)
 
-deriveGeneric ''SinisterRep
-
 data Summy =
   Laevus { lInt :: Int, lSinister :: Sinister }
   |
   Dexter { rText :: Text, rNewt :: Newt, rDouble :: Double }
   deriving (Eq, Show, Generic)
 
-deriveGeneric ''Summy
-
 data SummyRep =
   LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
   |
   DexterRep { rText :: Prim Auto, rNewt :: Prim Auto, rDouble :: Prim Auto }
   deriving (Eq, Show, Generic)
-
-deriveGeneric ''SummyRep
 
 instance ExplicitColumnParams SummyRep where
   explicitColumnParams =
@@ -77,8 +69,6 @@ data SumField =
     f1 :: Summy
   }
   deriving (Eq, Show, Generic)
-
-deriveGeneric ''SumField
 
 data SumFieldRep =
   SumFieldRep {

@@ -14,7 +14,6 @@ data Uid i a =
   }
   deriving (Eq, Show, Generic, Functor)
 
-deriveGeneric ''Uid
 makeClassy ''Uid
 
 instance (FromJSON a, FromJSON i) => FromJSON (Uid i a) where

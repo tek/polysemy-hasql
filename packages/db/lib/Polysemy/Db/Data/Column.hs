@@ -41,9 +41,7 @@ data PK i a =
     id :: i,
     payload :: a
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''PK
+  deriving (Eq, Show, Generic)
 
 uidToPK :: Uid i a -> PK i a
 uidToPK (Uid id' a) =
@@ -57,15 +55,11 @@ newtype PKQuery i =
   PKQuery {
     id :: i
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''PKQuery
+  deriving (Eq, Show, Generic)
 
 data PKRep i r =
   PKRep {
     id :: Prim PrimaryKey,
     payload :: Flatten r
   }
-  deriving (Eq, Show)
-
-deriveGeneric ''PKRep
+  deriving (Eq, Show, Generic)

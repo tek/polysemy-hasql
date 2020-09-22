@@ -46,7 +46,6 @@ library
       Polysemy.Hasql.Table.ColumnType
       Polysemy.Hasql.Table.Enum
       Polysemy.Hasql.Table.Identifier
-      Polysemy.Hasql.Table.Orphans
       Polysemy.Hasql.Table.Query.Delete
       Polysemy.Hasql.Table.Query.Fragment
       Polysemy.Hasql.Table.Query.Insert
