@@ -8,6 +8,7 @@ import Polysemy.Db.Data.Column (Auto, Prim, Sum)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
+import qualified Polysemy.Hasql.Table.Query.Insert as Query
 import Polysemy.Hasql.Table.QueryFields (QueryFields)
 import Polysemy.Hasql.Table.QueryTable (genQueryTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure)
@@ -90,6 +91,17 @@ test_selectStatement =
     stmtText :: SqlCode
     stmtText =
       Statement.selectWhereSql (genQueryTable @RecRep @Q1 @Rec)
+
+test_insertStatement :: UnitTest
+test_insertStatement =
+  runTestAuto do
+    target === unSqlCode stmtText
+  where
+    target =
+      [qt|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, row($5), row($6, $7)))|]
+    stmtText :: SqlCode
+    stmtText =
+      Query.insert (genTableStructure @RecRep @Rec)
 
 test_createStatement :: UnitTest
 test_createStatement =
