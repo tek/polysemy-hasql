@@ -155,7 +155,6 @@ test-suite polysemy-hasql-unit
   main-is: Main.hs
   other-modules:
       Polysemy.Db.Test.EnumTest
-      Polysemy.Db.Test.Q1
       Polysemy.Db.Test.RepTest
       Polysemy.Db.Test.StatementTest
       Polysemy.Db.Test.TableTest

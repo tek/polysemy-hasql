@@ -4,9 +4,8 @@ import qualified Generics.SOP as SOP
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
-import Polysemy.Db.Data.Column (Auto, Prim)
+import Polysemy.Db.Data.Column (Auto, Prim, Sum)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
-import Polysemy.Db.Test.Q1 (Q1)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.QueryFields (QueryFields)
@@ -44,19 +43,40 @@ newtype NT =
 
 instance SOP.Generic NT
 
+data SumRec =
+  L { d :: Int }
+  |
+  R { e :: Text, f :: Double }
+  deriving (Eq, Show, Generic)
+
+data SumRecRep =
+  LRep { d :: Prim Auto }
+  |
+  RRep { e :: Prim Auto, f :: Prim Auto }
+  deriving (Eq, Show, Generic)
+
 data Rec =
   Rec {
-    fieldOne :: Text,
-    fieldTwo :: NT,
-    fieldThree :: Maybe Double
+    a :: Text,
+    b :: NT,
+    c :: Maybe Double,
+    sumField :: SumRec
   }
   deriving (Eq, Show, Generic)
 
 data RecRep =
   RecRep {
-    fieldOne :: Prim Auto,
-    fieldTwo :: Prim Auto,
-    fieldThree :: Prim Auto
+    a :: Prim Auto,
+    b :: Prim Auto,
+    c :: Prim Auto,
+    sumField :: Sum SumRecRep
+  }
+  deriving (Eq, Show, Generic)
+
+data Q1 =
+  Q1 {
+    a :: Text,
+    c :: Double
   }
   deriving (Eq, Show, Generic)
 
@@ -66,7 +86,7 @@ test_selectStatement =
     target === unSqlCode stmtText
   where
     target =
-      [qt|select "field_one", "field_two", "field_three" from "rec" where "field_one" = $1 and "field_three" = $2|]
+      [qt|select "a", "b", "c", ("sum_field").sum_index, ("sum_field")."l"."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
     stmtText :: SqlCode
     stmtText =
       Statement.selectWhereSql (genQueryTable @RecRep @Q1 @Rec)
@@ -77,7 +97,7 @@ test_createStatement =
     target === unSqlCode stmtText
   where
     target =
-      [qt|create table "rec" ("field_one" text not null, "field_two" bigint not null, "field_three" double precision)|]
+      [qt|create table "rec" ("a" text not null, "b" bigint not null, "c" double precision, "sum_field" sum_rec not null)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (genTableStructure @RecRep @Rec)
