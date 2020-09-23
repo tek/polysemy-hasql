@@ -35,7 +35,7 @@ import Hasql.Encoders (
 import Path (Path, toFilePath)
 import Prelude hiding (bool)
 
-import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim)
+import Polysemy.Db.Data.Column (NewtypePrim, Prim)
 import Polysemy.Db.SOP.Constraint (NewtypeCoded)
 
 class ValueEncoder a where
@@ -174,7 +174,7 @@ instance ValueEncoder Chronos.Time where
 class RepEncoder (rep :: *) (a :: *) where
   repEncoder :: Value a
 
-instance ValueEncoder a => RepEncoder Auto a where
+instance {-# overlappable #-} ValueEncoder a => RepEncoder r a where
   repEncoder =
     valueEncoder
 
@@ -182,6 +182,6 @@ instance RepEncoder r a => RepEncoder (Prim r) a where
   repEncoder =
     repEncoder @r
 
-instance (NewtypeCoded a c, ValueEncoder c) => RepEncoder (NewtypePrim r) a where
+instance (NewtypeCoded a c, RepEncoder r c) => RepEncoder (NewtypePrim r) a where
   repEncoder =
-    coerce >$< valueEncoder @c
+    coerce >$< repEncoder @r @c

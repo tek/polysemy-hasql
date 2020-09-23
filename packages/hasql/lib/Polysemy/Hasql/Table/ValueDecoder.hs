@@ -200,6 +200,10 @@ instance ValueDecoder Chronos.Time where
 class RepDecoder (rep :: *) (a :: *) where
   repDecoder :: Value a
 
+instance {-# overlappable #-} ValueDecoder a => RepDecoder r a where
+  repDecoder =
+    valueDecoder
+
 instance ValueDecoder a => RepDecoder (Prim r) a where
   repDecoder =
     valueDecoder
