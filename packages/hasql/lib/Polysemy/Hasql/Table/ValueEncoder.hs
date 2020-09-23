@@ -10,62 +10,35 @@ import Data.Time (
   TimeZone,
   UTCTime,
   )
-import Generics.SOP.GGP (GCode)
 import Hasql.Encoders (
-  uuid,
-  interval,
-  timetz,
-  time,
-  timestamptz,
-  timestamp,
-  date,
-  bytea,
-  text,
-  char,
-  numeric,
-  float8,
-  float4,
-  int8,
-  int4,
-  int2,
-  enum,
   Value,
   bool,
+  bytea,
+  char,
+  date,
+  enum,
+  float4,
+  float8,
+  int2,
+  int4,
+  int8,
+  interval,
+  numeric,
+  text,
+  time,
+  timestamp,
+  timestamptz,
+  timetz,
+  uuid,
   )
 import Path (Path, toFilePath)
-import Prelude hiding (bool)
+import Prelude hiding (Enum, bool)
 
-import Polysemy.Db.Data.Column (NewtypePrim, Prim)
+import Polysemy.Db.Data.Column (Enum, NewtypePrim, Prim)
 import Polysemy.Db.SOP.Constraint (NewtypeCoded)
 
 class ValueEncoder a where
   valueEncoder :: Value a
-
-class (Generic a, b ~ GCode a) => GenEncoder a b where
-  genEncoder :: Value a
-
-enumEncoder ::
-  Show a =>
-  Value a
-enumEncoder =
-  enum show
-
--- necessary to disambiguate the enum instances from the newtype instance
-instance (Show a, Generic a, GCode a ~ '[ '[] ]) => GenEncoder a '[ '[] ] where
-  genEncoder =
-    enumEncoder
-
-instance {-# overlappable #-} (Show a, Generic a, GCode a ~ ('[] : cs)) => GenEncoder a ('[] : cs) where
-  genEncoder =
-    enumEncoder
-
-instance (Coercible c a, Generic a, GCode a ~ '[ '[c]], ValueEncoder c) => GenEncoder a '[ '[c]] where
-  genEncoder =
-    coerce >$< valueEncoder @c
-
-instance {-# overlappable #-} GenEncoder a b => ValueEncoder a where
-  valueEncoder =
-    genEncoder @a
 
 instance ValueEncoder Bool where
   valueEncoder =
@@ -181,6 +154,10 @@ instance {-# overlappable #-} ValueEncoder a => RepEncoder r a where
 instance RepEncoder r a => RepEncoder (Prim r) a where
   repEncoder =
     repEncoder @r
+
+instance Show a => RepEncoder (Enum r) a where
+  repEncoder =
+    enum show
 
 instance (NewtypeCoded a c, RepEncoder r c) => RepEncoder (NewtypePrim r) a where
   repEncoder =

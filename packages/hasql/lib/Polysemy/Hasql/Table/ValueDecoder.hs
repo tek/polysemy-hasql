@@ -11,7 +11,6 @@ import Data.Time (
   UTCTime,
   toModifiedJulianDay,
   )
-import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (
   Value,
   bool,
@@ -34,39 +33,15 @@ import Hasql.Decoders (
   uuid,
   )
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
-import Prelude hiding (bool)
+import Prelude hiding (Enum, bool)
 
-import Polysemy.Db.Data.Column (NewtypePrim, Prim)
-import Polysemy.Db.SOP.Constraint (Coded, NewtypeCoded)
+import Polysemy.Db.Data.Column (Enum, NewtypePrim, Prim)
+import Polysemy.Db.SOP.Constraint (NewtypeCoded)
 import Polysemy.Hasql.SOP.Enum (EnumTable)
 import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 
 class ValueDecoder a where
   valueDecoder :: Value a
-
-class Coded a b => GenDecoder a b where
-  genDecoder :: Value a
-
--- necessary to disambiguate the enum instances from the newtype instance
-instance (EnumTable a, GCode a ~ '[ '[] ]) => GenDecoder a '[ '[] ] where
-  genDecoder =
-    enumDecodeValue
-
-instance (EnumTable a, GCode a ~ ('[] : cs)) => GenDecoder a ('[] : cs) where
-  genDecoder =
-    enumDecodeValue
-
-instance (NewtypeCoded a c, ValueDecoder c) => GenDecoder a '[ '[c]] where
-  genDecoder =
-    coerce <$> valueDecoder @c
-
-instance {-# overlappable #-} (
-    Generic a,
-    GenDecoder a b
-  ) => ValueDecoder a where
-  valueDecoder =
-    genDecoder @a
-  {-# inline valueDecoder #-}
 
 instance ValueDecoder Bool where
   valueDecoder =
@@ -207,6 +182,10 @@ instance {-# overlappable #-} ValueDecoder a => RepDecoder r a where
 instance ValueDecoder a => RepDecoder (Prim r) a where
   repDecoder =
     valueDecoder
+
+instance EnumTable a => RepDecoder (Enum r) a where
+  repDecoder =
+    enumDecodeValue
 
 instance (NewtypeCoded a c, ValueDecoder c) => RepDecoder (NewtypePrim r) a where
   repDecoder =

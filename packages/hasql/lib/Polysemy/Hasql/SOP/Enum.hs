@@ -5,7 +5,6 @@ module Polysemy.Hasql.SOP.Enum where
 import qualified Data.Map.Strict as Map
 import qualified Generics.SOP as SOP
 import Generics.SOP (
-  DatatypeInfoOf,
   I,
   K(K),
   NP(Nil),
@@ -18,7 +17,7 @@ import Generics.SOP (
   type (-.->),
   unK,
   )
-import Generics.SOP.GGP (GCode, gto)
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf, gto)
 import qualified Generics.SOP.Type.Metadata as T
 
 import Polysemy.Db.SOP.Constraint (IsEnum, IsNullary, ReifySOP)
@@ -27,7 +26,7 @@ genEnumTable ::
   ∀ a mod name ctors strictness .
   IsEnum a =>
   ReifySOP a (GCode a) =>
-  DatatypeInfoOf a ~ 'T.ADT mod name ctors strictness =>
+  GDatatypeInfoOf a ~ 'T.ADT mod name ctors strictness =>
   T.DemoteConstructorInfos ctors (GCode a) =>
   Map Text a
 genEnumTable =
@@ -48,7 +47,7 @@ instance
   (
   IsEnum a,
   ReifySOP a (GCode a),
-  DatatypeInfoOf a ~ 'T.ADT mod name ctors strictness,
+  GDatatypeInfoOf a ~ 'T.ADT mod name ctors strictness,
   T.DemoteConstructorInfos ctors (GCode a)
   ) =>
   EnumTable a where

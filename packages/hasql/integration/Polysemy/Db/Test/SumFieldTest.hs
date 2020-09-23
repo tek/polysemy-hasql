@@ -5,8 +5,9 @@ import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
+import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, Prim, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
 import Polysemy.Db.Data.ColumnParams (ColumnParams(unique))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
@@ -43,6 +44,14 @@ import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
 
+data Nume =
+  One
+  |
+  Two
+  |
+  Three
+  deriving (Eq, Show, Generic)
+
 newtype Newt =
   Newt Int
   deriving (Eq, Show, Generic)
@@ -65,13 +74,13 @@ data SinisterRep =
 data Summy =
   Laevus { lInt :: Int, lSinister :: Sinister }
   |
-  Dexter { rText :: Text, rNewt :: Newt, rDouble :: Double }
+  Dexter { rText :: Text, rNewt :: Newt, rNume :: Nume }
   deriving (Eq, Show, Generic)
 
 data SummyRep =
   LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
   |
-  DexterRep { rText :: Prim Auto, rNewt :: NewtypePrim Auto, rDouble :: Prim Auto }
+  DexterRep { rText :: Prim Auto, rNewt :: NewtypePrim Auto, rNume :: Enum Auto }
   deriving (Eq, Show, Generic)
 
 instance ExplicitColumnParams SummyRep where
@@ -160,7 +169,7 @@ queryParams_Sinister =
 type SumColumns_Summy =
   [
     ProdColumn '[Prim Auto, SinisterRepFlatten],
-    ProdColumn '[Prim Auto, NewtypePrim Auto, Prim Auto]
+    ProdColumn '[Prim Auto, NewtypePrim Auto, Enum Auto]
   ]
 
 type SumColumn_Summy =
@@ -223,7 +232,7 @@ laevus =
 
 dexter :: SumField
 dexter =
-  SumField id' (Dexter "water" 5 4.6)
+  SumField id' (Dexter "water" 5 Three)
 
 prog ::
   Member (Store IdQuery DbError SumField) r =>
