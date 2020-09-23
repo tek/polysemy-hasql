@@ -3,6 +3,7 @@ module Polysemy.Hasql.Table.Representation where
 import Data.Vector (Vector)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo, DatatypeInfo(ADT, Newtype))
+import Path (Path)
 import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(Text, ShowType), TypeError)
 import Type.Errors.Pretty (type (<>))
@@ -67,6 +68,7 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode UUID = Prim Auto
   ColumnCode Float = Prim Auto
   ColumnCode Double = Prim Auto
+  ColumnCode (Path _ _) = Prim Auto
   ColumnCode [d] = Prim Auto
   ColumnCode (NonEmpty d) = Prim Auto
   ColumnCode (Vector d) = Prim Auto

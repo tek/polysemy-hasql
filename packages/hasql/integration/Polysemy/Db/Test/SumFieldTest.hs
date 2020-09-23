@@ -1,10 +1,12 @@
 module Polysemy.Db.Test.SumFieldTest where
 
+import Path (absfile)
 import Generics.SOP (I, NP, NS)
 import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
+import Path (Abs, File, Path)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
@@ -74,13 +76,13 @@ data SinisterRep =
 data Summy =
   Laevus { lInt :: Int, lSinister :: Sinister }
   |
-  Dexter { rText :: Text, rNewt :: Newt, rNume :: Nume }
+  Dexter { rPath :: Path Abs File, rNewt :: Newt, rNume :: Nume }
   deriving (Eq, Show, Generic)
 
 data SummyRep =
   LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
   |
-  DexterRep { rText :: Prim Auto, rNewt :: NewtypePrim Auto, rNume :: Enum Auto }
+  DexterRep { rPath :: Prim Auto, rNewt :: NewtypePrim Auto, rNume :: Enum Auto }
   deriving (Eq, Show, Generic)
 
 instance ExplicitColumnParams SummyRep where
@@ -232,7 +234,7 @@ laevus =
 
 dexter :: SumField
 dexter =
-  SumField id' (Dexter "water" 5 Three)
+  SumField id' (Dexter [absfile|/foo/bar|] 5 Three)
 
 prog ::
   Member (Store IdQuery DbError SumField) r =>

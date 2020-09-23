@@ -1,6 +1,7 @@
 module Polysemy.Db.Test.RepTest where
 
 import Generics.SOP.GGP (GCode)
+import Path (Abs, File, Path)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
@@ -35,7 +36,7 @@ data Nummy =
 
 data Inside =
   Inside {
-    ii :: Int,
+    ii :: Path Abs File,
     tt :: Maybe Newty
   }
   deriving (Eq, Show, Generic)
