@@ -82,7 +82,7 @@ library
     , contravariant
     , generics-sop
     , ghc-prim
-    , hasql >=1.4 && <1.5
+    , hasql >=1.4.3 && <1.5
     , lens
     , path
     , polysemy
@@ -125,7 +125,7 @@ test-suite polysemy-hasql-integration
     , contravariant
     , generics-sop
     , ghc-prim
-    , hasql >=1.4 && <1.5
+    , hasql >=1.4.3 && <1.5
     , hedgehog
     , lens
     , path
@@ -170,7 +170,7 @@ test-suite polysemy-hasql-unit
     , contravariant
     , generics-sop
     , ghc-prim
-    , hasql >=1.4 && <1.5
+    , hasql >=1.4.3 && <1.5
     , hedgehog
     , lens
     , path

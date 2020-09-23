@@ -21,7 +21,7 @@ dependencies:
   - chronos
   - contravariant
   - ghc-prim
-  - hasql ^>= 1.4
+  - hasql ^>= 1.4.3
   - path
   - polysemy-plugin
   - scientific
