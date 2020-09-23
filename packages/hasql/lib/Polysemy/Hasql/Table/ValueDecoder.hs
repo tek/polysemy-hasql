@@ -36,25 +36,27 @@ import Hasql.Decoders (
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
 import Prelude hiding (bool)
 
+import Polysemy.Db.Data.Column (NewtypePrim, Prim)
+import Polysemy.Db.SOP.Constraint (Coded, NewtypeCoded)
 import Polysemy.Hasql.SOP.Enum (EnumTable)
 import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 
 class ValueDecoder a where
   valueDecoder :: Value a
 
-class (Generic a, b ~ GCode a) => GenDecoder a b where
+class Coded a b => GenDecoder a b where
   genDecoder :: Value a
 
 -- necessary to disambiguate the enum instances from the newtype instance
-instance (EnumTable a, Generic a, GCode a ~ '[ '[] ]) => GenDecoder a '[ '[] ] where
+instance (EnumTable a, GCode a ~ '[ '[] ]) => GenDecoder a '[ '[] ] where
   genDecoder =
     enumDecodeValue
 
-instance (EnumTable a, Generic a, GCode a ~ ('[] : cs)) => GenDecoder a ('[] : cs) where
+instance (EnumTable a, GCode a ~ ('[] : cs)) => GenDecoder a ('[] : cs) where
   genDecoder =
     enumDecodeValue
 
-instance (Coercible c a, Generic a, GCode a ~ '[ '[c]], ValueDecoder c) => GenDecoder a '[ '[c]] where
+instance (NewtypeCoded a c, ValueDecoder c) => GenDecoder a '[ '[c]] where
   genDecoder =
     coerce <$> valueDecoder @c
 
@@ -194,3 +196,14 @@ instance ValueDecoder Chronos.Time where
   valueDecoder =
     Chronos.Time <$> int8
   {-# inline valueDecoder #-}
+
+class RepDecoder (rep :: *) (a :: *) where
+  repDecoder :: Value a
+
+instance ValueDecoder a => RepDecoder (Prim r) a where
+  repDecoder =
+    valueDecoder
+
+instance (NewtypeCoded a c, ValueDecoder c) => RepDecoder (NewtypePrim r) a where
+  repDecoder =
+    coerce <$> valueDecoder @c

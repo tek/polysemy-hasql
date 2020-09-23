@@ -9,7 +9,7 @@ import System.IO.Unsafe (unsafePerformIO)
 
 srcLoc :: CallStack -> SrcLoc
 srcLoc = \case
-  (getCallStack -> (_, loc):_) -> loc
+  (getCallStack -> (_, loc) : _) -> loc
   _ -> error "Debug.srcLoc: empty CallStack"
 
 debugPrintWithLoc ::
@@ -18,7 +18,7 @@ debugPrintWithLoc ::
   Text ->
   m ()
 debugPrintWithLoc SrcLoc{..} msg = do
-  () <- return $ unsafePerformIO (putStrLn [i|#{srcLocFile}:#{srcLocStartLine}:#{srcLocStartCol} #{msg}|])
+  () <- return $ unsafePerformIO (putStrLn [i|#{srcLocModule}:#{srcLocStartLine}:#{srcLocStartCol} #{msg}|])
   pure ()
 
 dbg ::
@@ -29,7 +29,6 @@ dbg ::
 dbg =
   debugPrintWithLoc (srcLoc callStack)
 {-# inline dbg #-}
-{-# warning dbg "‘dbg’ in code" #-}
 
 dbgs ::
   HasCallStack =>
@@ -40,7 +39,6 @@ dbgs ::
 dbgs a =
   debugPrintWithLoc (srcLoc callStack) (show a)
 {-# inline dbgs_ #-}
-{-# warning dbgs "‘dbgs’ in code" #-}
 
 dbgs_ ::
   HasCallStack =>
@@ -51,4 +49,3 @@ dbgs_ ::
 dbgs_ a =
   a <$ debugPrintWithLoc (srcLoc callStack) (show a)
 {-# inline dbgs #-}
-{-# warning dbgs_ "‘dbgs_’ in code" #-}

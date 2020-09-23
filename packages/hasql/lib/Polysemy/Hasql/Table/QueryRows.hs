@@ -13,6 +13,7 @@ import Generics.SOP.GGP (GCode, gto)
 import Hasql.Decoders (Row)
 import Prelude hiding (All)
 
+import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.SOP.Constraint (ReifySOP)
 import Polysemy.Hasql.Table.ColumnType (Done, Multi, Single, UnconsRep)
 import Polysemy.Hasql.Table.QueryRow (NullVariants, QueryRow(queryRow), readNulls2)
@@ -26,11 +27,11 @@ instance ProductRows Done '[] where
     Nil
 
 instance (
-    QueryRow d,
+    QueryRow rep d,
     ProductRows (UnconsRep reps) ds
-  ) => ProductRows (Single reps) (d : ds) where
+  ) => ProductRows (Single rep reps) (d : ds) where
     genRows =
-      queryRow @d :* genRows @(UnconsRep reps) @ds
+      queryRow @rep @d :* genRows @(UnconsRep reps) @ds
 
 instance (
     ColumnRows head d (GCode d),
@@ -74,7 +75,7 @@ instance (
     SumRows repss dss
   ) => ColumnRows (SumColumn repss) d dss where
     genQueryRows =
-      gto . SOP <$> (sumRows @repss =<< queryRow)
+      gto . SOP <$> (sumRows @repss =<< queryRow @(Prim Auto))
 
 class QueryRows rep d where
   queryRows :: Row d

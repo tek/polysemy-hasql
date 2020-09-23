@@ -17,3 +17,10 @@ instance (
   GenQueryTable rep q d where
     genQueryTable =
       QueryTable (genTable @rep @d) (queryParams @(Rep q) @q) queryWhere
+
+queryTable ::
+  ∀ q d .
+  GenQueryTable (Rep d) q d =>
+  QueryTable q d
+queryTable =
+  genQueryTable @(Rep d)

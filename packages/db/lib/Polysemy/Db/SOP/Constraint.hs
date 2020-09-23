@@ -14,10 +14,13 @@ import Prelude hiding (All)
 import Polysemy.Db.Text.Case (unCamelCase)
 
 type Coded (d :: *) (dss :: [[*]]) =
-  (GCode d ~ dss)
+  GCode d ~ dss
 
 type ProductCoded (d :: *) (ds :: [*]) =
   Coded d '[ds]
+
+type NewtypeCoded (d :: *) (a :: *) =
+  (Coercible d a, ProductCoded d '[a])
 
 type ReifySOP (d :: *) (dss :: [[*]]) =
   (Generic d, GTo d, GCode d ~ dss, All2 Top dss)

@@ -7,7 +7,7 @@ import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(Text, ShowType), TypeError)
 import Type.Errors.Pretty (type (<>))
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, Prim, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
 import Polysemy.Db.SOP.Error (ErrorWithType, JoinComma, MessageWithType)
 import Polysemy.Db.SOP.FieldNames (FieldNames)
 
@@ -56,7 +56,7 @@ type family ADTColumnCode (dss :: [[*]]) :: * where
     SumColumnCode dss dss
 
 type family DataColumnCode (dss :: [[*]]) (info :: DatatypeInfo) :: * where
-  DataColumnCode dss ('Newtype _ _ _) = Prim Auto
+  DataColumnCode dss ('Newtype _ _ _) = NewtypePrim Auto
   DataColumnCode dss ('ADT _ _ _ _) = ADTColumnCode dss
 
 type family ColumnCode (d :: *) :: * where
@@ -67,10 +67,10 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode UUID = Prim Auto
   ColumnCode Float = Prim Auto
   ColumnCode Double = Prim Auto
-  ColumnCode (Maybe d) = Prim Auto
   ColumnCode [d] = Prim Auto
   ColumnCode (NonEmpty d) = Prim Auto
   ColumnCode (Vector d) = Prim Auto
+  ColumnCode (Maybe d) = ColumnCode d
   ColumnCode d = DataColumnCode (GCode d) (GDatatypeInfoOf d)
 
 type family ColumnCodes (ds :: [*]) :: [*] where

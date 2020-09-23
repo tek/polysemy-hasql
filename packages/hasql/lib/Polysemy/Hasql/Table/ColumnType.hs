@@ -5,7 +5,7 @@ import Generics.SOP.GGP (GCode)
 import Path (Path)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Enum, Flatten, Prim, Sum)
+import Polysemy.Db.Data.Column (Enum, Flatten, NewtypePrim, Prim, Sum)
 
 class ColumnType a where
   columnType :: Text
@@ -73,7 +73,7 @@ data Done =
   Done
   deriving (Show)
 
-data Single (tail :: [*]) =
+data Single (rep :: *) (tail :: [*]) =
   Single
   deriving (Show)
 
@@ -85,5 +85,6 @@ type family UnconsRep (reps :: [*]) :: *
 type instance UnconsRep '[] = Done
 type instance UnconsRep (Sum r : reps) = Multi r reps
 type instance UnconsRep (Flatten r : reps) = Multi r reps
-type instance UnconsRep (Prim r : reps) = Single reps
-type instance UnconsRep (Enum r : reps) = Single reps
+type instance UnconsRep (Prim r : reps) = Single (Prim r) reps
+type instance UnconsRep (NewtypePrim r : reps) = Single (NewtypePrim r) reps
+type instance UnconsRep (Enum r : reps) = Single (Enum r) reps

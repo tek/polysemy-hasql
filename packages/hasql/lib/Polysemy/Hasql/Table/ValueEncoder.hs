@@ -11,9 +11,32 @@ import Data.Time (
   UTCTime,
   )
 import Generics.SOP.GGP (GCode)
-import Hasql.Encoders
+import Hasql.Encoders (
+  uuid,
+  interval,
+  timetz,
+  time,
+  timestamptz,
+  timestamp,
+  date,
+  bytea,
+  text,
+  char,
+  numeric,
+  float8,
+  float4,
+  int8,
+  int4,
+  int2,
+  enum,
+  Value,
+  bool,
+  )
 import Path (Path, toFilePath)
 import Prelude hiding (bool)
+
+import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim)
+import Polysemy.Db.SOP.Constraint (NewtypeCoded)
 
 class ValueEncoder a where
   valueEncoder :: Value a
@@ -147,3 +170,18 @@ instance ValueEncoder Chronos.Date where
 instance ValueEncoder Chronos.Time where
   valueEncoder =
     Chronos.getTime >$< int8
+
+class RepEncoder (rep :: *) (a :: *) where
+  repEncoder :: Value a
+
+instance ValueEncoder a => RepEncoder Auto a where
+  repEncoder =
+    valueEncoder
+
+instance RepEncoder r a => RepEncoder (Prim r) a where
+  repEncoder =
+    repEncoder @r
+
+instance (NewtypeCoded a c, ValueEncoder c) => RepEncoder (NewtypePrim r) a where
+  repEncoder =
+    coerce >$< valueEncoder @c

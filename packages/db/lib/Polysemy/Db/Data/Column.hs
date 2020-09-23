@@ -26,6 +26,10 @@ data Prim a =
   Prim
   deriving (Eq, Show)
 
+data NewtypePrim a =
+  NewtypePrim
+  deriving (Eq, Show)
+
 data Sum a =
   Sum
   deriving (Eq, Show)

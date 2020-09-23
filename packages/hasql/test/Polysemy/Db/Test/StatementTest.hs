@@ -10,8 +10,8 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
 import Polysemy.Hasql.Table.QueryFields (QueryFields)
-import Polysemy.Hasql.Table.QueryTable (genQueryTable)
-import Polysemy.Hasql.Table.TableStructure (genTableStructure)
+import Polysemy.Hasql.Table.QueryTable (queryTable)
+import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data WithMaybe =
@@ -90,7 +90,7 @@ test_selectStatement =
       [qt|select "a", "b", "c", ("sum_field").sum_index, ("sum_field")."l"."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
     stmtText :: SqlCode
     stmtText =
-      Statement.selectWhereSql (genQueryTable @RecRep @Q1 @Rec)
+      Statement.selectWhereSql (queryTable @Q1 @Rec)
 
 test_insertStatement :: UnitTest
 test_insertStatement =
@@ -101,7 +101,7 @@ test_insertStatement =
       [qt|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, row($5), row($6, $7)))|]
     stmtText :: SqlCode
     stmtText =
-      Query.insert (genTableStructure @RecRep @Rec)
+      Query.insert (tableStructure @Rec)
 
 test_createStatement :: UnitTest
 test_createStatement =

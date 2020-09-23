@@ -2,65 +2,57 @@ module Polysemy.Hasql.Table.QueryParam where
 
 import qualified Data.Vector as Vector
 import Data.Vector (Vector)
-import Generics.SOP (All, I, NP, hcpure, unComp, (:.:)(Comp))
 import Hasql.Encoders (Params, Value, array, dimension, element, nonNullable, nullable, param)
 import Prelude hiding (All)
 
 import Polysemy.Db.Data.Column (Flatten)
 import Polysemy.Db.SOP.Constraint (ProductCoded)
-import Polysemy.Db.SOP.Contravariant (sequenceContravariantNPF)
 import Polysemy.Hasql.Table.Representation (ProdColumn)
-import Polysemy.Hasql.Table.ValueEncoder (ValueEncoder(valueEncoder))
+import Polysemy.Hasql.Table.ValueEncoder (RepEncoder, repEncoder)
 
-class QueryParam a where
+class QueryParam (rep :: *) (a :: *) where
   queryParam :: Params a
 
 value :: Value a -> Params a
 value =
   param . nonNullable
 
-instance ValueEncoder a => QueryParam [a] where
+instance RepEncoder r a => QueryParam r [a] where
   queryParam =
-    value $ array (dimension foldl' (element (nonNullable valueEncoder)))
+    value $ array (dimension foldl' (element (nonNullable (repEncoder @r))))
   {-# inline queryParam #-}
 
-instance ValueEncoder a => QueryParam (Vector a) where
+instance RepEncoder r a => QueryParam r (Vector a) where
   queryParam =
-    value $ array (dimension Vector.foldl' (element (nonNullable valueEncoder)))
+    value $ array (dimension Vector.foldl' (element (nonNullable (repEncoder @r))))
   {-# inline queryParam #-}
 
-instance ValueEncoder a => QueryParam (NonEmpty a) where
+instance RepEncoder r a => QueryParam r (NonEmpty a) where
   queryParam =
-    value $ array (dimension foldl' (element (nonNullable valueEncoder)))
+    value $ array (dimension foldl' (element (nonNullable (repEncoder @r))))
   {-# inline queryParam #-}
 
-instance ValueEncoder a => QueryParam (Maybe a) where
+instance RepEncoder r a => QueryParam r (Maybe a) where
   queryParam =
-    param $ nullable valueEncoder
+    param $ nullable (repEncoder @r)
   {-# inline queryParam #-}
 
-instance {-# overlappable #-} ValueEncoder a => QueryParam a where
+instance {-# overlappable #-} RepEncoder r a => QueryParam r a where
   queryParam =
-    value valueEncoder
+    value (repEncoder @r)
   {-# inline queryParam #-}
+
+type family NullParam a :: * where
+  NullParam (Maybe a) = Maybe a
+  NullParam a = Maybe a
 
 maybeParam ::
-  ∀ a .
-  ValueEncoder a =>
-  (Params :.: Maybe) a
+  ∀ rep a .
+  NullParam a ~ Maybe a =>
+  QueryParam rep (NullParam a) =>
+  Params (Maybe a)
 maybeParam =
-  Comp (param (nullable (valueEncoder @a)))
-
-maybeRow ::
-  ∀ ds .
-  All ValueEncoder ds =>
-  Params (NP (I :.: Maybe) ds)
-maybeRow =
-  sequenceContravariantNPF ps
-  where
-    ps :: NP (Params :.: Maybe) ds
-    ps =
-      hcpure (Proxy @ValueEncoder) maybeParam
+  queryParam @rep @(NullParam a)
 
 class NullVariant (rep :: [*]) (ds :: [*]) where
   writeNulls :: Params d
@@ -71,10 +63,12 @@ instance NullVariant rep '[] where
 
 instance {-# overlappable #-} (
     NullVariant reps ds,
-    ValueEncoder d
+    NullParam d ~ Maybe a,
+    NullParam a ~ Maybe a,
+    QueryParam rep (NullParam d)
   ) => NullVariant (rep : reps) (d : ds) where
   writeNulls =
-    contramap (const Nothing) (unComp (maybeParam @d)) <> writeNulls @reps @ds
+    contramap (const Nothing) (maybeParam @rep @a) <> writeNulls @reps @ds
 
 instance (
     ProductCoded d dSub,

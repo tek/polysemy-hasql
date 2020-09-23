@@ -23,6 +23,7 @@ import Generics.SOP.GGP (GCode, gfrom)
 import Hasql.Encoders (Params)
 import Prelude hiding (All, Enum)
 
+import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.SOP.Constraint (ConstructSOP)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
 import Polysemy.Hasql.Table.ColumnType (Done, Multi, Single, UnconsRep)
@@ -30,25 +31,25 @@ import Polysemy.Hasql.Table.QueryParam (NullVariant, NullVariants, QueryParam(qu
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 
 class ProductParams (reps :: *) (ds :: [*]) where
-  genParams :: NP Params ds
+  productParams :: NP Params ds
 
 instance ProductParams Done '[] where
-  genParams =
+  productParams =
     Nil
 
 instance (
-    QueryParam d,
+    QueryParam rep d,
     ProductParams (UnconsRep reps) ds
-  ) => ProductParams (Single reps) (d : ds) where
-    genParams =
-      queryParam @d :* genParams @(UnconsRep reps) @ds
+  ) => ProductParams (Single rep reps) (d : ds) where
+    productParams =
+      queryParam @rep @d :* productParams @(UnconsRep reps) @ds
 
 instance (
     ColumnParams head d (GCode d),
     ProductParams (UnconsRep tail) ds
   ) => ProductParams (Multi head tail) (d : ds) where
-    genParams =
-      genQueryParams @head @d @(GCode d) :* genParams @(UnconsRep tail) @ds
+    productParams =
+      columnParams @head @d @(GCode d) :* productParams @(UnconsRep tail) @ds
 
 queryParamsNP ::
   ∀ (reps :: *) ds d .
@@ -66,7 +67,7 @@ queryParamsNP =
       unZ . unSOP . gfrom
     qps :: NP (K (Params (NP I ds))) ds
     qps =
-      hzipWith qp (genParams @reps @ds :: NP Params ds) (projections :: NP (Projection I ds) ds)
+      hzipWith qp (productParams @reps @ds :: NP Params ds) (projections :: NP (Projection I ds) ds)
     qp :: ∀ a . Params a -> Projection I ds a -> K (Params (NP I ds)) a
     qp par (Fn proj) =
       K (contramap (unI . proj . K) par)
@@ -96,14 +97,14 @@ instance (
     choose unconsNS inhabited uninhabited
     where
       inhabited =
-        sequenceContravariantNP (genParams @(UnconsRep reps)) <> writeNulls2 @repss @dss
+        sequenceContravariantNP (productParams @(UnconsRep reps)) <> writeNulls2 @repss @dss
       uninhabited =
         writeNulls @reps @ds <> sumParams @repss
 
 sumIndex ::
   Params (NS (NP I) dss)
 sumIndex =
-  contramap hindex queryParam
+  contramap hindex (queryParam @(Prim Auto))
 
 queryParamsNS ::
   ∀ (d :: *) (repss :: [*]) (dss :: [[*]]) .
@@ -114,25 +115,25 @@ queryParamsNS =
   contramap (unSOP . gfrom) (sumIndex <> sumParams @repss)
 
 class ColumnParams (rep :: *) (d :: *) (dss :: [[*]]) where
-  genQueryParams :: Params d
+  columnParams :: Params d
 
 instance (
     ConstructSOP d '[ds],
     ProductParams (UnconsRep reps) ds
   ) => ColumnParams (ProdColumn reps) d '[ds] where
-  genQueryParams =
+  columnParams =
     queryParamsNP @(UnconsRep reps) @ds
 
 instance (
     ConstructSOP d dss,
     SumParams reps dss
   ) => ColumnParams (SumColumn reps) d dss where
-    genQueryParams =
+    columnParams =
       queryParamsNS @d @reps @dss
 
 class QueryParams (rep :: *) (d :: *) where
   queryParams :: Params d
 
 instance ColumnParams (ReifyRepTable rep d) d (GCode d) => QueryParams rep d where
-    queryParams =
-      genQueryParams @(ReifyRepTable rep d) @d @(GCode d)
+  queryParams =
+    columnParams @(ReifyRepTable rep d) @d @(GCode d)

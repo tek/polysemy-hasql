@@ -6,9 +6,9 @@ import Hasql.Decoders (Array, Row, Value, array, column, listArray, nonNullable,
 import Polysemy.Db.Data.Column (Flatten)
 import Polysemy.Db.SOP.Constraint (ProductCoded)
 import Polysemy.Hasql.Table.Representation (ProdColumn)
-import Polysemy.Hasql.Table.ValueDecoder (ValueDecoder(..))
+import Polysemy.Hasql.Table.ValueDecoder (RepDecoder(..))
 
-class QueryRow a where
+class QueryRow (rep :: *) (a :: *) where
   queryRow :: Row a
 
 value :: Value a -> Row a
@@ -19,30 +19,30 @@ values :: Array a -> Row a
 values =
   value . array
 
-instance ValueDecoder a => QueryRow [a] where
+instance RepDecoder r a => QueryRow r [a] where
   queryRow =
-    value (listArray (nonNullable valueDecoder))
+    value (listArray (nonNullable (repDecoder @r)))
   {-# inline queryRow #-}
 
-instance ValueDecoder a => QueryRow (Vector a) where
+instance RepDecoder r a => QueryRow r (Vector a) where
   queryRow =
-    value (vectorArray (nonNullable valueDecoder))
+    value (vectorArray (nonNullable (repDecoder @r)))
   {-# inline queryRow #-}
 
-instance ValueDecoder a => QueryRow (NonEmpty a) where
+instance RepDecoder r a => QueryRow r (NonEmpty a) where
   queryRow = do
-    result <- nonEmpty <$> value (listArray (nonNullable valueDecoder))
+    result <- nonEmpty <$> value (listArray (nonNullable (repDecoder @r)))
     maybe (fail "no elements in NonEmpty field") pure result
   {-# inline queryRow #-}
 
-instance ValueDecoder a => QueryRow (Maybe a) where
+instance RepDecoder r a => QueryRow r (Maybe a) where
   queryRow =
-    column (nullable valueDecoder)
+    column (nullable (repDecoder @r))
   {-# inline queryRow #-}
 
-instance {-# overlappable #-} ValueDecoder a => QueryRow a where
+instance {-# overlappable #-} RepDecoder r a => QueryRow r a where
   queryRow =
-    value valueDecoder
+    value (repDecoder @r)
   {-# inline queryRow #-}
 
 class NullVariants reps (ds :: [*]) where
@@ -56,17 +56,17 @@ instance NullVariants rep '[] where
 -- instead of @QueryRow (Maybe d)@
 instance (
     NullVariants (ProdColumn reps) ds,
-    QueryRow (Maybe d)
+    QueryRow rep (Maybe d)
   ) => NullVariants (ProdColumn (rep : reps)) (Maybe d : ds) where
   readNulls2 =
-    void (queryRow @(Maybe d)) *> readNulls2 @(ProdColumn reps) @ds
+    void (queryRow @rep @(Maybe d)) *> readNulls2 @(ProdColumn reps) @ds
 
 instance {-# overlappable #-} (
     NullVariants (ProdColumn reps) ds,
-    QueryRow (Maybe d)
+    QueryRow rep (Maybe d)
   ) => NullVariants (ProdColumn (rep : reps)) (d : ds) where
   readNulls2 =
-    void (queryRow @(Maybe d)) *> readNulls2 @(ProdColumn reps) @ds
+    void (queryRow @rep @(Maybe d)) *> readNulls2 @(ProdColumn reps) @ds
 
 instance (
     ProductCoded d dSub,

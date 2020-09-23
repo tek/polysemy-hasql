@@ -3,7 +3,7 @@ module Polysemy.Db.Test.RepTest where
 import Generics.SOP.GGP (GCode)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, Prim, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
 import Polysemy.Db.Data.ColumnParams (notNull)
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Table.Columns (columns)
@@ -21,6 +21,10 @@ import Polysemy.Hasql.Table.Representation (
   )
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
+newtype Newty =
+  Newty Text
+  deriving (Eq, Show, Generic)
+
 data Nummy =
   Onesy
   |
@@ -32,28 +36,28 @@ data Nummy =
 data Inside =
   Inside {
     ii :: Int,
-    tt :: Maybe Text
+    tt :: Maybe Newty
   }
   deriving (Eq, Show, Generic)
 
 data InsideRepAuto =
   InsideRepAuto {
     ii :: Prim Auto,
-    tt :: Prim Auto
+    tt :: NewtypePrim Auto
   }
   deriving (Show, Generic)
 
 data InsideRep =
   InsideRep {
     ii :: Prim Auto,
-    tt :: Prim Auto
+    tt :: NewtypePrim Auto
   }
   deriving (Show, Generic)
 
 testInside ::
   ColumnCodes '[Int] ~ '[Prim Auto] =>
-  ColumnCode Inside ~ Flatten (ProdColumn [Prim Auto, Prim Auto]) =>
-  ColumnCodes [Int, Inside] ~ [Prim Auto, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
+  ColumnCode Inside ~ Flatten (ProdColumn [Prim Auto, NewtypePrim Auto]) =>
+  ColumnCodes [Int, Inside] ~ [Prim Auto, Flatten (ProdColumn [Prim Auto, NewtypePrim Auto])] =>
   Rep Inside ~ ProdTable (ProdCode (GCode InsideRepAuto)) =>
   ()
 testInside =
@@ -87,7 +91,7 @@ type SummyCodess =
   [
     [Prim Auto, Enum Auto],
     [Prim Auto, Prim Auto],
-    [Prim Auto, Flatten (ProdColumn [Prim Auto, Prim Auto])]
+    [Prim Auto, Flatten (ProdColumn [Prim Auto, NewtypePrim Auto])]
   ]
 
 testSummy ::
