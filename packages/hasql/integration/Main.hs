@@ -2,6 +2,7 @@ module Main where
 
 import Polysemy.Db.Test.ArrayTest (test_arrayField)
 import Polysemy.Db.Test.InitTest (test_initTable)
+import Polysemy.Db.Test.PKTest (test_pk)
 import Polysemy.Db.Test.QueryTest (test_query)
 import Polysemy.Db.Test.SingletonTest (test_singletonDb)
 import Polysemy.Db.Test.SumFieldTest (test_sumField)
@@ -15,7 +16,8 @@ tests =
     unitTest "schema for a singleton db" test_singletonDb,
     unitTest "array db column" test_arrayField,
     unitTest "query" test_query,
-    unitTest "sum field" test_sumField
+    unitTest "sum field" test_sumField,
+    unitTest "primary key with PK" test_pk
   ]
 
 main :: IO ()

@@ -36,12 +36,11 @@ table =
 testRep ::
   Rep (PK Int Rec) ~ ProdTable [Prim PrimaryKey, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
   ()
-
 testRep =
   ()
 
-test_sumField :: UnitTest
-test_sumField =
+test_pk :: UnitTest
+test_pk =
   integrationTest do
     _ <- pure testRep
     dbgs table
