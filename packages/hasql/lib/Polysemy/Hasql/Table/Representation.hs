@@ -69,9 +69,9 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode Float = Prim Auto
   ColumnCode Double = Prim Auto
   ColumnCode (Path _ _) = Prim Auto
-  ColumnCode [d] = Prim Auto
-  ColumnCode (NonEmpty d) = Prim Auto
-  ColumnCode (Vector d) = Prim Auto
+  ColumnCode [d] = ColumnCode d
+  ColumnCode (NonEmpty d) = ColumnCode d
+  ColumnCode (Vector d) = ColumnCode d
   ColumnCode (Maybe d) = ColumnCode d
   ColumnCode (PK f _ d) = ProdColumn [f PrimaryKey, ColumnCode d]
   ColumnCode d = DataColumnCode (GCode d) (GDatatypeInfoOf d)

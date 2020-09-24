@@ -1,28 +1,38 @@
 module Polysemy.Db.Test.ArrayTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim)
+import Prelude hiding (Enum)
+
+import Polysemy.Db.Data.Column (Auto, Enum, Prim)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
+import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
+
+data Flag =
+  On
+  |
+  Off
+  |
+  Superposition
+  deriving (Eq, Show, Generic)
 
 data ArrayField =
   ArrayField {
     id :: UUID,
-    f1 :: [Int]
+    f1 :: [Flag]
   }
   deriving (Eq, Show, Generic)
 
 data ArrayFieldRep =
   ArrayFieldRep {
     id :: Prim Auto,
-    f1 :: Prim Auto
+    f1 :: Enum Auto
   }
   deriving (Eq, Show, Generic)
 
@@ -32,7 +42,7 @@ id' =
 
 array :: ArrayField
 array =
-  ArrayField id' [1, 2, 3]
+  ArrayField id' [On, Off, Superposition]
 
 prog ::
   Member (Store IdQuery DbError ArrayField) r =>
