@@ -73,7 +73,7 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode (NonEmpty d) = Prim Auto
   ColumnCode (Vector d) = Prim Auto
   ColumnCode (Maybe d) = ColumnCode d
-  ColumnCode (PK _ d) = ProdColumn [Prim PrimaryKey, ColumnCode d]
+  ColumnCode (PK f _ d) = ProdColumn [f PrimaryKey, ColumnCode d]
   ColumnCode d = DataColumnCode (GCode d) (GDatatypeInfoOf d)
 
 type family ColumnCodes (ds :: [*]) :: [*] where
@@ -93,7 +93,7 @@ type family ProdCode (d :: [[*]]) :: [*] where
   ProdCode _ = TypeError ('Text "not a product type")
 
 type family Rep d :: * where
-  Rep (PK _ d) = ProdTable [Prim PrimaryKey, ColumnCode d]
+  Rep (PK f i d) = ProdTable [f PrimaryKey, ColumnCode d]
   Rep d = TableRep d (ColumnCodess (GCode d))
 
 type family NestedSum (dss :: [[*]]) :: [*] where

@@ -38,18 +38,18 @@ data Enum a =
   Enum
   deriving (Eq, Show)
 
-data PK i a =
+data PK (f :: * -> *) i a =
   PK {
     id :: i,
     payload :: a
   }
   deriving (Eq, Show, Generic)
 
-uidToPK :: Uid i a -> PK i a
+uidToPK :: Uid i a -> PK f i a
 uidToPK (Uid id' a) =
   PK id' a
 
-pkToUid :: PK i a -> Uid i a
+pkToUid :: PK f i a -> Uid i a
 pkToUid (PK id' a) =
   Uid id' a
 
@@ -59,9 +59,12 @@ newtype PKQuery i =
   }
   deriving (Eq, Show, Generic)
 
-data PKRep i r =
+data PKRep f i r =
   PKRep {
-    id :: Prim PrimaryKey,
+    id :: f PrimaryKey,
     payload :: Flatten r
   }
-  deriving (Eq, Show, Generic)
+  deriving (Generic)
+
+deriving instance Show (PKRep Prim i r)
+deriving instance Show (PKRep NewtypePrim i r)

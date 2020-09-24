@@ -113,12 +113,12 @@ interpretStoreDbFullGenAs toD fromD fromQ =
   interpretStoreDbFullAs toD fromD fromQ (genQueryTable @rep)
 
 interpretStoreDbFullGenUid ::
-  ∀ i rep d r .
-  GenQueryTable (PKRep i rep) (PKQuery i) (PK i d) =>
+  ∀ i rep d f r .
+  GenQueryTable (PKRep f i rep) (PKQuery i) (PK f i d) =>
   Members StoreDeps r =>
   InterpreterFor (Store i DbError (Uid i d)) r
 interpretStoreDbFullGenUid =
-  interpretStoreDbFullGenAs @(PKRep i rep) pkToUid uidToPK PKQuery
+  interpretStoreDbFullGenAs @(PKRep f i rep) @(PK f i d) pkToUid uidToPK PKQuery
 
 interpretStoreDbFull ::
   Members StoreDeps r =>

@@ -1,6 +1,6 @@
 module Polysemy.Db.Test.PKTest where
 
-import Polysemy.Db.Data.Column (Auto, Flatten, PK(PK), PKQuery(PKQuery), Prim, PrimaryKey)
+import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PK(PK), PKQuery(PKQuery), Prim, PrimaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
@@ -13,6 +13,11 @@ import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
 
+newtype Id =
+  Id { unId :: Int }
+  deriving (Eq, Show, Generic)
+  deriving newtype (Num, Real, Enum, Integral, Ord)
+
 data Rec =
   Rec {
     a :: Int,
@@ -21,20 +26,20 @@ data Rec =
   deriving (Eq, Show, Generic)
 
 prog ::
-  Member (Store (PKQuery Int) DbError (PK Int Rec)) r =>
-  PK Int Rec ->
-  Sem r (Either (StoreError DbError) (Maybe (PK Int Rec)))
+  Member (Store (PKQuery Id) DbError (PK NewtypePrim Id Rec)) r =>
+  PK NewtypePrim Id Rec ->
+  Sem r (Either (StoreError DbError) (Maybe (PK NewtypePrim Id Rec)))
 prog specimen = do
   runError do
     Store.upsert specimen
     Store.fetch (PKQuery 2)
 
-table :: QueryTable (PKQuery Int) (PK Int Rec)
+table :: QueryTable (PKQuery Id) (PK NewtypePrim Id Rec)
 table =
   queryTable
 
 testRep ::
-  Rep (PK Int Rec) ~ ProdTable [Prim PrimaryKey, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
+  Rep (PK NewtypePrim Id Rec) ~ ProdTable [NewtypePrim PrimaryKey, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
   ()
 testRep =
   ()
