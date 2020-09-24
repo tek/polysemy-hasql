@@ -21,5 +21,5 @@ table ::
   ∀ (d :: *) .
   GenTable (Rep d) d =>
   Table d
-table =
+table = do
   genTable @(Rep d)

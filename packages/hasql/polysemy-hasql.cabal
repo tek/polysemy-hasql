@@ -108,6 +108,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Db.Test.ArrayTest
       Polysemy.Db.Test.DbConfig
       Polysemy.Db.Test.InitTest
+      Polysemy.Db.Test.PKTest
       Polysemy.Db.Test.QueryTest
       Polysemy.Db.Test.Run
       Polysemy.Db.Test.SingletonTest
