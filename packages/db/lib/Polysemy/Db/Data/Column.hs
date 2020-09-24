@@ -45,6 +45,8 @@ data PK (f :: * -> *) i a =
   }
   deriving (Eq, Show, Generic)
 
+type PKPrim = PK Prim
+
 uidToPK :: Uid i a -> PK f i a
 uidToPK (Uid id' a) =
   PK id' a
@@ -65,6 +67,8 @@ data PKRep f i r =
     payload :: Flatten r
   }
   deriving (Generic)
+
+type PKPrimRep = PKRep Prim
 
 deriving instance Show (PKRep Prim i r)
 deriving instance Show (PKRep NewtypePrim i r)
