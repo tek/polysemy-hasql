@@ -57,21 +57,21 @@ interpretManyGenAs fromQ toD =
   interpretManyAs fromQ toD (genQueryTable @rep @qIn @dIn)
 
 interpretManyGenUidAs ::
-  ∀ rep i qOut qIn d e r .
-  GenQueryTable (PKRep i rep) qIn (PK i d) =>
-  Member (Database e (PK i d)) r =>
+  ∀ rep i qOut qIn d e f r .
+  GenQueryTable (PKRep f i rep) qIn (PK f i d) =>
+  Member (Database e (PK f i d)) r =>
   (qOut -> qIn) ->
   InterpreterFor (StoreQuery qOut e [Uid i d]) r
 interpretManyGenUidAs fromQ =
-  interpretManyAs fromQ pkToUid (genQueryTable @(PKRep i rep) @qIn @(PK i d))
+  interpretManyAs fromQ pkToUid (genQueryTable @(PKRep f i rep) @qIn @(PK f i d))
 
 interpretManyGenUid ::
-  ∀ rep i q d e r .
-  GenQueryTable (PKRep i rep) q (PK i d) =>
-  Member (Database e (PK i d)) r =>
+  ∀ rep i q d e f r .
+  GenQueryTable (PKRep f i rep) q (PK f i d) =>
+  Member (Database e (PK f i d)) r =>
   InterpreterFor (StoreQuery q e [Uid i d]) r
 interpretManyGenUid =
-  interpretManyAs id pkToUid (genQueryTable @(PKRep i rep) @q @(PK i d))
+  interpretManyAs id pkToUid (genQueryTable @(PKRep f i rep) @q @(PK f i d))
 
 interpretMany ::
   Member (Database e d) r =>

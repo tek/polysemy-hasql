@@ -149,7 +149,7 @@ targetComposite =
     TableStructure "m" [Column "mi" "bigint" def Nothing, Column "mt" "text" def Nothing],
     TableStructure "r" [
       Column "ri" "bigint" def Nothing,
-      Column "ii" "bigint" def Nothing,
+      Column "ii" "text" def Nothing,
       Column "tt" "text" def { notNull = False } Nothing
     ]
   ]

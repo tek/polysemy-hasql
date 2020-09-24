@@ -36,21 +36,21 @@ interpretOneGenAs fromQ toD =
   interpretOneAs fromQ toD (genQueryTable @rep @qIn @dIn)
 
 interpretOneGenUidAs ::
-  ∀ rep i d qOut qIn e r .
-  GenQueryTable (PKRep i rep) qIn (PK i d) =>
-  Member (Database e (PK i d)) r =>
+  ∀ rep i d qOut qIn e f r .
+  GenQueryTable (PKRep f i rep) qIn (PK f i d) =>
+  Member (Database e (PK f i d)) r =>
   (qOut -> qIn) ->
   InterpreterFor (StoreQuery qOut e (Maybe (Uid i d))) r
 interpretOneGenUidAs fromQ =
-  interpretOneAs fromQ pkToUid (genQueryTable @(PKRep i rep) @qIn @(PK i d))
+  interpretOneAs fromQ pkToUid (genQueryTable @(PKRep f i rep) @qIn @(PK f i d))
 
 interpretOneGenUid ::
-  ∀ rep i q d e r .
-  GenQueryTable (PKRep i rep) q (PK i d) =>
-  Member (Database e (PK i d)) r =>
+  ∀ rep i q d e f r .
+  GenQueryTable (PKRep f i rep) q (PK f i d) =>
+  Member (Database e (PK f i d)) r =>
   InterpreterFor (StoreQuery q e (Maybe (Uid i d))) r
 interpretOneGenUid =
-  interpretOneAs id pkToUid (genQueryTable @(PKRep i rep) @q @(PK i d))
+  interpretOneAs id pkToUid (genQueryTable @(PKRep f i rep) @q @(PK f i d))
 
 interpretOne ::
   ∀ q d e r .
