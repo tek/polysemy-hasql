@@ -4,14 +4,15 @@ import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PK(PK), PKQuery(PKQu
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
+import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Db.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
+import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
-import Polysemy.Test (UnitTest, evalEither)
-import Polysemy.Test.Hedgehog (assertJust)
+import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 newtype Id =
   Id { unId :: Int }
@@ -34,6 +35,10 @@ prog specimen = do
     Store.upsert specimen
     Store.fetch (PKQuery 2)
 
+struct :: TableStructure
+struct =
+  tableStructure @(PK NewtypePrim Id Rec)
+
 table :: QueryTable (PKQuery Id) (PK NewtypePrim Id Rec)
 table =
   queryTable
@@ -44,11 +49,20 @@ testRep ::
 testRep =
   ()
 
+targetStructure :: TableStructure
+targetStructure =
+  TableStructure "rec" [
+    Column "id" "bigint" def Nothing,
+    Column "a" "bigint" def Nothing,
+    Column "b" "text" def Nothing
+  ]
+
 test_pk :: UnitTest
 test_pk =
   integrationTest do
     _ <- pure testRep
     dbgs table
+    targetStructure === struct
     result <- withTestStoreGen @Auto (prog specimen)
     assertJust specimen =<< evalEither result
   where
