@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.DbConfig where
+module Polysemy.Hasql.Test.DbConfig where
 
 import System.Environment (lookupEnv)
 

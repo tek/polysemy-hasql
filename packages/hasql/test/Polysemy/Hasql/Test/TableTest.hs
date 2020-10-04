@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.TableTest where
+module Polysemy.Hasql.Test.TableTest where
 
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import Polysemy.Hasql.Table (missingColumns)

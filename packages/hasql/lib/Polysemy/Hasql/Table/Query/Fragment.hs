@@ -41,9 +41,9 @@ addFragment (Column (dquote -> name) type' (ColumnParams.format -> params) _) =
 
 conflictFragment ::
   [Column] ->
-  Text ->
+  SqlCode ->
   SqlCode
-conflictFragment columns setters =
+conflictFragment columns (SqlCode setters) =
   SqlCode (format uniques)
   where
     format Nothing =

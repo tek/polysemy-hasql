@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.RepTest where
+module Polysemy.Hasql.Test.RepTest where
 
 import Generics.SOP.GGP (GCode)
 import Path (Abs, File, Path)

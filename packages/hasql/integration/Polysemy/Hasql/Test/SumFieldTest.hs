@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.SumFieldTest where
+module Polysemy.Hasql.Test.SumFieldTest where
 
 import Generics.SOP (I, NP, NS)
 import Generics.SOP.GGP (GCode)
@@ -19,7 +19,7 @@ import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
-import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
@@ -259,9 +259,7 @@ sumTest ::
   Sem r ()
 sumTest specimen = do
   result <- withTestStoreGen @rep @IdQuery @d $ runError do
-    -- TODO this formats the conflict fragment for Two incorrectly
-    -- Store.upsert specimen
-    Store.insert specimen
+    Store.upsert specimen
     Store.fetch (IdQuery id')
   assertJust specimen =<< evalEither result
 
@@ -306,3 +304,4 @@ test_simpleSumField :: UnitTest
 test_simpleSumField =
   integrationTest do
     sumTest @(PKRep Prim UUID SimpleRep) (PK @Prim id' (Simple (TwoA 5) 9))
+

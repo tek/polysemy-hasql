@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.QueryTest where
+module Polysemy.Hasql.Test.QueryTest where
 
 import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim, PrimaryKey)
 import Polysemy.Db.Data.DbError (DbError)
@@ -8,7 +8,7 @@ import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.Schema (IdQuery)
 import Polysemy.Hasql.Query.One (interpretOneWith)

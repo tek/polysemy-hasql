@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.SingletonTest where
+module Polysemy.Hasql.Test.SingletonTest where
 
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.DbError (DbError)
@@ -6,7 +6,7 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Schema.Generic (interpretSchemaSingleton)

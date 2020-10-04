@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.Run where
+module Polysemy.Hasql.Test.Run where
 
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
@@ -12,7 +12,7 @@ import Polysemy.Test.Data.TestError (TestError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Random (Random, runRandomIO)
-import Polysemy.Db.Test.DbConfig (dbConfig)
+import Polysemy.Hasql.Test.DbConfig (dbConfig)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 

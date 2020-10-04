@@ -1,10 +1,10 @@
-module Polysemy.Db.Test.StatementTest where
+module Polysemy.Hasql.Test.StatementTest where
 
 import qualified Generics.SOP as SOP
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
-import Polysemy.Db.Data.Column (Auto, Prim, Sum)
+import Polysemy.Db.Data.Column (Unique, Auto, Prim, Sum)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
@@ -67,7 +67,7 @@ data Rec =
 
 data RecRep =
   RecRep {
-    a :: Prim Auto,
+    a :: Prim Unique,
     b :: Prim Auto,
     c :: Prim Auto,
     sumField :: Sum SumRecRep
@@ -103,13 +103,24 @@ test_insertStatement =
     stmtText =
       Query.insert (tableStructure @Rec)
 
+test_upsertStatement :: UnitTest
+test_upsertStatement =
+  runTestAuto do
+    target === unSqlCode stmtText
+  where
+    target =
+      [qt|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, row($5), row($6, $7))) on conflict ("a") do update set a = $1, b = $2, c = $3, sum_field = row($4, row($5), row($6, $7))|]
+    stmtText :: SqlCode
+    stmtText =
+      Statement.upsertSql (genTableStructure @RecRep @Rec)
+
 test_createStatement :: UnitTest
 test_createStatement =
   runTestAuto do
     target === unSqlCode stmtText
   where
     target =
-      [qt|create table "rec" ("a" text not null, "b" bigint not null, "c" double precision, "sum_field" sum_rec not null)|]
+      [qt|create table "rec" ("a" text unique not null, "b" bigint not null, "c" double precision, "sum_field" sum_rec not null)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (genTableStructure @RecRep @Rec)

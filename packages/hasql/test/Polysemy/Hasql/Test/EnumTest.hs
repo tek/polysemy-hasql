@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.EnumTest where
+module Polysemy.Hasql.Test.EnumTest where
 
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))

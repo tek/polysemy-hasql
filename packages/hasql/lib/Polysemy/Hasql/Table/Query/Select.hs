@@ -18,9 +18,9 @@ assembleComposite :: Text -> CompositeType -> [Text]
 assembleComposite name (CompositeType _ _ variants) =
   pure [qt|(#{dquote name}).sum_index|] <> (variants >>= assembleVariant name)
 
-assembleColumns :: [Column] -> Text
+assembleColumns :: [Column] -> [Text]
 assembleColumns =
-  commaSeparated . (>>= column)
+  (>>= column)
   where
     column = \case
       Column name _ _ (Just composite) ->
@@ -32,4 +32,4 @@ selectColumns ::
   TableStructure ->
   SqlCode
 selectColumns (TableStructure (fromFragment -> SqlCode from) (assembleColumns -> columns)) =
-  SqlCode [qt|select #{columns} #{from}|]
+  SqlCode [qt|select #{commaSeparated columns} #{from}|]

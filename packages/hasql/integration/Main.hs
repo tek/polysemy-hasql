@@ -1,11 +1,11 @@
 module Main where
 
-import Polysemy.Db.Test.ArrayTest (test_arrayField)
-import Polysemy.Db.Test.InitTest (test_initTable)
-import Polysemy.Db.Test.PKTest (test_pk)
-import Polysemy.Db.Test.QueryTest (test_query)
-import Polysemy.Db.Test.SingletonTest (test_singletonDb)
-import Polysemy.Db.Test.SumFieldTest (test_sumField)
+import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
+import Polysemy.Hasql.Test.InitTest (test_initTable)
+import Polysemy.Hasql.Test.PKTest (test_pk)
+import Polysemy.Hasql.Test.QueryTest (test_query)
+import Polysemy.Hasql.Test.SingletonTest (test_singletonDb)
+import Polysemy.Hasql.Test.SumFieldTest (test_sumField)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 

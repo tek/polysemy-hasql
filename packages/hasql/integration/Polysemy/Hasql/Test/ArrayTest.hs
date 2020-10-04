@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.ArrayTest where
+module Polysemy.Hasql.Test.ArrayTest where
 
 import Prelude hiding (Enum)
 
@@ -8,7 +8,7 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Test (UnitTest, evalEither)

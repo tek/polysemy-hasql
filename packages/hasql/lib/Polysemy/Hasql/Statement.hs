@@ -18,7 +18,7 @@ import Polysemy.Hasql.Table.Query.Delete (deleteSql)
 import Polysemy.Hasql.Table.Query.Fragment (addFragment, alterFragment, conflictFragment)
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
 import Polysemy.Hasql.Table.Query.Select (selectColumns)
-import Polysemy.Hasql.Table.Query.Set (set)
+import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
 import Polysemy.Hasql.Table.Query.Text (commaSeparated, commaSeparatedSql)
 import Polysemy.Hasql.Table.ResultShape (ResultShape(resultShape))
 
@@ -76,7 +76,7 @@ upsertSql table@(TableStructure _ columns) =
     SqlCode ins =
       Query.insert table
     st =
-      set table
+      Query.set table
 
 upsert ::
   Table d ->

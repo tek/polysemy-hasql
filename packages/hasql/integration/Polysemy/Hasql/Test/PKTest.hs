@@ -1,4 +1,4 @@
-module Polysemy.Db.Test.PKTest where
+module Polysemy.Hasql.Test.PKTest where
 
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PK(PK), PKQuery(PKQuery), Prim, PrimaryKey)
 import Polysemy.Db.Data.DbError (DbError)
@@ -6,7 +6,7 @@ import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import qualified Polysemy.Db.Store as Store
-import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
@@ -61,7 +61,6 @@ test_pk :: UnitTest
 test_pk =
   integrationTest do
     _ <- pure testRep
-    dbgs table
     targetStructure === struct
     result <- withTestStoreGen @Auto (prog specimen)
     assertJust specimen =<< evalEither result

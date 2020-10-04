@@ -111,14 +111,14 @@ test-suite polysemy-hasql-integration
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Polysemy.Db.Test.ArrayTest
-      Polysemy.Db.Test.DbConfig
-      Polysemy.Db.Test.InitTest
-      Polysemy.Db.Test.PKTest
-      Polysemy.Db.Test.QueryTest
-      Polysemy.Db.Test.Run
-      Polysemy.Db.Test.SingletonTest
-      Polysemy.Db.Test.SumFieldTest
+      Polysemy.Hasql.Test.ArrayTest
+      Polysemy.Hasql.Test.DbConfig
+      Polysemy.Hasql.Test.InitTest
+      Polysemy.Hasql.Test.PKTest
+      Polysemy.Hasql.Test.QueryTest
+      Polysemy.Hasql.Test.Run
+      Polysemy.Hasql.Test.SingletonTest
+      Polysemy.Hasql.Test.SumFieldTest
       Paths_polysemy_hasql
   hs-source-dirs:
       integration
@@ -160,10 +160,10 @@ test-suite polysemy-hasql-unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Polysemy.Db.Test.EnumTest
-      Polysemy.Db.Test.RepTest
-      Polysemy.Db.Test.StatementTest
-      Polysemy.Db.Test.TableTest
+      Polysemy.Hasql.Test.EnumTest
+      Polysemy.Hasql.Test.RepTest
+      Polysemy.Hasql.Test.StatementTest
+      Polysemy.Hasql.Test.TableTest
       Paths_polysemy_hasql
   hs-source-dirs:
       test

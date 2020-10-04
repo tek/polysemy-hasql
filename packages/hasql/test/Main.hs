@@ -1,9 +1,9 @@
 module Main where
 
-import Polysemy.Db.Test.EnumTest (test_enumColTable, test_enumsColTable)
-import Polysemy.Db.Test.RepTest (test_rep)
-import Polysemy.Db.Test.StatementTest (test_createStatement, test_insertStatement, test_selectStatement)
-import Polysemy.Db.Test.TableTest (tableTests)
+import Polysemy.Hasql.Test.EnumTest (test_enumColTable, test_enumsColTable)
+import Polysemy.Hasql.Test.RepTest (test_rep)
+import Polysemy.Hasql.Test.StatementTest (test_createStatement, test_insertStatement, test_selectStatement)
+import Polysemy.Hasql.Test.TableTest (tableTests)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 
