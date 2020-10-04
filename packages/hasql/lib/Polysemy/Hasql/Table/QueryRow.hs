@@ -45,33 +45,47 @@ instance {-# overlappable #-} RepDecoder r a => QueryRow r a where
     value (repDecoder @r)
   {-# inline queryRow #-}
 
-class NullVariants reps (ds :: [*]) where
-  readNulls2 :: Row ()
+class NullVariant reps (ds :: [*]) where
+  readNulls :: Row ()
 
-instance NullVariants rep '[] where
-  readNulls2 =
+instance NullVariant rep '[] where
+  readNulls =
     unit
 
 -- doing this with 'hcpure' seems to send ghc spinning because of the necessity of the constraint being @QueryRow d@
 -- instead of @QueryRow (Maybe d)@
 instance (
-    NullVariants (ProdColumn reps) ds,
+    NullVariant (ProdColumn reps) ds,
     QueryRow rep (Maybe d)
-  ) => NullVariants (ProdColumn (rep : reps)) (Maybe d : ds) where
-  readNulls2 =
-    void (queryRow @rep @(Maybe d)) *> readNulls2 @(ProdColumn reps) @ds
+  ) => NullVariant (ProdColumn (rep : reps)) (Maybe d : ds) where
+  readNulls =
+    void (queryRow @rep @(Maybe d)) *> readNulls @(ProdColumn reps) @ds
 
 instance {-# overlappable #-} (
-    NullVariants (ProdColumn reps) ds,
+    NullVariant (ProdColumn reps) ds,
     QueryRow rep (Maybe d)
-  ) => NullVariants (ProdColumn (rep : reps)) (d : ds) where
-  readNulls2 =
-    void (queryRow @rep @(Maybe d)) *> readNulls2 @(ProdColumn reps) @ds
+  ) => NullVariant (ProdColumn (rep : reps)) (d : ds) where
+  readNulls =
+    void (queryRow @rep @(Maybe d)) *> readNulls @(ProdColumn reps) @ds
 
 instance (
     ProductCoded d dSub,
-    NullVariants rSub dSub,
-    NullVariants reps ds
-  ) => NullVariants (ProdColumn (Flatten rSub : reps)) (d : ds) where
+    NullVariant rSub dSub,
+    NullVariant reps ds
+  ) => NullVariant (ProdColumn (Flatten rSub : reps)) (d : ds) where
+  readNulls =
+    readNulls @rSub @dSub *> readNulls @reps @ds
+
+class NullVariants rep (dss :: [[*]]) where
+  readNulls2 :: Row ()
+
+instance NullVariants reps '[] where
   readNulls2 =
-    readNulls2 @rSub @dSub *> readNulls2 @reps @ds
+    unit
+
+instance (
+    NullVariant rep ds,
+    NullVariants reps dss
+  ) => NullVariants (rep : reps) (ds : dss) where
+  readNulls2 =
+    readNulls @rep @ds *> readNulls2 @reps @dss

@@ -16,7 +16,7 @@ import Prelude hiding (All)
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.SOP.Constraint (ReifySOP)
 import Polysemy.Hasql.Table.ColumnType (Done, Multi, Single, UnconsRep)
-import Polysemy.Hasql.Table.QueryRow (NullVariants, QueryRow(queryRow), readNulls2)
+import Polysemy.Hasql.Table.QueryRow (NullVariant, NullVariants, QueryRow(queryRow), readNulls, readNulls2)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 
 class ProductRows (rep :: *) (ds :: [*]) where
@@ -49,15 +49,16 @@ instance SumRows '[] '[] where
 
 instance (
     All Top ds,
-    NullVariants (ProdColumn reps) ds,
+    NullVariant (ProdColumn reps) ds,
+    NullVariants repss dss,
     ProductRows (UnconsRep reps) ds,
     SumRows repss dss
   ) => SumRows (ProdColumn reps : repss) (ds : dss) where
   sumRows = \case
     0 ->
-      Z <$> hsequence (genRows @(UnconsRep reps) @ds)
+      Z <$> hsequence (genRows @(UnconsRep reps) @ds) <* readNulls2 @repss @dss
     index -> do
-      readNulls2 @(ProdColumn reps) @ds
+      readNulls @(ProdColumn reps) @ds
       S <$> sumRows @repss @dss (index - 1)
 
 class ColumnRows (repss :: *) (d :: *) (dss :: [[*]]) where

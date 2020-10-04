@@ -7,8 +7,10 @@ cabal-version: 2.2
 name:           polysemy-db
 version:        0.1.0.0
 synopsis:       Polysemy effects for databases
-description:    Please see the README on Github at <https://github.com/tek/polysemy-db>
+description:    Please see the README on Github at <https://github.com/tek/polysemy-hasql>
 category:       Database
+homepage:       https://github.com/tek/polysemy-hasql#readme
+bug-reports:    https://github.com/tek/polysemy-hasql/issues
 author:         Torsten Schmits
 maintainer:     tek@tryp.io
 copyright:      2020 Torsten Schmits
@@ -18,6 +20,10 @@ build-type:     Simple
 extra-source-files:
     README.md
     Changelog.md
+
+source-repository head
+  type: git
+  location: https://github.com/tek/polysemy-hasql
 
 library
   exposed-modules:

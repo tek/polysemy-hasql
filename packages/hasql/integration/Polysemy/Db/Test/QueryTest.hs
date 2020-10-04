@@ -1,6 +1,6 @@
 module Polysemy.Db.Test.QueryTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim, PrimaryKey)
+import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim, PrimaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
@@ -16,10 +16,15 @@ import Polysemy.Hasql.Test.Database (withTestStoreTableGen)
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
 
+newtype Content =
+  Content { unContent :: Text }
+  deriving (Eq, Show, Generic)
+  deriving newtype (IsString)
+
 data Dat =
   Dat {
      id :: UUID,
-     content :: Text,
+     content :: Content,
      number :: Int
   }
   deriving (Eq, Show, Generic)
@@ -27,17 +32,21 @@ data Dat =
 data DatRep =
   DatRep {
     id :: Prim PrimaryKey,
-    content :: Prim Auto,
+    content :: NewtypePrim Auto,
     number :: Prim Auto
   }
   deriving (Eq, Show, Generic)
 
 data ContentNumber =
   ContentNumber {
-    content :: Text,
+    content :: Content,
     number :: Int
   }
   deriving (Eq, Show, Generic)
+
+target :: Dat
+target =
+  Dat (Uid.uuid 2) "hello" 5
 
 prog ::
   Member (Error (StoreError DbError)) r =>
@@ -45,7 +54,7 @@ prog ::
   Sem r (Maybe Dat)
 prog = do
   Store.insert (Dat (Uid.uuid 1) "hello" 1)
-  Store.insert (Dat (Uid.uuid 2) "hello" 5)
+  Store.insert target
   Store.insert (Dat (Uid.uuid 3) "goodbye" 1)
   Store.insert (Dat (Uid.uuid 4) "goodbye" 5)
   StoreQuery.basicQuery (ContentNumber "hello" 5)
@@ -55,4 +64,4 @@ test_query =
   integrationTest do
     withTestStoreTableGen @DatRep \ table ->
       interpretOneWith @DatRep (table ^. QueryTable.structure) do
-        assertJust (Dat (Uid.uuid 2) "hello" 5) =<< prog
+        assertJust target =<< prog

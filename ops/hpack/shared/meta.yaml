@@ -1,10 +1,11 @@
 version: 0.1.0.0
-description: Please see the README on Github at <https://github.com/tek/polysemy-db>
+description: Please see the README on Github at <https://github.com/tek/polysemy-hasql>
+github: tek/polysemy-hasql
 license: BSD-2-Clause-Patent
 license-file: LICENSE
-author: "Torsten Schmits"
-maintainer: "tek@tryp.io"
-copyright: "2020 Torsten Schmits"
+author: Torsten Schmits
+maintainer: tek@tryp.io
+copyright: 2020 Torsten Schmits
 category: Database
 build-type: Simple
 extra-source-files:

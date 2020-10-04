@@ -1,23 +1,26 @@
 module Polysemy.Db.Test.SumFieldTest where
 
-import Path (absfile)
 import Generics.SOP (I, NP, NS)
 import Generics.SOP.GGP (GCode)
+import Hasql.Connection (Connection)
 import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
-import Path (Abs, File, Path)
+import Hasql.Session (QueryError)
+import Path (Abs, File, Path, absfile)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK(PK), PKRep, Prim, Sum)
 import Polysemy.Db.Data.ColumnParams (ColumnParams(unique))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
+import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Db.Test.Run (integrationTest)
+import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import Polysemy.Hasql.Data.Table (Table)
@@ -25,9 +28,9 @@ import Polysemy.Hasql.Table.ColumnParams (ExplicitColumnParams(..))
 import Polysemy.Hasql.Table.ColumnType (Single, UnconsRep)
 import Polysemy.Hasql.Table.QueryParam (queryParam, writeNulls, writeNulls2)
 import Polysemy.Hasql.Table.QueryParams (columnParams, productParams, queryParams, sumParams)
-import Polysemy.Hasql.Table.QueryRow (readNulls2)
+import Polysemy.Hasql.Table.QueryRow (readNulls)
 import Polysemy.Hasql.Table.QueryRows (genQueryRows, genRows, queryRows, sumRows)
-import Polysemy.Hasql.Table.QueryTable (genQueryTable)
+import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Hasql.Table.Representation (
   ExplicitSum,
   ExplicitTable,
@@ -43,7 +46,8 @@ import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
 import Polysemy.Hasql.Table.ValueEncoder (repEncoder)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
-import Polysemy.Test (UnitTest, evalEither)
+import Polysemy.Resource (Resource)
+import Polysemy.Test (Hedgehog, UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
 
 data Nume =
@@ -114,13 +118,13 @@ row_genRows_Laevus :: NP Row [Int, Sinister]
 row_genRows_Laevus =
   genRows @(UnconsRep [Prim Auto, SinisterRepFlatten]) @[Int, Sinister]
 
-readNulls2_Flatten_Sinister :: Row ()
-readNulls2_Flatten_Sinister =
-  readNulls2 @(ProdColumn '[SinisterRepFlatten]) @'[Sinister]
+readNulls_Flatten_Sinister :: Row ()
+readNulls_Flatten_Sinister =
+  readNulls @(ProdColumn '[SinisterRepFlatten]) @'[Sinister]
 
-readNulls2_Summy :: Row ()
-readNulls2_Summy =
-  readNulls2 @(ProdColumn [Prim Auto, SinisterRepFlatten]) @'[Int, Sinister]
+readNulls_Summy :: Row ()
+readNulls_Summy =
+  readNulls @(ProdColumn [Prim Auto, SinisterRepFlatten]) @'[Int, Sinister]
 
 row_sumRows_Sinister :: Row (NS (NP I) '[ '[Sinister]])
 row_sumRows_Sinister =
@@ -237,13 +241,29 @@ dexter =
   SumField id' (Dexter [absfile|/foo/bar|] 5 Three)
 
 prog ::
-  Member (Store IdQuery DbError SumField) r =>
-  SumField ->
-  Sem r (Either (StoreError DbError) (Maybe SumField))
-prog specimen = do
+  Member (Store IdQuery DbError a) r =>
+  a ->
+  Sem r (Either (StoreError DbError) (Maybe a))
+prog specimen =
   runError do
     Store.upsert specimen
     Store.fetch (IdQuery id')
+
+sumTest ::
+  ∀ rep d r .
+  Show d =>
+  Eq d =>
+  Members [Hedgehog IO, Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  GenQueryTable rep IdQuery d =>
+  d ->
+  Sem r ()
+sumTest specimen = do
+  result <- withTestStoreGen @rep @IdQuery @d $ runError do
+    -- TODO this formats the conflict fragment for Two incorrectly
+    -- Store.upsert specimen
+    Store.insert specimen
+    Store.fetch (IdQuery id')
+  assertJust specimen =<< evalEither result
 
 test_reps :: IO ()
 test_reps = do
@@ -253,9 +273,36 @@ test_reps = do
 test_sumField :: UnitTest
 test_sumField =
   integrationTest do
-    test laevus
-    test dexter
-    where
-      test specimen = do
-        result <- withTestStoreGen @SumFieldRep (prog specimen)
-        assertJust specimen =<< evalEither result
+    sumTest @SumFieldRep laevus
+    sumTest @SumFieldRep dexter
+
+data Two =
+  TwoA { twoA :: Int }
+  |
+  TwoB { twoB :: Int }
+  deriving (Eq, Show, Generic)
+
+data Simple =
+  Simple {
+    two :: Two,
+    other :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+data TwoRep =
+  TwoARep { twoA :: Prim Auto }
+  |
+  TwoBRep { twoB :: Prim Auto }
+  deriving (Generic)
+
+data SimpleRep =
+  SimpleRep {
+    two :: Sum TwoRep,
+    other :: Prim Auto
+  }
+  deriving (Generic)
+
+test_simpleSumField :: UnitTest
+test_simpleSumField =
+  integrationTest do
+    sumTest @(PKRep Prim UUID SimpleRep) (PK @Prim id' (Simple (TwoA 5) 9))
