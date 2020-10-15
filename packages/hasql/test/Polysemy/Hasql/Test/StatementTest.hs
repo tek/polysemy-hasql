@@ -4,7 +4,8 @@ import qualified Generics.SOP as SOP
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
-import Polysemy.Db.Data.Column (Unique, Auto, Prim, Sum)
+import Polysemy.Db.Data.Column (Auto, NewtypePrim, PKRep, Prim, Sum, Unique)
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
@@ -124,3 +125,25 @@ test_createStatement =
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (genTableStructure @RecRep @Rec)
+
+newtype UserId =
+  UserId { unUserId :: Int }
+  deriving (Eq, Show, Generic)
+
+data User =
+  User {
+    name :: Text,
+    number :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+test_createPKStatement :: UnitTest
+test_createPKStatement =
+  runTestAuto do
+    target === unSqlCode stmtText
+  where
+    target =
+      [qt|create table "user" ("id" bigint primary key, "name" text not null, "number" bigint not null)|]
+    stmtText :: SqlCode
+    stmtText =
+      Statement.createTableSql (genTableStructure @(PKRep NewtypePrim UserId User) @(Uid UserId User))

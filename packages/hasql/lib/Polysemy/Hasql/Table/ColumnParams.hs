@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Table.ColumnParams where
 
-import Polysemy.Db.Data.Column (Auto, ForeignKey, Prim, PrimaryKey, Sum, Unique)
+import Polysemy.Db.Data.Column (Auto, ForeignKey, NewtypePrim, Prim, PrimaryKey, Sum, Unique)
 import Polysemy.Db.Data.ColumnParams (ColumnParams(..))
 
 class ExplicitColumnParams r where
@@ -27,6 +27,10 @@ instance {-# overlappable #-} ExplicitColumnParams a => ExplicitColumnParams (Su
     explicitColumnParams @a
 
 instance {-# overlappable #-} ExplicitColumnParams a => ExplicitColumnParams (Prim a) where
+  explicitColumnParams =
+    explicitColumnParams @a
+
+instance {-# overlappable #-} ExplicitColumnParams a => ExplicitColumnParams (NewtypePrim a) where
   explicitColumnParams =
     explicitColumnParams @a
 
