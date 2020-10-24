@@ -1,7 +1,6 @@
 module Polysemy.Hasql.Table.Columns where
 
 import qualified Data.Text as Text
-import GHC.TypeLits (KnownSymbol)
 import Generics.SOP (fieldName)
 import Generics.SOP.Type.Metadata (
   ConstructorInfo(Record),

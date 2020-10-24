@@ -8,7 +8,7 @@ import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(Text, ShowType), TypeError)
 import Type.Errors.Pretty (type (<>))
 
-import Polysemy.Db.Data.Column (PK, Auto, Enum, Flatten, NewtypePrim, Prim, PrimaryKey, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK, Prim, PrimaryKey, Sum)
 import Polysemy.Db.SOP.Error (ErrorWithType, JoinComma, MessageWithType)
 import Polysemy.Db.SOP.FieldNames (FieldNames)
 
@@ -43,11 +43,11 @@ type family CtorsColumnCode (dss :: [[*]]) :: [*] where
 type family SumColumnCode (dss :: [[*]]) (initial :: [[*]]) :: * where
   SumColumnCode ('[] : dss) initial =
     SumColumnCode dss initial
-  SumColumnCode '[] initial =
+  SumColumnCode '[] _ =
     Enum Auto
-  SumColumnCode ((d1 : ds) : dss) initial =
+  SumColumnCode ((_ : _) : _) initial =
     Sum (SumColumn (CtorsColumnCode initial))
-  SumColumnCode dss initial =
+  SumColumnCode _ initial =
     TypeError ('Text "could not match sum type column: " <> 'ShowType initial)
 
 type family ADTColumnCode (dss :: [[*]]) :: * where
@@ -57,7 +57,7 @@ type family ADTColumnCode (dss :: [[*]]) :: * where
     SumColumnCode dss dss
 
 type family DataColumnCode (dss :: [[*]]) (info :: DatatypeInfo) :: * where
-  DataColumnCode dss ('Newtype _ _ _) = NewtypePrim Auto
+  DataColumnCode _ ('Newtype _ _ _) = NewtypePrim Auto
   DataColumnCode dss ('ADT _ _ _ _) = ADTColumnCode dss
 
 type family ColumnCode (d :: *) :: * where
@@ -85,15 +85,15 @@ type family ColumnCodess (ds :: [[*]]) :: [[*]] where
   ColumnCodess (d : ds) = ColumnCodes d : ColumnCodess ds
 
 type family TableRep d (dss :: [[*]]) :: * where
-  TableRep d '[ds] = ProdTable ds
-  TableRep d dss = SumAsTable d
+  TableRep _ '[ds] = ProdTable ds
+  TableRep d _ = SumAsTable d
 
 type family ProdCode (d :: [[*]]) :: [*] where
   ProdCode '[ds] = ds
   ProdCode _ = TypeError ('Text "not a product type")
 
 type family Rep d :: * where
-  Rep (PK f i d) = ProdTable [f PrimaryKey, ColumnCode d]
+  Rep (PK f _ d) = ProdTable [f PrimaryKey, ColumnCode d]
   Rep d = TableRep d (ColumnCodess (GCode d))
 
 type family NestedSum (dss :: [[*]]) :: [*] where
@@ -101,25 +101,25 @@ type family NestedSum (dss :: [[*]]) :: [*] where
   NestedSum (ds : dss) = ProdColumn ds : NestedSum dss
 
 type family ExplicitColumn (dt :: *) (rep :: *) (rn :: Symbol) (d :: *) (dn :: Symbol) :: * where
-  ExplicitColumn dt (Sum rep) rn d dn =
+  ExplicitColumn _ (Sum rep) _ d _ =
     Sum (SumColumn (NestedSum (ExplicitSum d rep)))
-  ExplicitColumn dt (Flatten rep) rn d dn =
+  ExplicitColumn _ (Flatten rep) _ d _ =
     Flatten (ProdColumn (ProdCode (ExplicitSum d rep)))
-  ExplicitColumn dt (Enum rep) rn d dn =
+  ExplicitColumn _ (Enum rep) _ _ _ =
     Enum rep
-  ExplicitColumn dt rep rn d dn =
+  ExplicitColumn _ rep _ _ _ =
     rep
 
 type family FieldMismatch (dt :: *) (rs :: [*]) (rns :: [Symbol]) (ds :: [*]) (dns :: [Symbol]) :: k where
-  FieldMismatch dt reps rns '[] _ =
+  FieldMismatch dt _ rns '[] _ =
     TypeError ('Text "too many fields in rep for " <> 'ShowType dt <> ": " <> JoinComma rns)
-  FieldMismatch dt '[] _ ds dns =
+  FieldMismatch dt '[] _ _ dns =
     TypeError ('Text "missing fields in rep for " <> 'ShowType dt <> ": " <> JoinComma dns)
   FieldMismatch dt _ _ _ _ =
     ErrorWithType "unexpected field mismatch when checking table representation" dt
 
 type family ExplicitProd (dt :: *) (rs :: [*]) (rns :: [Symbol]) (ds :: [*]) (dns :: [Symbol]) :: [*] where
-  ExplicitProd dt '[] _ '[] _ = '[]
+  ExplicitProd _ '[] _ '[] _ = '[]
   ExplicitProd dt (rep : reps) (rn : rns) (d : ds) (dn : dns) =
     ExplicitColumn dt rep rn d dn : ExplicitProd dt reps rns ds dns
   ExplicitProd dt rs rns ds dns =
@@ -132,9 +132,9 @@ type family CtorMismatch dt :: k where
 type Names = [[Symbol]]
 
 type family GenExplicitSum (dt :: *) (repss :: [[*]]) (rns :: Names) (dss :: [[*]]) (dns :: Names) :: [[*]] where
-  GenExplicitSum dt '[] _ '[] _ = '[]
-  GenExplicitSum dt '[] _ dss _ = CtorMismatch dt
-  GenExplicitSum dt repss _ '[] _ = CtorMismatch dt
+  GenExplicitSum _ '[] _ '[] _ = '[]
+  GenExplicitSum dt '[] _ _ _ = CtorMismatch dt
+  GenExplicitSum dt _ _ '[] _ = CtorMismatch dt
   GenExplicitSum dt (rs : rss) (rn : rns) (ds : dss) (dn : dns) =
     ExplicitProd dt rs rn ds dn : GenExplicitSum dt rss rns dss dns
   GenExplicitSum dt _ _ _ _ = CtorMismatch dt
@@ -168,7 +168,7 @@ type family ProductForSum d :: k where
 
 type family ReifySumType (rep :: *) (d :: *) :: * where
   ReifySumType (SumTable _) d = SumAsTable d
-  ReifySumType (SumColumn rep) d = SumColumn rep
+  ReifySumType (SumColumn rep) _ = SumColumn rep
   ReifySumType (ProdTable _) d = ProductForSum d
   ReifySumType (ProdColumn _) d = ProductForSum d
   ReifySumType rep d = SumColumn (NestedSum (ExplicitSum d rep))

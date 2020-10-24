@@ -6,9 +6,11 @@ import Prelude hiding (All)
 import Polysemy.Db.Data.Column (Auto, NewtypePrim, PKRep, Prim, Sum, Unique)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
+import Polysemy.Hasql.Data.QueryWhere (LessOrEq)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
+import Polysemy.Hasql.Table.Query.Where (queryWhere)
 import Polysemy.Hasql.Table.QueryFields (QueryFields)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
@@ -141,3 +143,27 @@ test_createPKStatement =
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (genTableStructure @(PKRep NewtypePrim UserId User) @(Uid UserId User))
+
+data QueryTest =
+  QueryTest {
+    field1 :: Text,
+    field2 :: Int,
+    field3 :: Double,
+    field4 :: Maybe Int
+  }
+  deriving (Eq, Show, Generic)
+
+data QueryTestQ =
+  QueryTestQ {
+    field2 :: LessOrEq Int,
+    field4 :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+test_queryWhereStatement :: UnitTest
+test_queryWhereStatement =
+  runTestAuto do
+    dbgs qw
+  where
+    qw =
+      queryWhere @QueryTest @QueryTestQ

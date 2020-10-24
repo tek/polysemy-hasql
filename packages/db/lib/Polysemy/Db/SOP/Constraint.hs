@@ -1,6 +1,6 @@
 module Polysemy.Db.SOP.Constraint where
 
-import GHC.TypeLits (KnownSymbol, symbolVal)
+import GHC.TypeLits (symbolVal)
 import Generics.SOP (All, All2, IsProductType, Top)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo)
 import Generics.SOP.Type.Metadata (

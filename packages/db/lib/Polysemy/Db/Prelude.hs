@@ -40,7 +40,7 @@ import qualified Data.Text as Text
 import Data.UUID (UUID)
 import GHC.Err (undefined)
 import GHC.IO.Unsafe (unsafePerformIO)
-import GHC.TypeLits (Symbol)
+import GHC.TypeLits (KnownSymbol, Symbol)
 import Language.Haskell.TH.Quote (QuasiQuoter)
 import qualified Language.Haskell.TH.Syntax as TH
 import Polysemy (

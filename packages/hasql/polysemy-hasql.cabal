@@ -86,6 +86,7 @@ library
     , chronos
     , containers
     , contravariant
+    , first-class-families
     , generics-sop
     , ghc-prim
     , hasql >=1.4.3 && <1.5
@@ -130,6 +131,7 @@ test-suite polysemy-hasql-integration
     , chronos
     , containers
     , contravariant
+    , first-class-families
     , generics-sop
     , ghc-prim
     , hasql >=1.4.3 && <1.5
@@ -175,6 +177,7 @@ test-suite polysemy-hasql-unit
     , chronos
     , containers
     , contravariant
+    , first-class-families
     , generics-sop
     , ghc-prim
     , hasql >=1.4.3 && <1.5
