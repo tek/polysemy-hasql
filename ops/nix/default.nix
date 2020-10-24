@@ -17,7 +17,7 @@ let
 
   project = hs.project {
     inherit nixpkgs packages base;
-    compiler = "ghc884";
+    compiler = "ghc8102";
     cabal2nixOptions = "--no-hpack";
     overrides = import ./overrides.nix niv;
     ghci = {
