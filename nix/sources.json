@@ -53,10 +53,10 @@
         "homepage": null,
         "owner": "tek",
         "repo": "tryp-hs",
-        "rev": "42e92c0ea336044932c96ce175f4e21385f606a5",
-        "sha256": "1cwsskcdc0z65n5d7pp3bppn1ylhngq71091yq0s50lsrnrzp368",
+        "rev": "1198e219a572429ab0efbbca8da4863c3cfde7a4",
+        "sha256": "1avz8bcglmn7520zksivmb4ik8yixvvcbs3sqpxxvvipipa7hidn",
         "type": "tarball",
-        "url": "https://github.com/tek/tryp-hs/archive/42e92c0ea336044932c96ce175f4e21385f606a5.tar.gz",
+        "url": "https://github.com/tek/tryp-hs/archive/1198e219a572429ab0efbbca8da4863c3cfde7a4.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
