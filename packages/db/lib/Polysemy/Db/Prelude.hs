@@ -12,7 +12,6 @@ module Polysemy.Db.Prelude (
   module Data.List.NonEmpty,
   module Data.Map.Strict,
   module Data.UUID,
-  module Debug.Trace,
   module GHC.Err,
   module GHC.TypeLits,
   module Polysemy,
@@ -35,12 +34,10 @@ import Data.Default (Default(def))
 import Data.Either.Combinators (mapLeft)
 import Data.Foldable (foldl, traverse_)
 import Data.List.NonEmpty ((<|))
-import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, lookup)
 import Data.String.Interpolate (i)
 import qualified Data.Text as Text
 import Data.UUID (UUID)
-import Debug.Trace (trace, traceShow)
 import GHC.Err (undefined)
 import GHC.IO.Unsafe (unsafePerformIO)
 import GHC.TypeLits (Symbol)
@@ -135,15 +132,6 @@ unsafeLog a =
   unsafePerformIO $ putStrLn (toString a) >> return a
 {-# inline unsafeLog #-}
 
-liftT ::
-  forall m f r e a .
-  Functor f =>
-  Sem r a ->
-  Sem (WithTactics e f m r) (f a)
-liftT =
-  pureT <=< raise
-{-# inline liftT #-}
-
 hoistEither ::
   Member (Error e2) r =>
   (e1 -> e2) ->
@@ -237,35 +225,6 @@ unaryRecordJson =
   deriveJSON basicOptions
 {-# inline unaryRecordJson #-}
 
-type Basic a =
-  (Eq a, Show a)
-
-type family Basics (as :: [*]) :: Constraint where
-  Basics '[] = ()
-  Basics (a : as) = (Basic a, Basics as)
-
-type Eso a =
-  (Basic a, Ord a)
-
-type family Esos (as :: [*]) :: Constraint where
-  Esos '[] = ()
-  Esos (a : as) = (Eso a, Esos as)
-
-type Json a =
-  (FromJSON a, ToJSON a, Basic a)
-
-type family Jsons (r :: [*]) :: Constraint where
-  Jsons '[] = ()
-  Jsons (a ': r) = (Json a, Jsons r)
-
-type a ++ b =
-  Append a b
-
-rightOr :: (a -> b) -> Either a b -> b
-rightOr f =
-  either f id
-{-# inline rightOr #-}
-
 traverseLeft ::
   Applicative m =>
   (a -> m b) ->
@@ -274,46 +233,6 @@ traverseLeft ::
 traverseLeft f =
   either f pure
 {-# inline traverseLeft #-}
-
-jsonDecode ::
-  FromJSON a =>
-  ByteString ->
-  Either Text a
-jsonDecode =
-  mapLeft toText . Aeson.eitherDecodeStrict'
-{-# inline jsonDecode #-}
-
-jsonDecodeL ::
-  FromJSON a =>
-  LByteString ->
-  Either Text a
-jsonDecodeL =
-  mapLeft toText . Aeson.eitherDecode'
-{-# inline jsonDecodeL #-}
-
-jsonDecodeText ::
-  FromJSON a =>
-  Text ->
-  Either Text a
-jsonDecodeText =
-  mapLeft toText . Aeson.eitherDecodeStrict' . encodeUtf8
-{-# inline jsonDecodeText #-}
-
-jsonEncode ::
-  ToJSON a =>
-  a ->
-  ByteString
-jsonEncode =
-  toStrict . Aeson.encode
-{-# inline jsonEncode #-}
-
-jsonEncodeText ::
-  ToJSON a =>
-  a ->
-  Text
-jsonEncodeText =
-  decodeUtf8 . jsonEncode
-{-# inline jsonEncodeText #-}
 
 as ::
   Functor m =>
@@ -324,42 +243,10 @@ as =
   (<$)
 {-# inline as #-}
 
-mneToList :: Maybe (NonEmpty a) -> [a]
-mneToList =
-  maybe [] toList
-{-# inline mneToList #-}
-
 qt :: QuasiQuoter
 qt =
   i
 {-# inline qt #-}
 
-safeDiv ::
-  Eq a =>
-  Fractional a =>
-  a ->
-  a ->
-  Maybe a
-safeDiv _ 0 =
-  Nothing
-safeDiv n d =
-  Just (n / d)
-{-# inline safeDiv #-}
-
-divOr0 ::
-  Eq a =>
-  Fractional a =>
-  a ->
-  a ->
-  a
-divOr0 =
-  fromMaybe 0 .: safeDiv
-{-# inline divOr0 #-}
-
-mapBy ::
-  Ord k =>
-  (a -> k) ->
-  [a] ->
-  Map k a
-mapBy f =
-  Map.fromList . fmap \ a -> (f a, a)
+type Basic a =
+  (Eq a, Show a)

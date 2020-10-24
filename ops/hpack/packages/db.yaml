@@ -20,5 +20,6 @@ dependencies:
   - relude
   - string-interpolate
   - template-haskell
+  - time
   - unordered-containers
   - uuid

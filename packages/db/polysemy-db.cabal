@@ -30,6 +30,7 @@ library
       Polysemy.Db.Atomic
       Polysemy.Db.Data.Column
       Polysemy.Db.Data.ColumnParams
+      Polysemy.Db.Data.CreationTime
       Polysemy.Db.Data.DbConfig
       Polysemy.Db.Data.DbError
       Polysemy.Db.Data.DbHost
@@ -79,6 +80,7 @@ library
     , string-interpolate
     , template-haskell
     , text
+    , time
     , type-errors
     , type-errors-pretty
     , unordered-containers

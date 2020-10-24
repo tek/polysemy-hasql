@@ -1,17 +1,18 @@
 module Polysemy.Hasql.Test.PKTest where
 
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PK(PK), PKQuery(PKQuery), Prim, PrimaryKey)
+import Polysemy.Db.Data.ColumnParams (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import qualified Polysemy.Db.Store as Store
-import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
 import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 newtype Id =
@@ -52,7 +53,7 @@ testRep =
 targetStructure :: TableStructure
 targetStructure =
   TableStructure "rec" [
-    Column "id" "bigint" def Nothing,
+    Column "id" "bigint" def { primaryKey = True } Nothing,
     Column "a" "bigint" def Nothing,
     Column "b" "text" def Nothing
   ]

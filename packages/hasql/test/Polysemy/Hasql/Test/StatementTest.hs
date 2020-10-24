@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Test.StatementTest where
 
-import qualified Generics.SOP as SOP
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
@@ -22,9 +21,6 @@ data WithMaybe =
   }
   deriving (Eq, Show, Generic)
 
-instance SOP.Generic WithMaybe
-instance SOP.HasDatatypeInfo WithMaybe
-
 derivation ::
   ∀ names (columns :: [*]) (name :: Symbol) .
   QueryFields '[ 'FieldInfo "f1", 'FieldInfo "f3"] '[Text, Double] '[ 'FieldInfo "f1", 'FieldInfo "f2", 'FieldInfo "f3"] '[Text, Int, Double] =>
@@ -42,8 +38,6 @@ test_derivation =
 newtype NT =
   NT Int
   deriving (Eq, Show, Generic)
-
-instance SOP.Generic NT
 
 data SumRec =
   L { d :: Int }
