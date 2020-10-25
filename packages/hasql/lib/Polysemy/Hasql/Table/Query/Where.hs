@@ -9,6 +9,7 @@ import Polysemy.Db.SOP.Constraint (dataSlugSymbol_)
 import Polysemy.Hasql.Data.QueryWhere (Greater, GreaterOrEq, Less, LessOrEq)
 import qualified Polysemy.Hasql.Data.QueryWhere as Data (QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
+import Polysemy.Hasql.Table.Query.Prepared (dollar)
 
 fieldWithOp ::
   ∀ (name :: Symbol) .
@@ -17,7 +18,7 @@ fieldWithOp ::
   Int ->
   Text
 fieldWithOp op index =
-  [qt|"#{dataSlugSymbol_ @name}" #{op} $#{index}|]
+  [qt|"#{dataSlugSymbol_ @name}" #{op} #{dollar index}|]
 
 regularField ::
   ∀ (name :: Symbol) .
@@ -26,6 +27,13 @@ regularField ::
   Text
 regularField =
   fieldWithOp @name "="
+
+maybeField ::
+  Int ->
+  Text ->
+  Text
+maybeField index cond =
+  [qt|(#{dollar index} is null or #{cond})|]
 
 concatWhereFields ::
   [Int -> Text] ->
@@ -46,9 +54,13 @@ instance {-# overlappable #-} KnownSymbol name => QueryWhereField d d name where
   queryWhereField =
     regularField @name
 
-instance {-# overlappable #-} QueryWhereField d d name => QueryWhereField (Maybe d) d name where
+instance {-# overlappable #-} QueryWhereField d q name => QueryWhereField d (Maybe q) name where
+  queryWhereField i =
+    maybeField i (queryWhereField @d @q @name i)
+
+instance {-# overlappable #-} QueryWhereField d q name => QueryWhereField (Maybe d) q name where
   queryWhereField =
-    queryWhereField @d @d @name
+    queryWhereField @d @q @name
 
 instance {-# overlappable #-} KnownSymbol name => QueryWhereField d (Less q) name where
   queryWhereField =

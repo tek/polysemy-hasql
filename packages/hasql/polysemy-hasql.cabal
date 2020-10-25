@@ -55,6 +55,7 @@ library
       Polysemy.Hasql.Table.Query.Delete
       Polysemy.Hasql.Table.Query.Fragment
       Polysemy.Hasql.Table.Query.Insert
+      Polysemy.Hasql.Table.Query.Prepared
       Polysemy.Hasql.Table.Query.Select
       Polysemy.Hasql.Table.Query.Set
       Polysemy.Hasql.Table.Query.Text

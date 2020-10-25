@@ -2,28 +2,18 @@ module Polysemy.Hasql.Query.Many where
 
 import Polysemy.Db.Data.Column (PK, PKRep, pkToUid)
 import qualified Polysemy.Db.Data.StoreError as StoreError
-import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
+import Polysemy.Db.Data.TableStructure (TableStructure)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database)
+import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
+import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Statement (selectWhere)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
-execute ::
-  ∀ qOut qIn dIn dOut dResult e r .
-  Member (Database e dIn) r =>
-  ([dOut] -> dResult) ->
-  (qOut -> qIn) ->
-  (dIn -> dOut) ->
-  QueryTable qIn dIn ->
-  qOut ->
-  Sem r (Either (StoreError e) dResult)
-execute result fromQ toD table params =
-  bimap StoreError.Backend (result . fmap toD) <$> Database.run (fromQ params) (selectWhere table)
-
-interpretManyWith ::
+interpretManyAs ::
   ∀ qOut qIn dIn dOut dResult e r .
   Member (Database e dIn) r =>
   ([dOut] -> dResult) ->
@@ -31,20 +21,20 @@ interpretManyWith ::
   (dIn -> dOut) ->
   QueryTable qIn dIn ->
   InterpreterFor (StoreQuery qOut e dResult) r
-interpretManyWith result fromQ toD table =
+interpretManyAs result fromQ toD table =
   interpret \case
     Basic params ->
-      execute result fromQ toD table params
+      bimap StoreError.Backend (result . fmap toD) <$> Database.run (fromQ params) (selectWhere table)
 
-interpretManyAs ::
+interpretManyAsList ::
   ∀ qOut qIn dIn dOut e r .
   Member (Database e dIn) r =>
   (qOut -> qIn) ->
   (dIn -> dOut) ->
   QueryTable qIn dIn ->
   InterpreterFor (StoreQuery qOut e [dOut]) r
-interpretManyAs =
-  interpretManyWith id
+interpretManyAsList =
+  interpretManyAs id
 
 interpretManyGenAs ::
   ∀ dIn dOut rep qOut qIn e r .
@@ -54,7 +44,7 @@ interpretManyGenAs ::
   (dIn -> dOut) ->
   InterpreterFor (StoreQuery qOut e [dOut]) r
 interpretManyGenAs fromQ toD =
-  interpretManyAs fromQ toD (genQueryTable @rep @qIn @dIn)
+  interpretManyAsList fromQ toD (genQueryTable @rep @qIn @dIn)
 
 interpretManyGenUidAs ::
   ∀ rep i qOut qIn d e f r .
@@ -63,7 +53,7 @@ interpretManyGenUidAs ::
   (qOut -> qIn) ->
   InterpreterFor (StoreQuery qOut e [Uid i d]) r
 interpretManyGenUidAs fromQ =
-  interpretManyAs fromQ pkToUid (genQueryTable @(PKRep f i rep) @qIn @(PK f i d))
+  interpretManyAsList fromQ pkToUid (genQueryTable @(PKRep f i rep) @qIn @(PK f i d))
 
 interpretManyGenUid ::
   ∀ rep i q d e f r .
@@ -71,16 +61,23 @@ interpretManyGenUid ::
   Member (Database e (PK f i d)) r =>
   InterpreterFor (StoreQuery q e [Uid i d]) r
 interpretManyGenUid =
-  interpretManyAs id pkToUid (genQueryTable @(PKRep f i rep) @q @(PK f i d))
+  interpretManyAsList id pkToUid (genQueryTable @(PKRep f i rep) @q @(PK f i d))
 
 interpretMany ::
   Member (Database e d) r =>
   QueryTable q d ->
   InterpreterFor (StoreQuery q e [d]) r
-interpretMany table =
-  interpret \case
-    Basic params ->
-      mapLeft StoreError.Backend <$> Database.run params (selectWhere table)
+interpretMany =
+  interpretManyAsList id id
+
+interpretManyWith ::
+  ∀ rep q d e r .
+  GenQueryTable rep q d =>
+  Member (Database e d) r =>
+  TableStructure ->
+  InterpreterFor (StoreQuery q e [d]) r
+interpretManyWith struct =
+  interpretMany (genQueryTable @rep & QueryTable.table . Table.structure .~ struct)
 
 interpretManyGen ::
   ∀ rep q d e r .

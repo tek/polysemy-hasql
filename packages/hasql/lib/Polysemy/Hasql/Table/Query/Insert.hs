@@ -5,15 +5,12 @@ import qualified Polysemy.Db.Data.TableStructure as TableStructure (TableStructu
 import Polysemy.Db.Data.TableStructure (Column, CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import Polysemy.Hasql.Table.Query.Fragment (intoFragment)
+import Polysemy.Hasql.Table.Query.Prepared (dollar)
 import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated)
 
 row :: Text -> Text
 row a =
   [qt|row(#{a})|]
-
-dollar :: Int -> Text
-dollar i =
-  [qt|$#{i}|]
 
 compositeConstructor :: Int -> [Column] -> (Int, Text)
 compositeConstructor index columns =

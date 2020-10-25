@@ -57,10 +57,8 @@ interpretOne ::
   Member (Database e d) r =>
   QueryTable q d ->
   InterpreterFor (StoreQuery q e (Maybe d)) r
-interpretOne table =
-  interpret \case
-    Basic params ->
-      mapLeft StoreError.Backend <$> Database.run params (selectWhere table)
+interpretOne =
+  interpretOneAs id id
 
 interpretOneWith ::
   ∀ rep q d e r .

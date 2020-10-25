@@ -6,7 +6,7 @@ import Prelude hiding (All)
 import Polysemy.Db.Data.Column (Auto, NewtypePrim, PKRep, Prim, Sum, Unique)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
-import Polysemy.Hasql.Data.QueryWhere (LessOrEq)
+import Polysemy.Hasql.Data.QueryWhere (LessOrEq, QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
@@ -156,6 +156,7 @@ data QueryTest =
 data QueryTestQ =
   QueryTestQ {
     field2 :: LessOrEq Int,
+    field3 :: Maybe Double,
     field4 :: Int
   }
   deriving (Eq, Show, Generic)
@@ -163,7 +164,9 @@ data QueryTestQ =
 test_queryWhereStatement :: UnitTest
 test_queryWhereStatement =
   runTestAuto do
-    dbgs qw
+    target === unSqlCode qw
   where
-    qw =
+    target =
+      [qt|"field2" <= $1 and ($2 is null or "field3" = $2) and "field4" = $3|]
+    QueryWhere qw =
       queryWhere @QueryTest @QueryTestQ
