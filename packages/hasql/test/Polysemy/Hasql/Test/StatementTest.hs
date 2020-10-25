@@ -4,9 +4,10 @@ import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
 import Polysemy.Db.Data.Column (Auto, NewtypePrim, PKRep, Prim, Sum, Unique)
+import Polysemy.Db.Data.Cond (LessOrEq)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
-import Polysemy.Hasql.Data.QueryWhere (LessOrEq, QueryWhere(QueryWhere))
+import Polysemy.Hasql.Data.QueryWhere (QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query

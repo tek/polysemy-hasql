@@ -3,6 +3,7 @@ module Polysemy.Hasql.Test.QueryTest where
 import Hasql.Encoders (Params)
 
 import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim, PrimaryKey)
+import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
@@ -11,7 +12,6 @@ import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryWhere (LessOrEq(LessOrEq))
 import Polysemy.Hasql.Data.Schema (IdQuery)
 import Polysemy.Hasql.Query.Many (interpretManyWith)
 import Polysemy.Hasql.Query.One (interpretOneWith)
