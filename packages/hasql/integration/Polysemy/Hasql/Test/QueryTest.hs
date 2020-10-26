@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.QueryTest where
 import Hasql.Encoders (Params)
 import Polysemy.Time (mkDatetime)
 
-import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PKRep, Prim, PrimaryKey, Sum)
+import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, Prim, PrimaryKey, Sum, UidRep)
 import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
@@ -83,10 +83,10 @@ type DatRepT =
   ])]
 
 queryWhere_ContentNumber_Dat ::
-  ReifyRepTable (PKRep Prim UUID DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
+  ReifyRepTable (UidRep (Prim PrimaryKey) DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
   QueryWhere (Uuid Dat) ContentNumber
 queryWhere_ContentNumber_Dat =
-  queryWhere' @(PKRep Prim UUID DatRep) @(Uuid Dat) @ContentNumber
+  queryWhere' @(UidRep UUID DatRep) @(Uuid Dat) @ContentNumber
 
 test_queryWhere_derivation :: UnitTest
 test_queryWhere_derivation =
@@ -122,10 +122,10 @@ prog = do
 test_query :: UnitTest
 test_query = do
   integrationTest do
-    withTestStoreTableUidGen @DatRep @Prim \ table@(QueryTable (Table struct _ _) _ _) ->
+    withTestStoreTableUidGen @DatRep @(Prim PrimaryKey) \ table@(QueryTable (Table struct _ _) _ _) ->
       interpretDatabase struct $
-      interpretOneWith @(PKRep Prim UUID DatRep) (table ^. QueryTable.structure) $
-      interpretManyWith @(PKRep Prim UUID DatRep) (table ^. QueryTable.structure) do
+      interpretOneWith @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) $
+      interpretManyWith @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) do
         (count, result) <- prog
         count === 2
         assertJust target result

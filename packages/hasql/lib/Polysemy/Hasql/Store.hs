@@ -2,7 +2,7 @@ module Polysemy.Hasql.Store where
 
 import Hasql.Connection (Connection)
 
-import Polysemy.Db.Data.Column (PK, PKQuery(PKQuery), PKRep, pkToUid, uidToPK)
+import Polysemy.Db.Data.Column (UidRep)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
@@ -13,7 +13,7 @@ import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.Schema (Schema(..))
+import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery), Schema(..))
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
@@ -102,12 +102,12 @@ interpretStoreDbFullAs toD fromD fromQ qTable@(QueryTable (Table structure _ _) 
   raiseUnder2
 
 interpretStoreDbFullUid ::
-  ∀ i d f r .
+  ∀ i d r .
   Members StoreDeps r =>
-  QueryTable (PKQuery i) (PK f i d) ->
+  QueryTable (IdQuery i) (Uid i d) ->
   InterpreterFor (UidStore i DbError d) r
 interpretStoreDbFullUid =
-  interpretStoreDbFullAs pkToUid uidToPK PKQuery
+  interpretStoreDbFullAs id id IdQuery
 
 interpretStoreDbFullGenAs ::
   ∀ rep dIn dOut qIn qOut r .
@@ -121,12 +121,12 @@ interpretStoreDbFullGenAs toD fromD fromQ =
   interpretStoreDbFullAs toD fromD fromQ (genQueryTable @rep)
 
 interpretStoreDbFullGenUid ::
-  ∀ i rep d f r .
-  GenQueryTable (PKRep f i rep) (PKQuery i) (PK f i d) =>
+  ∀ i rep d ir r .
+  GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
   Members StoreDeps r =>
   InterpreterFor (Store i DbError (Uid i d)) r
 interpretStoreDbFullGenUid =
-  interpretStoreDbFullGenAs @(PKRep f i rep) @(PK f i d) pkToUid uidToPK PKQuery
+  interpretStoreDbFullGenAs @(UidRep ir rep) @(Uid i d) id id IdQuery
 
 interpretStoreDbFull ::
   Members StoreDeps r =>

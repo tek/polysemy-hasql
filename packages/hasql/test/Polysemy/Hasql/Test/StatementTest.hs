@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.StatementTest where
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
-import Polysemy.Db.Data.Column (Auto, NewtypePrim, PKRep, Prim, Sum, Unique)
+import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Cond (LessOrEq)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Constraint (DataName, IsRecord)
@@ -144,7 +144,7 @@ test_createPKStatement =
       [qt|create table "user" ("id" bigint primary key, "name" text not null, "number" bigint not null)|]
     stmtText :: SqlCode
     stmtText =
-      Statement.createTableSql (genTableStructure @(PKRep NewtypePrim UserId User) @(Uid UserId User))
+      Statement.createTableSql (genTableStructure @(UidRep (NewtypePrim Auto) User) @(Uid UserId User))
 
 data QueryTest =
   QueryTest {

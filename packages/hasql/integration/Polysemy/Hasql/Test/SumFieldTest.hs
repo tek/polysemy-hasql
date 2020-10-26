@@ -10,19 +10,19 @@ import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK', PK(PK), PKRep, PKRep', Prim, PrimaryKey, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, PrimaryKey, Sum, UidRep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid(Uid))
+import Polysemy.Db.Data.Uid (Uid, Uid(Uid))
 import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
+import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.ColumnType (Single, UnconsRep)
@@ -225,13 +225,13 @@ table :: Table SumField
 table =
   genTable @SumFieldRep
 
-queryParams_IdQuery :: Params IdQuery
+queryParams_IdQuery :: Params (IdQuery UUID)
 queryParams_IdQuery =
-  queryParams @(Rep IdQuery)
+  queryParams @(Rep (IdQuery UUID))
 
-queryTable_SumField :: QueryTable IdQuery SumField
+queryTable_SumField :: QueryTable (IdQuery UUID) SumField
 queryTable_SumField =
-  genQueryTable @SumFieldRep @IdQuery @SumField
+  genQueryTable @SumFieldRep @(IdQuery UUID) @SumField
 
 id' :: UUID
 id' =
@@ -246,7 +246,7 @@ dexter =
   SumField id' (Dexter [absfile|/foo/bar|] 5 Three)
 
 prog ::
-  Member (Store IdQuery DbError a) r =>
+  Member (Store UuidQuery DbError a) r =>
   a ->
   Sem r (Either (StoreError DbError) (Maybe a))
 prog specimen =
@@ -259,11 +259,11 @@ sumTest ::
   Show d =>
   Eq d =>
   Members [Hedgehog IO, Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
-  GenQueryTable rep IdQuery d =>
+  GenQueryTable rep UuidQuery d =>
   d ->
   Sem r ()
 sumTest specimen = do
-  result <- withTestStoreGen @rep @IdQuery @d $ runError do
+  result <- withTestStoreGen @rep @UuidQuery @d $ runError do
     Store.upsert specimen
     Store.fetch (IdQuery id')
   assertJust specimen =<< evalEither result
@@ -308,7 +308,7 @@ data SimpleRep =
 test_simpleSumField :: UnitTest
 test_simpleSumField =
   integrationTest do
-    sumTest @(PKRep Prim UUID SimpleRep) (PK @Prim id' (Simple (TwoA 5) 9))
+    sumTest @(UidRep (Prim Auto) SimpleRep) (Uid id' (Simple (TwoA 5) 9))
 
 data SumPK =
   SumPKL { l :: Int }
@@ -333,10 +333,10 @@ data SumId =
   deriving (Eq, Show, Generic)
 
 type SumIdRecRep =
-  PKRep' (Sum (SumPKRep PrimaryKey)) SumPK SumId
+  UidRep (Sum (SumPKRep PrimaryKey)) SumId
 
 type SumIdRec =
-  PK' SumPK SumId
+  Uid SumPK SumId
 
 queryParams_SumPKQuery :: Params SumPKQuery
 queryParams_SumPKQuery =
@@ -362,7 +362,7 @@ table_SumId :: Table SumIdRec
 table_SumId =
   genTable @(Rep SumIdRec) @SumIdRec
 
-queryTable_SumId :: QueryTable SumPKQuery (PK' SumPK SumId)
+queryTable_SumId :: QueryTable SumPKQuery (Uid SumPK SumId)
 queryTable_SumId =
   genQueryTable @(Rep SumIdRec)
 

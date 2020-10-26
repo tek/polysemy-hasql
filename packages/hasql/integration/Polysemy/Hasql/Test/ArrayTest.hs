@@ -8,9 +8,9 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
+import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Test (UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
 
@@ -45,7 +45,7 @@ array =
   ArrayField id' [On, Off, Superposition]
 
 prog ::
-  Member (Store IdQuery DbError ArrayField) r =>
+  Member (Store UuidQuery DbError ArrayField) r =>
   Sem r (Either (StoreError DbError) (Maybe ArrayField))
 prog = do
   _ <- Store.upsert array

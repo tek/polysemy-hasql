@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Query.One where
 
-import Polysemy.Db.Data.Column (PK, PKRep, pkToUid)
+import Polysemy.Db.Data.Column (UidRep)
 import qualified Polysemy.Db.Data.StoreError as StoreError
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
 import Polysemy.Db.Data.TableStructure (TableStructure)
@@ -36,21 +36,21 @@ interpretOneGenAs fromQ toD =
   interpretOneAs fromQ toD (genQueryTable @rep @qIn @dIn)
 
 interpretOneGenUidAs ::
-  ∀ rep i d qOut qIn e f r .
-  GenQueryTable (PKRep f i rep) qIn (PK f i d) =>
-  Member (Database e (PK f i d)) r =>
+  ∀ rep i ir d qOut qIn e r .
+  GenQueryTable (UidRep ir rep) qIn (Uid i d) =>
+  Member (Database e (Uid i d)) r =>
   (qOut -> qIn) ->
   InterpreterFor (StoreQuery qOut e (Maybe (Uid i d))) r
 interpretOneGenUidAs fromQ =
-  interpretOneAs fromQ pkToUid (genQueryTable @(PKRep f i rep) @qIn @(PK f i d))
+  interpretOneAs fromQ id (genQueryTable @(UidRep ir rep) @qIn @(Uid i d))
 
 interpretOneGenUid ::
-  ∀ rep i q d e f r .
-  GenQueryTable (PKRep f i rep) q (PK f i d) =>
-  Member (Database e (PK f i d)) r =>
+  ∀ rep i ir q d e r .
+  GenQueryTable (UidRep ir rep) q (Uid i d) =>
+  Member (Database e (Uid i d)) r =>
   InterpreterFor (StoreQuery q e (Maybe (Uid i d))) r
 interpretOneGenUid =
-  interpretOneAs id pkToUid (genQueryTable @(PKRep f i rep) @q @(PK f i d))
+  interpretOneAs id id (genQueryTable @(UidRep ir rep) @q @(Uid i d))
 
 interpretOne ::
   ∀ q d e r .

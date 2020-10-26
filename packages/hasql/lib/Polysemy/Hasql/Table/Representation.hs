@@ -8,7 +8,8 @@ import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(Text, ShowType), TypeError)
 import Type.Errors.Pretty (type (<>))
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK, Prim, PrimaryKey, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, PrimaryKey, Sum)
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Error (ErrorWithType, JoinComma, MessageWithType)
 import Polysemy.Db.SOP.FieldNames (FieldNames)
 
@@ -73,7 +74,6 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode (NonEmpty d) = ColumnCode d
   ColumnCode (Vector d) = ColumnCode d
   ColumnCode (Maybe d) = ColumnCode d
-  ColumnCode (PK f _ d) = ProdColumn [f PrimaryKey, ColumnCode d]
   ColumnCode d = DataColumnCode (GCode d) (GDatatypeInfoOf d)
 
 type family ColumnCodes (ds :: [*]) :: [*] where
@@ -92,8 +92,13 @@ type family ProdCode (d :: [[*]]) :: [*] where
   ProdCode '[ds] = ds
   ProdCode _ = TypeError ('Text "not a product type")
 
+type family WithPrimaryKey (r :: *) :: * where
+  WithPrimaryKey (NewtypePrim _) = NewtypePrim PrimaryKey
+  WithPrimaryKey (Prim _) = Prim PrimaryKey
+  WithPrimaryKey r = r
+
 type family Rep d :: * where
-  Rep (PK f _ d) = ProdTable [f PrimaryKey, ColumnCode d]
+  Rep (Uid i d) = ProdTable [WithPrimaryKey (ColumnCode i), ColumnCode d]
   Rep d = TableRep d (ColumnCodess (GCode d))
 
 type family NestedSum (dss :: [[*]]) :: [*] where

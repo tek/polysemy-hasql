@@ -5,7 +5,7 @@ import Path (Abs, File, Path)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum)
-import Polysemy.Db.Data.ColumnParams (notNull)
+import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Table.Columns (columns)
 import Polysemy.Hasql.Table.Representation (
