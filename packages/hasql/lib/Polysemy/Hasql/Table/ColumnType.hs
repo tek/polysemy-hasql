@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Table.ColumnType where
 
 import qualified Chronos as Chronos
+import Data.Time (Day, DiffTime, LocalTime, TimeOfDay, TimeZone, UTCTime)
 import Generics.SOP.GGP (GCode)
 import Path (Path)
 import Prelude hiding (Enum)
@@ -48,6 +49,30 @@ instance ColumnType Text where
 instance ColumnType UUID where
   columnType =
     "uuid"
+
+instance ColumnType Day where
+  columnType =
+    "date"
+
+instance ColumnType LocalTime where
+  columnType =
+    "timestamp"
+
+instance ColumnType UTCTime where
+  columnType =
+    "timestamp with time zone"
+
+instance ColumnType TimeOfDay where
+  columnType =
+    "time"
+
+instance ColumnType (TimeOfDay, TimeZone) where
+  columnType =
+    "time with time zone"
+
+instance ColumnType DiffTime where
+  columnType =
+    "interval"
 
 instance ColumnType Chronos.Date where
   columnType =

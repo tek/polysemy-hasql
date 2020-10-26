@@ -2,9 +2,11 @@ module Polysemy.Hasql.Test.QueryTest where
 
 import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Hasql.Encoders (Params)
+import Polysemy.Time (mkDatetime)
 
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PKRep, Prim, PrimaryKey, Sum)
 import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
+import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UuidStore)
@@ -51,7 +53,8 @@ data Dat =
   Dat {
      content :: Content,
      number :: Int,
-     xxor :: XXor
+     xxor :: XXor,
+     created :: CreationTime
   }
   deriving (Eq, Show, Generic)
 
@@ -59,7 +62,8 @@ data DatRep =
   DatRep {
     content :: NewtypePrim Auto,
     number :: Prim Auto,
-    xxor :: Sum XorRep
+    xxor :: Sum XorRep,
+    created :: NewtypePrim Auto
   }
   deriving (Eq, Show, Generic)
 
@@ -71,23 +75,31 @@ data ContentNumber =
   }
   deriving (Eq, Show, Generic)
 
+type DatRepT =
+  '[Flatten (ProdColumn [
+    NewtypePrim Auto,
+    Prim Auto,
+    Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]),
+    NewtypePrim Auto
+  ])]
+
 queryWhereProd_ContentNumber_Dat_1 ::
   [Int -> Text]
 queryWhereProd_ContentNumber_Dat_1 =
-  queryWhereProd @'[Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]])])] @'[ '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
+  queryWhereProd @DatRepT @'[ '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
 
 queryWhereProd_ContentNumber_Dat ::
   [Int -> Text]
 queryWhereProd_ContentNumber_Dat =
-  queryWhereProd @([Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]])])]) @['(UUID, 'FieldInfo "_id"), '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
+  queryWhereProd @(Prim PrimaryKey : DatRepT) @['(UUID, 'FieldInfo "_id"), '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
 
 queryWhereFields_ContentNumber_Dat ::
   [Int -> Text]
 queryWhereFields_ContentNumber_Dat =
-  queryWhereFields' @(ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]])])]) @['(UUID, 'FieldInfo "_id"), '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
+  queryWhereFields' @(ProdColumn (Prim PrimaryKey : DatRepT)) @['(UUID, 'FieldInfo "_id"), '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
 
 queryWhere_ContentNumber_Dat ::
-  ReifyRepTable (PKRep Prim UUID DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]])])] =>
+  ReifyRepTable (PKRep Prim UUID DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
   QueryWhere (Uuid Dat) ContentNumber
 queryWhere_ContentNumber_Dat =
   queryWhere' @(PKRep Prim UUID DatRep) @(Uuid Dat) @ContentNumber
@@ -100,21 +112,25 @@ queryParamsContentNumber :: Params ContentNumber
 queryParamsContentNumber =
   queryParams @(Rep ContentNumber) @ContentNumber
 
+creation :: CreationTime
+creation =
+  CreationTime (mkDatetime 2020 1 1 0 0 0)
+
 target :: Uuid Dat
 target =
-  Uid (Uid.uuid 2) (Dat "hello" 5 (Lef 8))
+  Uid (Uid.uuid 2) (Dat "hello" 5 (Lef 8) creation)
 
 prog ::
   Members [Error (StoreError DbError), StoreQuery ContentNumber DbError [Uuid Dat]] r =>
   Members [UuidStore DbError Dat, StoreQuery ContentNumber DbError (Maybe (Uuid Dat))] r =>
   Sem r (Int, Maybe (Uuid Dat))
 prog = do
-  Store.insert (Uid (Uid.uuid 1) (Dat "hello" 10 (Lef 8)))
+  Store.insert (Uid (Uid.uuid 1) (Dat "hello" 10 (Lef 8) creation))
   Store.insert target
-  Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" 1 (Lef 8)))
-  Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" 5 (Lef 8)))
-  Store.insert (Uid (Uid.uuid 5) (Dat "hello" 7 (Lef 9)))
-  Store.insert (Uid (Uid.uuid 6) (Dat "hello" 7 (Righ 8)))
+  Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" 1 (Lef 8) creation))
+  Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" 5 (Lef 8) creation))
+  Store.insert (Uid (Uid.uuid 5) (Dat "hello" 7 (Lef 9) creation))
+  Store.insert (Uid (Uid.uuid 6) (Dat "hello" 7 (Righ 8) creation))
   r1 :: [Uuid Dat] <- StoreQuery.basicQuery (ContentNumber "hello" Nothing (Lef 8))
   r2 <- StoreQuery.basicQuery (ContentNumber "hello" (Just 6) (Lef 8))
   pure (length r1, r2)

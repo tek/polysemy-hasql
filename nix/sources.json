@@ -47,6 +47,18 @@
         "url": "https://github.com/tek/polysemy-test/archive/7a8d6c01f2bbf21ef424c8b41d1709395c9dbaf4.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "polysemy-time": {
+        "branch": "master",
+        "description": "Polysemy effects for time",
+        "homepage": null,
+        "owner": "tek",
+        "repo": "polysemy-time",
+        "rev": "1159a2295d0f4075b6ee2577de0619fa7f11516b",
+        "sha256": "0vrflxhc63wih1520dcagb2i2lmw89axnl4dlfh5n48xk0alagxp",
+        "type": "tarball",
+        "url": "https://github.com/tek/polysemy-time/archive/1159a2295d0f4075b6ee2577de0619fa7f11516b.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "tryp-hs": {
         "branch": "master",
         "description": null,
