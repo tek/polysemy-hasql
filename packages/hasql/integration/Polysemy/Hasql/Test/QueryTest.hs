@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Test.QueryTest where
 
-import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Hasql.Encoders (Params)
 import Polysemy.Time (mkDatetime)
 
@@ -22,7 +21,7 @@ import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Query.Many (interpretManyWith)
 import Polysemy.Hasql.Query.One (interpretOneWith)
-import Polysemy.Hasql.Table.Query.Where (queryWhere', queryWhereFields', queryWhereProd)
+import Polysemy.Hasql.Table.Query.Where (queryWhere')
 import Polysemy.Hasql.Table.QueryParams (queryParams)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, Rep, SumColumn)
 import Polysemy.Hasql.Test.Database (withTestStoreTableUidGen)
@@ -82,21 +81,6 @@ type DatRepT =
     Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]),
     NewtypePrim Auto
   ])]
-
-queryWhereProd_ContentNumber_Dat_1 ::
-  [Int -> Text]
-queryWhereProd_ContentNumber_Dat_1 =
-  queryWhereProd @DatRepT @'[ '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
-
-queryWhereProd_ContentNumber_Dat ::
-  [Int -> Text]
-queryWhereProd_ContentNumber_Dat =
-  queryWhereProd @(Prim PrimaryKey : DatRepT) @['(UUID, 'FieldInfo "_id"), '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
-
-queryWhereFields_ContentNumber_Dat ::
-  [Int -> Text]
-queryWhereFields_ContentNumber_Dat =
-  queryWhereFields' @(ProdColumn (Prim PrimaryKey : DatRepT)) @['(UUID, 'FieldInfo "_id"), '(Dat, 'FieldInfo "_payload")] @['(Content, 'FieldInfo "content"), '(Maybe (LessOrEq Int), 'FieldInfo "number")]
 
 queryWhere_ContentNumber_Dat ::
   ReifyRepTable (PKRep Prim UUID DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>

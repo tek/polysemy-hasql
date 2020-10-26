@@ -1,24 +1,54 @@
 module Polysemy.Hasql.Table.Query.Where where
 
+import Data.Symbol.Ascii (ToList)
 import qualified Data.Text as Text
+import Fcf (Eval, Exp, ZipWith)
+import qualified Fcf.Data.Text as Fcf
+import Fcf.Data.Text (FromList, ToSymbol, Uncons)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo(Record), DatatypeInfo(Newtype, ADT), FieldInfo(FieldInfo))
 
-import Fcf (Eval, Zip)
+import Fcf.Class.Functor (FMap)
 import Polysemy.Db.Data.Column (Flatten, Sum)
 import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
-import Polysemy.Db.SOP.Constraint (slugSymbolString_, slugSymbol_)
+import Polysemy.Db.SOP.Constraint (slugString_, slugSymbol_, symbolString)
+import Polysemy.Db.SOP.Error (ErrorWithType, ErrorWithType2)
 import qualified Polysemy.Hasql.Data.QueryWhere as Data (QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.Table.Query.Prepared (dollar)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, SumColumn)
 
 simpleSlug ::
-  ∀ name .
+  ∀ (name :: Symbol) .
   KnownSymbol name =>
   String
 simpleSlug =
-  [qt|"#{slugSymbolString_ @name}"|]
+  [qt|"#{slugString_ (dropWhile ('_' ==) (symbolString @name))}"|]
+
+data FieldName =
+  FieldName Symbol
+
+data ColumnName =
+  SumName Symbol Symbol Symbol
+  |
+  SimpleName Symbol
+
+class ReifyName (name :: ColumnName) where
+  reifyName :: String
+
+instance (
+    KnownSymbol typeName,
+    KnownSymbol ctorName,
+    KnownSymbol name
+  ) => ReifyName ('SumName typeName ctorName name) where
+  reifyName =
+    [qt|(#{simpleSlug @typeName}).#{simpleSlug @ctorName}.#{simpleSlug @name}|]
+
+instance (
+    KnownSymbol name
+  ) => ReifyName ('SimpleName name) where
+  reifyName =
+    simpleSlug @name
 
 fieldWithOp ::
   Text ->
@@ -63,146 +93,160 @@ concatWhereFields ::
 concatWhereFields fields =
   Text.intercalate " and " (zipWith ($) fields [(1 :: Int)..length fields])
 
+trueField :: Int -> Text
+trueField _ =
+  "true"
+
 where' ::
   [Int -> Text] ->
   Data.QueryWhere a query
 where' fields =
   Data.QueryWhere (SqlCode (concatWhereFields fields))
 
-class QueryWhereField d q where
-  queryWhereField :: String -> Int -> Text
+class QueryWhereColumn d q where
+  queryWhereColumn :: String -> Int -> Text
 
-instance {-# overlappable #-} QueryWhereField d d where
-  queryWhereField =
+instance {-# overlappable #-} (
+  ErrorWithType2 "cannot query a column of type" d "with a query type" q
+  ) => QueryWhereColumn d q where
+  queryWhereColumn _ _ =
+    "error"
+
+instance {-# overlappable #-} QueryWhereColumn d d where
+  queryWhereColumn =
     regularField
 
-instance QueryWhereField d q => QueryWhereField d (Maybe q) where
-  queryWhereField name i =
-    maybeField i (queryWhereField @d @q name i)
+instance QueryWhereColumn d q => QueryWhereColumn d (Maybe q) where
+  queryWhereColumn name i =
+    maybeField i (queryWhereColumn @d @q name i)
 
-instance QueryWhereField d q => QueryWhereField (Maybe d) q where
-  queryWhereField =
-    queryWhereField @d @q
+instance QueryWhereColumn d q => QueryWhereColumn (Maybe d) q where
+  queryWhereColumn =
+    queryWhereColumn @d @q
 
-instance QueryWhereField d (Less q) where
-  queryWhereField =
+instance QueryWhereColumn d (Less q) where
+  queryWhereColumn =
     fieldWithOp "<"
 
-instance QueryWhereField d (LessOrEq q) where
-  queryWhereField =
+instance QueryWhereColumn d (LessOrEq q) where
+  queryWhereColumn =
     fieldWithOp "<="
 
-instance QueryWhereField d (Greater q) where
-  queryWhereField =
+instance QueryWhereColumn d (Greater q) where
+  queryWhereColumn =
     fieldWithOp ">"
 
-instance QueryWhereField d (GreaterOrEq q) where
-  queryWhereField =
+instance QueryWhereColumn d (GreaterOrEq q) where
+  queryWhereColumn =
     fieldWithOp ">="
 
+data PrimField =
+  PrimField * * ColumnName
+  |
+  TrueField
+
 type QFields =
-  [(*, *, Symbol)]
+  [PrimField]
+
+data Field =
+  Field * FieldName
 
 type Fields =
-  [(*, FieldInfo)]
+  [Field]
+
+data Con =
+  Con Symbol Fields
+
+type Cons =
+  [Con]
+
+data MkField :: * -> FieldName -> Exp Field
+
+type instance (Eval (MkField d name)) =
+  'Field d name
+
+type family WithoutUnderscore (und :: Symbol) (cons :: Maybe (Symbol, Fcf.Text)) (name :: Symbol) :: Symbol where
+  WithoutUnderscore und ('Just '(und, tail)) _ = Eval (ToSymbol tail)
+  WithoutUnderscore _ _ name = name
+
+data CanonicalName :: FieldInfo -> Exp FieldName
+
+type instance (Eval (CanonicalName ('FieldInfo name))) =
+  'FieldName (WithoutUnderscore "_" (Eval (Uncons (Eval (FromList (ToList name))))) name)
 
 type family WithInfoData (dss :: [[*]]) (info :: DatatypeInfo) :: Fields where
-  WithInfoData '[ds] ('Newtype _ _ ('Record _ fs)) = Eval (Zip ds fs)
-  WithInfoData '[ds] ('ADT _ _ '[('Record _ fs)] _) = Eval (Zip ds fs)
+  WithInfoData '[ds] ('Newtype _ _ ('Record _ fs)) =
+    Eval (ZipWith MkField ds (Eval (FMap CanonicalName fs)))
+  WithInfoData '[ds] ('ADT _ _ '[('Record _ fs)] _) =
+    Eval (ZipWith MkField ds (Eval (FMap CanonicalName fs)))
 
 type WithInfo a =
   WithInfoData (GCode a) (GDatatypeInfoOf a)
 
-type family WithInfo2ADT (dss :: [[*]]) (info :: [ConstructorInfo]) :: [(Symbol, Fields)] where
+type family WithInfo2ADT (dss :: [[*]]) (info :: [ConstructorInfo]) :: Cons where
   WithInfo2ADT '[] '[] = '[]
-  WithInfo2ADT (ds : dss) ('Record ctorName fs : fss) = '(ctorName, Eval (Zip ds fs)) : WithInfo2ADT dss fss
+  WithInfo2ADT (ds : dss) ('Record ctorName fs : fss) =
+    'Con ctorName (Eval (ZipWith MkField ds (Eval (FMap CanonicalName fs)))) : WithInfo2ADT dss fss
 
-type family WithInfo2Data (dss :: [[*]]) (info :: DatatypeInfo) :: [(Symbol, Fields)] where
+type family WithInfo2Data (dss :: [[*]]) (info :: DatatypeInfo) :: Cons where
   WithInfo2Data dss ('ADT _ _ fss _) = WithInfo2ADT dss fss
 
 type WithInfo2 a =
   WithInfo2Data (GCode a) (GDatatypeInfoOf a)
 
-class QueryWhereCtor (ds :: Fields) (qss :: Fields) (typeName :: Symbol) (ctorName :: Symbol) where
-  queryWhereCtor :: [Int -> Text]
-
-instance QueryWhereCtor '[] '[] typeName ctorName where
-  queryWhereCtor =
-    mempty
-
-instance (
-    KnownSymbol typeName,
-    KnownSymbol ctorName,
-    KnownSymbol name,
-    QueryWhereField d (Maybe q),
-    QueryWhereCtor ds qs typeName ctorName
-  ) => QueryWhereCtor ('(d, 'FieldInfo name) : ds) ('(q, 'FieldInfo name) : qs) typeName ctorName where
-  queryWhereCtor =
-     queryWhereField @d @(Maybe q) (sumName @typeName @ctorName @name) : queryWhereCtor @ds @qs @typeName @ctorName
-
-class QueryWhereSum (dss :: [(Symbol, Fields)]) (qss :: [(Symbol, Fields)]) (name :: Symbol) where
-  queryWhereSum :: [Int -> Text]
-
-instance QueryWhereSum '[] '[] name where
-  queryWhereSum =
-    mempty
-
-instance (
-    QueryWhereCtor ds qs typeName ctorName,
-    QueryWhereSum dss qss typeName
-  ) => QueryWhereSum ('(ctorName, ds) : dss) ('(qcn, qs) : qss) typeName where
-    queryWhereSum =
-      queryWhereCtor @ds @qs @typeName @ctorName <> queryWhereSum @dss @qss @typeName
-
-class QueryWhereProd (reps :: [*]) (ds ::  Fields) (qs :: Fields) where
-  queryWhereProd :: [Int -> Text]
-
-instance QueryWhereProd reps '[] '[] where
-  queryWhereProd =
-    mempty
-
-instance {-# overlappable #-} (
-    QueryWhereProd reps ds qs
-  ) => QueryWhereProd (rep : reps) (d : ds) qs where
-  queryWhereProd =
-    queryWhereProd @reps @ds @qs
-
-instance {-# overlappable #-} (
-    KnownSymbol name,
-    QueryWhereField d q,
-    QueryWhereProd reps ds qs
-  ) => QueryWhereProd (rep : reps) ('(d, 'FieldInfo name) : ds) ('(q, 'FieldInfo name) : qs) where
-  queryWhereProd =
-    queryWhereField @d @q (simpleSlug @name) : queryWhereProd @reps @ds @qs
-
-instance (
-    QueryWhereSum (WithInfo2 d) (WithInfo2 q) name,
-    QueryWhereProd reps ds qs
-  ) => QueryWhereProd (Sum (SumColumn rep) : reps) ('(d, 'FieldInfo name) : ds) ('(q, 'FieldInfo name) : qs) where
-  queryWhereProd =
-    dummyField : queryWhereSum @(WithInfo2 d) @(WithInfo2 q) @name <> queryWhereProd @reps @ds @qs
-
-instance (
-    QueryWhereFields' (ProdColumn (rep ++ reps)) (WithInfo d ++ ds) qs wit
-  ) => QueryWhereProd (Flatten (ProdColumn rep) : reps) ('(d, 'FieldInfo name) : ds) qs where
-  queryWhereProd =
-    queryWhereFields' @(ProdColumn (rep ++ reps)) @(WithInfo d ++ ds) @qs @wit
-
-class QueryWhereFields' (rep :: *) (ds ::  Fields) (qs :: Fields) (wit :: QFields) where
+class QueryWhereFields' (fields :: QFields) where
   queryWhereFields' :: [Int -> Text]
 
-instance QueryWhereFields' rep '[] '[] wit where
+instance QueryWhereFields' '[] where
   queryWhereFields' =
     mempty
 
 instance (
-    QueryWhereProd reps ds qs
-  ) => QueryWhereFields' (ProdColumn reps) ds qs wit where
+    ReifyName name,
+    QueryWhereColumn d q,
+    QueryWhereFields' fields
+  ) => QueryWhereFields' ('PrimField d q name : fields) where
   queryWhereFields' =
-    queryWhereProd @reps @ds @qs
+    queryWhereColumn @d @q (reifyName @name) : queryWhereFields' @fields
 
-type family MatchFields (ds :: Fields) (qs :: Fields) :: QFields where
-  MatchFields ('(d, 'FieldInfo n) : ds) ('(q, 'FieldInfo n) : qs) = '(d, q, n) : MatchFields ds qs
+instance (
+    QueryWhereFields' fields
+  ) => QueryWhereFields' ('TrueField : fields) where
+  queryWhereFields' =
+    trueField : queryWhereFields' @fields
+
+data Todo
+
+type family MatchCtor (rep :: *) (typeName :: Symbol) (ctorName :: Symbol) (d :: Fields) (q :: Fields) :: QFields where
+  MatchCtor _ _ _ '[] '[] = '[]
+  MatchCtor rep typeName ctorName ('Field d ('FieldName name) : ds) ('Field q ('FieldName name) : qs) =
+    MatchField Todo d (Maybe q) ('SumName typeName ctorName name) ++ MatchCtor rep typeName ctorName ds qs
+
+type family MatchSum (reps :: [*]) (typeName :: Symbol) (dss :: Cons) (qss :: Cons) :: QFields where
+  MatchSum _ _ '[] '[] = '[]
+  MatchSum (rep : reps) typeName ('Con ctorName d : dss) ('Con _ q : qss) =
+    MatchCtor rep typeName ctorName d q ++ MatchSum reps typeName dss qss
+
+type family MatchProd (reps :: [*]) (ds :: Fields) (qs :: Fields) :: QFields where
+  MatchProd _ _ '[] = '[]
+  MatchProd (Flatten (ProdColumn rep) : reps) ('Field d _ : ds) qs =
+    MatchProd (rep ++ reps) (WithInfo d ++ ds) qs
+  MatchProd (rep : reps) ('Field d ('FieldName n) : ds) ('Field q ('FieldName n) : qs) =
+    MatchField rep d q ('SimpleName n) ++ MatchProd reps ds qs
+  MatchProd (_ : reps) (_ : ds) qs = MatchProd reps ds qs
+  MatchProd _ '[] qs =
+    ErrorWithType "couldn't match all query fields with the payload" qs
+
+type family MatchField (rep :: *) (d :: *) (q :: *) (name :: ColumnName) :: QFields where
+  MatchField (Flatten (ProdColumn rep)) d q _ =
+    MatchProd rep (WithInfo d) (WithInfo q)
+  MatchField (Sum (SumColumn rep)) d q ('SimpleName n) =
+    'TrueField : MatchSum rep n (WithInfo2 d) (WithInfo2 q)
+  MatchField _ d q n = '[ 'PrimField d q n]
+
+type family MatchFields (rep :: *) (ds :: Fields) (qs :: Fields) :: QFields where
+  MatchFields _ _ '[] = '[]
+  MatchFields (ProdColumn rep) ds qs = MatchProd rep ds qs
 
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
 -- present and matching in the data record
@@ -210,8 +254,8 @@ class QueryWhere' (rep :: *) (d :: *) (query :: *) where
   queryWhere' :: Data.QueryWhere d query
 
 instance (
-    QueryWhereFields' (ReifyRepTable rep d) (WithInfo d) (WithInfo query) (MatchFields (WithInfo d) (WithInfo query))
+    QueryWhereFields' (MatchFields (ReifyRepTable rep d) (WithInfo d) (WithInfo query))
   ) =>
   QueryWhere' rep d query where
     queryWhere' =
-      where' (queryWhereFields' @(ReifyRepTable rep d) @(WithInfo d) @(WithInfo query) @(MatchFields (WithInfo d) (WithInfo query)))
+      where' (queryWhereFields' @(MatchFields (ReifyRepTable rep d) (WithInfo d) (WithInfo query)))

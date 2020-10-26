@@ -17,6 +17,7 @@ import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
+import Polysemy.Db.Data.Uid (Uid(Uid))
 import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
@@ -308,13 +309,6 @@ test_simpleSumField :: UnitTest
 test_simpleSumField =
   integrationTest do
     sumTest @(PKRep Prim UUID SimpleRep) (PK @Prim id' (Simple (TwoA 5) 9))
-
-data Uid i a =
-  Uid {
-    id :: i,
-    payload :: a
-  }
-  deriving (Eq, Show, Generic, Functor)
 
 data SumPK =
   SumPKL { l :: Int }

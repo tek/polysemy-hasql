@@ -87,6 +87,7 @@ library
     , chronos
     , containers
     , contravariant
+    , fcf-containers
     , first-class-families
     , generics-sop
     , ghc-prim
@@ -97,6 +98,7 @@ library
     , polysemy-db
     , polysemy-plugin
     , scientific
+    , symbols
     , text
     , time
     , type-errors
@@ -132,6 +134,7 @@ test-suite polysemy-hasql-integration
     , chronos
     , containers
     , contravariant
+    , fcf-containers
     , first-class-families
     , generics-sop
     , ghc-prim
@@ -146,6 +149,7 @@ test-suite polysemy-hasql-integration
     , polysemy-test
     , polysemy-time
     , scientific
+    , symbols
     , tasty
     , tasty-hedgehog
     , text
@@ -179,6 +183,7 @@ test-suite polysemy-hasql-unit
     , chronos
     , containers
     , contravariant
+    , fcf-containers
     , first-class-families
     , generics-sop
     , ghc-prim
@@ -193,6 +198,7 @@ test-suite polysemy-hasql-unit
     , polysemy-test
     , polysemy-time
     , scientific
+    , symbols
     , tasty
     , tasty-hedgehog
     , text

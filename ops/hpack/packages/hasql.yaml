@@ -22,10 +22,12 @@ dependencies:
   - contravariant
   - ghc-prim
   - first-class-families
+  - fcf-containers
   - hasql ^>= 1.4.3
   - path
   - polysemy-plugin
   - scientific
+  - symbols
   - time
   - uuid
   - vector
