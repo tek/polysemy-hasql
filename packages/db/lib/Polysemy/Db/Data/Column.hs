@@ -38,6 +38,13 @@ data Enum a =
   Enum
   deriving (Eq, Show)
 
+data PK' i a =
+  PK' {
+    id :: i,
+    payload :: a
+  }
+  deriving (Eq, Show, Generic)
+
 data PK (f :: * -> *) i a =
   PK {
     id :: i,
@@ -72,3 +79,10 @@ type PKPrimRep = PKRep Prim
 
 deriving instance Show (PKRep Prim i r)
 deriving instance Show (PKRep NewtypePrim i r)
+
+data PKRep' idr i r =
+  PKRep' {
+    id :: idr,
+    payload :: Flatten r
+  }
+  deriving (Show, Generic)

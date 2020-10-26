@@ -100,24 +100,30 @@ instance QueryWhereField d (GreaterOrEq q) where
   queryWhereField =
     fieldWithOp ">="
 
-type family Fields' (dss :: [[*]]) (info :: DatatypeInfo) :: [(*, FieldInfo)] where
-  Fields' '[ds] ('Newtype _ _ ('Record _ fs)) = Eval (Zip ds fs)
-  Fields' '[ds] ('ADT _ _ '[('Record _ fs)] _) = Eval (Zip ds fs)
+type QFields =
+  [(*, *, Symbol)]
 
-type Fields a =
-  Fields' (GCode a) (GDatatypeInfoOf a)
+type Fields =
+  [(*, FieldInfo)]
 
-type family Fields2'' (dss :: [[*]]) (info :: [ConstructorInfo]) :: [(Symbol, [(*, FieldInfo)])] where
-  Fields2'' '[] '[] = '[]
-  Fields2'' (ds : dss) ('Record ctorName fs : fss) = '(ctorName, Eval (Zip ds fs)) : Fields2'' dss fss
+type family WithInfoData (dss :: [[*]]) (info :: DatatypeInfo) :: Fields where
+  WithInfoData '[ds] ('Newtype _ _ ('Record _ fs)) = Eval (Zip ds fs)
+  WithInfoData '[ds] ('ADT _ _ '[('Record _ fs)] _) = Eval (Zip ds fs)
 
-type family Fields2' (dss :: [[*]]) (info :: DatatypeInfo) :: [(Symbol, [(*, FieldInfo)])] where
-  Fields2' dss ('ADT _ _ fss _) = Fields2'' dss fss
+type WithInfo a =
+  WithInfoData (GCode a) (GDatatypeInfoOf a)
 
-type Fields2 a =
-  Fields2' (GCode a) (GDatatypeInfoOf a)
+type family WithInfo2ADT (dss :: [[*]]) (info :: [ConstructorInfo]) :: [(Symbol, Fields)] where
+  WithInfo2ADT '[] '[] = '[]
+  WithInfo2ADT (ds : dss) ('Record ctorName fs : fss) = '(ctorName, Eval (Zip ds fs)) : WithInfo2ADT dss fss
 
-class QueryWhereCtor (ds :: [(*, FieldInfo)]) (qss :: [(*, FieldInfo)]) (typeName :: Symbol) (ctorName :: Symbol) where
+type family WithInfo2Data (dss :: [[*]]) (info :: DatatypeInfo) :: [(Symbol, Fields)] where
+  WithInfo2Data dss ('ADT _ _ fss _) = WithInfo2ADT dss fss
+
+type WithInfo2 a =
+  WithInfo2Data (GCode a) (GDatatypeInfoOf a)
+
+class QueryWhereCtor (ds :: Fields) (qss :: Fields) (typeName :: Symbol) (ctorName :: Symbol) where
   queryWhereCtor :: [Int -> Text]
 
 instance QueryWhereCtor '[] '[] typeName ctorName where
@@ -134,7 +140,7 @@ instance (
   queryWhereCtor =
      queryWhereField @d @(Maybe q) (sumName @typeName @ctorName @name) : queryWhereCtor @ds @qs @typeName @ctorName
 
-class QueryWhereSum (dss :: [(Symbol, [(*, FieldInfo)])]) (qss :: [(Symbol, [(*, FieldInfo)])]) (name :: Symbol) where
+class QueryWhereSum (dss :: [(Symbol, Fields)]) (qss :: [(Symbol, Fields)]) (name :: Symbol) where
   queryWhereSum :: [Int -> Text]
 
 instance QueryWhereSum '[] '[] name where
@@ -148,7 +154,7 @@ instance (
     queryWhereSum =
       queryWhereCtor @ds @qs @typeName @ctorName <> queryWhereSum @dss @qss @typeName
 
-class QueryWhereProd (reps :: [*]) (ds ::  [(*, FieldInfo)]) (qs :: [(*, FieldInfo)]) where
+class QueryWhereProd (reps :: [*]) (ds ::  Fields) (qs :: Fields) where
   queryWhereProd :: [Int -> Text]
 
 instance QueryWhereProd reps '[] '[] where
@@ -170,30 +176,33 @@ instance {-# overlappable #-} (
     queryWhereField @d @q (simpleSlug @name) : queryWhereProd @reps @ds @qs
 
 instance (
-    QueryWhereSum (Fields2 d) (Fields2 q) name,
+    QueryWhereSum (WithInfo2 d) (WithInfo2 q) name,
     QueryWhereProd reps ds qs
   ) => QueryWhereProd (Sum (SumColumn rep) : reps) ('(d, 'FieldInfo name) : ds) ('(q, 'FieldInfo name) : qs) where
   queryWhereProd =
-    dummyField : queryWhereSum @(Fields2 d) @(Fields2 q) @name <> queryWhereProd @reps @ds @qs
+    dummyField : queryWhereSum @(WithInfo2 d) @(WithInfo2 q) @name <> queryWhereProd @reps @ds @qs
 
 instance (
-    QueryWhereFields' (ProdColumn (rep ++ reps)) (Fields d ++ ds) qs
+    QueryWhereFields' (ProdColumn (rep ++ reps)) (WithInfo d ++ ds) qs wit
   ) => QueryWhereProd (Flatten (ProdColumn rep) : reps) ('(d, 'FieldInfo name) : ds) qs where
   queryWhereProd =
-    queryWhereFields' @(ProdColumn (rep ++ reps)) @(Fields d ++ ds) @qs
+    queryWhereFields' @(ProdColumn (rep ++ reps)) @(WithInfo d ++ ds) @qs @wit
 
-class QueryWhereFields' (rep :: *) (ds ::  [(*, FieldInfo)]) (qs :: [(*, FieldInfo)]) where
+class QueryWhereFields' (rep :: *) (ds ::  Fields) (qs :: Fields) (wit :: QFields) where
   queryWhereFields' :: [Int -> Text]
 
-instance QueryWhereFields' rep '[] '[] where
+instance QueryWhereFields' rep '[] '[] wit where
   queryWhereFields' =
     mempty
 
 instance (
     QueryWhereProd reps ds qs
-  ) => QueryWhereFields' (ProdColumn reps) ds qs where
+  ) => QueryWhereFields' (ProdColumn reps) ds qs wit where
   queryWhereFields' =
     queryWhereProd @reps @ds @qs
+
+type family MatchFields (ds :: Fields) (qs :: Fields) :: QFields where
+  MatchFields ('(d, 'FieldInfo n) : ds) ('(q, 'FieldInfo n) : qs) = '(d, q, n) : MatchFields ds qs
 
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
 -- present and matching in the data record
@@ -201,8 +210,8 @@ class QueryWhere' (rep :: *) (d :: *) (query :: *) where
   queryWhere' :: Data.QueryWhere d query
 
 instance (
-    QueryWhereFields' (ReifyRepTable rep d) (Fields d) (Fields query)
+    QueryWhereFields' (ReifyRepTable rep d) (WithInfo d) (WithInfo query) (MatchFields (WithInfo d) (WithInfo query))
   ) =>
   QueryWhere' rep d query where
     queryWhere' =
-      where' (queryWhereFields' @(ReifyRepTable rep d) @(Fields d) @(Fields query))
+      where' (queryWhereFields' @(ReifyRepTable rep d) @(WithInfo d) @(WithInfo query) @(MatchFields (WithInfo d) (WithInfo query)))

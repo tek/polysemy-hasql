@@ -10,7 +10,7 @@ import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK(PK), PKRep, Prim, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK', PK(PK), PKRep, PKRep', Prim, PrimaryKey, Sum)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
@@ -139,11 +139,11 @@ row_sumRows_Summy =
 
 row_genQuery_Summy :: Row Summy
 row_genQuery_Summy =
-  genQueryRows @(ReifySumType (SumColumn "f1" (NestedSum (ExplicitSum Summy SummyRep))) Summy) @Summy @(GCode Summy)
+  genQueryRows @(ReifySumType (SumColumn (NestedSum (ExplicitSum Summy SummyRep))) Summy) @Summy @(GCode Summy)
 
 row_genRows_SumField :: NP Row '[UUID, Summy]
 row_genRows_SumField =
-  genRows @(UnconsRep [Prim Auto, Sum (SumColumn "f1" (NestedSum (ExplicitSum Summy SummyRep)))]) @'[UUID, Summy]
+  genRows @(UnconsRep [Prim Auto, Sum (SumColumn (NestedSum (ExplicitSum Summy SummyRep)))]) @'[UUID, Summy]
 
 queryRows_SumField :: Row SumField
 queryRows_SumField =
@@ -179,7 +179,7 @@ type SumColumns_Summy =
   ]
 
 type SumColumn_Summy =
-  SumColumn "f1" SumColumns_Summy
+  SumColumn SumColumns_Summy
 
 testSumField ::
   Rep SumField ~ ExplicitTable SumFieldRep SumField =>
@@ -228,8 +228,8 @@ queryParams_IdQuery :: Params IdQuery
 queryParams_IdQuery =
   queryParams @(Rep IdQuery)
 
-queryTable :: QueryTable IdQuery SumField
-queryTable =
+queryTable_SumField :: QueryTable IdQuery SumField
+queryTable_SumField =
   genQueryTable @SumFieldRep @IdQuery @SumField
 
 id' :: UUID
@@ -309,3 +309,76 @@ test_simpleSumField =
   integrationTest do
     sumTest @(PKRep Prim UUID SimpleRep) (PK @Prim id' (Simple (TwoA 5) 9))
 
+data Uid i a =
+  Uid {
+    id :: i,
+    payload :: a
+  }
+  deriving (Eq, Show, Generic, Functor)
+
+data SumPK =
+  SumPKL { l :: Int }
+  |
+  SumPKR { r :: Int }
+  deriving (Eq, Show, Generic)
+
+data SumPKQuery =
+  SumPKQuery {
+    id :: SumPK
+  }
+  deriving (Eq, Show, Generic)
+
+data SumPKRep r =
+  SumPKLRep { l :: Prim r }
+  |
+  SumPKRRep { r :: Prim r }
+  deriving (Eq, Show, Generic)
+
+data SumId =
+  SumId { number :: Int }
+  deriving (Eq, Show, Generic)
+
+type SumIdRecRep =
+  PKRep' (Sum (SumPKRep PrimaryKey)) SumPK SumId
+
+type SumIdRec =
+  PK' SumPK SumId
+
+queryParams_SumPKQuery :: Params SumPKQuery
+queryParams_SumPKQuery =
+  queryParams @(Rep SumPKQuery) @SumPKQuery
+
+queryRows_SumPKQuery :: Row SumPKQuery
+queryRows_SumPKQuery =
+  queryRows @(Rep SumPKQuery) @SumPKQuery
+
+queryParams_SumId :: Params SumIdRec
+queryParams_SumId =
+  queryParams @(Rep SumIdRec) @SumIdRec
+
+queryRows_SumId :: Row SumIdRec
+queryRows_SumId =
+  queryRows @(Rep SumIdRec) @SumIdRec
+
+tableStructure_SumId :: TableStructure
+tableStructure_SumId =
+  genTableStructure @(Rep SumIdRec) @SumIdRec
+
+table_SumId :: Table SumIdRec
+table_SumId =
+  genTable @(Rep SumIdRec) @SumIdRec
+
+queryTable_SumId :: QueryTable SumPKQuery (PK' SumPK SumId)
+queryTable_SumId =
+  genQueryTable @(Rep SumIdRec)
+
+test_sumId :: UnitTest
+test_sumId =
+  integrationTest do
+    result <- withTestStoreGen @(Rep SumIdRec) @SumPKQuery $ runError do
+      Store.upsert specimen
+      Store.fetch (SumPKQuery (SumPKR 5))
+    assertJust specimen =<< evalEither result
+    where
+      specimen =
+        Uid (SumPKR 5) (SumId 10)
