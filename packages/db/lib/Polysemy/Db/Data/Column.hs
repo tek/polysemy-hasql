@@ -55,7 +55,7 @@ pkToUid :: PK f i a -> Uid i a
 pkToUid (PK id' a) =
   Uid id' a
 
-newtype PKQuery i =
+data PKQuery i =
   PKQuery {
     id :: i
   }

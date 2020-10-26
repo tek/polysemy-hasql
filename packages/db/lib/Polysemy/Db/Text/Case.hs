@@ -1,11 +1,10 @@
 module Polysemy.Db.Text.Case where
 
-import Data.Char (isLower, isUpper)
-import qualified Data.Text as Text
+import Data.Char (isLower, isUpper, toLower)
 
-unCamelCase :: Char -> String -> Text
-unCamelCase sep =
-  Text.toLower . toText . reverse . foldl f []
+unCamelCaseString :: Char -> String -> String
+unCamelCaseString sep =
+  fmap toLower . reverse . foldl f []
   where
     f [] c =
       [c]
@@ -15,6 +14,10 @@ unCamelCase sep =
       c : sep : h : t
     f z c =
       c : z
+
+unCamelCase :: Char -> String -> Text
+unCamelCase =
+  toText .: unCamelCaseString
 
 unCamelCaseText :: Char -> Text -> Text
 unCamelCaseText sep =

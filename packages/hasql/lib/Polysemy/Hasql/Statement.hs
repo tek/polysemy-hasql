@@ -9,7 +9,7 @@ import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Db.Text.Quote (dquote)
-import qualified Polysemy.Hasql.ColumnParams as ColumnParams
+import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.QueryWhere (QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
@@ -113,7 +113,7 @@ createTableSql (TableStructure (TableName (dquote -> name)) columns) =
   where
     formattedColumns =
       commaSeparated (toList (formattedColumn <$> columns))
-    formattedColumn (Column (dquote -> n) t (ColumnParams.format -> params) _) =
+    formattedColumn (Column (dquote -> n) t (ColumnOptions.format -> params) _) =
       [qt|#{n} #{t}#{params}|]
 
 createTable ::

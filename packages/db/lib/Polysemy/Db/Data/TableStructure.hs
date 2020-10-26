@@ -1,13 +1,13 @@
 module Polysemy.Db.Data.TableStructure where
 
-import Polysemy.Db.Data.ColumnParams (ColumnParams)
+import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.TableName (TableName)
 
 data Column =
   Column {
     columnName :: Text,
     dataType :: Text,
-    params :: ColumnParams,
+    params :: ColumnOptions,
     customType :: Maybe CompositeType
   }
   deriving (Eq, Show)

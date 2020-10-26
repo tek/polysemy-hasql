@@ -6,7 +6,7 @@ import Polysemy.Db.Data.Column (PK, PKQuery(PKQuery), PKRep, pkToUid, uidToPK)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store)
+import Polysemy.Db.Data.Store (Store, UidStore)
 import qualified Polysemy.Db.Data.StoreError as StoreError
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.Uid (Uid)
@@ -100,6 +100,14 @@ interpretStoreDbFullAs toD fromD fromQ qTable@(QueryTable (Table structure _ _) 
   interpretSchema qTable .
   interpretStoreDbAs toD fromD fromQ .
   raiseUnder2
+
+interpretStoreDbFullUid ::
+  ∀ i d f r .
+  Members StoreDeps r =>
+  QueryTable (PKQuery i) (PK f i d) ->
+  InterpreterFor (UidStore i DbError d) r
+interpretStoreDbFullUid =
+  interpretStoreDbFullAs pkToUid uidToPK PKQuery
 
 interpretStoreDbFullGenAs ::
   ∀ rep dIn dOut qIn qOut r .

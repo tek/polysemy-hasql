@@ -11,7 +11,7 @@ import Generics.SOP.Type.Metadata (
   )
 import Prelude hiding (All)
 
-import Polysemy.Db.Text.Case (unCamelCase)
+import Polysemy.Db.Text.Case (unCamelCase, unCamelCaseString)
 
 type Coded (d :: *) (dss :: [[*]]) =
   GCode d ~ dss
@@ -92,6 +92,20 @@ instance
     dataName =
       symbolVal (Proxy @name)
 
+symbolString ::
+  ∀ (name :: Symbol) .
+  KnownSymbol name =>
+  String
+symbolString =
+  symbolVal (Proxy @name)
+
+symbolText ::
+  ∀ (name :: Symbol) .
+  KnownSymbol name =>
+  Text
+symbolText =
+  toText (symbolString @name)
+
 dataSlug ::
   ∀ a .
   DataName a =>
@@ -99,25 +113,38 @@ dataSlug ::
 dataSlug =
   unCamelCase '-' (dataName @a)
 
-dataSlugString_ ::
+slugString_ ::
+  String ->
+  String
+slugString_ =
+  unCamelCaseString '_'
+
+slugText_ ::
   String ->
   Text
-dataSlugString_ =
+slugText_ =
   unCamelCase '_'
 
-dataSlugSymbol_ ::
+slugSymbolString_ ::
+  ∀ a .
+  KnownSymbol a =>
+  String
+slugSymbolString_ =
+  slugString_ (symbolVal (Proxy @a))
+
+slugSymbol_ ::
   ∀ a .
   KnownSymbol a =>
   Text
-dataSlugSymbol_ =
-  dataSlugString_ (symbolVal (Proxy @a))
+slugSymbol_ =
+  slugText_ (symbolVal (Proxy @a))
 
 dataSlug_ ::
   ∀ a .
   DataName a =>
   Text
 dataSlug_ =
-  dataSlugString_ (dataName @a)
+  slugText_ (dataName @a)
 
 class RecordFields a (names :: [FieldInfo]) types | a -> names types where
 

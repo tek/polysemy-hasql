@@ -1,15 +1,15 @@
 module Polysemy.Hasql.Table.Query.Fragment where
 
-import Polysemy.Db.Data.ColumnParams (ColumnParams(ColumnParams))
+import Polysemy.Db.Data.ColumnOptions (ColumnOptions(ColumnOptions))
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.TableStructure (Column(Column))
 import Polysemy.Db.Text.Quote (dquote)
-import qualified Polysemy.Hasql.ColumnParams as ColumnParams
+import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.Table.Query.Text (commaFields)
 
-uniqueOrPrimary :: ColumnParams -> Bool
-uniqueOrPrimary (ColumnParams u _ p) =
+uniqueOrPrimary :: ColumnOptions -> Bool
+uniqueOrPrimary (ColumnOptions u _ p) =
   u || p
 
 pattern UniqueName :: Text -> Column
@@ -36,7 +36,7 @@ alterFragment (TableName (dquote -> name)) =
 addFragment ::
   Column ->
   SqlCode
-addFragment (Column (dquote -> name) type' (ColumnParams.format -> params) _) =
+addFragment (Column (dquote -> name) type' (ColumnOptions.format -> params) _) =
   SqlCode [qt|add #{name} #{type'}#{params}|]
 
 conflictFragment ::

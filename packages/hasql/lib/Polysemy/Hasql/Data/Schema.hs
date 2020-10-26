@@ -2,7 +2,7 @@ module Polysemy.Hasql.Data.Schema where
 
 import Hasql.Statement (Statement)
 
-newtype IdQuery =
+data IdQuery =
   IdQuery { id :: UUID }
   deriving (Eq, Show, Generic)
 

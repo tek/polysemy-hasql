@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.PKTest where
 
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, PK(PK), PKQuery(PKQuery), Prim, PrimaryKey)
-import Polysemy.Db.Data.ColumnParams (primaryKey)
+import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)

@@ -18,7 +18,6 @@ module Polysemy.Db.Prelude (
   module Polysemy.AtomicState,
   module Polysemy.Db.Debug,
   module Polysemy.Error,
-  module Polysemy.Internal.Bundle,
   module Polysemy.Reader,
   module Polysemy.State,
   module Relude,
@@ -250,3 +249,6 @@ qt =
 
 type Basic a =
   (Eq a, Show a)
+
+type a ++ b =
+  Append a b

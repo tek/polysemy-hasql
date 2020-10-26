@@ -7,11 +7,12 @@ import Hasql.Session (QueryError)
 import Polysemy.Db.Random (Random, random, runRandomIO)
 import Polysemy.Resource (Resource, bracket)
 
+import Polysemy.Db.Data.Column (PK, PKQuery, PKRep)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
-import Polysemy.Db.Data.Store (Store)
+import Polysemy.Db.Data.Store (Store, UidStore)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
@@ -24,7 +25,7 @@ import Polysemy.Hasql.Data.Table (Table, tableName)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Store (interpretStoreDbFull)
+import Polysemy.Hasql.Store (interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Hasql.Table.Table (GenTable, genTable)
@@ -150,6 +151,16 @@ withTestStoreTableGen ::
 withTestStoreTableGen prog = do
   withTestQueryTableGen @rep \ table ->
     interpretStoreDbFull table (prog table)
+
+withTestStoreTableUidGen ::
+  ∀ rep f d i r a .
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  GenQueryTable (PKRep f i rep) (PKQuery i) (PK f i d) =>
+  (QueryTable (PKQuery i) (PK f i d) -> Sem (UidStore i DbError d : r) a) ->
+  Sem r a
+withTestStoreTableUidGen prog = do
+  withTestQueryTableGen @(PKRep f i rep) \ table ->
+    interpretStoreDbFullUid table (prog table)
 
 withTestStoreGen ::
   ∀ rep q d r a .

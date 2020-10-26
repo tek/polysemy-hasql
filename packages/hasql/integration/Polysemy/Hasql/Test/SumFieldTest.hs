@@ -11,7 +11,7 @@ import Path (Abs, File, Path, absfile)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, PK(PK), PKRep, Prim, Sum)
-import Polysemy.Db.Data.ColumnParams (ColumnParams(unique))
+import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
@@ -19,12 +19,11 @@ import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
-import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
 import Polysemy.Hasql.Data.Table (Table)
-import Polysemy.Hasql.Table.ColumnParams (ExplicitColumnParams(..))
+import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.ColumnType (Single, UnconsRep)
 import Polysemy.Hasql.Table.QueryParam (queryParam, writeNulls, writeNulls2)
 import Polysemy.Hasql.Table.QueryParams (columnParams, productParams, queryParams, sumParams)
@@ -46,6 +45,7 @@ import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
 import Polysemy.Hasql.Table.ValueEncoder (repEncoder)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Resource (Resource)
 import Polysemy.Test (Hedgehog, UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
@@ -89,8 +89,8 @@ data SummyRep =
   DexterRep { rPath :: Prim Auto, rNewt :: NewtypePrim Auto, rNume :: Enum Auto }
   deriving (Eq, Show, Generic)
 
-instance ExplicitColumnParams SummyRep where
-  explicitColumnParams =
+instance ExplicitColumnOptions SummyRep where
+  explicitColumnOptions =
     def { unique = False }
 
 data SumField =
@@ -139,11 +139,11 @@ row_sumRows_Summy =
 
 row_genQuery_Summy :: Row Summy
 row_genQuery_Summy =
-  genQueryRows @(ReifySumType (SumColumn (NestedSum (ExplicitSum Summy SummyRep))) Summy) @Summy @(GCode Summy)
+  genQueryRows @(ReifySumType (SumColumn "f1" (NestedSum (ExplicitSum Summy SummyRep))) Summy) @Summy @(GCode Summy)
 
 row_genRows_SumField :: NP Row '[UUID, Summy]
 row_genRows_SumField =
-  genRows @(UnconsRep [Prim Auto, Sum (SumColumn (NestedSum (ExplicitSum Summy SummyRep)))]) @'[UUID, Summy]
+  genRows @(UnconsRep [Prim Auto, Sum (SumColumn "f1" (NestedSum (ExplicitSum Summy SummyRep)))]) @'[UUID, Summy]
 
 queryRows_SumField :: Row SumField
 queryRows_SumField =
@@ -179,7 +179,7 @@ type SumColumns_Summy =
   ]
 
 type SumColumn_Summy =
-  SumColumn SumColumns_Summy
+  SumColumn "f1" SumColumns_Summy
 
 testSumField ::
   Rep SumField ~ ExplicitTable SumFieldRep SumField =>
@@ -223,6 +223,10 @@ structManual =
 table :: Table SumField
 table =
   genTable @SumFieldRep
+
+queryParams_IdQuery :: Params IdQuery
+queryParams_IdQuery =
+  queryParams @(Rep IdQuery)
 
 queryTable :: QueryTable IdQuery SumField
 queryTable =

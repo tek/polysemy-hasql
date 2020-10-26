@@ -12,10 +12,10 @@ import Generics.SOP.Type.Metadata (
 import Polysemy.Db.Data.Column (Flatten, Sum)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
-import Polysemy.Db.SOP.Constraint (Ctors, DataName, IsRecord, dataName, dataSlugSymbol_)
-import Polysemy.Hasql.Table.ColumnParams (
-  ExplicitColumnParams(explicitColumnParams),
-  ImplicitColumnParams(implicitColumnParams),
+import Polysemy.Db.SOP.Constraint (Ctors, DataName, IsRecord, dataName, slugSymbol_)
+import Polysemy.Hasql.Table.ColumnOptions (
+  ExplicitColumnOptions(explicitColumnOptions),
+  ImplicitColumnOptions(implicitColumnOptions),
   )
 import Polysemy.Hasql.Table.ColumnType (ColumnType(columnType))
 import Polysemy.Hasql.Table.Identifier (dbIdentifier)
@@ -48,7 +48,7 @@ instance (
     columnName @field @d : columnNames @fields
 
 type BasicColumn r field d =
-  (DemoteFieldInfo field d, ExplicitColumnParams r, ImplicitColumnParams d)
+  (DemoteFieldInfo field d, ExplicitColumnOptions r, ImplicitColumnOptions d)
 
 genColumnBasic ::
   ∀ r (field :: FieldInfo) (d :: *) .
@@ -60,7 +60,7 @@ genColumnBasic colType composite =
   Column (columnName @field @d) colType par composite
   where
     par =
-      explicitColumnParams @r <> implicitColumnParams @d
+      explicitColumnOptions @r <> implicitColumnOptions @d
 
 genColumnSum ::
   ∀ r (field :: FieldInfo) (d :: *) .
@@ -127,7 +127,7 @@ instance (
     KnownSymbol n
   ) => GenCtorType rep ts d where
   genCtorType =
-    TableStructure (TableName (dataSlugSymbol_ @n)) (genProdColumns @rep @fs @ts)
+    TableStructure (TableName (slugSymbol_ @n)) (genProdColumns @rep @fs @ts)
 
 class GenSumCtorsColumns (repTypes :: [*]) (columnTypes :: [[*]]) (dataCtors :: [ConstructorInfo]) where
   genSumCtorsColumns :: [TableStructure]

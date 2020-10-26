@@ -27,7 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      Polysemy.Hasql.ColumnParams
+      Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
       Polysemy.Hasql.Data.QueryTable
@@ -47,7 +47,7 @@ library
       Polysemy.Hasql.Store
       Polysemy.Hasql.Store.Statement
       Polysemy.Hasql.Table
-      Polysemy.Hasql.Table.ColumnParams
+      Polysemy.Hasql.Table.ColumnOptions
       Polysemy.Hasql.Table.Columns
       Polysemy.Hasql.Table.ColumnType
       Polysemy.Hasql.Table.Enum
