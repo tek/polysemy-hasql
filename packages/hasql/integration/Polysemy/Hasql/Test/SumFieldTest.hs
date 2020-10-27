@@ -10,22 +10,30 @@ import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, PrimaryKey, Sum, UidRep)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum, UidRep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
+import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
+import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
-import Polysemy.Db.Data.TableStructure (TableStructure)
+import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
+import Polysemy.Db.Data.StoreQuery (StoreQuery)
+import Polysemy.Db.Data.TableStructure (Column, TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid, Uid(Uid))
 import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
-import Polysemy.Hasql.Data.QueryTable (QueryTable)
+import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
+import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery), UuidQuery)
-import Polysemy.Hasql.Data.Table (Table)
+import Polysemy.Hasql.Data.Table (Table(Table))
+import Polysemy.Hasql.Database (interpretDatabase)
+import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.ColumnType (Single, UnconsRep)
+import Polysemy.Hasql.Table.Columns (columns)
 import Polysemy.Hasql.Table.QueryParam (queryParam, writeNulls, writeNulls2)
 import Polysemy.Hasql.Table.QueryParams (columnParams, productParams, queryParams, sumParams)
 import Polysemy.Hasql.Table.QueryRow (readNulls)
@@ -38,6 +46,7 @@ import Polysemy.Hasql.Table.Representation (
   ProdCode,
   ProdColumn,
   ProdTable,
+  ReifyRepTable,
   ReifySumType,
   Rep,
   SumColumn,
@@ -45,11 +54,12 @@ import Polysemy.Hasql.Table.Representation (
 import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
 import Polysemy.Hasql.Table.ValueEncoder (repEncoder)
-import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.Database (withTestStoreGen, withTestStoreTableUidGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Resource (Resource)
 import Polysemy.Test (Hedgehog, UnitTest, evalEither)
 import Polysemy.Test.Hedgehog (assertJust)
+import Polysemy.Time (mkDatetime)
 
 data Nume =
   One
@@ -74,7 +84,7 @@ data Sinister =
 data SinisterRep =
   SinisterRep {
     sId :: Prim Auto,
-    sNewt :: NewtypePrim Auto
+    sNewt :: NewtypePrim (Prim Auto)
   }
   deriving (Eq, Show, Generic)
 
@@ -87,7 +97,7 @@ data Summy =
 data SummyRep =
   LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
   |
-  DexterRep { rPath :: Prim Auto, rNewt :: NewtypePrim Auto, rNume :: Enum Auto }
+  DexterRep { rPath :: Prim Auto, rNewt :: NewtypePrim (Prim Auto), rNume :: Enum Auto }
   deriving (Eq, Show, Generic)
 
 instance ExplicitColumnOptions SummyRep where
@@ -152,7 +162,7 @@ queryRows_SumField =
 
 repEncoder_Newt :: Encoders.Value Newt
 repEncoder_Newt =
-  repEncoder @(NewtypePrim Auto)
+  repEncoder @(NewtypePrim (Prim Auto))
 
 writeNulls_Sinister :: Params Sinister
 writeNulls_Sinister =
@@ -167,7 +177,7 @@ writeNulls2_SumField =
 
 queryParam_Newt :: Params (Maybe Newt)
 queryParam_Newt =
-  queryParam @(NewtypePrim Auto)
+  queryParam @(NewtypePrim (Prim Auto))
 
 queryParams_Sinister :: Params Sinister
 queryParams_Sinister =
@@ -176,7 +186,7 @@ queryParams_Sinister =
 type SumColumns_Summy =
   [
     ProdColumn '[Prim Auto, SinisterRepFlatten],
-    ProdColumn '[Prim Auto, NewtypePrim Auto, Enum Auto]
+    ProdColumn '[Prim Auto, NewtypePrim (Prim Auto), Enum Auto]
   ]
 
 type SumColumn_Summy =
@@ -316,12 +326,6 @@ data SumPK =
   SumPKR { r :: Int }
   deriving (Eq, Show, Generic)
 
-data SumPKQuery =
-  SumPKQuery {
-    id :: SumPK
-  }
-  deriving (Eq, Show, Generic)
-
 data SumPKRep r =
   SumPKLRep { l :: Prim r }
   |
@@ -329,22 +333,32 @@ data SumPKRep r =
   deriving (Eq, Show, Generic)
 
 data SumId =
-  SumId { number :: Int }
+  SumId { number :: CreationTime }
+  deriving (Eq, Show, Generic)
+
+data SumIdRep =
+  SumIdRep { number :: NewtypePrim (Prim Auto) }
+  deriving (Eq, Show, Generic)
+
+data SumPKQ =
+  SumPKQ {
+    number :: Maybe (LessOrEq CreationTime)
+  }
   deriving (Eq, Show, Generic)
 
 type SumIdRecRep =
-  UidRep (Sum (SumPKRep PrimaryKey)) SumId
+  UidRep (Sum (SumPKRep Auto)) SumIdRep
 
 type SumIdRec =
   Uid SumPK SumId
 
-queryParams_SumPKQuery :: Params SumPKQuery
+queryParams_SumPKQuery :: Params (IdQuery SumPK)
 queryParams_SumPKQuery =
-  queryParams @(Rep SumPKQuery) @SumPKQuery
+  queryParams @(Rep (IdQuery SumPK)) @(IdQuery SumPK)
 
-queryRows_SumPKQuery :: Row SumPKQuery
+queryRows_SumPKQuery :: Row (IdQuery SumPK)
 queryRows_SumPKQuery =
-  queryRows @(Rep SumPKQuery) @SumPKQuery
+  queryRows @(Rep (IdQuery SumPK)) @(IdQuery SumPK)
 
 queryParams_SumId :: Params SumIdRec
 queryParams_SumId =
@@ -354,25 +368,66 @@ queryRows_SumId :: Row SumIdRec
 queryRows_SumId =
   queryRows @(Rep SumIdRec) @SumIdRec
 
+columns_SumId :: [Column]
+columns_SumId =
+  columns @(UidRep (Sum (SumPKRep Auto)) SumIdRep) @SumIdRec
+
 tableStructure_SumId :: TableStructure
 tableStructure_SumId =
-  genTableStructure @(Rep SumIdRec) @SumIdRec
+  genTableStructure @(UidRep (Sum (SumPKRep Auto)) SumIdRep) @SumIdRec
 
 table_SumId :: Table SumIdRec
 table_SumId =
-  genTable @(Rep SumIdRec) @SumIdRec
+  genTable @(UidRep (Sum (SumPKRep Auto)) SumIdRep)
 
-queryTable_SumId :: QueryTable SumPKQuery (Uid SumPK SumId)
+queryTable_SumId ::
+  ReifyRepTable (Rep SumIdRec) SumIdRec ~ ReifyRepTable SumIdRecRep SumIdRec =>
+  QueryTable (IdQuery SumPK) (Uid SumPK SumId)
 queryTable_SumId =
-  genQueryTable @(Rep SumIdRec)
+  genQueryTable @(UidRep (Sum (SumPKRep Auto)) SumIdRep)
+
+queryParams_SumPKQ ::
+  Rep SumPKQ ~ ProdTable '[NewtypePrim (NewtypePrim (Prim Auto))] =>
+  Params SumPKQ
+queryParams_SumPKQ =
+  queryParams @(Rep SumPKQ)
+
+foo ::
+  Monad m =>
+  m ()
+foo =
+  void $ pure queryParams_SumPKQ
+
+queryTable_SumId_SumPKQ ::
+  QueryTable SumPKQ (Uid SumPK SumId)
+queryTable_SumId_SumPKQ =
+  genQueryTable @(UidRep (Sum (SumPKRep Auto)) SumIdRep)
+
+sumIdQProg ::
+  Member (StoreQuery SumPKQ DbError (Maybe (Uid SumPK SumId))) r =>
+  Members [Store SumPK DbError SumIdRec, DbConnection Connection, Error (StoreError DbError), Hedgehog IO, Embed IO] r =>
+  Sem r ()
+sumIdQProg = do
+  Store.upsert specimen
+  r1 <- Store.fetch (SumPKR 5)
+  r2 <- StoreQuery.basicQuery (SumPKQ Nothing)
+  assertJust specimen r1
+  assertJust specimen r2
+  where
+    specimen =
+      Uid (SumPKR 5) (SumId (CreationTime (mkDatetime 2020 1 1 0 0 0)))
+
+sumIdProg ::
+  Members [Store SumPK DbError SumIdRec, DbConnection Connection, Error (StoreError DbError), Hedgehog IO, Embed IO] r =>
+  QueryTable (IdQuery SumPK) SumIdRec ->
+  Sem r ()
+sumIdProg tbl@(QueryTable (Table stct _ _) _ _) = do
+  interpretDatabase stct $
+    interpretOneGenUidWith @SumIdRep @SumPK @(Sum (SumPKRep Auto)) @SumPKQ @SumId (tbl ^. QueryTable.structure) $
+    sumIdQProg
 
 test_sumId :: UnitTest
 test_sumId =
   integrationTest do
-    result <- withTestStoreGen @(Rep SumIdRec) @SumPKQuery $ runError do
-      Store.upsert specimen
-      Store.fetch (SumPKQuery (SumPKR 5))
-    assertJust specimen =<< evalEither result
-    where
-      specimen =
-        Uid (SumPKR 5) (SumId 10)
+    _ <- pure queryTable_SumId
+    withTestStoreTableUidGen @SumIdRep @(Sum (SumPKRep Auto)) @SumId @SumPK sumIdProg

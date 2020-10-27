@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.Representation where
 
+import Data.Time (UTCTime)
 import Data.Vector (Vector)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo, DatatypeInfo(ADT, Newtype))
@@ -57,8 +58,9 @@ type family ADTColumnCode (dss :: [[*]]) :: * where
   ADTColumnCode dss =
     SumColumnCode dss dss
 
+-- TODO change NewtypePrim to NewtypeColumn or something and treat it as a transparent wrapper
 type family DataColumnCode (dss :: [[*]]) (info :: DatatypeInfo) :: * where
-  DataColumnCode _ ('Newtype _ _ _) = NewtypePrim Auto
+  DataColumnCode '[ '[d] ] ('Newtype _ _ _) = NewtypePrim (ColumnCode d)
   DataColumnCode dss ('ADT _ _ _ _) = ADTColumnCode dss
 
 type family ColumnCode (d :: *) :: * where
@@ -70,6 +72,7 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode Float = Prim Auto
   ColumnCode Double = Prim Auto
   ColumnCode (Path _ _) = Prim Auto
+  ColumnCode UTCTime = Prim Auto
   ColumnCode [d] = ColumnCode d
   ColumnCode (NonEmpty d) = ColumnCode d
   ColumnCode (Vector d) = ColumnCode d
@@ -93,7 +96,7 @@ type family ProdCode (d :: [[*]]) :: [*] where
   ProdCode _ = TypeError ('Text "not a product type")
 
 type family WithPrimaryKey (r :: *) :: * where
-  WithPrimaryKey (NewtypePrim _) = NewtypePrim PrimaryKey
+  WithPrimaryKey (NewtypePrim r) = NewtypePrim (WithPrimaryKey r)
   WithPrimaryKey (Prim _) = Prim PrimaryKey
   WithPrimaryKey r = r
 

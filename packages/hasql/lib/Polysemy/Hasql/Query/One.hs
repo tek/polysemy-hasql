@@ -52,6 +52,15 @@ interpretOneGenUid ::
 interpretOneGenUid =
   interpretOneAs id id (genQueryTable @(UidRep ir rep) @q @(Uid i d))
 
+interpretOneGenUidWith ::
+  ∀ rep i ir q d e r .
+  GenQueryTable (UidRep ir rep) q (Uid i d) =>
+  Member (Database e (Uid i d)) r =>
+  TableStructure ->
+  InterpreterFor (StoreQuery q e (Maybe (Uid i d))) r
+interpretOneGenUidWith struct =
+  interpretOneAs id id (genQueryTable @(UidRep ir rep) & QueryTable.table . Table.structure .~ struct)
+
 interpretOne ::
   ∀ q d e r .
   Member (Database e d) r =>
