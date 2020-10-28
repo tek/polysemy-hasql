@@ -143,6 +143,12 @@ instance ValueEncoder Chronos.Date where
 instance ValueEncoder Chronos.Time where
   valueEncoder =
     Chronos.getTime >$< int8
+  {-# inline valueEncoder #-}
+
+instance ValueEncoder Chronos.Datetime where
+  valueEncoder =
+    Chronos.datetimeToTime >$< valueEncoder
+  {-# inline valueEncoder #-}
 
 class RepEncoder (rep :: *) (a :: *) where
   repEncoder :: Value a

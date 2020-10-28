@@ -172,6 +172,11 @@ instance ValueDecoder Chronos.Time where
     Chronos.Time <$> int8
   {-# inline valueDecoder #-}
 
+instance ValueDecoder Chronos.Datetime where
+  valueDecoder =
+    Chronos.timeToDatetime <$> valueDecoder
+  {-# inline valueDecoder #-}
+
 class RepDecoder (rep :: *) (a :: *) where
   repDecoder :: Value a
 
