@@ -5,8 +5,8 @@ import Data.Scientific (Scientific)
 import Data.Time (
   Day(ModifiedJulianDay),
   DiffTime,
-  LocalTime,
-  TimeOfDay,
+  LocalTime(LocalTime),
+  TimeOfDay(TimeOfDay),
   TimeZone,
   UTCTime,
   )
@@ -135,9 +135,13 @@ instance ValueEncoder (Path b t) where
     (toText . toFilePath) >$< text
   {-# inline valueEncoder #-}
 
+chronosToDay :: Chronos.Date -> Day
+chronosToDay =
+  ModifiedJulianDay . fromIntegral . Chronos.getDay . Chronos.dateToDay
+
 instance ValueEncoder Chronos.Date where
   valueEncoder =
-    ModifiedJulianDay . fromIntegral . Chronos.getDay . Chronos.dateToDay >$< date
+    chronosToDay >$< date
   {-# inline valueEncoder #-}
 
 instance ValueEncoder Chronos.Time where
@@ -145,9 +149,17 @@ instance ValueEncoder Chronos.Time where
     Chronos.getTime >$< int8
   {-# inline valueEncoder #-}
 
+chronosToTimeOfDay :: Chronos.TimeOfDay -> TimeOfDay
+chronosToTimeOfDay (Chronos.TimeOfDay h m ns) =
+  TimeOfDay h m (realToFrac ns / 1000000000)
+
+datetimeToLocalTime :: Chronos.Datetime -> LocalTime
+datetimeToLocalTime (Chronos.Datetime d t) =
+  LocalTime (chronosToDay d) (chronosToTimeOfDay t)
+
 instance ValueEncoder Chronos.Datetime where
   valueEncoder =
-    Chronos.datetimeToTime >$< valueEncoder
+     datetimeToLocalTime >$< valueEncoder
   {-# inline valueEncoder #-}
 
 class RepEncoder (rep :: *) (a :: *) where

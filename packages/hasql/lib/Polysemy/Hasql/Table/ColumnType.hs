@@ -82,6 +82,10 @@ instance ColumnType Chronos.Time where
   columnType =
     "bigint"
 
+instance ColumnType Chronos.Datetime where
+  columnType =
+    "timestamp"
+
 instance ColumnType a => ColumnType [a] where
   columnType =
     columnType @a <> "[]"

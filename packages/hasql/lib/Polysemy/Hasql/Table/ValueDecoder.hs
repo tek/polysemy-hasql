@@ -5,8 +5,8 @@ import Data.Scientific (Scientific)
 import Data.Time (
   Day,
   DiffTime,
-  LocalTime,
-  TimeOfDay,
+  LocalTime(LocalTime),
+  TimeOfDay(TimeOfDay),
   TimeZone,
   UTCTime,
   toModifiedJulianDay,
@@ -162,9 +162,13 @@ instance ValueDecoder (Path Rel Dir) where
     custom (decodePath parseRelDir)
   {-# inline valueDecoder #-}
 
+dayToChronos :: Day -> Chronos.Date
+dayToChronos =
+  Chronos.dayToDate . Chronos.Day . fromIntegral . toModifiedJulianDay
+
 instance ValueDecoder Chronos.Date where
   valueDecoder =
-    Chronos.dayToDate . Chronos.Day . fromIntegral . toModifiedJulianDay <$> date
+    dayToChronos <$> date
   {-# inline valueDecoder #-}
 
 instance ValueDecoder Chronos.Time where
@@ -172,9 +176,17 @@ instance ValueDecoder Chronos.Time where
     Chronos.Time <$> int8
   {-# inline valueDecoder #-}
 
+chronosToTimeOfDay :: TimeOfDay -> Chronos.TimeOfDay
+chronosToTimeOfDay (TimeOfDay h m ns) =
+  Chronos.TimeOfDay h m (round (ns * 1000000000))
+
+localTimeToDatetime :: LocalTime -> Chronos.Datetime
+localTimeToDatetime (LocalTime d t) =
+  Chronos.Datetime (dayToChronos d) (chronosToTimeOfDay t)
+
 instance ValueDecoder Chronos.Datetime where
   valueDecoder =
-    Chronos.timeToDatetime <$> valueDecoder
+    localTimeToDatetime <$> valueDecoder
   {-# inline valueDecoder #-}
 
 class RepDecoder (rep :: *) (a :: *) where
