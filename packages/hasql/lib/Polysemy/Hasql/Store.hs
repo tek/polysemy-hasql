@@ -121,7 +121,7 @@ interpretStoreDbFullGenAs toD fromD fromQ =
   interpretStoreDbFullAs toD fromD fromQ (genQueryTable @rep)
 
 interpretStoreDbFullGenUid ::
-  ∀ i rep d ir r .
+  ∀ rep ir i d r .
   GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
   Members StoreDeps r =>
   InterpreterFor (Store i DbError (Uid i d)) r
