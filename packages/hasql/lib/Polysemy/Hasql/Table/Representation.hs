@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.Representation where
 
+import qualified Chronos as Chronos
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
@@ -73,6 +74,7 @@ type family ColumnCode (d :: *) :: * where
   ColumnCode Double = Prim Auto
   ColumnCode (Path _ _) = Prim Auto
   ColumnCode UTCTime = Prim Auto
+  ColumnCode Chronos.Datetime = Prim Auto
   ColumnCode [d] = ColumnCode d
   ColumnCode (NonEmpty d) = ColumnCode d
   ColumnCode (Vector d) = ColumnCode d
