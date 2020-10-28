@@ -423,11 +423,11 @@ sumIdProg ::
   Sem r ()
 sumIdProg tbl@(QueryTable (Table stct _ _) _ _) = do
   interpretDatabase stct $
-    interpretOneGenUidWith @SumIdRep @SumPK @(Sum (SumPKRep Auto)) @SumPKQ @SumId (tbl ^. QueryTable.structure) $
+    interpretOneGenUidWith @SumIdRep @(Sum (SumPKRep Auto)) (tbl ^. QueryTable.structure) $
     sumIdQProg
 
 test_sumId :: UnitTest
 test_sumId =
   integrationTest do
     _ <- pure queryTable_SumId
-    withTestStoreTableUidGen @SumIdRep @(Sum (SumPKRep Auto)) @SumId @SumPK sumIdProg
+    withTestStoreTableUidGen @SumIdRep @(Sum (SumPKRep Auto)) sumIdProg

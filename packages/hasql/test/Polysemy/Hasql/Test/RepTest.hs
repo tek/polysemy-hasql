@@ -44,21 +44,21 @@ data Inside =
 data InsideRepAuto =
   InsideRepAuto {
     ii :: Prim Auto,
-    tt :: NewtypePrim Auto
+    tt :: NewtypePrim (Prim Auto)
   }
   deriving (Show, Generic)
 
 data InsideRep =
   InsideRep {
     ii :: Prim Auto,
-    tt :: NewtypePrim Auto
+    tt :: NewtypePrim (Prim Auto)
   }
   deriving (Show, Generic)
 
 testInside ::
   ColumnCodes '[Int] ~ '[Prim Auto] =>
-  ColumnCode Inside ~ Flatten (ProdColumn [Prim Auto, NewtypePrim Auto]) =>
-  ColumnCodes [Int, Inside] ~ [Prim Auto, Flatten (ProdColumn [Prim Auto, NewtypePrim Auto])] =>
+  ColumnCode Inside ~ Flatten (ProdColumn [Prim Auto, NewtypePrim (Prim Auto)]) =>
+  ColumnCodes [Int, Inside] ~ [Prim Auto, Flatten (ProdColumn [Prim Auto, NewtypePrim (Prim Auto)])] =>
   Rep Inside ~ ProdTable (ProdCode (GCode InsideRepAuto)) =>
   ()
 testInside =
@@ -92,7 +92,7 @@ type SummyCodess =
   [
     [Prim Auto, Enum Auto],
     [Prim Auto, Prim Auto],
-    [Prim Auto, Flatten (ProdColumn [Prim Auto, NewtypePrim Auto])]
+    [Prim Auto, Flatten (ProdColumn [Prim Auto, NewtypePrim (Prim Auto)])]
   ]
 
 testSummy ::

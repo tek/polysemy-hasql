@@ -36,7 +36,7 @@ interpretOneGenAs fromQ toD =
   interpretOneAs fromQ toD (genQueryTable @rep @qIn @dIn)
 
 interpretOneGenUidAs ::
-  ∀ rep i ir d qOut qIn e r .
+  ∀ rep ir i d qOut qIn e r .
   GenQueryTable (UidRep ir rep) qIn (Uid i d) =>
   Member (Database e (Uid i d)) r =>
   (qOut -> qIn) ->
@@ -45,7 +45,7 @@ interpretOneGenUidAs fromQ =
   interpretOneAs fromQ id (genQueryTable @(UidRep ir rep) @qIn @(Uid i d))
 
 interpretOneGenUid ::
-  ∀ rep i ir q d e r .
+  ∀ rep ir i q d e r .
   GenQueryTable (UidRep ir rep) q (Uid i d) =>
   Member (Database e (Uid i d)) r =>
   InterpreterFor (StoreQuery q e (Maybe (Uid i d))) r
@@ -53,7 +53,7 @@ interpretOneGenUid =
   interpretOneAs id id (genQueryTable @(UidRep ir rep) @q @(Uid i d))
 
 interpretOneGenUidWith ::
-  ∀ rep i ir q d e r .
+  ∀ rep ir i q d e r .
   GenQueryTable (UidRep ir rep) q (Uid i d) =>
   Member (Database e (Uid i d)) r =>
   TableStructure ->

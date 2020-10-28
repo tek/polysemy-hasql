@@ -47,7 +47,7 @@ interpretManyGenAs fromQ toD =
   interpretManyAsList fromQ toD (genQueryTable @rep @qIn @dIn)
 
 interpretManyGenUidAs ::
-  ∀ rep i qOut qIn d e ir r .
+  ∀ rep ir i qOut qIn d e r .
   GenQueryTable (UidRep ir rep) qIn (Uid i d) =>
   Member (Database e (Uid i d)) r =>
   (qOut -> qIn) ->
@@ -56,7 +56,7 @@ interpretManyGenUidAs fromQ =
   interpretManyAsList fromQ id (genQueryTable @(UidRep ir rep) @qIn @(Uid i d))
 
 interpretManyGenUid ::
-  ∀ rep i q d e ir r .
+  ∀ rep ir i q d e r .
   GenQueryTable (UidRep ir rep) q (Uid i d) =>
   Member (Database e (Uid i d)) r =>
   InterpreterFor (StoreQuery q e [Uid i d]) r

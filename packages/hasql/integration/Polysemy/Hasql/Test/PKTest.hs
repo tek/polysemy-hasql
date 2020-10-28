@@ -47,7 +47,7 @@ table =
   queryTable
 
 testRep ::
-  Rep (Uid Id Rec) ~ ProdTable [NewtypePrim PrimaryKey, Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
+  Rep (Uid Id Rec) ~ ProdTable [NewtypePrim (Prim PrimaryKey), Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
   ()
 testRep =
   ()
