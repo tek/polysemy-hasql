@@ -56,7 +56,7 @@ instance ColumnType Day where
 
 instance ColumnType LocalTime where
   columnType =
-    "timestamp"
+    "timestamp without time zone"
 
 instance ColumnType UTCTime where
   columnType =
@@ -64,7 +64,7 @@ instance ColumnType UTCTime where
 
 instance ColumnType TimeOfDay where
   columnType =
-    "time"
+    "time without time zone"
 
 instance ColumnType (TimeOfDay, TimeZone) where
   columnType =
@@ -84,7 +84,7 @@ instance ColumnType Chronos.Time where
 
 instance ColumnType Chronos.Datetime where
   columnType =
-    "timestamp"
+    "timestamp without time zone"
 
 instance ColumnType a => ColumnType [a] where
   columnType =
