@@ -11,7 +11,7 @@ import Polysemy.Hasql.Data.QueryWhere (QueryWhere(QueryWhere))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
-import Polysemy.Hasql.Table.Query.Where (queryWhere')
+import Polysemy.Hasql.Table.Query.Where (queryWhere)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
@@ -168,4 +168,4 @@ test_queryWhereStatement =
     target =
       [qt|"field2" <= $1 and ($2 is null or "field3" = $2) and "field4" = $3|]
     QueryWhere qw =
-      queryWhere' @(Rep QueryTest) @QueryTest @QueryTestQ
+      queryWhere @(Rep QueryTest) @QueryTest @QueryTestQ

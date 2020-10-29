@@ -21,7 +21,7 @@ import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Query.Many (interpretManyWith)
 import Polysemy.Hasql.Query.One (interpretOneWith)
-import Polysemy.Hasql.Table.Query.Where (queryWhere')
+import Polysemy.Hasql.Table.Query.Where (queryWhere)
 import Polysemy.Hasql.Table.QueryParams (queryParams)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, Rep, SumColumn)
 import Polysemy.Hasql.Test.Database (withTestStoreTableUidGen)
@@ -48,10 +48,36 @@ data XorRep =
   RRep { r :: Prim Auto }
   deriving (Eq, Show, Generic)
 
+data Number =
+  Number {
+    number :: Int,
+    otherNumber :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+data NumberRep =
+  NumberRep {
+    number :: Prim Auto,
+    otherNumber :: Prim Auto
+  }
+  deriving (Eq, Show, Generic)
+
+data NumberWrap =
+  NumberWrap {
+    numberWrap :: Number
+  }
+  deriving (Eq, Show, Generic)
+
+data NumberWrapRep =
+  NumberWrapRep {
+    numberWrap :: Flatten NumberRep
+  }
+  deriving (Eq, Show, Generic)
+
 data Dat =
   Dat {
      content :: Content,
-     number :: Int,
+     number :: NumberWrap,
      xxor :: XXor,
      created :: CreationTime
   }
@@ -60,7 +86,7 @@ data Dat =
 data DatRep =
   DatRep {
     content :: NewtypePrim Auto,
-    number :: Prim Auto,
+    number :: Flatten NumberWrapRep,
     xxor :: Sum XorRep,
     created :: NewtypePrim Auto
   }
@@ -69,6 +95,7 @@ data DatRep =
 data ContentNumber =
   ContentNumber {
     content :: Content,
+    otherNumber :: Maybe Int,
     number :: Maybe (LessOrEq Int),
     xxor :: XXor
   }
@@ -83,10 +110,10 @@ type DatRepT =
   ])]
 
 queryWhere_ContentNumber_Dat ::
-  ReifyRepTable (UidRep (Prim PrimaryKey) DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Prim Auto, Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
+  ReifyRepTable (UidRep (Prim PrimaryKey) DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Flatten (ProdColumn '[Flatten (ProdColumn '[Prim Auto, Prim Auto])]), Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
   QueryWhere (Uuid Dat) ContentNumber
 queryWhere_ContentNumber_Dat =
-  queryWhere' @(UidRep UUID DatRep) @(Uuid Dat) @ContentNumber
+  queryWhere @(UidRep UUID DatRep) @(Uuid Dat) @ContentNumber
 
 test_queryWhere_derivation :: UnitTest
 test_queryWhere_derivation =
@@ -100,23 +127,27 @@ creation :: CreationTime
 creation =
   CreationTime (mkDatetime 2020 1 1 0 0 0)
 
+num :: Int -> NumberWrap
+num n =
+  NumberWrap (Number n 555)
+
 target :: Uuid Dat
 target =
-  Uid (Uid.uuid 2) (Dat "hello" 5 (Lef 8) creation)
+  Uid (Uid.uuid 2) (Dat "hello" (num 5) (Lef 8) creation)
 
 prog ::
   Members [Error (StoreError DbError), StoreQuery ContentNumber DbError [Uuid Dat]] r =>
   Members [UuidStore DbError Dat, StoreQuery ContentNumber DbError (Maybe (Uuid Dat))] r =>
   Sem r (Int, Maybe (Uuid Dat))
 prog = do
-  Store.insert (Uid (Uid.uuid 1) (Dat "hello" 10 (Lef 8) creation))
+  Store.insert (Uid (Uid.uuid 1) (Dat "hello" (num 10) (Lef 8) creation))
   Store.insert target
-  Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" 1 (Lef 8) creation))
-  Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" 5 (Lef 8) creation))
-  Store.insert (Uid (Uid.uuid 5) (Dat "hello" 7 (Lef 9) creation))
-  Store.insert (Uid (Uid.uuid 6) (Dat "hello" 7 (Righ 8) creation))
-  r1 :: [Uuid Dat] <- StoreQuery.basicQuery (ContentNumber "hello" Nothing (Lef 8))
-  r2 <- StoreQuery.basicQuery (ContentNumber "hello" (Just 6) (Lef 8))
+  Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" (num 1) (Lef 8) creation))
+  Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" (num 5) (Lef 8) creation))
+  Store.insert (Uid (Uid.uuid 5) (Dat "hello" (num 7) (Lef 9) creation))
+  Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ 8) creation))
+  r1 :: [Uuid Dat] <- StoreQuery.basicQuery (ContentNumber "hello" Nothing Nothing (Lef 8))
+  r2 <- StoreQuery.basicQuery (ContentNumber "hello" Nothing (Just 6) (Lef 8))
   pure (length r1, r2)
 
 test_query :: UnitTest
