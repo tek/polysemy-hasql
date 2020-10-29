@@ -22,6 +22,12 @@ import Polysemy.Hasql.Schema.Generic (interpretSchema)
 import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
+type StoreStack qOut dOut qIn dIn =
+  [Store qOut DbError dOut, Schema qIn dIn, Database DbError dIn]
+
+type UidStoreStack i d =
+  StoreStack i (Uid i d) (IdQuery i) (Uid i d)
+
 interpretStoreDb ::
   Members [Schema q d, Database DbError d] r =>
   InterpreterFor (Store q DbError d) r
@@ -95,18 +101,17 @@ interpretStoreDbFullAs ::
   (dOut -> dIn) ->
   (qOut -> qIn) ->
   QueryTable qIn dIn ->
-  InterpreterFor (Store qOut DbError dOut) r
+  InterpretersFor [Store qOut DbError dOut, Schema qIn dIn, Database DbError dIn] r
 interpretStoreDbFullAs toD fromD fromQ qTable@(QueryTable (Table structure _ _) _ _) =
   interpretDatabase structure .
   interpretSchema qTable .
-  interpretStoreDbAs toD fromD fromQ .
-  raiseUnder2
+  interpretStoreDbAs toD fromD fromQ
 
 interpretStoreDbFullUid ::
   ∀ i d r .
   Members StoreDeps r =>
   QueryTable (IdQuery i) (Uid i d) ->
-  InterpreterFor (UidStore i DbError d) r
+  InterpretersFor [UidStore i DbError d, Schema (IdQuery i) (Uid i d), Database DbError (Uid i d)] r
 interpretStoreDbFullUid =
   interpretStoreDbFullAs id id IdQuery
 
@@ -117,7 +122,7 @@ interpretStoreDbFullGenAs ::
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
-  InterpreterFor (Store qOut DbError dOut) r
+  InterpretersFor [Store qOut DbError dOut, Schema qIn dIn, Database DbError dIn] r
 interpretStoreDbFullGenAs toD fromD fromQ =
   interpretStoreDbFullAs toD fromD fromQ (genQueryTable @rep)
 
@@ -125,7 +130,7 @@ interpretStoreDbFullGenUid ::
   ∀ rep ir i d r .
   GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
   Members StoreDeps r =>
-  InterpreterFor (Store i DbError (Uid i d)) r
+  InterpretersFor [UidStore i DbError d, Schema (IdQuery i) (Uid i d), Database DbError (Uid i d)] r
 interpretStoreDbFullGenUid =
   interpretStoreDbFullGenAs @(UidRep ir rep) @(Uid i d) id id IdQuery
 
@@ -140,21 +145,19 @@ interpretStoreDbFull qTable@(QueryTable (Table structure _ _) _ _) =
   interpretStoreDb
 
 interpretStoreDbFullGen ::
-  ∀ rep q d r a .
+  ∀ rep q d r .
   GenQueryTable rep q d =>
   Members StoreDeps r =>
-  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
-  Sem r a
+  InterpretersFor [Store q DbError d, Schema q d, Database DbError d] r
 interpretStoreDbFullGen =
   interpretStoreDbFull (genQueryTable @rep)
 
 interpretStoreDbSingle ::
-  ∀ rep q d r a .
+  ∀ rep q d r .
   GenQueryTable rep q d =>
   Members [Error DbError, Embed IO] r =>
   DbConfig ->
-  Sem (Store q DbError d : Schema q d : Database DbError d : DbConnection Connection : r) a ->
-  Sem r a
+  InterpretersFor [Store q DbError d, Schema q d, Database DbError d, DbConnection Connection] r
 interpretStoreDbSingle host =
   interpretDbConnection host .
   interpretStoreDbFullGen @rep

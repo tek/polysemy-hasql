@@ -13,7 +13,7 @@ import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Data.IdQuery (IdQuery)
-import Polysemy.Db.Data.Store (Store, UidStore)
+import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Hasql.Data.Database (Database)
@@ -27,9 +27,10 @@ import Polysemy.Hasql.Data.Table (Table, tableName)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Store (interpretStoreDbFull, interpretStoreDbFullUid)
+import Polysemy.Hasql.Store (UidStoreStack, interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.Table (GenTable, genTable)
 
 suffixedTable ::
@@ -150,7 +151,7 @@ withTestStoreTableGen ::
   GenQueryTable rep q d =>
   (QueryTable q d -> Sem (Store q DbError d : Schema q d : Database DbError d : r) a) ->
   Sem r a
-withTestStoreTableGen prog = do
+withTestStoreTableGen prog =
   withTestQueryTableGen @rep \ table ->
     interpretStoreDbFull table (prog table)
 
@@ -158,9 +159,9 @@ withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
   GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
-  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStore i DbError d : r) a) ->
+  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
-withTestStoreTableUidGen prog = do
+withTestStoreTableUidGen prog =
   withTestQueryTableGen @(UidRep ir rep) \ table ->
     interpretStoreDbFullUid table (prog table)
 
@@ -170,6 +171,26 @@ withTestStoreGen ::
   GenQueryTable rep q d =>
   Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
   Sem r a
-withTestStoreGen prog = do
+withTestStoreGen prog =
   withTestQueryTableGen @rep \ table ->
     interpretStoreDbFull table prog
+
+withTestStore ::
+  ∀ q d r a .
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  GenQueryTable (Rep d) q d =>
+  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
+  Sem r a
+withTestStore prog =
+  withTestQueryTableGen @(Rep d) \ table ->
+    interpretStoreDbFull table prog
+
+withTestStoreUid ::
+  ∀ i d r a .
+  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  GenQueryTable (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
+  Sem (UidStoreStack i d ++ r) a ->
+  Sem r a
+withTestStoreUid prog =
+  withTestQueryTableGen @(Rep (Uid i d)) \ table ->
+    interpretStoreDbFullUid table prog

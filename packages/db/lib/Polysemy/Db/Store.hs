@@ -168,6 +168,13 @@ fetchPayloadShow ::
 fetchPayloadShow liftError id' =
   fmap Uid._payload <$> (hoistEitherShow liftError =<< Store.fetch @i @e' @(Uid i d) id')
 
+fetchAll ::
+  ∀ i e d r .
+  Members [Store i e d, Error (StoreError e)] r =>
+  Sem r (Maybe (NonEmpty d))
+fetchAll =
+  fromEither =<< Store.fetchAll @i @e @d
+
 insert ::
   ∀ i e d r .
   Members [Store i e d, Error (StoreError e)] r =>

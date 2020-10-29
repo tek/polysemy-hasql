@@ -252,3 +252,6 @@ type Basic a =
 
 type a ++ b =
   Append a b
+
+type InterpretersFor r0 r =
+  ∀ a . Sem (r0 ++ r) a -> Sem r a
