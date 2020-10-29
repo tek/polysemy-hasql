@@ -12,6 +12,7 @@ import qualified Polysemy.Db.Data.DbConfig as DbConfig
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
+import Polysemy.Db.Data.IdQuery (IdQuery)
 import Polysemy.Db.Data.Store (Store, UidStore)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.Uid (Uid)
@@ -20,7 +21,7 @@ import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Data.Schema (IdQuery, Schema)
+import Polysemy.Hasql.Data.Schema (Schema)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table, tableName)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)

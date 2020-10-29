@@ -2,13 +2,6 @@ module Polysemy.Hasql.Data.Schema where
 
 import Hasql.Statement (Statement)
 
-data IdQuery i =
-  IdQuery { id :: i }
-  deriving (Eq, Show, Generic)
-
-type UuidQuery =
-  IdQuery UUID
-
 -- TODO make Statement a type param
 data Schema q d :: Effect where
   Fetch :: Schema q d m (Statement q (Maybe d))

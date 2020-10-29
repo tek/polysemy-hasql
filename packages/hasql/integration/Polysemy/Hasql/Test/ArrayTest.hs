@@ -8,7 +8,7 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery), UuidQuery)
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Test (UnitTest, evalEither)

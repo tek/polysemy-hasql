@@ -9,7 +9,7 @@ import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStru
 import Polysemy.Db.Data.Uid (Uid(Uid))
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery))
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
 import Polysemy.Hasql.Table.TableStructure (tableStructure)

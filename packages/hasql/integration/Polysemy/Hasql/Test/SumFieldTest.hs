@@ -27,7 +27,7 @@ import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.Schema (IdQuery(IdQuery), UuidQuery)
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Query.One (interpretOneGenUidWith)

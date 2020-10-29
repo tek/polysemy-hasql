@@ -12,7 +12,6 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
 import Polysemy.Hasql.Table.Query.Where (queryWhere')
-import Polysemy.Hasql.Table.QueryFields (QueryFields)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
@@ -27,8 +26,6 @@ data WithMaybe =
 
 derivation ::
   ∀ names (columns :: [*]) (name :: Symbol) .
-  QueryFields '[ 'FieldInfo "f1", 'FieldInfo "f3"] '[Text, Double] '[ 'FieldInfo "f1", 'FieldInfo "f2", 'FieldInfo "f3"] '[Text, Int, Double] =>
-  QueryFields '[ 'FieldInfo "f2", 'FieldInfo "f3"] '[Int, Maybe Double] '[ 'FieldInfo "f1", 'FieldInfo "f2", 'FieldInfo "f3"] '[Text, Int, Maybe Double] =>
   IsRecord WithMaybe columns name names =>
   DataName WithMaybe =>
   IO ()
