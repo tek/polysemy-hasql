@@ -60,7 +60,6 @@ library
       Polysemy.Hasql.Table.Query.Set
       Polysemy.Hasql.Table.Query.Text
       Polysemy.Hasql.Table.Query.Where
-      Polysemy.Hasql.Table.QueryFields
       Polysemy.Hasql.Table.QueryParam
       Polysemy.Hasql.Table.QueryParams
       Polysemy.Hasql.Table.QueryRow
