@@ -169,6 +169,7 @@ test-suite polysemy-hasql-unit
   main-is: Main.hs
   other-modules:
       Polysemy.Hasql.Test.EnumTest
+      Polysemy.Hasql.Test.GenTest
       Polysemy.Hasql.Test.RepTest
       Polysemy.Hasql.Test.StatementTest
       Polysemy.Hasql.Test.TableTest

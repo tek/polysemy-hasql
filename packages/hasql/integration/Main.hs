@@ -5,7 +5,7 @@ import Polysemy.Hasql.Test.InitTest (test_initTable)
 import Polysemy.Hasql.Test.PKTest (test_pk)
 import Polysemy.Hasql.Test.QueryTest (test_query)
 import Polysemy.Hasql.Test.SingletonTest (test_singletonDb)
-import Polysemy.Hasql.Test.SumFieldTest (test_sumField)
+import Polysemy.Hasql.Test.SumFieldTest (test_multiSum, test_sumField, test_sumId)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 
@@ -17,6 +17,8 @@ tests =
     unitTest "array db column" test_arrayField,
     unitTest "query" test_query,
     unitTest "sum field" test_sumField,
+    unitTest "sum field as id column" test_sumId,
+    unitTest "same sum type in multiple tables" test_multiSum,
     unitTest "primary key with PK" test_pk
   ]
 

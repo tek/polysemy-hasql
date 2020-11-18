@@ -13,7 +13,6 @@ import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import qualified Polysemy.Db.Data.TableStructure as Column
-import qualified Polysemy.Db.Data.TableStructure as TableStructure (TableStructure(_name))
 import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import qualified Polysemy.Hasql.Statement as Statement
@@ -28,12 +27,12 @@ runStatement ::
 runStatement connection args statement =
   fromEither =<< embed (Session.run (Session.statement args statement) connection)
 
-columnsStatement :: Statement Text [(Text, Text)]
-columnsStatement =
-  Statement.query code decoder encoder
+dbColumnsStatement ::
+  SqlCode ->
+  Statement Text [(Text, Text)]
+dbColumnsStatement sql =
+  Statement.query sql decoder encoder
   where
-    code =
-      SqlCode [qt|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
     decoder =
       tuple text text
     text =
@@ -41,16 +40,73 @@ columnsStatement =
     encoder =
       Encoders.param (Encoders.nonNullable Encoders.text)
 
+dbColumnsFor ::
+  Members [Embed IO, Error QueryError] r =>
+  SqlCode ->
+  Connection ->
+  TableName ->
+  Sem r (Maybe (NonEmpty Column))
+dbColumnsFor sql connection (TableName tableName) =
+  nonEmpty . fmap cons <$> runStatement connection tableName (dbColumnsStatement sql)
+  where
+    cons (name, dataType) =
+      Column name dataType def Nothing
+
 tableColumns ::
   Members [Embed IO, Error QueryError] r =>
   Connection ->
   TableName ->
   Sem r (Maybe (NonEmpty Column))
-tableColumns connection (TableName tableName) =
-  nonEmpty . fmap cons <$> runStatement connection tableName columnsStatement
+tableColumns =
+  dbColumnsFor code
   where
-    cons (name, dataType) =
-      Column name dataType def Nothing
+    code =
+      SqlCode [qt|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
+
+typeColumns ::
+  Members [Embed IO, Error QueryError] r =>
+  Connection ->
+  TableName ->
+  Sem r (Maybe (NonEmpty Column))
+typeColumns =
+  dbColumnsFor code
+  where
+    code =
+      SqlCode [qt|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
+
+-- TODO
+updateType ::
+  NonEmpty Column ->
+  Sem r ()
+updateType _ =
+  unit
+
+initCtorType ::
+  Members [Embed IO, Error QueryError] r =>
+  Connection ->
+  TableStructure ->
+  Sem r ()
+initCtorType connection col@(TableStructure name _) = do
+  exists <- isJust <$> typeColumns connection name
+  unless exists (run (Statement.createCtorType col))
+  where
+    run =
+      runStatement connection ()
+
+initType ::
+  Members [Embed IO, Error QueryError] r =>
+  Connection ->
+  CompositeType ->
+  Sem r ()
+initType connection tpe@(CompositeType name _ cols) = do
+  existing <- typeColumns connection name
+  maybe createType updateType existing
+  where
+    createType = do
+      traverse_ (initCtorType connection) cols
+      run (Statement.createSumType tpe)
+    run =
+      runStatement connection ()
 
 createTable ::
   Members [Embed IO, Error QueryError] r =>
@@ -58,18 +114,13 @@ createTable ::
   TableStructure ->
   Sem r ()
 createTable connection struct@(TableStructure _ columns) = do
-  traverse_ createType types
+  traverse_ (initType connection) types
   run (Statement.createTable struct)
   where
     run =
       runStatement connection ()
     types =
-      catMaybes (Column.customType <$> toList columns)
-    createType ct@(CompositeType name _ cols) = do
-      run (Statement.dropType name)
-      traverse_ (run . Statement.dropType . TableStructure._name) cols
-      traverse_ (run . Statement.createCtorType) cols
-      run (Statement.createSumType ct)
+      mapMaybe Column.customType (toList columns)
 
 dropTable ::
   Members [Embed IO, Error QueryError] r =>

@@ -8,6 +8,9 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
+import Polysemy.Test (Hedgehog, UnitTest, evalEither)
+import Polysemy.Test.Hedgehog (assertJust)
+import Polysemy.Time (mkDatetime)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, Sum, UidRep)
@@ -15,6 +18,7 @@ import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
 import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
@@ -25,12 +29,11 @@ import Polysemy.Db.Data.Uid (Uid, Uid(Uid))
 import Polysemy.Db.Random (Random)
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
-import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
+import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.ColumnType (Single, UnconsRep)
 import Polysemy.Hasql.Table.Columns (columns)
@@ -57,9 +60,6 @@ import Polysemy.Hasql.Table.ValueEncoder (repEncoder)
 import Polysemy.Hasql.Test.Database (withTestStoreGen, withTestStoreTableUidGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Resource (Resource)
-import Polysemy.Test (Hedgehog, UnitTest, evalEither)
-import Polysemy.Test.Hedgehog (assertJust)
-import Polysemy.Time (mkDatetime)
 
 data Nume =
   One
@@ -392,12 +392,6 @@ queryParams_SumPKQ ::
 queryParams_SumPKQ =
   queryParams @(Rep SumPKQ)
 
-foo ::
-  Monad m =>
-  m ()
-foo =
-  void $ pure queryParams_SumPKQ
-
 queryTable_SumId_SumPKQ ::
   QueryTable SumPKQ (Uid SumPK SumId)
 queryTable_SumId_SumPKQ =
@@ -421,9 +415,9 @@ sumIdProg ::
   Members [Store SumPK DbError SumIdRec, DbConnection Connection, Error (StoreError DbError), Hedgehog IO, Embed IO] r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()
-sumIdProg tbl@(QueryTable (Table stct _ _) _ _) = do
+sumIdProg (QueryTable (Table stct _ _) _ _) =
   interpretDatabase stct $
-    interpretOneGenUidWith @SumIdRep @(Sum (SumPKRep Auto)) (tbl ^. QueryTable.structure) $
+    interpretOneGenUidWith @SumIdRep @(Sum (SumPKRep Auto)) stct $
     sumIdQProg
 
 test_sumId :: UnitTest
@@ -431,3 +425,40 @@ test_sumId =
   integrationTest do
     _ <- pure queryTable_SumId
     withTestStoreTableUidGen @SumIdRep @(Sum (SumPKRep Auto)) sumIdProg
+
+data Dat1 =
+  Dat1 {
+    dat1_Int :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+data Dat1Rep =
+  Dat1Rep {
+    dat1_Int :: Prim Auto
+  }
+  deriving (Eq, Show, Generic)
+
+data Dat2 =
+  Dat2 {
+    dat2_Text :: Text
+  }
+  deriving (Eq, Show, Generic)
+
+data Dat2Rep =
+  Dat2Rep {
+    dat2_Int :: Prim Auto
+  }
+  deriving (Eq, Show, Generic)
+
+test_multiSum :: UnitTest
+test_multiSum =
+  integrationTest do
+    interpretStoreDbFullGenUid @Dat1Rep @(Sum (SumPKRep Auto)) @_ @Dat1 do
+      Store.upsert record
+      interpretStoreDbFullGenUid @Dat2Rep @(Sum (SumPKRep Auto)) @_ @Dat2 do
+        Store.upsert (Uid (SumPKL 6) (Dat2 "six"))
+        result <- Store.fetchAll @SumPK @_ @(Uid SumPK Dat1)
+        assertJust (pure record) result
+  where
+    record =
+      Uid (SumPKL 5) (Dat1 5)
