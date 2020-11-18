@@ -12,9 +12,9 @@ import Polysemy.Test.Data.TestError (TestError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Random (Random, runRandomIO)
-import Polysemy.Hasql.Test.DbConfig (dbConfig)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
-import Polysemy.Hasql.DbConnection (interpretDbConnection)
+import Polysemy.Hasql.Test.Database (withTestConnection)
+import Polysemy.Hasql.Test.DbConfig (dbConfig)
 
 type TestEffects =
   [
@@ -36,7 +36,7 @@ type TestEffects =
 integrationTest ::
   Sem TestEffects () ->
   TestT IO ()
-integrationTest thunk = do
+integrationTest thunk =
   dbConfig >>= \case
     Just conf -> do
       runTestAuto do
@@ -46,7 +46,7 @@ integrationTest thunk = do
           mapError @(StoreError DbError) @Text show $
           runRandomIO $
           failToEmbed $
-          interpretDbConnection conf $
+          withTestConnection conf $
           thunk
         Hedgehog.evalEither r
     Nothing ->

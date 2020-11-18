@@ -21,6 +21,7 @@ import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Schema.Generic (interpretSchema)
 import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+import Polysemy.Resource (Resource)
 
 type StoreStack qOut dOut qIn dIn =
   [Store qOut DbError dOut, Schema qIn dIn, Database DbError dIn]
@@ -155,7 +156,7 @@ interpretStoreDbFullGen =
 interpretStoreDbSingle ::
   ∀ rep q d r .
   GenQueryTable rep q d =>
-  Members [Error DbError, Embed IO] r =>
+  Members [Error DbError, Resource, Embed IO] r =>
   DbConfig ->
   InterpretersFor [Store q DbError d, Schema q d, Database DbError d, DbConnection Connection] r
 interpretStoreDbSingle host =

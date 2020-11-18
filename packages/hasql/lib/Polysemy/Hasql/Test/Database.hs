@@ -134,7 +134,7 @@ withTestDb baseConfig f =
     acquire config connection =
       runRandomIO $ createTestDb config connection
     release connection (DbConfig _ _ name _ _) =
-      mapError convertQueryError (runStatement connection () (Statement.createDb name))
+      mapError convertQueryError (runStatement connection () (Statement.dropDb name))
 
 withTestConnection ::
   Members [Error DbError, Embed IO, Resource] r =>
