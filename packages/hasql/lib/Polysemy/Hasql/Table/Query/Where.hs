@@ -276,7 +276,7 @@ type family MatchSum (reps :: [*]) (typeName :: Symbol) (dss :: Cons) (qss :: Co
     ErrorWithType "MatchSum" reps
 
 type family MatchField (rep :: *) (d :: *) (q :: *) (name :: ColumnName) :: QFields where
-  MatchField (Sum (SumColumn rep)) d q ('SimpleName n) =
+  MatchField (Sum _ (SumColumn rep)) d q ('SimpleName n) =
     'TrueField : MatchSum rep n (WithInfo2 d) (WithInfo2 q)
   MatchField _ d q n = '[ 'PrimField d q n]
 
@@ -291,7 +291,7 @@ type family MissingField (table :: QueryTable) (q :: Field) :: k where
 type family MatchQueryField (table :: QueryTable) (fields :: [TableField]) (q :: Field) :: QFields where
   MatchQueryField table '[] q =
     MissingField table q
-  MatchQueryField _ ('TableField (Sum (SumColumn rep)) ('Field d ('FieldName n)) : _) ('Field q ('FieldName n)) =
+  MatchQueryField _ ('TableField (Sum _ (SumColumn rep)) ('Field d ('FieldName n)) : _) ('Field q ('FieldName n)) =
     'TrueField : MatchSum rep n (WithInfo2 d) (WithInfo2 q)
   MatchQueryField _ ('TableField _ ('Field d ('FieldName n)) : _) ('Field q ('FieldName n)) =
     '[ 'PrimField d q ('SimpleName n)]

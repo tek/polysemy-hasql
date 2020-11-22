@@ -28,7 +28,7 @@ data NewtypePrim a =
   NewtypePrim
   deriving (Eq, Show)
 
-data Sum a =
+data Sum r s =
   Sum
   deriving (Eq, Show)
 

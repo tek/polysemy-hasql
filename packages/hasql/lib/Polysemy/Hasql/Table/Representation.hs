@@ -49,7 +49,7 @@ type family SumColumnCode (dss :: [[*]]) (initial :: [[*]]) :: * where
   SumColumnCode '[] _ =
     Enum Auto
   SumColumnCode ((_ : _) : _) initial =
-    Sum (SumColumn (CtorsColumnCode initial))
+    Sum Auto (SumColumn (CtorsColumnCode initial))
   SumColumnCode _ initial =
     TypeError ('Text "could not match sum type column: " <> 'ShowType initial)
 
@@ -111,8 +111,8 @@ type family NestedSum (dss :: [[*]]) :: [*] where
   NestedSum (ds : dss) = ProdColumn ds : NestedSum dss
 
 type family ExplicitColumn (dt :: *) (rep :: *) (rn :: Symbol) (d :: *) (dn :: Symbol) :: * where
-  ExplicitColumn _ (Sum rep) _ d _ =
-    Sum (SumColumn (NestedSum (ExplicitSum d rep)))
+  ExplicitColumn _ (Sum rep sum) _ d _ =
+    Sum rep (SumColumn (NestedSum (ExplicitSum d sum)))
   ExplicitColumn _ (Flatten rep) _ d _ =
     Flatten (ProdColumn (ProdCode (ExplicitSum d rep)))
   ExplicitColumn _ (Enum rep) _ _ _ =

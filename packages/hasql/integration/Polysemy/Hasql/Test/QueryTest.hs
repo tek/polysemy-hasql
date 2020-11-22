@@ -87,7 +87,7 @@ data DatRep =
   DatRep {
     content :: NewtypePrim Auto,
     number :: Flatten NumberWrapRep,
-    xxor :: Sum XorRep,
+    xxor :: Sum Auto XorRep,
     created :: NewtypePrim Auto
   }
   deriving (Eq, Show, Generic)
@@ -105,12 +105,12 @@ type DatRepT =
   '[Flatten (ProdColumn [
     NewtypePrim Auto,
     Prim Auto,
-    Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]),
+    Sum Auto (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]),
     NewtypePrim Auto
   ])]
 
 queryWhere_ContentNumber_Dat ::
-  ReifyRepTable (UidRep (Prim PrimaryKey) DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Flatten (ProdColumn '[Flatten (ProdColumn '[Prim Auto, Prim Auto])]), Sum (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
+  ReifyRepTable (UidRep (Prim PrimaryKey) DatRep) (Uuid Dat) ~ ProdColumn [Prim PrimaryKey, Flatten (ProdColumn [NewtypePrim Auto, Flatten (ProdColumn '[Flatten (ProdColumn '[Prim Auto, Prim Auto])]), Sum Auto (SumColumn '[ProdColumn '[Prim Auto], ProdColumn '[Prim Auto]]), NewtypePrim Auto])] =>
   QueryWhere (Uuid Dat) ContentNumber
 queryWhere_ContentNumber_Dat =
   queryWhere @(UidRep UUID DatRep) @(Uuid Dat) @ContentNumber

@@ -97,7 +97,7 @@ type SummyCodess =
 
 testSummy ::
   ColumnCodess (GCode Summy) ~ SummyCodess =>
-  ColumnCode Summy ~ Sum (SumColumn (NestedSum (GCode SummyRepAuto))) =>
+  ColumnCode Summy ~ Sum Auto (SumColumn (NestedSum (GCode SummyRepAuto))) =>
   ()
 testSummy =
   ()
@@ -114,7 +114,7 @@ data SumFieldRepAuto =
   SumFieldRepAuto {
     id :: Prim Auto,
     int :: Prim Auto,
-    sum :: Sum (SumColumn (NestedSum (GCode SummyRepAuto)))
+    sum :: Sum Auto (SumColumn (NestedSum (GCode SummyRepAuto)))
   }
   deriving (Show, Generic)
 
@@ -122,7 +122,7 @@ data SumFieldRep =
   SumFieldRep {
     id :: Prim Auto,
     int :: Prim Auto,
-    sum :: Sum SummyRep
+    sum :: Sum Auto SummyRep
   }
   deriving (Show, Generic)
 

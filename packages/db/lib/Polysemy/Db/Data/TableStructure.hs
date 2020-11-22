@@ -10,7 +10,7 @@ data Column =
     params :: ColumnOptions,
     customType :: Maybe CompositeType
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Ord)
 
 data CompositeType =
   CompositeType {
@@ -18,13 +18,13 @@ data CompositeType =
     _index :: Column,
     _variants :: [TableStructure]
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Ord)
 
 data TableStructure =
   TableStructure {
     _name :: TableName,
     _columns :: [Column]
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Ord)
 
 makeClassy ''TableStructure

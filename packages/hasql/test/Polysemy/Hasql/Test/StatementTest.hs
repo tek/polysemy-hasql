@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Test.StatementTest where
 
-import Generics.SOP.Type.Metadata (FieldInfo(FieldInfo))
 import Prelude hiding (All)
 
 import Polysemy.Db.Data.Column (Auto, NewtypePrim, Prim, Sum, UidRep, Unique)
@@ -66,7 +65,7 @@ data RecRep =
     a :: Prim Unique,
     b :: Prim Auto,
     c :: Prim Auto,
-    sumField :: Sum SumRecRep
+    sumField :: Sum Auto SumRecRep
   }
   deriving (Eq, Show, Generic)
 

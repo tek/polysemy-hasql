@@ -112,7 +112,7 @@ data Multi (head :: *) (tail :: [*]) =
 
 type family UnconsRep (reps :: [*]) :: *
 type instance UnconsRep '[] = Done
-type instance UnconsRep (Sum r : reps) = Multi r reps
+type instance UnconsRep (Sum _ r : reps) = Multi r reps
 type instance UnconsRep (Flatten r : reps) = Multi r reps
 type instance UnconsRep (Prim r : reps) = Single (Prim r) reps
 type instance UnconsRep (NewtypePrim r : reps) = Single (NewtypePrim r) reps

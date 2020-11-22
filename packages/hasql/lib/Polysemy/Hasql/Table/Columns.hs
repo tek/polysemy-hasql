@@ -47,12 +47,12 @@ instance (
   columnNames =
     columnName @field @d : columnNames @fields
 
-type BasicColumn r field d =
-  (DemoteFieldInfo field d, ExplicitColumnOptions r, ImplicitColumnOptions d)
+type BasicColumn rep field d =
+  (DemoteFieldInfo field d, ExplicitColumnOptions rep, ImplicitColumnOptions d)
 
 genColumnBasic ::
-  ∀ r (field :: FieldInfo) (d :: *) .
-  BasicColumn r field d =>
+  ∀ rep (field :: FieldInfo) (d :: *) .
+  BasicColumn rep field d =>
   Text ->
   Maybe CompositeType ->
   Column
@@ -60,42 +60,42 @@ genColumnBasic colType composite =
   Column (columnName @field @d) colType par composite
   where
     par =
-      explicitColumnOptions @r <> implicitColumnOptions @d
+      explicitColumnOptions @rep <> implicitColumnOptions @d
 
 genColumnSum ::
-  ∀ r (field :: FieldInfo) (d :: *) .
+  ∀ rep sum (field :: FieldInfo) (d :: *) .
   DataName d =>
-  GenCompositeType r d =>
-  BasicColumn (Sum r) field d =>
+  GenCompositeType sum d =>
+  BasicColumn rep field d =>
   Column
 genColumnSum =
-  genColumnBasic @(Sum r) @field @d (dbIdentifier (dataName @d)) (Just (genCompositeType @r @d))
+  genColumnBasic @rep @field @d (dbIdentifier (dataName @d)) (Just (genCompositeType @sum @d))
 
 genColumnPrim ::
-  ∀ r (field :: FieldInfo) d .
-  BasicColumn r field d =>
+  ∀ rep (field :: FieldInfo) d .
+  BasicColumn rep field d =>
   ColumnType d =>
   Column
 genColumnPrim =
-  genColumnBasic @r @field @d (columnType @d) Nothing
+  genColumnBasic @rep @field @d (columnType @d) Nothing
 
 class GenColumn (columnField :: FieldInfo) (columnRep :: *) (columnType :: *) where
   genColumn :: Column
 
 instance {-# overlappable #-} (
-    BasicColumn r field d,
+    BasicColumn rep field d,
     ColumnType d
-  ) => GenColumn field r d where
+  ) => GenColumn field rep d where
   genColumn =
-    genColumnPrim @r @field @d
+    genColumnPrim @rep @field @d
 
 instance (
     DataName d,
-    GenCompositeType rep d,
-    BasicColumn (Sum rep) field d
-  ) => GenColumn field (Sum (SumColumn rep)) d where
+    GenCompositeType sumRep d,
+    BasicColumn rep field d
+  ) => GenColumn field (Sum rep (SumColumn sumRep)) d where
   genColumn =
-    genColumnSum @rep @field @d
+    genColumnSum @rep @sumRep @field @d
 
 class GenProdColumns (columnRepTypes :: [*]) (columnFields :: [FieldInfo]) (columnTypes :: [*]) where
   genProdColumns :: [Column]
@@ -137,11 +137,11 @@ instance GenSumCtorsColumns rep '[] '[] where
     mempty
 
 instance (
-    GenCtorType r t c,
+    GenCtorType rep t c,
     GenSumCtorsColumns reps ts cs
-  ) => GenSumCtorsColumns (ProdColumn r : reps) (t : ts) (c : cs) where
+  ) => GenSumCtorsColumns (ProdColumn rep : reps) (t : ts) (c : cs) where
   genSumCtorsColumns =
-    pure (genCtorType @r @t @c) <> genSumCtorsColumns @reps @ts @cs
+    pure (genCtorType @rep @t @c) <> genSumCtorsColumns @reps @ts @cs
 
 class GenSumColumns (sumRepType :: [*]) (sumType :: *) where
   genSumColumns :: [TableStructure]

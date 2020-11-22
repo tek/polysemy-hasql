@@ -1,6 +1,8 @@
 module Polysemy.Hasql.Table.ColumnOptions where
 
-import Polysemy.Db.Data.Column (Auto, ForeignKey, NewtypePrim, Prim, PrimaryKey, Sum, Unique)
+import Prelude hiding (Enum)
+
+import Polysemy.Db.Data.Column (Auto, Enum, ForeignKey, NewtypePrim, Prim, PrimaryKey, Sum, Unique)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(..))
 
 class ExplicitColumnOptions r where
@@ -31,6 +33,10 @@ instance {-# overlappable #-} ExplicitColumnOptions a => ExplicitColumnOptions (
     explicitColumnOptions @a
 
 instance {-# overlappable #-} ExplicitColumnOptions a => ExplicitColumnOptions (NewtypePrim a) where
+  explicitColumnOptions =
+    explicitColumnOptions @a
+
+instance {-# overlappable #-} ExplicitColumnOptions a => ExplicitColumnOptions (Enum a) where
   explicitColumnOptions =
     explicitColumnOptions @a
 

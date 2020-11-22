@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.InitTest where
 
+import qualified Data.Set as Set
 import Control.Lens (view)
 
 import Polysemy.Db.Data.Column (Auto, Prim)
@@ -30,7 +31,7 @@ test_initTable =
     withTestTableGen @InitRep @Init \ (view tableName -> name) -> do
       Right conn <- DbConnection.connect
       initTable conn (TableStructure name (toList extra))
-      assertJust (extra <> columns) =<< tableColumns conn name
+      assertJust (Set.fromList (extra <> columns)) . fmap (Set.fromList . toList) =<< tableColumns conn name
   where
     columns =
       [Column "f1" "text" def Nothing]
