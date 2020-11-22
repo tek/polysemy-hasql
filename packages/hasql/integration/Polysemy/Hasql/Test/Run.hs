@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.Run where
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
-import Polysemy.Fail (Fail, failToEmbed)
+import Polysemy.Fail (Fail)
 import Polysemy.Resource (Resource)
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
@@ -19,13 +19,13 @@ import Polysemy.Hasql.Test.DbConfig (dbConfig)
 type TestEffects =
   [
     DbConnection Connection,
-    Fail,
     Random,
     Error (StoreError DbError),
     Error DbError,
     Error QueryError,
     Error Text,
     Test,
+    Fail,
     Error TestError,
     Hedgehog IO,
     Embed IO,
@@ -40,12 +40,12 @@ integrationTest thunk =
   dbConfig >>= \case
     Just conf -> do
       runTestAuto do
-        r <- runError @Text $
+        r <-
+          runError @Text $
           mapError @QueryError @Text show $
           mapError @DbError @Text show $
           mapError @(StoreError DbError) @Text show $
           runRandomIO $
-          failToEmbed $
           withTestConnection conf $
           thunk
         Hedgehog.evalEither r

@@ -41,10 +41,10 @@
         "homepage": null,
         "owner": "tek",
         "repo": "polysemy-test",
-        "rev": "7a8d6c01f2bbf21ef424c8b41d1709395c9dbaf4",
-        "sha256": "0fgvl9gvl7wyrp04rz4k686x0sn1cjvmf3qnfl1y2zx0g746xb9f",
+        "rev": "b6c9123a8e8acc5f5dc1746c7193e6af13c93b7b",
+        "sha256": "0iydlknyqgqanh5ky6gkaz7i1a5p401qyjyi6jc32czp395ciygw",
         "type": "tarball",
-        "url": "https://github.com/tek/polysemy-test/archive/7a8d6c01f2bbf21ef424c8b41d1709395c9dbaf4.tar.gz",
+        "url": "https://github.com/tek/polysemy-test/archive/b6c9123a8e8acc5f5dc1746c7193e6af13c93b7b.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "polysemy-time": {
