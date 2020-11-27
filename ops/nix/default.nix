@@ -35,5 +35,6 @@ let
     };
     packageDir = "packages";
   };
+  integration = import ./integration.nix { nixpkgs = nixpkgsSrc; inherit (project) pkgs; };
 in
-  project
+  project // { inherit integration; }
