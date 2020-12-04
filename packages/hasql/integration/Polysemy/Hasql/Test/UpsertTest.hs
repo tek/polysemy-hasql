@@ -1,15 +1,14 @@
 module Polysemy.Hasql.Test.UpsertTest where
 
-import Polysemy.Test (UnitTest)
+import Polysemy.Test (UnitTest, assertJust)
 
 import Polysemy.Db.Data.DbError (DbError)
+import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UidStore)
-import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.Uid (Uid(Uid))
-import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Test.Database (withTestStoreUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Test (assertJust, evalEither)
+import Polysemy.Resume (restop)
 
 data Dat =
   Dat {
@@ -22,7 +21,7 @@ specimen =
   Uid 1 (Dat "second")
 
 prog ::
-  Members [Error (StoreError DbError), UidStore Int DbError Dat] r =>
+  Member (UidStore Int Dat) r =>
   Sem r (Maybe (NonEmpty (Uid Int Dat)))
 prog = do
   Store.insert (Uid 1 (Dat "first"))
@@ -34,4 +33,4 @@ test_upsert :: UnitTest
 test_upsert = do
   integrationTest do
     withTestStoreUid do
-      assertJust [specimen] =<< evalEither =<< runError prog
+      assertJust [specimen] =<< (restop @DbError prog)

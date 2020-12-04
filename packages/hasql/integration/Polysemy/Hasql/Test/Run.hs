@@ -1,28 +1,33 @@
 module Polysemy.Hasql.Test.Run where
 
-import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
+import Polysemy (raise3Under)
 import Polysemy.Fail (Fail)
 import Polysemy.Resource (Resource)
+import Polysemy.Resume (Stop, mapStop, stopToError, type (!))
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
+import Polysemy.Time (GhcTime, interpretTimeGhc)
 
+import Polysemy.Db.Data.DbConfig (DbConfig)
+import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Random (Random, runRandomIO)
-import Polysemy.Hasql.Data.DbConnection (DbConnection)
+import Polysemy.Hasql (HasqlConnection)
+import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Test.Database (withTestConnection)
 import Polysemy.Hasql.Test.DbConfig (dbConfig)
 
 type TestEffects =
   [
-    DbConnection Connection,
+    GhcTime,
     Random,
-    Error (StoreError DbError),
+    Stop DbConnectionError,
+    Stop DbError,
+    Stop QueryError,
     Error DbError,
-    Error QueryError,
     Error Text,
     Test,
     Fail,
@@ -33,21 +38,40 @@ type TestEffects =
     Final IO
   ]
 
-integrationTest ::
-  Sem TestEffects () ->
+integrationTestWith ::
+  (DbConfig -> Sem TestEffects ()) ->
   TestT IO ()
-integrationTest thunk =
+integrationTestWith run =
   dbConfig >>= \case
     Just conf -> do
       runTestAuto do
         r <-
           runError @Text $
-          mapError @QueryError @Text show $
           mapError @DbError @Text show $
-          mapError @(StoreError DbError) @Text show $
+          stopToError @Text $
+          mapStop @QueryError @Text show $
+          mapStop @DbError @Text show $
+          mapStop @DbConnectionError @Text show $
+          raise3Under $
           runRandomIO $
-          withTestConnection conf $
-          thunk
+          interpretTimeGhc $
+          run conf
         Hedgehog.evalEither r
     Nothing ->
       unit
+
+integrationTest ::
+  HasCallStack =>
+  Sem (Database ! DbError : HasqlConnection : TestEffects) () ->
+  TestT IO ()
+integrationTest thunk =
+  withFrozenCallStack do
+    integrationTestWith \ conf -> withTestConnection conf thunk
+
+integrationTestWithDb ::
+  HasCallStack =>
+  (DbConfig -> Sem (Database ! DbError : HasqlConnection : TestEffects) ()) ->
+  TestT IO ()
+integrationTestWithDb thunk =
+  withFrozenCallStack do
+    integrationTestWith \ conf -> withTestConnection conf (thunk conf)

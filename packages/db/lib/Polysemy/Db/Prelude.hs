@@ -42,7 +42,7 @@ import GHC.IO.Unsafe (unsafePerformIO)
 import GHC.TypeLits (KnownSymbol, Symbol)
 import Language.Haskell.TH.Quote (QuasiQuoter)
 import qualified Language.Haskell.TH.Syntax as TH
-import Polysemy (
+import Polysemy (bindTSimple, 
   Effect,
   EffectRow,
   Embed,
@@ -255,3 +255,11 @@ type a ++ b =
 
 type InterpretersFor r0 r =
   ∀ a . Sem (r0 ++ r) a -> Sem r a
+
+callT ::
+  Functor f =>
+  (a -> m b) ->
+  a ->
+  Sem (WithTactics e f m r) (f b)
+callT f =
+  bindTSimple f <=< pureT

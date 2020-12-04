@@ -18,6 +18,7 @@ tests:
     source-dirs: integration
 
 dependencies:
+  - async
   - chronos
   - contravariant
   - ghc-prim
@@ -26,7 +27,11 @@ dependencies:
   - hasql ^>= 1.4.3
   - path
   - polysemy-plugin
+  - polysemy-resume
+  - polysemy-time
+  - postgresql-libpq
   - scientific
+  - stm-chans
   - symbols
   - time
   - uuid

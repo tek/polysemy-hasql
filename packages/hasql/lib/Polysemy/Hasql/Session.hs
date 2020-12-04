@@ -5,6 +5,7 @@ import Hasql.Connection (Connection)
 import Hasql.Session (CommandError(ClientError, ResultError), QueryError(QueryError), Session)
 import qualified Hasql.Session as Session (run)
 
+import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 
@@ -12,7 +13,7 @@ convertQueryError :: QueryError -> DbError
 convertQueryError (QueryError template (Text.intercalate "," -> args) cmdError) =
   case cmdError of
     ClientError err ->
-      DbError.Connection (maybe "no error" decodeUtf8 err)
+      DbError.Connection (DbConnectionError.Query (maybe "no error" decodeUtf8 err))
     ResultError err ->
       DbError.Query [qt|#{template} #{args} #{err}|]
 

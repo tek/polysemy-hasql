@@ -8,6 +8,7 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Session (QueryError)
 import qualified Hasql.Session as Session (run, statement)
 import Hasql.Statement (Statement)
+import Polysemy.Resume (Stop, stopEither, mapStop, runStop)
 
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -17,15 +18,16 @@ import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeT
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.TableStructure (GenTableStructure(genTableStructure))
+import Polysemy.Resume (stop)
 
 runStatement ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   p ->
   Statement p d ->
   Sem r d
 runStatement connection args statement =
-  fromEither =<< embed (Session.run (Session.statement args statement) connection)
+  stopEither =<< embed (Session.run (Session.statement args statement) connection)
 
 dbColumnsStatement ::
   SqlCode ->
@@ -41,7 +43,7 @@ dbColumnsStatement sql =
       Encoders.param (Encoders.nonNullable Encoders.text)
 
 dbColumnsFor ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   SqlCode ->
   Connection ->
   TableName ->
@@ -53,7 +55,7 @@ dbColumnsFor sql connection (TableName tableName) =
       Column name dataType def Nothing
 
 tableColumns ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   TableName ->
   Sem r (Maybe (NonEmpty Column))
@@ -64,7 +66,7 @@ tableColumns =
       SqlCode [qt|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
 
 typeColumns ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   TableName ->
   Sem r (Maybe (NonEmpty Column))
@@ -82,7 +84,7 @@ updateType _ =
   unit
 
 initCtorType ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   TableStructure ->
   Sem r ()
@@ -94,7 +96,7 @@ initCtorType connection col@(TableStructure name _) = do
       runStatement connection ()
 
 initType ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   CompositeType ->
   Sem r ()
@@ -109,7 +111,7 @@ initType connection tpe@(CompositeType name _ cols) = do
       runStatement connection ()
 
 createTable ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   TableStructure ->
   Sem r ()
@@ -123,7 +125,7 @@ createTable connection struct@(TableStructure _ columns) = do
       mapMaybe Column.customType (toList columns)
 
 dropTable ::
-  Members [Embed IO, Error QueryError] r =>
+  Members [Embed IO, Stop QueryError] r =>
   Connection ->
   TableName ->
   Sem r ()
@@ -172,12 +174,12 @@ mismatchedColumns dbColumns dataColumns =
       columnMap dbColumns
 
 reportMismatchedColumns ::
-  Member (Error DbError) r =>
+  Member (Stop DbError) r =>
   TableName ->
   NonEmpty (Text, Column) ->
   Sem r ()
 reportMismatchedColumns (TableName name) columns =
-  throw (DbError.Table [qt|mismatched columns in table `#{name}`: #{columnsDescription}|])
+  stop (DbError.Table [qt|mismatched columns in table `#{name}`: #{columnsDescription}|])
   where
     columnsDescription =
       Text.intercalate ";" (toList (columnDescription <$> columns))
@@ -185,13 +187,13 @@ reportMismatchedColumns (TableName name) columns =
       [qt|db: #{colName} :: #{dbType}, app: #{colName} :: #{dataType}|]
 
 updateTable ::
-  Members [Embed IO, Error DbError] r =>
+  Members [Embed IO, Stop DbError] r =>
   NonEmpty Column ->
   Connection ->
   TableStructure ->
   Sem r ()
 updateTable (toList -> existing) connection (TableStructure name target) = do
-  mapError (DbError.Query . show) $ traverse_ alter missing
+  mapStop (DbError.Query . show) $ traverse_ alter missing
   traverse_ (reportMismatchedColumns name) (mismatchedColumns existing target)
   where
     alter =
@@ -200,7 +202,7 @@ updateTable (toList -> existing) connection (TableStructure name target) = do
       missingColumns existing target
 
 initTable ::
-  Members [Embed IO, Error DbError] r =>
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
   TableStructure ->
   Sem r ()
@@ -212,11 +214,11 @@ initTable connection t@(TableStructure name _) =
     process Nothing =
       liftError $ createTable connection t
     liftError =
-      mapError (DbError.Query . show)
+      mapStop (DbError.Query . show)
 
 initTableGen ::
   ∀ d rep r .
-  Members [Embed IO, Error DbError] r =>
+  Members [Embed IO, Stop DbError] r =>
   GenTableStructure d rep =>
   Connection ->
   Sem r ()
@@ -230,4 +232,4 @@ initTableE ::
   Connection ->
   Sem r (Either DbError ())
 initTableE =
-  runError . initTableGen @d @rep
+  runStop . initTableGen @d @rep

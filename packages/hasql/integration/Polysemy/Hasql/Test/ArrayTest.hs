@@ -4,14 +4,14 @@ import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Prim)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Test (UnitTest, evalEither)
+import Polysemy.Resume (restop)
+import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
 
 data Flag =
@@ -45,8 +45,8 @@ array =
   ArrayField id' [On, Off, Superposition]
 
 prog ::
-  Member (Store UuidQuery DbError ArrayField) r =>
-  Sem r (Either (StoreError DbError) (Maybe ArrayField))
+  Member (Store UuidQuery ArrayField) r =>
+  Sem r (Maybe ArrayField)
 prog = do
   _ <- Store.upsert array
   Store.fetch (IdQuery id')
@@ -55,5 +55,5 @@ prog = do
 test_arrayField :: UnitTest
 test_arrayField =
   integrationTest do
-    result <- withTestStoreGen @ArrayFieldRep prog
-    assertJust array =<< evalEither result
+    result <- withTestStoreGen @ArrayFieldRep (restop @DbError prog)
+    assertJust array result

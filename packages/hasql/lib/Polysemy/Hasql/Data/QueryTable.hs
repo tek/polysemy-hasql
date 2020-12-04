@@ -3,10 +3,10 @@ module Polysemy.Hasql.Data.QueryTable where
 import Control.Lens (Lens')
 import Hasql.Encoders (Params)
 
+import Polysemy.Db.Data.TableStructure (TableStructure)
 import Polysemy.Hasql.Data.QueryWhere (QueryWhere)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table)
-import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Text.Show as Show
 
 data QueryTable q a =

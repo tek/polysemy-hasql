@@ -29,10 +29,22 @@
         "homepage": "",
         "owner": "polysemy-research",
         "repo": "polysemy",
-        "rev": "62f5af5d03c274f83fb03a0eb9afb93b299e385c",
-        "sha256": "1bhxcn72ncizsixj985sl03ganaqs9q6rzgs5xbznk423bsh5d6n",
+        "rev": "478c86e080f38334f7ea5b0259f900916db58c33",
+        "sha256": "0vpfc7w90gyj60ydzpjz9wilm28hcl8lbiwicw5qj1rnzj3lfy66",
         "type": "tarball",
-        "url": "https://github.com/polysemy-research/polysemy/archive/62f5af5d03c274f83fb03a0eb9afb93b299e385c.tar.gz",
+        "url": "https://github.com/polysemy-research/polysemy/archive/478c86e080f38334f7ea5b0259f900916db58c33.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "polysemy-resume": {
+        "branch": "master",
+        "description": "cross-interpreter errors for polysemy",
+        "homepage": null,
+        "owner": "tek",
+        "repo": "polysemy-resume",
+        "rev": "84bef93e5611a8f5c7809a10ac8e3603e5826168",
+        "sha256": "02xsmaq75f1j7kfhr737jchygd9qa70h0490lpayligdxvlmlrlj",
+        "type": "tarball",
+        "url": "https://github.com/tek/polysemy-resume/archive/84bef93e5611a8f5c7809a10ac8e3603e5826168.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "polysemy-test": {
@@ -41,10 +53,10 @@
         "homepage": null,
         "owner": "tek",
         "repo": "polysemy-test",
-        "rev": "b6c9123a8e8acc5f5dc1746c7193e6af13c93b7b",
-        "sha256": "0iydlknyqgqanh5ky6gkaz7i1a5p401qyjyi6jc32czp395ciygw",
+        "rev": "5889efb49922f58d090725389c63c02e9505aa31",
+        "sha256": "1lihkwq4nb80wbw0dzvpi8is1hygd22jidmy326jill3didndh2n",
         "type": "tarball",
-        "url": "https://github.com/tek/polysemy-test/archive/b6c9123a8e8acc5f5dc1746c7193e6af13c93b7b.tar.gz",
+        "url": "https://github.com/tek/polysemy-test/archive/5889efb49922f58d090725389c63c02e9505aa31.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "polysemy-time": {
@@ -53,10 +65,10 @@
         "homepage": null,
         "owner": "tek",
         "repo": "polysemy-time",
-        "rev": "1159a2295d0f4075b6ee2577de0619fa7f11516b",
-        "sha256": "0vrflxhc63wih1520dcagb2i2lmw89axnl4dlfh5n48xk0alagxp",
+        "rev": "2d2f8328aa337f72122cc4b1e9f496904952eb1f",
+        "sha256": "1qnxadlnvbs194f7lkwgl8myw2ka0af850b93yg5yz4q5977ba7a",
         "type": "tarball",
-        "url": "https://github.com/tek/polysemy-time/archive/1159a2295d0f4075b6ee2577de0619fa7f11516b.tar.gz",
+        "url": "https://github.com/tek/polysemy-time/archive/2d2f8328aa337f72122cc4b1e9f496904952eb1f.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "tryp-hs": {

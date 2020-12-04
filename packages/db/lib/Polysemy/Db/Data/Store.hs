@@ -1,27 +1,26 @@
 module Polysemy.Db.Data.Store where
 
-import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.Uid (Uid, Uuid)
 
-data Store p e d :: Effect where
-  Insert :: d -> Store p e d m (Either (StoreError e) ())
-  Upsert :: d -> Store p e d m (Either (StoreError e) ())
-  Delete :: p -> Store p e d m (Either (StoreError e) ())
-  Fetch :: p -> Store p e d m (Either (StoreError e) (Maybe d))
-  FetchAll :: Store p e d m (Either (StoreError e) (Maybe (NonEmpty d)))
+data Store p d :: Effect where
+  Insert :: d -> Store p d m ()
+  Upsert :: d -> Store p d m ()
+  Delete :: p -> Store p d m ()
+  Fetch :: p -> Store p d m (Maybe d)
+  FetchAll :: Store p d m (Maybe (NonEmpty d))
 
 makeSem ''Store
 
-type UidStore i e d =
-  Store i e (Uid i d)
+type UidStore i d =
+  Store i (Uid i d)
 
-type UuidStore e d =
-  Store UUID e (Uuid d)
+type UuidStore d =
+  Store UUID (Uuid d)
 
-type family StoreEffects i e ds :: EffectRow where
-  StoreEffects i e '[] = '[]
-  StoreEffects i e (d : ds) = (UidStore i e d : StoreEffects i e ds)
+type family StoreEffects i ds :: EffectRow where
+  StoreEffects _ '[] = '[]
+  StoreEffects i (d : ds) = (UidStore i d : StoreEffects i ds)
 
-type family Stores i e ds r :: Constraint where
-  Stores i e '[] r = ()
-  Stores i e (d : ds) r = (Member (UidStore i e d) r, Stores i e ds r)
+type family Stores i ds r :: Constraint where
+  Stores _ '[] _ = ()
+  Stores i (d : ds) r = (Member (UidStore i d) r, Stores i ds r)

@@ -15,7 +15,7 @@ interpretStoreQueryStrict ::
 interpretStoreQueryStrict filter' store =
   interpret \case
     Basic params ->
-      pure (Right (filter' (fromMaybe [] (Map.lookup params store))))
+      pure (filter' (fromMaybe [] (Map.lookup params store)))
 
 single :: [a] -> Maybe a
 single [a] = Just a
@@ -44,7 +44,7 @@ interpretStoreQueryAtomicState ::
 interpretStoreQueryAtomicState filter' match =
   interpret \case
     Basic q ->
-      Right <$> atomicGets @(StrictStore d) (filter' . filter (match q) . view StrictStore.records)
+      atomicGets @(StrictStore d) (filter' . filter (match q) . view StrictStore.records)
 
 interpretStoreQueryAtomicStateOne ::
   Member (AtomicState (StrictStore d)) r =>

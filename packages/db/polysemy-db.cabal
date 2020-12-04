@@ -33,6 +33,7 @@ library
       Polysemy.Db.Data.Cond
       Polysemy.Db.Data.CreationTime
       Polysemy.Db.Data.DbConfig
+      Polysemy.Db.Data.DbConnectionError
       Polysemy.Db.Data.DbError
       Polysemy.Db.Data.DbHost
       Polysemy.Db.Data.DbName
@@ -41,7 +42,6 @@ library
       Polysemy.Db.Data.DbUser
       Polysemy.Db.Data.IdQuery
       Polysemy.Db.Data.Store
-      Polysemy.Db.Data.StoreError
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Data.TableName
       Polysemy.Db.Data.TableStructure
@@ -77,6 +77,7 @@ library
     , generics-sop
     , lens
     , polysemy
+    , polysemy-resume
     , random
     , relude
     , string-interpolate

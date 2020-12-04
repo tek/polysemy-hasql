@@ -16,6 +16,7 @@ dependencies:
   - composition
   - data-default
   - either
+  - polysemy-resume
   - random
   - relude
   - string-interpolate

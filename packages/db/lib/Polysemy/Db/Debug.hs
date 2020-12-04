@@ -38,7 +38,7 @@ dbgs ::
   m ()
 dbgs a =
   debugPrintWithLoc (srcLoc callStack) (show a)
-{-# inline dbgs_ #-}
+{-# inline dbgs #-}
 
 dbgs_ ::
   HasCallStack =>
@@ -48,4 +48,4 @@ dbgs_ ::
   m a
 dbgs_ a =
   a <$ debugPrintWithLoc (srcLoc callStack) (show a)
-{-# inline dbgs #-}
+{-# inline dbgs_ #-}

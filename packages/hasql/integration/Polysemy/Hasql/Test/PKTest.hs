@@ -3,18 +3,18 @@ module Polysemy.Hasql.Test.PKTest where
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, Prim, PrimaryKey)
 import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
+import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.StoreError (StoreError)
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import Polysemy.Db.Data.Uid (Uid(Uid))
-import qualified Polysemy.Db.Store as Store
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
 import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Resume (restop)
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 newtype Id =
@@ -30,9 +30,9 @@ data Rec =
   deriving (Eq, Show, Generic)
 
 prog ::
-  Member (Store (IdQuery Id) DbError (Uid Id Rec)) r =>
+  Member (Store (IdQuery Id) (Uid Id Rec)) r =>
   Uid Id Rec ->
-  Sem r (Either (StoreError DbError) (Maybe (Uid Id Rec)))
+  Sem r (Either DbError (Maybe (Uid Id Rec)))
 prog specimen = do
   runError do
     Store.upsert specimen
@@ -65,7 +65,7 @@ test_pk =
   integrationTest do
     _ <- pure testRep
     targetStructure === struct
-    result <- withTestStoreGen @Auto (prog specimen)
+    result <- withTestStoreGen @Auto (restop @DbError (prog specimen))
     assertJust specimen =<< evalEither result
   where
     specimen =

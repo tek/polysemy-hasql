@@ -1,8 +1,8 @@
 main: Main.hs
 ghc-options:
-- -threaded
-- -rtsopts
-- -with-rtsopts=-N
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N
 dependencies:
   - hedgehog
   - polysemy-hasql

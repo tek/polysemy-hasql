@@ -6,32 +6,37 @@ import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
 import Polysemy.Db.Random (Random, random, runRandomIO)
 import Polysemy.Resource (Resource, bracket)
+import Polysemy.Resume (Stop, mapStop, resumeHoist, type (!))
+import Polysemy.Time (Time)
 
 import Polysemy.Db.Data.Column (UidRep)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
+import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
+import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Data.IdQuery (IdQuery)
-import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Data.Schema (Schema)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table, tableName)
+import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Store (UidStoreStack, interpretStoreDbFull, interpretStoreDbFullUid)
+import Polysemy.Hasql.Store (StoreStack, UidStoreStack, interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.Table (GenTable, genTable)
+import Polysemy.Time (GhcTime)
 
 suffixedTable ::
   Lens' t TableName ->
@@ -47,7 +52,7 @@ suffixedTable lens suffix table =
       view lens table
 
 bracketTestTable ::
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
   Lens' t (Table d) ->
   t ->
   (t -> Sem r a) ->
@@ -64,18 +69,18 @@ bracketTestTable lens t use connection =
       view lens t
 
 withTestTable ::
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
   Lens' t (Table d) ->
   t ->
   (t -> Sem r a) ->
   Sem r a
 withTestTable lens table use = do
-  connection <- fromEither =<< DbConnection.connect
+  connection <- resumeHoist DbError.Connection DbConnection.connect
   suffix <- UUID.toText <$> random
   bracketTestTable lens (suffixedTable (lens . tableName) suffix table) use connection
 
 withTestPlainTable ::
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
   Table d ->
   (Table d -> Sem r a) ->
   Sem r a
@@ -84,7 +89,7 @@ withTestPlainTable =
 
 withTestTableGen ::
   ∀ rep d a r .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
   GenTable rep d =>
   (Table d -> Sem r a) ->
   Sem r a
@@ -92,7 +97,7 @@ withTestTableGen =
   withTestPlainTable (genTable @rep)
 
 withTestQueryTable ::
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
   QueryTable q d ->
   (QueryTable q d -> Sem r a) ->
   Sem r a
@@ -101,7 +106,7 @@ withTestQueryTable =
 
 withTestQueryTableGen ::
   ∀ rep q d a r .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
   GenQueryTable rep q d =>
   (QueryTable q d -> Sem r a) ->
   Sem r a
@@ -109,7 +114,7 @@ withTestQueryTableGen =
   withTestQueryTable (genQueryTable @rep)
 
 createTestDb ::
-  Members [Random, (DbConnection Connection), Error DbError, Embed IO] r =>
+  Members [Random, DbConnection Connection ! DbConnectionError, Stop DbError, Embed IO] r =>
   DbConfig ->
   Connection ->
   Sem r DbConfig
@@ -118,38 +123,51 @@ createTestDb dbConfig@(DbConfig _ _ (DbName name) _ _) connection = do
   let
     suffixedName = [qt|#{name}-#{suffix}|]
     suffixed = dbConfig & DbConfig.name .~ suffixedName
-  mapError convertQueryError (runStatement connection () (Statement.createDb suffixedName))
+  mapStop convertQueryError (runStatement connection () (Statement.createDb suffixedName))
   pure suffixed
 
 withTestDb ::
-  Members [Error DbError, Embed IO, Resource] r =>
+  Members [Stop DbError, Embed IO, Resource] r =>
   DbConfig ->
   (DbConfig -> Sem r a) ->
   Sem r a
 withTestDb baseConfig f =
   interpretDbConnection baseConfig do
-    connection <- fromEither =<< DbConnection.connect
+    connection <- resumeHoist DbError.Connection DbConnection.connect
     bracket (acquire baseConfig connection) (release connection) (raise . f)
   where
     acquire config connection =
       runRandomIO $ createTestDb config connection
     release connection (DbConfig _ _ name _ _) =
-      mapError convertQueryError (runStatement connection () (Statement.dropDb name))
+      mapStop convertQueryError (runStatement connection () (Statement.dropDb name))
 
 withTestConnection ::
-  Members [Error DbError, Embed IO, Resource] r =>
+  Members [Stop DbError, Embed IO, Time t dt, Resource] r =>
   DbConfig ->
-  Sem (DbConnection Connection : r) a ->
+  Sem (Database ! DbError : HasqlConnection : r) a ->
   Sem r a
 withTestConnection baseConfig ma =
   withTestDb baseConfig \ dbConfig ->
-    interpretDbConnection dbConfig ma
+    interpretDbConnection dbConfig (interpretDatabase ma)
+
+type TestStoreDeps =
+  [
+    Resource,
+    Embed IO,
+    HasqlConnection,
+    Database ! DbError,
+    Error DbError,
+    Random,
+    Stop QueryError,
+    Stop DbError,
+    GhcTime
+  ]
 
 withTestStoreTableGen ::
   ∀ rep q d r a .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members TestStoreDeps r =>
   GenQueryTable rep q d =>
-  (QueryTable q d -> Sem (Store q DbError d : Schema q d : Database DbError d : r) a) ->
+  (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
   withTestQueryTableGen @rep \ table ->
@@ -157,7 +175,7 @@ withTestStoreTableGen prog =
 
 withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members TestStoreDeps r =>
   GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
   (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
@@ -166,20 +184,19 @@ withTestStoreTableUidGen prog =
     interpretStoreDbFullUid table (prog table)
 
 withTestStoreGen ::
-  ∀ rep q d r a .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  ∀ rep q d r .
+  Members TestStoreDeps r =>
   GenQueryTable rep q d =>
-  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
-  Sem r a
+  InterpretersFor (StoreStack q d q d) r
 withTestStoreGen prog =
   withTestQueryTableGen @rep \ table ->
     interpretStoreDbFull table prog
 
 withTestStore ::
   ∀ q d r a .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members TestStoreDeps r =>
   GenQueryTable (Rep d) q d =>
-  Sem (Store q DbError d : Schema q d : Database DbError d : r) a ->
+  Sem (StoreStack q d q d ++ r) a ->
   Sem r a
 withTestStore prog =
   withTestQueryTableGen @(Rep d) \ table ->
@@ -187,7 +204,7 @@ withTestStore prog =
 
 withTestStoreUid ::
   ∀ i d r a .
-  Members [Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members TestStoreDeps r =>
   GenQueryTable (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
   Sem (UidStoreStack i d ++ r) a ->
   Sem r a

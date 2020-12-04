@@ -36,6 +36,10 @@ let
           create role "${name}" with login password '${name}' createdb;
           grant all privileges on database "${name}" to "${name}";
         '';
+        settings = {
+          log_statement = "all";
+          log_min_messages = "info";
+        };
       };
     };
   };
@@ -44,9 +48,10 @@ let
     #!${pkgs.zsh}/bin/zsh
     if ${pkgs.procps}/bin/pgrep -F ${pidfile} -L -f ${pidfile} &>/dev/null
     then
-      print 'vm already running' >&2
+      print '>>> vm already running' >&2
     else
-      print 'starting vm' >&2
+      print '>>> starting vm' >&2
+      mkdir -p ${tmp}
       rm -f ${pidfile}
       ${postgresVm}/bin/run-nixos-vm -display none -daemonize -pidfile ${pidfile}
     fi

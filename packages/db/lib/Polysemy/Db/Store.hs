@@ -1,12 +1,13 @@
 module Polysemy.Db.Store where
 
 import Control.Lens (view, views)
+import Polysemy.Resume (resumeHoist, type (!))
 
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store(..), UidStore)
-import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Resume (Stop)
 
 newtype StrictStore a =
   StrictStore {
@@ -18,33 +19,33 @@ newtype StrictStore a =
 makeClassy ''StrictStore
 
 interpretStoreAtomicState ::
-  ∀ i d e r .
+  ∀ i d r .
   Eq i =>
   (d -> i) ->
   Member (AtomicState (StrictStore d)) r =>
-  InterpreterFor (Store i e d) r
+  InterpreterFor (Store i d) r
 interpretStoreAtomicState getId =
   interpret \case
     Insert d ->
-      Right <$> atomicModify' @(StrictStore d) (over records (d :))
+      atomicModify' @(StrictStore d) (over records (d :))
     Upsert d ->
-      Right <$> atomicModify' @(StrictStore d) (over records mod')
+      atomicModify' @(StrictStore d) (over records mod')
       where
         mod' a =
           d : filter (\ d' -> getId d /= getId d') a
     Delete id' ->
-      Right <$> atomicModify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+      atomicModify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
     Fetch id' ->
-      atomicGets @(StrictStore d) (Right . views records (find ((id' ==) . getId)))
+      atomicGets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
-      atomicGets @(StrictStore d) (Right . nonEmpty . view records)
+      atomicGets @(StrictStore d) (nonEmpty . view records)
 
 interpretStoreAtomicWith ::
   Eq i =>
   Member (Embed IO) r =>
   (d -> i) ->
   TVar (StrictStore d) ->
-  InterpreterFor (Store i () d) r
+  InterpreterFor (Store i d) r
 interpretStoreAtomicWith getId tvar sem =
   runAtomicStateTVar tvar . interpretStoreAtomicState getId . raiseUnder $ sem
 
@@ -53,7 +54,7 @@ interpretStoreAtomic ::
   Member (Embed IO) r =>
   (d -> i) ->
   StrictStore d ->
-  InterpreterFor (Store i () d) r
+  InterpreterFor (Store i d) r
 interpretStoreAtomic getId init' sem = do
   tvar <- newTVarIO init'
   interpretStoreAtomicWith getId tvar sem
@@ -64,31 +65,31 @@ interpretStoreUidAtomic ::
   Eq d =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
-  InterpreterFor (Store i () (Uid i d)) r
+  InterpreterFor (Store i (Uid i d)) r
 interpretStoreUidAtomic =
   interpretStoreAtomic Uid._id
 
 interpretStoreStrictState ::
-  ∀ i d e r .
+  ∀ i d r .
   Eq i =>
   Member (State (StrictStore d)) r =>
   (d -> i) ->
-  InterpreterFor (Store i e d) r
+  InterpreterFor (Store i d) r
 interpretStoreStrictState getId =
   interpret \case
     Insert d ->
-      Right <$> modify' @(StrictStore d) (over records (d :))
+      modify' @(StrictStore d) (over records (d :))
     Upsert d ->
-      Right <$> modify' @(StrictStore d) (over records mod')
+      modify' @(StrictStore d) (over records mod')
       where
         mod' a =
           d : filter (\ d' -> getId d /= getId d') a
     Delete id' ->
-      Right <$> modify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+      modify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
     Fetch id' ->
-      gets @(StrictStore d) (Right . views records (find ((id' ==) . getId)))
+      gets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
-      gets @(StrictStore d) $ Right . nonEmpty . view records
+      gets @(StrictStore d) $ nonEmpty . view records
 
 interpretStoreStrict ::
   ∀ d i r .
@@ -96,7 +97,7 @@ interpretStoreStrict ::
   Member (Embed IO) r =>
   (d -> i) ->
   StrictStore d ->
-  InterpreterFor (Store i () d) r
+  InterpreterFor (Store i d) r
 interpretStoreStrict getId init' = do
   evalState init' . interpretStoreStrictState getId . raiseUnder
 
@@ -106,126 +107,88 @@ interpretStoreUidStrict ::
   Eq d =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
-  InterpreterFor (Store i () (Uid i d)) r
+  InterpreterFor (Store i (Uid i d)) r
 interpretStoreUidStrict =
   interpretStoreStrict Uid._id
 
 interpretStoreNull ::
-  InterpreterFor (Store i e d) r
+  InterpreterFor (Store i d) r
 interpretStoreNull =
   interpret \case
     Insert _ ->
-      pure (Right ())
+      unit
     Upsert _ ->
-      pure (Right ())
+      unit
     Delete _ ->
-      pure (Right ())
+      unit
     Fetch _ ->
-      pure (Right Nothing)
+      pure Nothing
     FetchAll ->
-      pure (Right Nothing)
+      pure Nothing
 
 elem ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
+  ∀ i d r .
+  Member (Store i d) r =>
   i ->
   Sem r Bool
 elem id' =
-  fromEither =<< (fmap isJust <$> Store.fetch @i @e @d id')
-
-fetch ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
-  i ->
-  Sem r (Maybe d)
-fetch =
-  fromEither <=< Store.fetch @i @e @d
+  isJust <$> Store.fetch @i @d id'
 
 fetchPayload ::
-  ∀ i e d r .
-  Members [UidStore i e d, Error (StoreError e)] r =>
+  ∀ i d r .
+  Member (UidStore i d) r =>
   i ->
   Sem r (Maybe d)
 fetchPayload =
-  fmap (fmap Uid._payload) . fetch @i @e @(Uid i d)
+  fmap (fmap Uid._payload) . Store.fetch @i @(Uid i d)
 
+-- TODO remove, seems pointless with 'Stop'
 fetchPayloadAs ::
   ∀ i e' e d r .
-  Members [UidStore i e' d, Error e] r =>
-  (StoreError e' -> e) ->
+  Members [UidStore i d ! e', Stop e] r =>
+  (e' -> e) ->
   i ->
   Sem r (Maybe d)
 fetchPayloadAs liftError id' =
-  fmap Uid._payload <$> (hoistEither liftError =<< Store.fetch @i @e' @(Uid i d) id')
+  fmap Uid._payload <$> resumeHoist @_ @_ @(UidStore i d) liftError (Store.fetch @i @(Uid i d) id')
 
 fetchPayloadShow ::
   ∀ i e' e d r .
   Show e' =>
-  Members [UidStore i e' d, Error e] r =>
+  Members [UidStore i d ! e', Stop e] r =>
   (Text -> e) ->
   i ->
   Sem r (Maybe d)
 fetchPayloadShow liftError id' =
-  fmap Uid._payload <$> (hoistEitherShow liftError =<< Store.fetch @i @e' @(Uid i d) id')
-
-fetchAll ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
-  Sem r (Maybe (NonEmpty d))
-fetchAll =
-  fromEither =<< Store.fetchAll @i @e @d
-
-insert ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
-  d ->
-  Sem r ()
-insert =
-  fromEither <=< Store.insert @i @e @d
-
-upsert ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
-  d ->
-  Sem r ()
-upsert =
-  fromEither <=< Store.upsert @i @e @d
+  fmap Uid._payload <$> (resumeHoist @e' @_ @(UidStore i d) (liftError . show) (Store.fetch @i @(Uid i d) id'))
 
 alter ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
+  ∀ i d r .
+  Member (Store i d) r =>
   i ->
   (d -> d) ->
   Sem r ()
 alter id' f = do
-  cur <- fetch @i @e id'
-  traverse_ (upsert @i @e . f) cur
+  cur <- Store.fetch @i id'
+  traverse_ (Store.upsert @i . f) cur
 
 alterOr ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
+  ∀ i d r .
+  Member (Store i d) r =>
   d ->
   i ->
   (d -> d) ->
   Sem r ()
 alterOr fallback id' f = do
-  cur <- fetch @i @e id'
-  upsert @i @e (f (fromMaybe fallback cur))
+  cur <- Store.fetch @i id'
+  Store.upsert @i (f (fromMaybe fallback cur))
 
 alterDefault ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
+  ∀ i d r .
+  Member (Store i d) r =>
   Default d =>
   i ->
   (d -> d) ->
   Sem r ()
 alterDefault =
-  alterOr @i @e def
-
-delete ::
-  ∀ i e d r .
-  Members [Store i e d, Error (StoreError e)] r =>
-  i ->
-  Sem r ()
-delete =
-  fromEither <=< Store.delete @i @e @d
+  alterOr @i def

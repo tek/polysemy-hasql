@@ -1,6 +1,9 @@
 module Polysemy.Hasql.Test.QueryTest where
 
 import Hasql.Encoders (Params)
+import Polysemy.Resume (Stop, restop, type (!))
+import Polysemy.Test (UnitTest, (===))
+import Polysemy.Test.Hedgehog (assertJust)
 import Polysemy.Time (mkDatetime)
 
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, Prim, PrimaryKey, Sum, UidRep)
@@ -9,16 +12,12 @@ import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UuidStore)
-import Polysemy.Db.Data.StoreError (StoreError)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.QueryWhere (QueryWhere)
-import Polysemy.Hasql.Data.Table (Table(Table))
-import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Query.Many (interpretManyWith)
 import Polysemy.Hasql.Query.One (interpretOneWith)
 import Polysemy.Hasql.Table.Query.Where (queryWhere)
@@ -26,8 +25,6 @@ import Polysemy.Hasql.Table.QueryParams (queryParams)
 import Polysemy.Hasql.Table.Representation (ProdColumn, ReifyRepTable, Rep, SumColumn)
 import Polysemy.Hasql.Test.Database (withTestStoreTableUidGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Test (UnitTest, (===))
-import Polysemy.Test.Hedgehog (assertJust)
 
 newtype Content =
   Content { unContent :: Text }
@@ -39,8 +36,6 @@ data XXor =
   |
   Righ { r :: Int }
   deriving (Eq, Show, Generic)
-
--- xxor.lef.l is null or xxor.lef.l = $4 and xxor.righ.r is null or xxor.righ.r = $5
 
 data XorRep =
   LRep { l :: Prim Auto }
@@ -136,27 +131,27 @@ target =
   Uid (Uid.uuid 2) (Dat "hello" (num 5) (Lef 8) creation)
 
 prog ::
-  Members [Error (StoreError DbError), StoreQuery ContentNumber DbError [Uuid Dat]] r =>
-  Members [UuidStore DbError Dat, StoreQuery ContentNumber DbError (Maybe (Uuid Dat))] r =>
+  Members [Stop DbError, StoreQuery ContentNumber DbError [Uuid Dat] ! DbError] r =>
+  Members [UuidStore Dat ! DbError, StoreQuery ContentNumber DbError (Maybe (Uuid Dat)) ! DbError] r =>
   Sem r (Int, Maybe (Uuid Dat))
 prog = do
-  Store.insert (Uid (Uid.uuid 1) (Dat "hello" (num 10) (Lef 8) creation))
-  Store.insert target
-  Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" (num 1) (Lef 8) creation))
-  Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" (num 5) (Lef 8) creation))
-  Store.insert (Uid (Uid.uuid 5) (Dat "hello" (num 7) (Lef 9) creation))
-  Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ 8) creation))
-  r1 :: [Uuid Dat] <- StoreQuery.basicQuery (ContentNumber "hello" Nothing Nothing (Lef 8))
-  r2 <- StoreQuery.basicQuery (ContentNumber "hello" Nothing (Just 6) (Lef 8))
-  pure (length r1, r2)
+  restop @DbError @(UuidStore Dat) do
+    Store.insert (Uid (Uid.uuid 1) (Dat "hello" (num 10) (Lef 8) creation))
+    Store.insert target
+    Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" (num 1) (Lef 8) creation))
+    Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" (num 5) (Lef 8) creation))
+    Store.insert (Uid (Uid.uuid 5) (Dat "hello" (num 7) (Lef 9) creation))
+    Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ 8) creation))
+    r1 :: [Uuid Dat] <- restop (StoreQuery.basic (ContentNumber "hello" Nothing Nothing (Lef 8)))
+    r2 <- restop (StoreQuery.basic (ContentNumber "hello" Nothing (Just 6) (Lef 8)))
+    pure (length r1, r2)
 
 test_query :: UnitTest
 test_query = do
   integrationTest do
-    withTestStoreTableUidGen @DatRep @(Prim PrimaryKey) \ table@(QueryTable (Table struct _ _) _ _) ->
-      interpretDatabase struct $
+    withTestStoreTableUidGen @DatRep @(Prim PrimaryKey) \ table ->
       interpretOneWith @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) $
       interpretManyWith @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) do
-        (count, result) <- prog
+        (count, result) <- restop @DbError @(UuidStore Dat) prog
         count === 2
         assertJust target result

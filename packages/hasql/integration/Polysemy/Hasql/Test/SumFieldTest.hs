@@ -1,15 +1,17 @@
+{-# OPTIONS_GHC -Wno-all #-}
 module Polysemy.Hasql.Test.SumFieldTest where
 
 import Generics.SOP (I, NP, NS)
 import Generics.SOP.GGP (GCode)
-import Hasql.Connection (Connection)
 import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalEither, evalLeft)
-import Polysemy.Time (mkDatetime)
+import Polysemy.Resource (Resource)
+import Polysemy.Resume (Stop, restop, resumeEither, type (!))
+import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
+import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, PrimaryKey, Sum, UidRep)
@@ -18,19 +20,20 @@ import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
-import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.StoreError (StoreError)
+import qualified Polysemy.Db.Data.Store as Store
+import Polysemy.Db.Data.Store (Store, UidStore)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import Polysemy.Db.Data.TableStructure (Column, TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid, Uid(Uid))
 import Polysemy.Db.Random (Random)
-import qualified Polysemy.Db.Store as Store
-import Polysemy.Hasql.Data.DbConnection (DbConnection)
+import Polysemy.Hasql (HasqlConnection)
+import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
+import Polysemy.Hasql.ManagedTable (interpretManagedTable, interpretManagedTableGen)
 import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
@@ -56,9 +59,8 @@ import Polysemy.Hasql.Table.Representation (
 import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
 import Polysemy.Hasql.Table.ValueEncoder (repEncoder)
-import Polysemy.Hasql.Test.Database (withTestStoreGen, withTestStoreTableUidGen)
+import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Resource (Resource)
 
 data Nume =
   One
@@ -255,9 +257,9 @@ dexter =
   SumField id' (Dexter [absfile|/foo/bar|] 5 Three)
 
 prog ::
-  Member (Store UuidQuery DbError a) r =>
+  Member (Store UuidQuery a) r =>
   a ->
-  Sem r (Either (StoreError DbError) (Maybe a))
+  Sem r (Either DbError (Maybe a))
 prog specimen =
   runError do
     Store.upsert specimen
@@ -267,15 +269,16 @@ sumTest ::
   ∀ rep d r .
   Show d =>
   Eq d =>
-  Members [Hedgehog IO, Resource, Embed IO, (DbConnection Connection), Random, Error QueryError, Error DbError] r =>
+  Members (Hedgehog IO : TestStoreDeps) r =>
+  Member (Embed IO) r =>
   GenQueryTable rep UuidQuery d =>
   d ->
   Sem r ()
 sumTest specimen = do
-  result <- withTestStoreGen @rep @UuidQuery @d $ runError do
-    Store.upsert specimen
-    Store.fetch (IdQuery id')
-  assertJust specimen =<< evalEither result
+  result <- withTestStoreGen @rep @UuidQuery @d do
+    restop (Store.upsert specimen)
+    restop (Store.fetch (IdQuery id'))
+  assertJust specimen result
 
 test_reps :: IO ()
 test_reps = do
@@ -397,13 +400,13 @@ queryTable_SumId_SumPKQ =
   genQueryTable @(UidRep (Sum Auto SumPKRep) SumIdRep)
 
 sumIdQProg ::
-  Member (StoreQuery SumPKQ DbError (Maybe (Uid SumPK SumId))) r =>
-  Members [Store SumPK DbError SumIdRec, DbConnection Connection, Error (StoreError DbError), Hedgehog IO, Embed IO] r =>
+  Member (StoreQuery SumPKQ DbError (Maybe (Uid SumPK SumId)) ! DbError) r =>
+  Members [Store SumPK SumIdRec ! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
   Sem r ()
 sumIdQProg = do
-  Store.upsert specimen
-  r1 <- Store.fetch (SumPKR 5)
-  r2 <- StoreQuery.basicQuery (SumPKQ Nothing)
+  restop (Store.upsert specimen)
+  r1 <- restop (Store.fetch (SumPKR 5))
+  r2 <- restop (StoreQuery.basic (SumPKQ Nothing))
   assertJust specimen r1
   assertJust specimen r2
   where
@@ -411,11 +414,12 @@ sumIdQProg = do
       Uid (SumPKR 5) (SumId (CreationTime (mkDatetime 2020 1 1 0 0 0)))
 
 sumIdProg ::
-  Members [Store SumPK DbError SumIdRec, DbConnection Connection, Error (StoreError DbError), Hedgehog IO, Embed IO] r =>
+  Members [Store SumPK SumIdRec ! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Embed IO] r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()
 sumIdProg (QueryTable (Table stct _ _) _ _) =
-  interpretDatabase stct $
+  interpretDatabase $
+    interpretManagedTable stct $
     interpretOneGenUidWith @SumIdRep @(Sum Auto SumPKRep) stct $
     sumIdQProg
 
@@ -453,11 +457,11 @@ test_multiSum :: UnitTest
 test_multiSum =
   integrationTest do
     interpretStoreDbFullGenUid @Dat1Rep @(Sum PrimaryKey SumPKRep) @_ @Dat1 do
-      Store.insert record
+      restop @DbError @(UidStore SumPK Dat1) (Store.insert record)
       interpretStoreDbFullGenUid @Dat2Rep @(Sum PrimaryKey SumPKRep) @_ @Dat2 do
-        Store.insert (Uid (SumPKL 6) (Dat2 "six"))
-        _ <- evalLeft =<< runError (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
-        result <- Store.fetchAll @SumPK @_ @(Uid SumPK Dat1)
+        restop @DbError (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
+        _ <- evalLeft =<< resumeEither (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
+        result <- restop @DbError @(UidStore SumPK Dat1) (Store.fetchAll @SumPK @(Uid SumPK Dat1))
         assertJust (pure record) result
   where
     record =

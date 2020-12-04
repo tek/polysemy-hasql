@@ -1,7 +1,9 @@
 module Polysemy.Db.Data.DbError where
 
+import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
+
 data DbError =
-  Connection Text
+  Connection DbConnectionError
   |
   Query Text
   |

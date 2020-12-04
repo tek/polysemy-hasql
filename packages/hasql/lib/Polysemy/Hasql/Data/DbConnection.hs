@@ -1,10 +1,14 @@
 module Polysemy.Hasql.Data.DbConnection where
 
-import Polysemy.Db.Data.DbError (DbError)
-
 data DbConnection c :: Effect where
-  Connect :: DbConnection c m (Either DbError c)
-  Disconnect :: DbConnection c m (Either DbError ())
+  ConnectWithInit :: (c -> m ()) -> DbConnection c m c
+  Disconnect :: DbConnection c m ()
   Reset :: DbConnection c m ()
 
 makeSem ''DbConnection
+
+connect ::
+  Member (DbConnection c) r =>
+  Sem r c
+connect =
+  connectWithInit (const unit)

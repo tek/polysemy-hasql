@@ -4,60 +4,57 @@ module Polysemy.Hasql.Store.Statement where
 
 import Hasql.Statement (Statement)
 
-import qualified Polysemy.Hasql.Data.Database as Database
-import Polysemy.Hasql.Data.Database (Database)
-import Polysemy.Db.Data.DbError (DbError)
+import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
+import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.Schema as Schema
 import Polysemy.Hasql.Data.Schema (Schema(..))
-import qualified Polysemy.Db.Data.StoreError as StoreError
-import Polysemy.Db.Data.StoreError (StoreError)
+import Polysemy.Resume (Stop, restop, type (!))
 
-class Members [Schema q d, Database DbError d] r => StatementEffects q r d where
+class Members [Schema q d ! e, ManagedTable d ! e, Stop e] r => StatementEffects q e r d where
 
-instance Members [Schema q d, Database DbError d] r => StatementEffects q r d where
+instance Members [Schema q d ! e, ManagedTable d ! e, Stop e] r => StatementEffects q e r d where
 
 runStatement ::
-  Member (Database e d) r =>
+  Members [ManagedTable d ! e, Stop e] r =>
   Sem r (Statement q o) ->
   q ->
-  Sem r (Either (StoreError e) o)
-runStatement statementSem param = do
-  statement <- statementSem
-  mapLeft StoreError.Backend <$> Database.run param statement
+  Sem r o
+runStatement statementSem param =
+  restop . ManagedTable.runStatement param =<< statementSem
 
 insert ::
-  StatementEffects q r d =>
+  StatementEffects q e r d =>
   d ->
-  Sem r (Either (StoreError DbError) ())
+  Sem r ()
 insert record =
-  runStatement Schema.insert record
+  runStatement (restop Schema.insert) record
 
 upsert ::
-  StatementEffects q r d =>
+  StatementEffects q e r d =>
   d ->
-  Sem r (Either (StoreError DbError) ())
+  Sem r ()
 upsert record =
-  runStatement Schema.upsert record
+  runStatement (restop Schema.upsert) record
 
 delete ::
-  ∀ d q r .
-  StatementEffects q r d =>
+  ∀ d q e r .
+  StatementEffects q e r d =>
   q ->
-  Sem r (Either (StoreError DbError) ())
+  Sem r ()
 delete q =
-  runStatement Schema.delete q
+  runStatement (restop Schema.delete) q
 
 fetch ::
-  ∀ d q r .
-  StatementEffects q r d =>
+  ∀ d q e r .
+  StatementEffects q e r d =>
   q ->
-  Sem r (Either (StoreError DbError) (Maybe d))
+  Sem r (Maybe d)
 fetch q =
-  runStatement Schema.fetch q
+  runStatement (restop Schema.fetch) q
 
 fetchAll ::
-  ∀ d q r .
-  StatementEffects q r d =>
-  Sem r (Either (StoreError DbError) [d])
+  ∀ d q e r .
+  StatementEffects q e r d =>
+  Sem r [d]
 fetchAll =
-  runStatement Schema.fetchAll ()
+  runStatement (restop Schema.fetchAll) ()

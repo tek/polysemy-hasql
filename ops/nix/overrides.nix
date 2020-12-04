@@ -20,6 +20,7 @@ let
   custom = {
     polysemy = cabal2nix "polysemy" niv.polysemy;
     polysemy-plugin = subPkg "polysemy-plugin" "polysemy-plugin" niv.polysemy;
+    polysemy-resume = subPkg "packages/resume" "polysemy-resume" niv.polysemy-resume;
     polysemy-test = subPkg "packages/polysemy-test" "polysemy-test" niv.polysemy-test;
     polysemy-time = subPkg "packages/time" "polysemy-time" niv.polysemy-time;
   };

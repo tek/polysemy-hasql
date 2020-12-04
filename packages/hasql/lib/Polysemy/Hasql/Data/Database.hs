@@ -2,7 +2,11 @@ module Polysemy.Hasql.Data.Database where
 
 import Hasql.Statement (Statement)
 
-data Database e d m a where
-  Run :: q -> Statement q o -> Database e d m (Either e o)
+import Polysemy.Db.Data.TableStructure (TableStructure)
+import Polysemy.Time (TimeUnit)
+
+data Database :: Effect where
+  Run :: Maybe TableStructure -> q -> Statement q o -> Database m o
+  Retrying :: TimeUnit t => Maybe TableStructure -> t -> q -> Statement q o -> Database m o
 
 makeSem ''Database
