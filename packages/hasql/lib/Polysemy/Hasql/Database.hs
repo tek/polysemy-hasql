@@ -3,15 +3,15 @@ module Polysemy.Hasql.Database where
 import Hasql.Connection (Connection)
 import qualified Hasql.Session as Session (statement)
 import Hasql.Statement (Statement)
-import Polysemy.Resume (Stop, interpretResumableH, resume, resume_, stop, type (!))
-import qualified Polysemy.Time as Time
-import Polysemy.Time (Time, TimeUnit)
-
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.TableStructure (TableStructure)
+import Polysemy.Resume (Stop, interpretResumableH, resume, resume_, runStop, stop, type (!))
+import qualified Polysemy.Time as Time
+import Polysemy.Time (Seconds(Seconds), Time, TimeUnit)
+
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database(..))
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
@@ -20,16 +20,22 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.Session (runSession)
 import Polysemy.Hasql.Statement (plain)
 import Polysemy.Hasql.Table (initTable)
-import Polysemy.Resume (runStop)
 
 retryingSql ::
   TimeUnit t =>
-  Members [Database, Stop DbError] r =>
+  Member Database r =>
   t ->
   SqlCode ->
   Sem r ()
 retryingSql interval =
   Database.retrying Nothing interval () . plain
+
+retryingSqlDef ::
+  Member Database r =>
+  SqlCode ->
+  Sem r ()
+retryingSqlDef =
+  retryingSql (Seconds 3)
 
 initOnReconnect ::
   Members [AtomicState Bool, Stop DbError, Embed IO] r =>
