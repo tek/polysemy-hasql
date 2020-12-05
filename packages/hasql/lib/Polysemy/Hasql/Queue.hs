@@ -25,7 +25,7 @@ import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import qualified Polysemy.Hasql.Database as Database
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Resume (interpretResumable, restop, resume_, type (!))
-import Polysemy.Time (GhcTime, Seconds(Seconds))
+import Polysemy.Time (Time, Seconds(Seconds))
 
 tryDequeue ::
   Show d =>
@@ -126,12 +126,12 @@ interpretInputDbQueueListen errorHandler sem =
       dequeueThread errorHandler
 
 interpretInputDbQueueFull ::
-  ∀ (queue :: Symbol) (conn :: Symbol) d r .
+  ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
   Show d =>
   FromJSON d =>
   KnownSymbol queue =>
   KnownSymbol conn =>
-  Members [Tagged conn HasqlConnection, GhcTime, Resource, Async, Error DbError, Embed IO] r =>
+  Members [Tagged conn HasqlConnection, Time t dt, Resource, Async, Error DbError, Embed IO] r =>
   (Text -> Sem r ()) ->
   InterpreterFor (Input (Maybe d) ! DbError) r
 interpretInputDbQueueFull errorHandler =
@@ -155,11 +155,11 @@ escape payload = do
       DbError.Connection . DbConnectionError.Acquire
 
 interpretOutputDbQueue ::
-  ∀ (conn :: Symbol) d r .
+  ∀ (conn :: Symbol) d t dt r .
   Show d =>
   ToJSON d =>
   KnownSymbol conn =>
-  Members [Database ! DbError, HasqlConnection, GhcTime, Embed IO] r =>
+  Members [Database ! DbError, HasqlConnection, Time t dt, Embed IO] r =>
   InterpreterFor (Output d ! DbError) r
 interpretOutputDbQueue =
   interpretResumable \case
@@ -168,11 +168,11 @@ interpretOutputDbQueue =
       restop (Database.retryingSql (Seconds 3) [qt|notify "#{symbolText @conn}", '#{payload}'|])
 
 interpretOutputDbQueueFull ::
-  ∀ (conn :: Symbol) d r .
+  ∀ (conn :: Symbol) d t dt r .
   Show d =>
   ToJSON d =>
   KnownSymbol conn =>
-  Members [Tagged conn HasqlConnection, Error DbError, GhcTime, Embed IO] r =>
+  Members [Tagged conn HasqlConnection, Error DbError, Time t dt, Embed IO] r =>
   InterpreterFor (Output d ! DbError) r
 interpretOutputDbQueueFull =
   tag @conn @HasqlConnection .
