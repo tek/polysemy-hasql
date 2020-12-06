@@ -400,7 +400,7 @@ queryTable_SumId_SumPKQ =
   genQueryTable @(UidRep (Sum Auto SumPKRep) SumIdRep)
 
 sumIdQProg ::
-  Member (StoreQuery SumPKQ DbError (Maybe (Uid SumPK SumId)) ! DbError) r =>
+  Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) ! DbError) r =>
   Members [Store SumPK SumIdRec ! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
   Sem r ()
 sumIdQProg = do

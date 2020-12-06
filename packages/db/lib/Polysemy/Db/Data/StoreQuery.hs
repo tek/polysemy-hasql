@@ -1,6 +1,6 @@
 module Polysemy.Db.Data.StoreQuery where
 
-data StoreQuery q e o m a where
-  Basic :: q -> StoreQuery q e o m o
+data StoreQuery q o m a where
+  Basic :: q -> StoreQuery q o m o
 
 makeSem ''StoreQuery

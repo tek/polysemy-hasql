@@ -11,7 +11,7 @@ interpretStoreQueryStrict ::
   Ord q =>
   (∀ a . [a] -> f a) ->
   Map q [d] ->
-  InterpreterFor (StoreQuery q e (f d)) r
+  InterpreterFor (StoreQuery q (f d)) r
 interpretStoreQueryStrict filter' store =
   interpret \case
     Basic params ->
@@ -24,14 +24,14 @@ single _ = Nothing
 interpretStoreQueryStrictOne ::
   Ord q =>
   Map q [d] ->
-  InterpreterFor (StoreQuery q e (Maybe d)) r
+  InterpreterFor (StoreQuery q (Maybe d)) r
 interpretStoreQueryStrictOne =
   interpretStoreQueryStrict single
 
 interpretStoreQueryStrictMulti ::
   Ord q =>
   Map q [d] ->
-  InterpreterFor (StoreQuery q e [d]) r
+  InterpreterFor (StoreQuery q [d]) r
 interpretStoreQueryStrictMulti =
   interpretStoreQueryStrict id
 
@@ -40,7 +40,7 @@ interpretStoreQueryAtomicState ::
   Member (AtomicState (StrictStore d)) r =>
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
-  InterpreterFor (StoreQuery q () (f d)) r
+  InterpreterFor (StoreQuery q (f d)) r
 interpretStoreQueryAtomicState filter' match =
   interpret \case
     Basic q ->
@@ -49,14 +49,14 @@ interpretStoreQueryAtomicState filter' match =
 interpretStoreQueryAtomicStateOne ::
   Member (AtomicState (StrictStore d)) r =>
   (q -> d -> Bool) ->
-  InterpreterFor (StoreQuery q () (Maybe d)) r
+  InterpreterFor (StoreQuery q (Maybe d)) r
 interpretStoreQueryAtomicStateOne =
   interpretStoreQueryAtomicState single
 
 interpretStoreQueryAtomicStateMulti ::
   Member (AtomicState (StrictStore d)) r =>
   (q -> d -> Bool) ->
-  InterpreterFor (StoreQuery q () [d]) r
+  InterpreterFor (StoreQuery q [d]) r
 interpretStoreQueryAtomicStateMulti =
   interpretStoreQueryAtomicState id
 
@@ -65,7 +65,7 @@ interpretStoreQueryAtomicTVar ::
   TVar (StrictStore d) ->
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
-  InterpreterFor (StoreQuery q () (f d)) r
+  InterpreterFor (StoreQuery q (f d)) r
 interpretStoreQueryAtomicTVar tvar filter' match sem =
   runAtomicStateTVar tvar . interpretStoreQueryAtomicState filter' match . raiseUnder $ sem
 
@@ -74,7 +74,7 @@ interpretStoreQueryAtomicWith ::
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
   [d] ->
-  InterpreterFor (StoreQuery q () (f d)) r
+  InterpreterFor (StoreQuery q (f d)) r
 interpretStoreQueryAtomicWith filter' match initial sem = do
   tvar <- newTVarIO (StrictStore initial)
   interpretStoreQueryAtomicTVar tvar filter' match sem
@@ -83,7 +83,7 @@ interpretStoreQueryAtomicOneWith ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
   [d] ->
-  InterpreterFor (StoreQuery q () (Maybe d)) r
+  InterpreterFor (StoreQuery q (Maybe d)) r
 interpretStoreQueryAtomicOneWith match initial sem = do
   tvar <- newTVarIO (StrictStore initial)
   interpretStoreQueryAtomicTVar tvar single match sem
@@ -92,7 +92,7 @@ interpretStoreQueryAtomicMultiWith ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
   [d] ->
-  InterpreterFor (StoreQuery q () [d]) r
+  InterpreterFor (StoreQuery q [d]) r
 interpretStoreQueryAtomicMultiWith match initial sem = do
   tvar <- newTVarIO (StrictStore initial)
   interpretStoreQueryAtomicTVar tvar id match sem
@@ -100,13 +100,13 @@ interpretStoreQueryAtomicMultiWith match initial sem = do
 interpretStoreQueryAtomicOne ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
-  InterpreterFor (StoreQuery q () (Maybe d)) r
+  InterpreterFor (StoreQuery q (Maybe d)) r
 interpretStoreQueryAtomicOne match =
   interpretStoreQueryAtomicOneWith match def
 
 interpretStoreQueryAtomicMulti ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
-  InterpreterFor (StoreQuery q () [d]) r
+  InterpreterFor (StoreQuery q [d]) r
 interpretStoreQueryAtomicMulti match =
   interpretStoreQueryAtomicMultiWith match def
