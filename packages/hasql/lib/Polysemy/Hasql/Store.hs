@@ -31,8 +31,8 @@ type UidStoreStack i d =
   StoreStack i (Uid i d) (IdQuery i) (Uid i d)
 
 interpretStoreDb ::
-  Members [Schema q d ! DbError, ManagedTable d ! DbError] r =>
-  InterpreterFor (Store q d ! DbError) r
+  Members [Schema q d ! e, ManagedTable d ! e] r =>
+  InterpreterFor (Store q d ! e) r
 interpretStoreDb =
   interpretResumable \case
     Store.Insert record ->
@@ -47,11 +47,11 @@ interpretStoreDb =
       nonEmpty <$> fetchAll
 
 interpretStoreDbAs' ::
-  Member (Store qIn dIn ! DbError) r =>
+  Member (Store qIn dIn ! e) r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
-  InterpreterFor (Store qOut dOut ! DbError) r
+  InterpreterFor (Store qOut dOut ! e) r
 interpretStoreDbAs' toD fromD fromQ =
   interpretResumable \case
     Store.Insert record ->
@@ -66,18 +66,18 @@ interpretStoreDbAs' toD fromD fromQ =
       restop ((fmap . fmap) toD <$> Store.fetchAll)
 
 interpretStoreDbAs ::
-  Members [Schema qIn dIn ! DbError, ManagedTable dIn ! DbError] r =>
+  Members [Schema qIn dIn ! e, ManagedTable dIn ! e] r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
-  InterpreterFor (Store qOut dOut ! DbError) r
+  InterpreterFor (Store qOut dOut ! e) r
 interpretStoreDbAs toD fromD fromQ =
   interpretStoreDb . interpretStoreDbAs' toD fromD fromQ . raiseUnder
 
 dbConnectionError ::
-  ∀ q d r .
-  Member (Stop DbError) r =>
-  DbError ->
+  ∀ e q d r .
+  Member (Stop e) r =>
+  e ->
   InterpreterFor (Store q d) r
 dbConnectionError err =
   interpret \case
