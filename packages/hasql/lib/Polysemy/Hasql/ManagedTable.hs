@@ -2,7 +2,6 @@ module Polysemy.Hasql.ManagedTable where
 
 import Polysemy.Resume (interpretResumable, restop, type (!))
 
-import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database)
@@ -11,9 +10,9 @@ import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Table.TableStructure (GenTableStructure, genTableStructure)
 
 interpretManagedTable ::
-  Member (Database ! DbError) r =>
+  Member (Database ! e) r =>
   TableStructure ->
-  InterpreterFor (ManagedTable d ! DbError) r
+  InterpreterFor (ManagedTable d ! e) r
 interpretManagedTable table =
   interpretResumable \case
     ManagedTable.RunStatement q stmt ->
@@ -22,16 +21,16 @@ interpretManagedTable table =
       restop (Database.retrying (Just table) interval q stmt)
 
 interpretManagedTableGen ::
-  ∀ rep d r .
+  ∀ rep d e r .
   GenTableStructure rep d =>
-  Member (Database ! DbError) r =>
-  InterpreterFor (ManagedTable d ! DbError) r
+  Member (Database ! e) r =>
+  InterpreterFor (ManagedTable d ! e) r
 interpretManagedTableGen =
   interpretManagedTable (genTableStructure @rep @d)
 
 interpretManagedTableUnmanaged ::
-  Member (Database ! DbError) r =>
-  InterpreterFor (ManagedTable d ! DbError) r
+  Member (Database ! e) r =>
+  InterpreterFor (ManagedTable d ! e) r
 interpretManagedTableUnmanaged =
   interpretResumable \case
     ManagedTable.RunStatement q stmt ->
