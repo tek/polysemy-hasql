@@ -41,10 +41,10 @@
         "homepage": null,
         "owner": "tek",
         "repo": "polysemy-resume",
-        "rev": "963447a32a2ed71942c25a8f1c41e07c33b07878",
-        "sha256": "1rfagdi8ajk5ai3ikwh9ljiqwdk51x21rwsx4n10707020bklia8",
+        "rev": "bb819413f9cb1a358c2a9bce4a3f62ed57e144b4",
+        "sha256": "0r801mxxw93z1n4a9f1dlizima2v0v313i6wyip4a01kxc4c0fny",
         "type": "tarball",
-        "url": "https://github.com/tek/polysemy-resume/archive/963447a32a2ed71942c25a8f1c41e07c33b07878.tar.gz",
+        "url": "https://github.com/tek/polysemy-resume/archive/bb819413f9cb1a358c2a9bce4a3f62ed57e144b4.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "polysemy-test": {

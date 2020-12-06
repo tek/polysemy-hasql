@@ -46,7 +46,7 @@ test_singletonDb =
   integrationTest do
     (a, b) <- withTestPlainTable (genTable @DatRep) $ \ table@(Table struct _ _) ->
       interpretManagedTable struct $
-        resumable @(Schema _ _) (interpretSchemaSingleton table) $
+        resumable @_ @(Schema _ _) (interpretSchemaSingleton table) $
         interpretStoreDb $
         prog
     assertJust (pure a) b
