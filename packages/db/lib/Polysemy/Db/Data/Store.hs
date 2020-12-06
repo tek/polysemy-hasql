@@ -1,5 +1,7 @@
 module Polysemy.Db.Data.Store where
 
+import Polysemy.Resume (type (!))
+
 import Polysemy.Db.Data.Uid (Uid, Uuid)
 
 data Store p d :: Effect where
@@ -17,10 +19,10 @@ type UidStore i d =
 type UuidStore d =
   Store UUID (Uuid d)
 
-type family StoreEffects i ds :: EffectRow where
-  StoreEffects _ '[] = '[]
-  StoreEffects i (d : ds) = (UidStore i d : StoreEffects i ds)
+type family StoreEffects i e ds :: EffectRow where
+  StoreEffects _ _ '[] = '[]
+  StoreEffects i e (d : ds) = (UidStore i d ! e : StoreEffects i e ds)
 
-type family Stores i ds r :: Constraint where
-  Stores _ '[] _ = ()
-  Stores i (d : ds) r = (Member (UidStore i d) r, Stores i ds r)
+type family Stores i e ds r :: Constraint where
+  Stores _ _ '[] _ = ()
+  Stores i e (d : ds) r = (Member (UidStore i d ! e) r, Stores i e ds r)
