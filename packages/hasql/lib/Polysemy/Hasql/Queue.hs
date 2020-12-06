@@ -172,7 +172,7 @@ interpretOutputDbQueueFull ::
   Show d =>
   ToJSON d =>
   KnownSymbol conn =>
-  Members [Tagged conn HasqlConnection, Error DbError, Time t dt, Embed IO] r =>
+  Members [Tagged conn HasqlConnection, Time t dt, Embed IO] r =>
   InterpreterFor (Output d ! DbError) r
 interpretOutputDbQueueFull =
   tag @conn @HasqlConnection .
