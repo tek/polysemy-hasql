@@ -167,7 +167,7 @@ withTestStoreTableGen ::
   ∀ rep q d r a .
   Members TestStoreDeps r =>
   GenQueryTable rep q d =>
-  (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
+  (QueryTable q d -> Sem (StoreStack DbError q d q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
   withTestQueryTableGen @rep \ table ->
@@ -177,7 +177,7 @@ withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members TestStoreDeps r =>
   GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
-  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
+  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i DbError d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGen prog =
   withTestQueryTableGen @(UidRep ir rep) \ table ->
@@ -187,7 +187,7 @@ withTestStoreGen ::
   ∀ rep q d r .
   Members TestStoreDeps r =>
   GenQueryTable rep q d =>
-  InterpretersFor (StoreStack q d q d) r
+  InterpretersFor (StoreStack DbError q d q d) r
 withTestStoreGen prog =
   withTestQueryTableGen @rep \ table ->
     interpretStoreDbFull table prog
@@ -196,7 +196,7 @@ withTestStore ::
   ∀ q d r a .
   Members TestStoreDeps r =>
   GenQueryTable (Rep d) q d =>
-  Sem (StoreStack q d q d ++ r) a ->
+  Sem (StoreStack DbError q d q d ++ r) a ->
   Sem r a
 withTestStore prog =
   withTestQueryTableGen @(Rep d) \ table ->
@@ -206,7 +206,7 @@ withTestStoreUid ::
   ∀ i d r a .
   Members TestStoreDeps r =>
   GenQueryTable (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
-  Sem (UidStoreStack i d ++ r) a ->
+  Sem (UidStoreStack i DbError d ++ r) a ->
   Sem r a
 withTestStoreUid prog =
   withTestQueryTableGen @(Rep (Uid i d)) \ table ->
