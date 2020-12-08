@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 module Polysemy.Hasql.Test.PKTest where
 
 import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, Prim, PrimaryKey)

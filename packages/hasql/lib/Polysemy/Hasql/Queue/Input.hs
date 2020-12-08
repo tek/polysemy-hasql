@@ -94,9 +94,9 @@ interpretInputDbQueue ::
   ∀ d r .
   Member (Embed IO) r =>
   TBMQueue d ->
-  InterpreterFor (Input (Maybe d) ! DbError) r
+  InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueue queue =
-  interpretResumable \case
+  interpret \case
     Input ->
       atomically (readTBMQueue queue)
 
@@ -127,7 +127,7 @@ interpretInputDbQueueListen ::
   KnownSymbol queue =>
   Members [UuidStore d ! DbError, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   (DbError -> Sem r Bool) ->
-  InterpreterFor (Input (Maybe (Uuid d)) ! DbError) r
+  InterpreterFor (Input (Maybe (Uuid d))) r
 interpretInputDbQueueListen errorHandler sem =
   bracket acquire (uncurry (releaseInputQueue @queue)) \ (_, queue) ->
     interpretInputDbQueue queue sem
@@ -140,7 +140,7 @@ interpretInputDbQueueFull ::
   KnownSymbol queue =>
   Members [Tagged conn HasqlConnection, UuidStore d ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   (DbError -> Sem r Bool) ->
-  InterpreterFor (Input (Maybe (Uuid d)) ! DbError) r
+  InterpreterFor (Input (Maybe (Uuid d))) r
 interpretInputDbQueueFull errorHandler =
   tag @conn @HasqlConnection .
   interpretDatabase .
@@ -153,7 +153,7 @@ interpretInputDbQueueFullGen ::
   GenQueryTable (UuidRep Auto) (IdQuery UUID) (Uuid d) =>
   Members [Tagged conn HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   (DbError -> Sem r Bool) ->
-  InterpreterFor (Input (Maybe (Uuid d)) ! DbError) r
+  InterpreterFor (Input (Maybe (Uuid d))) r
 interpretInputDbQueueFullGen errorHandler =
   interpretStoreDbFullGenUid @Auto @(Prim Auto) .
   raiseUnder2 .

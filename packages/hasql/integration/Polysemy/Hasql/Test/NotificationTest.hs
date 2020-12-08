@@ -11,6 +11,7 @@ import qualified Polysemy.Time as Time
 import Polysemy.Time (MilliSeconds(MilliSeconds), Time, interpretTimeGhc)
 
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Queue (interpretInputDbQueueFullGen, interpretOutputDbQueueFullGen)
 import Polysemy.Hasql.Test.Run (integrationTestWithDb)
@@ -24,14 +25,15 @@ data Dat =
 defaultJson ''Dat
 
 prog ::
+  ∀ oe t dt m r .
   Monad m =>
-  Members [Input (Maybe (Uuid Dat)) ! DbError, Output (Uuid Dat) ! DbError, Stop DbError, Time t dt, Hedgehog m] r =>
+  Members [Input (Maybe (Uuid Dat)), Output (Uuid Dat) ! oe, Stop oe, Stop DbError, Time t dt, Hedgehog m] r =>
   Sem r ()
 prog = do
   Time.sleep (MilliSeconds 100)
   restop (output d1 >> output d2)
-  dequeue1 <- restop input
-  dequeue2 <- restop input
+  dequeue1 <- input
+  dequeue2 <- input
   assertJust d1 dequeue1
   assertJust d2 dequeue2
   where
@@ -44,8 +46,10 @@ test_notification :: UnitTest
 test_notification =
   integrationTestWithDb \ conf ->
     asyncToIOFinal $
+    mapStop @QueueOutputError @Text show $
     interpretTimeGhc $
     (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
     (interpretDbConnection "test-queue" conf . untag @"test-queue") $
     interpretOutputDbQueueFullGen @"test-queue" $
-    interpretInputDbQueueFullGen @"test-queue" @"test-queue-input" (\ _ -> pure False) prog
+    interpretInputDbQueueFullGen @"test-queue" @"test-queue-input" (\ _ -> pure False) $
+    prog

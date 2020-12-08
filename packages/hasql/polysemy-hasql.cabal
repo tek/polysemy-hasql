@@ -34,6 +34,7 @@ library
       Polysemy.Hasql.Data.ManagedTable
       Polysemy.Hasql.Data.QueryTable
       Polysemy.Hasql.Data.QueryWhere
+      Polysemy.Hasql.Data.QueueOutputError
       Polysemy.Hasql.Data.Schema
       Polysemy.Hasql.Data.SqlCode
       Polysemy.Hasql.Data.StoreTable

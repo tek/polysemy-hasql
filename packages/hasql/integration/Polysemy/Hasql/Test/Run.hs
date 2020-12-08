@@ -2,7 +2,6 @@ module Polysemy.Hasql.Test.Run where
 
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
-import Polysemy (raise3Under)
 import Polysemy.Fail (Fail)
 import Polysemy.Resource (Resource)
 import qualified Polysemy.Test as Hedgehog
@@ -26,6 +25,7 @@ type TestEffects =
     Stop DbConnectionError,
     Stop DbError,
     Stop QueryError,
+    Stop Text,
     Error DbError,
     Error Text,
     Test,
@@ -51,7 +51,6 @@ integrationTestWith run =
           mapStop @QueryError @Text show $
           mapStop @DbError @Text show $
           mapStop @DbConnectionError @Text show $
-          raise3Under $
           runRandomIO $
           interpretTimeGhc $
           run conf

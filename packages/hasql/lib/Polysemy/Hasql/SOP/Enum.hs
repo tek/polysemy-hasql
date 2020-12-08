@@ -1,4 +1,4 @@
--- {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Polysemy.Hasql.SOP.Enum where
 
