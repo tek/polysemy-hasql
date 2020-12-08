@@ -1,7 +1,6 @@
 module Polysemy.Hasql.Store where
 
 import Polysemy.Resource (Resource)
-import Polysemy.Resume (Stop, stop, type (!))
 import Polysemy.Time (Time, interpretTimeGhc)
 
 import Polysemy (raise3Under)
@@ -22,7 +21,6 @@ import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Schema.Generic (interpretSchema)
 import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Resume (interpretResumable, restop, resumable)
 
 type StoreStack qOut dOut qIn dIn =
   [Store qOut dOut ! DbError, Schema qIn dIn ! DbError, ManagedTable dIn ! DbError]

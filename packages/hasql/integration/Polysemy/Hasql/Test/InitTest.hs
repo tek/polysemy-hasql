@@ -3,7 +3,6 @@ module Polysemy.Hasql.Test.InitTest where
 import Control.Lens (view)
 import qualified Data.Set as Set
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Resume (restop)
 
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))

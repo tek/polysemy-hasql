@@ -19,6 +19,7 @@ module Polysemy.Db.Prelude (
   module Polysemy.Db.Debug,
   module Polysemy.Error,
   module Polysemy.Reader,
+  module Polysemy.Resume,
   module Polysemy.State,
   module Relude,
 ) where
@@ -40,36 +41,6 @@ import Data.UUID (UUID)
 import GHC.Err (undefined)
 import GHC.IO.Unsafe (unsafePerformIO)
 import GHC.TypeLits (KnownSymbol, Symbol)
-import Language.Haskell.TH.Quote (QuasiQuoter)
-import qualified Language.Haskell.TH.Syntax as TH
-import Polysemy (bindTSimple, 
-  Effect,
-  EffectRow,
-  Embed,
-  Final,
-  InterpreterFor,
-  Member,
-  Members,
-  Sem,
-  WithTactics,
-  embed,
-  embedToFinal,
-  interpret,
-  makeSem,
-  pureT,
-  raise,
-  raiseUnder,
-  raiseUnder2,
-  raiseUnder3,
-  reinterpret,
-  runFinal,
-  )
-import Polysemy.AtomicState (AtomicState, atomicGet, atomicGets, atomicModify', atomicPut, runAtomicStateTVar)
-import Polysemy.Db.Debug (dbg, dbgs, dbgs_)
-import Polysemy.Error (Error, fromEither, mapError, note, runError, throw)
-import Polysemy.Internal.Bundle (Append)
-import Polysemy.Reader (Reader)
-import Polysemy.State (State, evalState, get, gets, modify, modify', put, runState)
 import Relude hiding (
   Reader,
   State,
@@ -93,6 +64,38 @@ import Relude hiding (
   traceShow,
   undefined,
   )
+import Language.Haskell.TH.Quote (QuasiQuoter)
+import qualified Language.Haskell.TH.Syntax as TH
+import Polysemy (
+  Effect,
+  EffectRow,
+  Embed,
+  Final,
+  InterpreterFor,
+  Member,
+  Members,
+  Sem,
+  WithTactics,
+  bindTSimple,
+  embed,
+  embedToFinal,
+  interpret,
+  makeSem,
+  pureT,
+  raise,
+  raiseUnder,
+  raiseUnder2,
+  raiseUnder3,
+  reinterpret,
+  runFinal,
+  )
+import Polysemy.AtomicState (AtomicState, atomicGet, atomicGets, atomicModify', atomicPut, runAtomicStateTVar)
+import Polysemy.Db.Debug (dbg, dbgs, dbgs_)
+import Polysemy.Error (Error, fromEither, mapError, note, runError, throw)
+import Polysemy.Internal.Bundle (Append)
+import Polysemy.Reader (Reader)
+import Polysemy.Resume
+import Polysemy.State (State, evalState, get, gets, modify, modify', put, runState)
 import System.IO.Error (userError)
 
 unit ::

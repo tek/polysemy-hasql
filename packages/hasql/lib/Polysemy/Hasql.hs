@@ -4,7 +4,6 @@ module Polysemy.Hasql (
 ) where
 
 import Hasql.Connection (Connection)
-import Polysemy.Resume (type (!))
 
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)

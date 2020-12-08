@@ -1,13 +1,11 @@
 module Polysemy.Db.Store where
 
 import Control.Lens (view, views)
-import Polysemy.Resume (resumeHoist, type (!))
 
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store(..), UidStore)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid)
-import Polysemy.Resume (Stop)
 
 newtype StrictStore a =
   StrictStore {

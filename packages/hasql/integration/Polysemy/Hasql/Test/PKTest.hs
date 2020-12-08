@@ -14,7 +14,6 @@ import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
 import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Resume (restop)
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 newtype Id =

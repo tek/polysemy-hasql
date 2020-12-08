@@ -1,7 +1,5 @@
 module Polysemy.Hasql.Query.One where
 
-import Polysemy.Resume (interpretResumable, restop, type (!))
-
 import Polysemy.Db.Data.Column (UidRep)
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
 import Polysemy.Db.Data.TableStructure (TableStructure)

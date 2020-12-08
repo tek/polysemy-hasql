@@ -10,7 +10,6 @@ import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Resume (restop)
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
 

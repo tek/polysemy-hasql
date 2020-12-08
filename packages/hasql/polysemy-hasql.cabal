@@ -44,6 +44,8 @@ library
       Polysemy.Hasql.Query.Many
       Polysemy.Hasql.Query.One
       Polysemy.Hasql.Queue
+      Polysemy.Hasql.Queue.Input
+      Polysemy.Hasql.Queue.Output
       Polysemy.Hasql.Schema.Generic
       Polysemy.Hasql.Session
       Polysemy.Hasql.SOP.Enum

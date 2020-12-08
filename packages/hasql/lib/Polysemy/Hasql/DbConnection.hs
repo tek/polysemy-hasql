@@ -6,7 +6,6 @@ import Hasql.Connection (Connection, Settings)
 import qualified Hasql.Connection as Connection (acquire, release, settings)
 import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Resource (Resource, finally)
-import Polysemy.Resume (Stop, stopEither, type (!))
 
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
@@ -20,7 +19,6 @@ import Polysemy.Db.Data.DbUser (DbUser(DbUser))
 import Polysemy.Hasql (HasqlConnection)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
-import Polysemy.Resume (interpretResumableH, resume)
 
 connectionSettings ::
   DbHost ->

@@ -8,7 +8,6 @@ import Polysemy (bindT, getInitialStateT, getInspectorT, inspect, runT)
 import Polysemy.Db.Atomic (interpretAtomic)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Resume (Stop, interpretResumableH, resumeHoist, resume_, runStop, stop, type (!))
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds(Seconds), Time, TimeUnit)
 

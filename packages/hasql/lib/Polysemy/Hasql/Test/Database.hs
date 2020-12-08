@@ -6,7 +6,6 @@ import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
 import Polysemy.Db.Random (Random, random, runRandomIO)
 import Polysemy.Resource (Resource, bracket)
-import Polysemy.Resume (Stop, mapStop, resumeHoist, type (!))
 import Polysemy.Time (Time)
 
 import Polysemy.Db.Data.Column (UidRep)

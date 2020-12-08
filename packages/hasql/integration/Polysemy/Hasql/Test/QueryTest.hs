@@ -3,7 +3,6 @@
 module Polysemy.Hasql.Test.QueryTest where
 
 import Hasql.Encoders (Params)
-import Polysemy.Resume (Stop, restop, type (!))
 import Polysemy.Test (UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
 import Polysemy.Time (mkDatetime)

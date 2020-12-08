@@ -1,5 +1,4 @@
 module Polysemy.Hasql.Query.Many where
-import Polysemy.Resume (type (!))
 
 import Polysemy.Db.Data.Column (UidRep)
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
@@ -12,7 +11,6 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Statement (selectWhere)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Resume (interpretResumable, restop)
 
 interpretManyAs ::
   ∀ qOut qIn dIn dOut dResult e r .

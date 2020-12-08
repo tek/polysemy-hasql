@@ -8,7 +8,6 @@ import Polysemy.Db.Data.Store (UidStore)
 import Polysemy.Db.Data.Uid (Uid(Uid))
 import Polysemy.Hasql.Test.Database (withTestStoreUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Resume (restop)
 
 data Dat =
   Dat {

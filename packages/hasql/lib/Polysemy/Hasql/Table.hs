@@ -8,7 +8,6 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Session (QueryError)
 import qualified Hasql.Session as Session (run, statement)
 import Hasql.Statement (Statement)
-import Polysemy.Resume (Stop, stopEither, mapStop, runStop)
 
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -18,7 +17,6 @@ import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeT
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.TableStructure (GenTableStructure(genTableStructure))
-import Polysemy.Resume (stop)
 
 runStatement ::
   Members [Embed IO, Stop QueryError] r =>

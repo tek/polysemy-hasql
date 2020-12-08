@@ -8,7 +8,6 @@ import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Resume (Stop, restop, resumeEither, type (!))
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)

@@ -1,7 +1,5 @@
 module Polysemy.Db.Data.Store where
 
-import Polysemy.Resume (type (!))
-
 import Polysemy.Db.Data.Uid (Uid, Uuid)
 
 data Store p d :: Effect where

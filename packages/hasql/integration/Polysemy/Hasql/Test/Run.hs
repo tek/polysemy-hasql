@@ -5,7 +5,6 @@ import Hedgehog (TestT)
 import Polysemy (raise3Under)
 import Polysemy.Fail (Fail)
 import Polysemy.Resource (Resource)
-import Polysemy.Resume (Stop, mapStop, stopToError, type (!))
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)

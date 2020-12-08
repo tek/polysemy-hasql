@@ -3,7 +3,6 @@ module Polysemy.Hasql.ManagedTable where
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.TableName (TableName(TableName))
 import qualified Polysemy.Db.Data.TableStructure as TableStructure (TableStructure(_name))
-import Polysemy.Resume (interpretResumable, restop, type (!))
 
 import Polysemy.Db.Data.TableStructure (TableStructure)
 import qualified Polysemy.Hasql.Data.Database as Database

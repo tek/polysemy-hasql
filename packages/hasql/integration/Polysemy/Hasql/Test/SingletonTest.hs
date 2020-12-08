@@ -13,7 +13,6 @@ import Polysemy.Hasql.Store (interpretStoreDb)
 import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Test.Database (withTestPlainTable)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Resume (Stop, restop, resumable, type (!))
 import Polysemy.Test (UnitTest, assertJust)
 
 data Dat =

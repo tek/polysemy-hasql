@@ -8,7 +8,6 @@ import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.Schema as Schema
 import Polysemy.Hasql.Data.Schema (Schema(..))
-import Polysemy.Resume (Stop, restop, type (!))
 
 class Members [Schema q d ! e, ManagedTable d ! e, Stop e] r => StatementEffects q e r d where
 
