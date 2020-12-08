@@ -1,8 +1,9 @@
 module Polysemy.Hasql.DbConnection where
 
+import Polysemy (interpretH)
+import Control.Lens (_2)
 import Hasql.Connection (Connection, Settings)
 import qualified Hasql.Connection as Connection (acquire, release, settings)
-import Polysemy (interpretH)
 import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Resource (Resource, finally)
 import Polysemy.Resume (Stop, stopEither, type (!))
@@ -41,39 +42,39 @@ connect (DbConfig host port name user password) =
     dbError err =
       DbConnectionError.Acquire (maybe "unspecified error" decodeUtf8 err)
 
-cachedConnectWithInit ::
-  Members [AtomicState (Maybe Connection), Embed IO, Stop DbConnectionError] r =>
-  (Connection -> Sem r b) ->
+cachedUse ::
+  Members [AtomicState (Int, Maybe Connection), Embed IO, Stop DbConnectionError] r =>
+  ((Int, Connection) -> Sem r a) ->
   DbConfig ->
-  Sem r Connection
-cachedConnectWithInit init' config =
-  maybe create pure =<< atomicGet
+  Sem r a
+cachedUse f config = do
+  f =<< create =<< atomicGet
   where
-    create = do
-      d <- connect config
-      atomicPut (Just d)
-      init' d
-      pure d
+    create (count, Nothing) = do
+      conn <- connect config
+      atomicPut (count + 1, Just conn)
+      pure (count + 1, conn)
+    create (count, Just conn) =
+      pure (count, conn)
 
 disconnect ::
-  Members [AtomicState (Maybe Connection), Stop DbConnectionError, Embed IO] r =>
+  Members [AtomicState (Int, Maybe Connection), Stop DbConnectionError, Embed IO] r =>
   Maybe Connection ->
   Sem r ()
 disconnect = \case
   Just connection -> do
     stopEither . first DbConnectionError.Release =<< tryAny (Connection.release connection)
-    atomicPut Nothing
+    atomicModify' (_2 .~ Nothing)
   Nothing ->
     unit
 
-connectSingleton ::
+useSingleton ::
   Members [Embed IO, Stop DbConnectionError] r =>
-  (Connection -> Sem r b) ->
+  (Connection -> Sem r a) ->
   DbConfig ->
-  Sem r Connection
-connectSingleton init' config = do
-  connection <- connect config
-  connection <$ init' connection
+  Sem r a
+useSingleton f config =
+  f =<< connect config
 
 interpretDbConnectionSingleton ::
   Members [Embed IO, Stop DbConnectionError] r =>
@@ -81,8 +82,10 @@ interpretDbConnectionSingleton ::
   InterpreterFor (DbConnection Connection) r
 interpretDbConnectionSingleton config =
   interpretH \case
-    DbConnection.ConnectWithInit init' -> do
-      pureT =<< connectSingleton (callT init') config
+    DbConnection.Info ->
+      pureT ("singleton", 0)
+    DbConnection.Use f ->
+      useSingleton (callT (f 0)) config
     DbConnection.Disconnect ->
       liftT unit
     DbConnection.Reset ->
@@ -90,17 +93,20 @@ interpretDbConnectionSingleton config =
 
 interpretDbConnectionCached ::
   ∀ r .
-  Members [AtomicState (Maybe Connection), Embed IO] r =>
+  Members [AtomicState (Int, Maybe Connection), Embed IO] r =>
+  Text ->
   DbConfig ->
   InterpreterFor HasqlConnection r
-interpretDbConnectionCached config =
+interpretDbConnectionCached name config =
   interpretResumableH \case
-    DbConnection.ConnectWithInit init' ->
-      pureT =<< cachedConnectWithInit (callT init') config
+    DbConnection.Info ->
+      liftT ((name,) <$> atomicGets fst)
+    DbConnection.Use f -> do
+      cachedUse (callT (uncurry f)) config
     DbConnection.Disconnect ->
-      liftT (disconnect =<< atomicGet)
+      liftT (disconnect . snd =<< atomicGet)
     DbConnection.Reset ->
-      liftT (atomicPut Nothing)
+      liftT (atomicModify' (_2 .~ Nothing))
 
 withDisconnect ::
   Members [DbConnection c ! DbConnectionError, Resource] r =>
@@ -112,7 +118,8 @@ withDisconnect sem =
 -- |Connects to a database and shares the connection among all consumers of the interpreter.
 interpretDbConnection ::
   Members [Resource, Embed IO] r =>
+  Text ->
   DbConfig ->
   InterpreterFor HasqlConnection r
-interpretDbConnection config sem =
-  interpretAtomic Nothing (interpretDbConnectionCached config (raiseUnder (withDisconnect sem)))
+interpretDbConnection name config sem =
+  interpretAtomic (0, Nothing) (interpretDbConnectionCached name config (raiseUnder (withDisconnect sem)))

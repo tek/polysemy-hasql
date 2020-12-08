@@ -75,9 +75,9 @@ withTestTable ::
   (t -> Sem r a) ->
   Sem r a
 withTestTable lens table use = do
-  connection <- resumeHoist DbError.Connection DbConnection.connect
   suffix <- UUID.toText <$> random
-  bracketTestTable lens (suffixedTable (lens . tableName) suffix table) use connection
+  resumeHoist DbError.Connection $ DbConnection.use \ _ ->
+    bracketTestTable lens (suffixedTable (lens . tableName) suffix table) (raise . use)
 
 withTestPlainTable ::
   Members [Resource, Embed IO, DbConnection Connection ! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
@@ -132,9 +132,9 @@ withTestDb ::
   (DbConfig -> Sem r a) ->
   Sem r a
 withTestDb baseConfig f =
-  interpretDbConnection baseConfig do
-    connection <- resumeHoist DbError.Connection DbConnection.connect
-    bracket (acquire baseConfig connection) (release connection) (raise . f)
+  interpretDbConnection "test" baseConfig do
+    resumeHoist DbError.Connection $ DbConnection.use \ _ connection ->
+      bracket (acquire baseConfig connection) (release connection) (raise . raise . f)
   where
     acquire config connection =
       runRandomIO $ createTestDb config connection
@@ -148,7 +148,7 @@ withTestConnection ::
   Sem r a
 withTestConnection baseConfig ma =
   withTestDb baseConfig \ dbConfig ->
-    interpretDbConnection dbConfig (interpretDatabase ma)
+    interpretDbConnection "test" dbConfig (interpretDatabase ma)
 
 type TestStoreDeps =
   [
@@ -167,7 +167,7 @@ withTestStoreTableGen ::
   ∀ rep q d r a .
   Members TestStoreDeps r =>
   GenQueryTable rep q d =>
-  (QueryTable q d -> Sem (StoreStack DbError q d q d ++ r) a) ->
+  (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
   withTestQueryTableGen @rep \ table ->
@@ -177,7 +177,7 @@ withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members TestStoreDeps r =>
   GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
-  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i DbError d ++ r) a) ->
+  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGen prog =
   withTestQueryTableGen @(UidRep ir rep) \ table ->
@@ -187,7 +187,7 @@ withTestStoreGen ::
   ∀ rep q d r .
   Members TestStoreDeps r =>
   GenQueryTable rep q d =>
-  InterpretersFor (StoreStack DbError q d q d) r
+  InterpretersFor (StoreStack q d q d) r
 withTestStoreGen prog =
   withTestQueryTableGen @rep \ table ->
     interpretStoreDbFull table prog
@@ -196,7 +196,7 @@ withTestStore ::
   ∀ q d r a .
   Members TestStoreDeps r =>
   GenQueryTable (Rep d) q d =>
-  Sem (StoreStack DbError q d q d ++ r) a ->
+  Sem (StoreStack q d q d ++ r) a ->
   Sem r a
 withTestStore prog =
   withTestQueryTableGen @(Rep d) \ table ->
@@ -206,7 +206,7 @@ withTestStoreUid ::
   ∀ i d r a .
   Members TestStoreDeps r =>
   GenQueryTable (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
-  Sem (UidStoreStack i DbError d ++ r) a ->
+  Sem (UidStoreStack i d ++ r) a ->
   Sem r a
 withTestStoreUid prog =
   withTestQueryTableGen @(Rep (Uid i d)) \ table ->

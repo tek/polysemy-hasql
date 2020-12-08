@@ -83,7 +83,7 @@ library
   hs-source-dirs:
       lib
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively
+  ghc-options: -Wall -Wredundant-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively
   build-depends:
       aeson
     , async
@@ -137,7 +137,7 @@ test-suite polysemy-hasql-integration
   hs-source-dirs:
       integration
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wredundant-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , async
@@ -191,7 +191,7 @@ test-suite polysemy-hasql-unit
   hs-source-dirs:
       test
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wredundant-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , async

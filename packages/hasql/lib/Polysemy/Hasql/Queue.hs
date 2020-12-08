@@ -12,7 +12,7 @@ import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Input (Input(Input))
 import Polysemy.Output (Output(Output))
 import Polysemy.Resource (Resource, bracket)
-import Polysemy.Resume (Stop, resumeHoist, stopEither, stopNote, stopToError)
+import Polysemy.Resume (Stop, runStop, stopEither, stopEitherWith, stopNote)
 import Polysemy.Tagged (Tagged, tag)
 
 import Control.Concurrent (threadWaitRead)
@@ -20,15 +20,15 @@ import Control.Concurrent.STM.TBMQueue (TBMQueue, newTBMQueueIO, readTBMQueue, w
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Hasql (HasqlConnection)
-import Polysemy.Hasql.Data.Database (Database)
-import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
-import qualified Polysemy.Hasql.Database as Database
+import qualified Polysemy.Hasql.Data.Database as Database
+import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
+import qualified Polysemy.Hasql.Database as Database (retryingSql, retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Resume (interpretResumable, restop, resume_, type (!))
-import Polysemy.Time (Time, Seconds(Seconds))
+import qualified Polysemy.Time as Time
+import Polysemy.Time (Seconds(Seconds), Time)
 
 tryDequeue ::
-  Show d =>
   FromJSON d =>
   LibPQ.Connection ->
   IO (Either Text (Maybe d))
@@ -40,7 +40,7 @@ tryDequeue connection =
           pure (Right (Just d))
         Left err -> do
           pure (Left (toText err))
-    Nothing -> do
+    Nothing ->
       LibPQ.socket connection >>= \case
         Just fd -> do
           threadWaitRead fd
@@ -48,28 +48,43 @@ tryDequeue connection =
         Nothing ->
           pure (Left "couldn't connect with LibPQ.socket")
 
-dequeueLoop ::
-  Show d =>
+listen ::
+  ∀ (queue :: Symbol) e r .
+  KnownSymbol queue =>
+  Members [Database ! e, Stop e, Embed IO] r =>
+  Sem r ()
+listen =
+  restop (Database.retryingSqlDef [qt|listen "#{symbolText @queue}"|])
+
+dequeue ::
+  ∀ (queue :: Symbol) d t dt r .
   FromJSON d =>
-  Members [Tagged conn HasqlConnection, Embed IO] r =>
-  (Text -> Sem r ()) ->
+  KnownSymbol queue =>
+  Members [Database ! DbError, Time t dt, Embed IO] r =>
+  TBMQueue d ->
+  Sem (Stop DbError : r) ()
+dequeue queue = do
+  restop $ Database.withInit (InitDb [qt|dequeue-#{symbolText @queue}|] (\ _ -> listen @queue)) do
+    Database.connect \ connection -> do
+      Time.sleep (Seconds 1)
+      result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
+      d <- stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result
+      traverse_ (embed . atomically . writeTBMQueue queue) d
+
+dequeueLoop ::
+  ∀ (queue :: Symbol) d t dt r .
+  FromJSON d =>
+  KnownSymbol queue =>
+  Members [Database ! DbError, Time t dt, Embed IO] r =>
+  (DbError -> Sem r ()) ->
   TBMQueue d ->
   Sem r ()
 dequeueLoop errorHandler queue =
   forever do
-    tag (resume_ (dequeueOne =<< DbConnection.connect))
-  where
-    dequeueOne connection = do
-      join <$> tryAny (withLibPQConnection connection tryDequeue) >>= \case
-        Right d ->
-          traverse_ (embed . atomically . writeTBMQueue queue) d
-        Left err ->
-          raise (raise (errorHandler err))
+    traverseLeft errorHandler =<< runStop (dequeue @queue queue)
 
 interpretInputDbQueue ::
   ∀ d r .
-  Show d =>
-  FromJSON d =>
   Member (Embed IO) r =>
   TBMQueue d ->
   InterpreterFor (Input (Maybe d) ! DbError) r
@@ -79,28 +94,21 @@ interpretInputDbQueue queue =
       atomically (readTBMQueue queue)
 
 dequeueThread ::
-  Show d =>
+  ∀ (queue :: Symbol) d t dt r .
   FromJSON d =>
-  Members [Tagged conn HasqlConnection, Async, Embed IO] r =>
-  (Text -> Sem r ()) ->
+  KnownSymbol queue =>
+  Members [Database ! DbError, Time t dt, Async, Embed IO] r =>
+  (DbError -> Sem r ()) ->
   Sem r (Concurrent.Async (Maybe ()), TBMQueue d)
 dequeueThread errorHandler = do
   queue <- embed (newTBMQueueIO 64)
-  handle <- async (dequeueLoop errorHandler queue)
+  handle <- async (dequeueLoop @queue errorHandler queue)
   pure (handle, queue)
 
-listen ::
-  ∀ (queue :: Symbol) r .
-  KnownSymbol queue =>
-  Members [Database ! DbError, Stop DbError, Embed IO] r =>
-  Sem r ()
-listen =
-  restop (Database.retryingSqlDef [qt|listen "#{symbolText @queue}"|])
-
 releaseInputQueue ::
-  ∀ (queue :: Symbol) d r .
+  ∀ (queue :: Symbol) d e r .
   KnownSymbol queue =>
-  Members [Database ! DbError, Async, Embed IO] r =>
+  Members [Database ! e, Async, Embed IO] r =>
   Concurrent.Async (Maybe ()) ->
   TBMQueue d ->
   Sem r ()
@@ -108,46 +116,42 @@ releaseInputQueue handle _ = do
   Async.cancel handle
   resume_ (Database.retryingSqlDef [qt|unlisten "#{symbolText @queue}"|])
 
+-- TODO acquire must be called with connectWithInit, otherwise it will not reconnect on connection loss
 interpretInputDbQueueListen ::
-  ∀ (queue :: Symbol) (conn :: Symbol) d r .
-  Show d =>
+  ∀ (queue :: Symbol) d t dt r .
   FromJSON d =>
   KnownSymbol queue =>
-  KnownSymbol conn =>
-  Members [Database ! DbError, Tagged conn HasqlConnection, Resource, Async, Error DbError, Embed IO] r =>
-  (Text -> Sem r ()) ->
+  Members [Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  (DbError -> Sem r ()) ->
   InterpreterFor (Input (Maybe d) ! DbError) r
 interpretInputDbQueueListen errorHandler sem =
   bracket acquire (uncurry (releaseInputQueue @queue)) \ (_, queue) ->
     interpretInputDbQueue queue sem
   where
-    acquire = do
-      stopToError (listen @queue)
-      dequeueThread errorHandler
+    acquire =
+      dequeueThread @queue errorHandler
 
 interpretInputDbQueueFull ::
   ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
-  Show d =>
   FromJSON d =>
   KnownSymbol queue =>
-  KnownSymbol conn =>
-  Members [Tagged conn HasqlConnection, Time t dt, Resource, Async, Error DbError, Embed IO] r =>
-  (Text -> Sem r ()) ->
+  Members [Tagged conn HasqlConnection, Time t dt, Resource, Async, Embed IO] r =>
+  (DbError -> Sem r ()) ->
   InterpreterFor (Input (Maybe d) ! DbError) r
 interpretInputDbQueueFull errorHandler =
   tag @conn @HasqlConnection .
   interpretDatabase .
-  interpretInputDbQueueListen @queue @conn (raise . raise . errorHandler) .
+  interpretInputDbQueueListen @queue (raise . raise . errorHandler) .
   raiseUnder2
 
 escape ::
-  Members [Database ! DbError, HasqlConnection, Stop DbError, Embed IO] r =>
+  Members [Database ! DbError, Stop DbError, Embed IO] r =>
   ByteString ->
   Sem r ByteString
 escape payload = do
-  connection <- resumeHoist (DbError.Connection) DbConnection.connect
-  result <- tryAny (withLibPQConnection connection (flip LibPQ.escapeStringConn payload))
-  stopNote invalid =<< stopEither (first connError result)
+  restop $ Database.connect \ connection -> do
+    result <- tryAny (withLibPQConnection connection (flip LibPQ.escapeStringConn payload))
+    stopNote invalid =<< stopEither (first connError result)
   where
     invalid =
       DbError.Query "invalid payload for notify"
@@ -155,21 +159,19 @@ escape payload = do
       DbError.Connection . DbConnectionError.Acquire
 
 interpretOutputDbQueue ::
-  ∀ (conn :: Symbol) d t dt r .
-  Show d =>
+  ∀ (queue :: Symbol) d t dt r .
   ToJSON d =>
-  KnownSymbol conn =>
-  Members [Database ! DbError, HasqlConnection, Time t dt, Embed IO] r =>
+  KnownSymbol queue =>
+  Members [Database ! DbError, Time t dt, Embed IO] r =>
   InterpreterFor (Output d ! DbError) r
 interpretOutputDbQueue =
   interpretResumable \case
     Output d -> do
       payload <- escape (toStrict (Aeson.encode d))
-      restop (Database.retryingSql (Seconds 3) [qt|notify "#{symbolText @conn}", '#{payload}'|])
+      restop (Database.retryingSql (Seconds 3) [qt|notify "#{symbolText @queue}", '#{payload}'|])
 
 interpretOutputDbQueueFull ::
   ∀ (conn :: Symbol) d t dt r .
-  Show d =>
   ToJSON d =>
   KnownSymbol conn =>
   Members [Tagged conn HasqlConnection, Time t dt, Embed IO] r =>

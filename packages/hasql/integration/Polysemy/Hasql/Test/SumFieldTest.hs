@@ -8,6 +8,7 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
+import Polysemy.Db.SOP.Constraint (DataName)
 import Polysemy.Resource (Resource)
 import Polysemy.Resume (Stop, restop, resumeEither, type (!))
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
@@ -267,8 +268,9 @@ prog specimen =
 
 sumTest ::
   ∀ rep d r .
-  Show d =>
   Eq d =>
+  Show d =>
+  DataName d =>
   Members (Hedgehog IO : TestStoreDeps) r =>
   Member (Embed IO) r =>
   GenQueryTable rep UuidQuery d =>
@@ -453,6 +455,12 @@ data Dat2Rep =
   }
   deriving (Eq, Show, Generic)
 
+-- TODO connectionWithInit only runs one init on connect, so the second table isn't created.
+-- need to have:
+-- * a counter in DbConnection
+-- * one in ManagedTable for comparison
+-- * higher-order action instead of connectWithInit, which is used from ManagedTable
+--   maybe use 'Stop' to shortcircuit back from DbConnection to ManagedTable? doesn't help with reconnect though
 test_multiSum :: UnitTest
 test_multiSum =
   integrationTest do

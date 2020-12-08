@@ -1,25 +1,26 @@
 module Polysemy.Hasql.Database where
 
+import qualified Data.Map.Strict as Map
 import Hasql.Connection (Connection)
 import qualified Hasql.Session as Session (statement)
 import Hasql.Statement (Statement)
+import Polysemy (bindT, getInitialStateT, getInspectorT, inspect, runT)
 import Polysemy.Db.Atomic (interpretAtomic)
-import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.TableStructure (TableStructure)
-import Polysemy.Resume (Stop, interpretResumableH, resume, resume_, runStop, stop, type (!))
+import Polysemy.Resume (Stop, interpretResumableH, resumeHoist, resume_, runStop, stop, type (!))
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds(Seconds), Time, TimeUnit)
 
+import Polysemy.Hasql (HasqlConnection)
 import qualified Polysemy.Hasql.Data.Database as Database
-import Polysemy.Hasql.Data.Database (Database(..))
+import Polysemy.Hasql.Data.Database (Database(..), InitDb(InitDb), hoistInitDb)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.Session (runSession)
 import Polysemy.Hasql.Statement (plain)
-import Polysemy.Hasql.Table (initTable)
+import Polysemy.Internal.Tactics (liftT)
 
 retryingSql ::
   TimeUnit t =>
@@ -28,7 +29,7 @@ retryingSql ::
   SqlCode ->
   Sem r ()
 retryingSql interval =
-  Database.retrying Nothing interval () . plain
+  Database.runStatementRetrying interval () . plain
 
 retryingSqlDef ::
   Member Database r =>
@@ -37,89 +38,87 @@ retryingSqlDef ::
 retryingSqlDef =
   retryingSql (Seconds 3)
 
-initOnReconnect ::
-  Members [AtomicState Bool, Stop DbError, Embed IO] r =>
-  Connection ->
-  TableStructure ->
-  Sem r ()
-initOnReconnect connection table =
-  whenM atomicGet do
-    initTable connection table
-    atomicPut False
-
 connect ::
-  Members [DbConnection Connection ! DbConnectionError, AtomicState Bool, Stop DbError, Embed IO] r =>
-  (Connection -> Sem r ()) ->
+  Members [HasqlConnection, AtomicState (Map Text Int), Stop DbError, Embed IO] r =>
+  InitDb (Sem r) ->
   Sem r Connection
-connect init' = do
-  connection <- resume DbConnection.connect \ err -> atomicPut True *> stop (DbError.Connection err)
-  connection <$ whenM atomicGet do
-    init' connection
-    atomicPut False
-
-connectTable ::
-  Members [DbConnection Connection ! DbConnectionError, AtomicState Bool, Stop DbError, Embed IO] r =>
-  Maybe TableStructure ->
-  Sem r Connection
-connectTable table =
-  connect (\ connection -> traverse_ (initTable connection) table)
+connect (InitDb clientId initDb) =
+  resumeHoist DbError.Connection do
+    DbConnection.use \ count connection -> do
+      whenM (reconnected count <$> atomicGets (Map.lookup clientId)) do
+        raise (initDb connection)
+        atomicModify' (at clientId ?~ count)
+      pure connection
+  where
+    reconnected count = \case
+      Just prev -> prev /= count
+      Nothing -> True
 
 resetConnection ::
-  Members [DbConnection c ! e, AtomicState Bool, Stop DbError] r =>
+  Members [DbConnection c ! e, Stop DbError] r =>
   DbError ->
   Sem r a
 resetConnection err = do
-  atomicPut True
   resume_ DbConnection.reset
   stop err
 
 connectWithReset ::
-  Members [DbConnection Connection ! DbConnectionError, AtomicState Bool, Time t dt, Stop DbError, Embed IO] r =>
-  Maybe TableStructure ->
+  Members [HasqlConnection, AtomicState (Map Text Int), Time t dt, Stop DbError, Embed IO] r =>
+  InitDb (Sem r) ->
   q ->
   Statement q o ->
   Sem r o
-connectWithReset table q statement = do
-  connection <- connectTable table
+connectWithReset initDb q statement = do
+  connection <- connect initDb
   traverseLeft resetConnection =<< runSession connection (Session.statement q statement)
-{-# INLINE connectWithReset #-}
 
 retrying ::
   TimeUnit u =>
-  Members [DbConnection Connection ! DbConnectionError, AtomicState Bool, Time t d, Stop DbError, Embed IO] r =>
-  Maybe TableStructure ->
+  Members [HasqlConnection, AtomicState (Map Text Int), Time t d, Stop DbError, Embed IO] r =>
+  InitDb (Sem r) ->
   u ->
   q ->
   Statement q o ->
   Sem r o
-retrying table interval q statement =
-  traverseLeft recurseOnConnectionError =<< runStop (connectWithReset table q statement)
+retrying initDb interval q statement =
+  traverseLeft recurseOnConnectionError =<< runStop (connectWithReset (hoistInitDb raise initDb) q statement)
   where
     recurseOnConnectionError = \case
       DbError.Connection _ -> do
         resume_ DbConnection.reset
         Time.sleep interval
-        retrying table interval q statement
+        retrying initDb interval q statement
       e ->
         stop e
-{-# INLINE retrying #-}
 
 interpretDatabaseState ::
   ∀ t dt r .
-  Members [DbConnection Connection ! DbConnectionError, AtomicState Bool, Time t dt, Embed IO] r =>
+  Members [HasqlConnection, AtomicState (Map Text Int), Time t dt, Embed IO] r =>
+  InitDb (Sem r) ->
   InterpreterFor (Database ! DbError) r
-interpretDatabaseState =
+interpretDatabaseState initDb =
   interpretResumableH \case
-    Run table q statement ->
-      pureT =<< connectWithReset table q statement
-    Retrying table interval q statement ->
-      pureT =<< retrying table interval q statement
+    Info ->
+      liftT $ resumeHoist DbError.Connection DbConnection.info
+    WithInit (InitDb clientId initDbThunk) ma -> do
+      s <- getInitialStateT
+      ins <- getInspectorT
+      initDbT <- bindT initDbThunk
+      let initDbT' c = fold . inspect ins <$> interpretDatabaseState def (initDbT (c <$ s))
+      raise . interpretDatabaseState (InitDb clientId initDbT') =<< runT ma
+    Connect f -> do
+      connection <- liftT (connect (hoistInitDb raise initDb))
+      bindTSimple f connection
+    RunStatement q statement ->
+      pureT =<< connectWithReset (hoistInitDb (raise . raise) initDb) q statement
+    RunStatementRetrying interval q statement ->
+      pureT =<< retrying (hoistInitDb (raise . raise) initDb) interval q statement
 {-# INLINE interpretDatabaseState #-}
 
 interpretDatabase ::
   ∀ t dt r .
-  Members [DbConnection Connection ! DbConnectionError, Time t dt, Embed IO] r =>
+  Members [HasqlConnection, Time t dt, Embed IO] r =>
   InterpreterFor (Database ! DbError) r
 interpretDatabase =
-  interpretAtomic True . interpretDatabaseState . raiseUnder
+  interpretAtomic mempty . interpretDatabaseState def . raiseUnder
 {-# INLINE interpretDatabase #-}

@@ -10,6 +10,7 @@ let
     configuration = { pkgs, ... }: {
       virtualisation = {
         diskImage = image;
+        diskSize = 4096;
         qemu.networkingOptions = [
           "-net nic,netdev=user.0,model=virtio"
           "-netdev user,id=user.0,hostfwd=tcp::${toString port}-:${toString port},hostfwd=tcp::10022-:22"
