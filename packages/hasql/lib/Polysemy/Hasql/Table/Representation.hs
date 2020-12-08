@@ -117,6 +117,8 @@ type family ExplicitColumn (dt :: *) (rep :: *) (rn :: Symbol) (d :: *) (dn :: S
     Flatten (ProdColumn (ProdCode (ExplicitSum d rep)))
   ExplicitColumn _ (Enum rep) _ _ _ =
     Enum rep
+  ExplicitColumn _ Auto _ d _ =
+    Rep d
   ExplicitColumn _ rep _ _ _ =
     rep
 
@@ -150,6 +152,8 @@ type family GenExplicitSum (dt :: *) (repss :: [[*]]) (rns :: Names) (dss :: [[*
   GenExplicitSum dt _ _ _ _ = CtorMismatch dt
 
 type family ExplicitSum (dt :: *) (rep :: *) :: [[*]] where
+  ExplicitSum dt Auto =
+    ColumnCodess (GCode dt)
   ExplicitSum dt rep =
     GenExplicitSum dt (GCode rep) (FieldNames rep) (GCode dt) (FieldNames dt)
 

@@ -42,3 +42,6 @@ data UidRep i a =
      payload :: Flatten a
   }
   deriving (Eq, Show, Generic)
+
+type UuidRep a =
+  UidRep (Prim Auto) a

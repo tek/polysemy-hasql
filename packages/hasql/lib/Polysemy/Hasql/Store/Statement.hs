@@ -40,7 +40,7 @@ delete ::
   ∀ d q e r .
   StatementEffects q e r d =>
   q ->
-  Sem r ()
+  Sem r [d]
 delete q =
   runStatement (restop Schema.delete) q
 

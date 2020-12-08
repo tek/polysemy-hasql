@@ -33,8 +33,9 @@ interpretStoreAtomicState getId =
       where
         mod' a =
           d : filter (\ d' -> getId d /= getId d') a
-    Delete id' ->
-      atomicModify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+    Delete id' -> do
+      result <- atomicGets @(StrictStore d) (views records (filter ((id' ==) . getId)))
+      nonEmpty result <$ atomicModify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
     Fetch id' ->
       atomicGets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
@@ -62,7 +63,6 @@ interpretStoreAtomic getId init' sem = do
 interpretStoreUidAtomic ::
   ∀ d i r .
   Eq i =>
-  Eq d =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
   InterpreterFor (Store i (Uid i d)) r
@@ -84,8 +84,9 @@ interpretStoreStrictState getId =
       where
         mod' a =
           d : filter (\ d' -> getId d /= getId d') a
-    Delete id' ->
-      modify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+    Delete id' -> do
+      result <- gets @(StrictStore d) (views records (filter ((id' ==) . getId)))
+      nonEmpty result <$ modify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
     Fetch id' ->
       gets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
@@ -104,7 +105,6 @@ interpretStoreStrict getId init' = do
 interpretStoreUidStrict ::
   ∀ d i r .
   Eq i =>
-  Eq d =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
   InterpreterFor (Store i (Uid i d)) r
@@ -120,7 +120,7 @@ interpretStoreNull =
     Upsert _ ->
       unit
     Delete _ ->
-      unit
+      pure Nothing
     Fetch _ ->
       pure Nothing
     FetchAll ->

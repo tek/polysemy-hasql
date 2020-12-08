@@ -1,3 +1,5 @@
+-- {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 module Polysemy.Hasql.Test.QueryTest where
 
 import Hasql.Encoders (Params)

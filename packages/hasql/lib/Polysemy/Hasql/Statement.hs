@@ -17,7 +17,7 @@ import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Table.Query.Delete (deleteSql)
 import Polysemy.Hasql.Table.Query.Fragment (addFragment, alterFragment, conflictFragment)
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
-import Polysemy.Hasql.Table.Query.Select (selectColumns)
+import Polysemy.Hasql.Table.Query.Select (assembleColumns, selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
 import Polysemy.Hasql.Table.Query.Text (commaSeparated, commaSeparatedSql)
 import Polysemy.Hasql.Table.ResultShape (ResultShape(resultShape))
@@ -87,21 +87,24 @@ upsert (Table structure row params) =
 deleteWhereSql ::
   QueryTable d q ->
   SqlCode
-deleteWhereSql (QueryTable (Table structure _ _) _ (QueryWhere (SqlCode qw))) =
-  [qt|#{del} where #{qw}|]
+deleteWhereSql (QueryTable (Table structure@(TableStructure _ columns) _ _) _ (QueryWhere (SqlCode qw))) =
+  [qt|#{del} where #{qw} returning #{cols}|]
   where
     SqlCode del =
       deleteSql structure
+    cols =
+      commaSeparated (assembleColumns columns)
 
 deleteWhere ::
-  QueryTable p d ->
-  Statement p ()
+  ResultShape d result =>
+  QueryTable query d ->
+  Statement query result
 deleteWhere table@(QueryTable (Table _ row _) params _) =
   query (deleteWhereSql table) row params
 
 deleteAll ::
   Table d ->
-  Statement () ()
+  Statement () [d]
 deleteAll (Table structure row _) =
   query (deleteSql structure) row noParams
 

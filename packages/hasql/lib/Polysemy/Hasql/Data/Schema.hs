@@ -8,6 +8,6 @@ data Schema q d :: Effect where
   FetchAll :: Schema q d m (Statement () [d])
   Insert :: Schema q d m (Statement d ())
   Upsert :: Schema q d m (Statement d ())
-  Delete :: Schema q d m (Statement q ())
+  Delete :: Schema q d m (Statement q [d])
 
 makeSem ''Schema

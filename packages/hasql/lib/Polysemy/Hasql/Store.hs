@@ -40,7 +40,7 @@ interpretStoreDb =
     Store.Upsert record ->
       upsert record
     Store.Delete id' ->
-      delete id'
+      nonEmpty <$> delete id'
     Store.Fetch id' ->
       fetch id'
     Store.FetchAll ->
@@ -59,11 +59,11 @@ interpretStoreDbAs' toD fromD fromQ =
     Store.Upsert record ->
       restop (Store.upsert (fromD record))
     Store.Delete id' ->
-      restop (Store.delete (fromQ id'))
+      restop (fmap (fmap toD) <$> Store.delete (fromQ id'))
     Store.Fetch id' ->
       restop (fmap toD <$> Store.fetch (fromQ id'))
     Store.FetchAll ->
-      restop ((fmap . fmap) toD <$> Store.fetchAll)
+      restop (fmap (fmap toD) <$> Store.fetchAll)
 
 interpretStoreDbAs ::
   Members [Schema qIn dIn ! e, ManagedTable dIn ! e] r =>
