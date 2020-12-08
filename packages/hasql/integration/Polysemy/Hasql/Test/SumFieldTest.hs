@@ -1,4 +1,5 @@
-{-# OPTIONS_GHC -Wno-all #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 module Polysemy.Hasql.Test.SumFieldTest where
 
 import Generics.SOP (I, NP, NS)
@@ -6,10 +7,7 @@ import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
-import Hasql.Session (QueryError)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Db.SOP.Constraint (DataName)
-import Polysemy.Resource (Resource)
 import Polysemy.Resume (Stop, restop, resumeEither, type (!))
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
@@ -28,13 +26,11 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import Polysemy.Db.Data.TableStructure (Column, TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid, Uid(Uid))
-import Polysemy.Db.Random (Random)
 import Polysemy.Hasql (HasqlConnection)
-import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Hasql.ManagedTable (interpretManagedTable, interpretManagedTableGen)
+import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
@@ -270,9 +266,7 @@ sumTest ::
   ∀ rep d r .
   Eq d =>
   Show d =>
-  DataName d =>
   Members (Hedgehog IO : TestStoreDeps) r =>
-  Member (Embed IO) r =>
   GenQueryTable rep UuidQuery d =>
   d ->
   Sem r ()

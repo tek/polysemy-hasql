@@ -12,8 +12,9 @@ import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Input (Input(Input))
 import Polysemy.Output (Output(Output))
 import Polysemy.Resource (Resource, bracket)
-import Polysemy.Resume (Stop, runStop, stopEither, stopEitherWith, stopNote)
+import Polysemy.Resume (Stop, interpretResumable, restop, resume_, runStop, stopEither, stopEitherWith, stopNote, type (!))
 import Polysemy.Tagged (Tagged, tag)
+import Polysemy.Time (Seconds(Seconds), Time)
 
 import Control.Concurrent (threadWaitRead)
 import Control.Concurrent.STM.TBMQueue (TBMQueue, newTBMQueueIO, readTBMQueue, writeTBMQueue)
@@ -24,9 +25,6 @@ import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSql, retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Resume (interpretResumable, restop, resume_, type (!))
-import qualified Polysemy.Time as Time
-import Polysemy.Time (Seconds(Seconds), Time)
 
 tryDequeue ::
   FromJSON d =>
@@ -66,7 +64,6 @@ dequeue ::
 dequeue queue = do
   restop $ Database.withInit (InitDb [qt|dequeue-#{symbolText @queue}|] (\ _ -> listen @queue)) do
     Database.connect \ connection -> do
-      Time.sleep (Seconds 1)
       result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
       d <- stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result
       traverse_ (embed . atomically . writeTBMQueue queue) d
