@@ -9,6 +9,7 @@ import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import Polysemy.Output (Output(Output))
 import Polysemy.Tagged (Tagged, tag)
 import Polysemy.Time (Seconds(Seconds), Time)
+import GHC.TypeLits (AppendSymbol)
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.SOP.Constraint (symbolText)
@@ -38,24 +39,27 @@ interpretOutputDbQueue =
             [qt|notify "#{symbolText @queue}", '#{id'}'|]
 
 interpretOutputDbQueueFull ::
-  ∀ (conn :: Symbol) d t dt r .
-  KnownSymbol conn =>
+  ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
+  KnownSymbol queue =>
   Members [Tagged conn HasqlConnection, UuidStore d ! DbError, Time t dt, Embed IO] r =>
   InterpreterFor (Output (Uuid d) ! QueueOutputError) r
 interpretOutputDbQueueFull =
   tag @conn @HasqlConnection .
   interpretDatabase .
-  interpretOutputDbQueue @conn .
+  interpretOutputDbQueue @queue .
   raiseUnder2
 
+type Conn queue =
+  AppendSymbol queue "-output"
+
 interpretOutputDbQueueFullGen ::
-  ∀ (conn :: Symbol) d t dt r .
-  KnownSymbol conn =>
+  ∀ (queue :: Symbol) d t dt r .
+  KnownSymbol queue =>
   GenQueryTable (UuidRep Auto) (IdQuery UUID) (Uuid d) =>
-  Members [Tagged conn HasqlConnection, Database ! DbError, Time t dt, Embed IO] r =>
+  Members [Tagged (QueueName queue) HasqlConnection, Database ! DbError, Time t dt, Embed IO] r =>
   InterpreterFor (Output (Uuid d) ! QueueOutputError) r
 interpretOutputDbQueueFullGen =
   interpretStoreDbFullGenUid @Auto @(Prim Auto) .
   raiseUnder2 .
-  interpretOutputDbQueueFull .
+  interpretOutputDbQueueFull @queue @(QueueName queue) .
   raiseUnder

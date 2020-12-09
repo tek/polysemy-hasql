@@ -1,11 +1,11 @@
 module Polysemy.Hasql.Queue.Input where
 
-import Prelude hiding (group)
 import Control.Concurrent (threadWaitRead)
 import qualified Control.Concurrent.Async as Concurrent
 import Control.Concurrent.STM.TBMQueue (TBMQueue, closeTBMQueue, newTBMQueueIO, readTBMQueue, writeTBMQueue)
 import qualified Data.UUID as UUID
 import qualified Database.PostgreSQL.LibPQ as LibPQ
+import GHC.TypeLits (AppendSymbol)
 import Hasql.Connection (withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
@@ -20,6 +20,7 @@ import Polysemy.Input (Input(Input))
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Tagged (Tagged, tag)
 import Polysemy.Time (Time)
+import Prelude hiding (group)
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.SOP.Constraint (symbolText)
@@ -135,27 +136,30 @@ interpretInputDbQueueListen errorHandler sem =
     acquire =
       dequeueThread @queue errorHandler
 
+type Conn queue =
+  AppendSymbol queue "-input"
+
 interpretInputDbQueueFull ::
-  ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [Tagged conn HasqlConnection, UuidStore d ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [Tagged (Conn queue) HasqlConnection, UuidStore d ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe (Uuid d))) r
 interpretInputDbQueueFull errorHandler =
-  tag @conn @HasqlConnection .
+  tag @(Conn queue) @HasqlConnection .
   interpretDatabase .
   interpretInputDbQueueListen @queue (raise . raise . errorHandler) .
   raiseUnder2
 
 interpretInputDbQueueFullGen ::
-  ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
   GenQueryTable (UuidRep Auto) (IdQuery UUID) (Uuid d) =>
-  Members [Tagged conn HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe (Uuid d))) r
 interpretInputDbQueueFullGen errorHandler =
   interpretStoreDbFullGenUid @Auto @(Prim Auto) .
   raiseUnder2 .
-  interpretInputDbQueueFull @queue @conn (raise . errorHandler) .
+  interpretInputDbQueueFull @queue (raise . errorHandler) .
   raiseUnder
