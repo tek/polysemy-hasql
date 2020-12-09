@@ -19,7 +19,7 @@ import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Schema.Generic (interpretSchema)
-import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, insert, upsert)
+import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, deleteAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 type StoreStack qOut dOut qIn dIn =
@@ -39,6 +39,8 @@ interpretStoreDb =
       upsert record
     Store.Delete id' ->
       nonEmpty <$> delete id'
+    Store.DeleteAll ->
+      nonEmpty <$> deleteAll
     Store.Fetch id' ->
       fetch id'
     Store.FetchAll ->
@@ -58,6 +60,8 @@ interpretStoreDbAs' toD fromD fromQ =
       restop (Store.upsert (fromD record))
     Store.Delete id' ->
       restop (fmap (fmap toD) <$> Store.delete (fromQ id'))
+    Store.DeleteAll ->
+      restop (fmap (fmap toD) <$> Store.deleteAll)
     Store.Fetch id' ->
       restop (fmap toD <$> Store.fetch (fromQ id'))
     Store.FetchAll ->
@@ -71,28 +75,6 @@ interpretStoreDbAs ::
   InterpreterFor (Store qOut dOut ! e) r
 interpretStoreDbAs toD fromD fromQ =
   interpretStoreDb . interpretStoreDbAs' toD fromD fromQ . raiseUnder
-
-dbConnectionError ::
-  ∀ e q d r .
-  Member (Stop e) r =>
-  e ->
-  InterpreterFor (Store q d) r
-dbConnectionError err =
-  interpret \case
-    Store.Insert _ ->
-      storeError
-    Store.Upsert _ ->
-      storeError
-    Store.Delete _ ->
-      storeError
-    Store.Fetch _ ->
-      storeError
-    Store.FetchAll ->
-      storeError
-    where
-      storeError :: Sem r a
-      storeError =
-        stop err
 
 type StoreDeps t dt =
   [Database ! DbError, Time t dt, Embed IO]

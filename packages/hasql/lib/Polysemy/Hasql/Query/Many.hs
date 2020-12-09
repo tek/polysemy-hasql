@@ -35,7 +35,6 @@ interpretManyAsList ::
 interpretManyAsList =
   interpretManyAs id
 
--- TODO Managed
 interpretManyGenAs ::
   ∀ dIn dOut rep qOut qIn e r .
   GenQueryTable rep qIn dIn =>

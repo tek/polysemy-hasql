@@ -20,6 +20,8 @@ interpretSchema qTable@(QueryTable table@(Table structure row _) _ _) =
       Statement.upsert table
     Delete ->
       Statement.deleteWhere qTable
+    DeleteAll ->
+      Statement.deleteAll table
 
 interpretSchemaSingleton ::
   Table d ->
@@ -35,4 +37,6 @@ interpretSchemaSingleton table@(Table structure row _) =
     Upsert ->
       Statement.insert table
     Delete ->
+      Statement.deleteAll table
+    DeleteAll ->
       Statement.deleteAll table

@@ -448,12 +448,6 @@ data Dat2Rep =
   }
   deriving (Eq, Show, Generic)
 
--- TODO connectionWithInit only runs one init on connect, so the second table isn't created.
--- need to have:
--- * a counter in DbConnection
--- * one in ManagedTable for comparison
--- * higher-order action instead of connectWithInit, which is used from ManagedTable
---   maybe use 'Stop' to shortcircuit back from DbConnection to ManagedTable? doesn't help with reconnect though
 test_multiSum :: UnitTest
 test_multiSum =
   integrationTest do

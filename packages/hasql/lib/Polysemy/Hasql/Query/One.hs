@@ -24,7 +24,6 @@ interpretOneAs fromQ toD table =
     Basic params ->
       fmap toD <$> restop (ManagedTable.runStatement (fromQ params) (selectWhere table))
 
--- TODO Managed
 interpretOneGenAs ::
   ∀ rep qOut qIn dIn dOut e r .
   GenQueryTable rep qIn dIn =>

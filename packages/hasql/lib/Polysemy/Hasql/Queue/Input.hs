@@ -39,9 +39,9 @@ tryDequeue connection =
   LibPQ.notifies connection >>= \case
     Just (LibPQ.Notify _ _ payload) ->
       case UUID.fromASCIIBytes payload of
-        Just d -> do
+        Just d ->
           pure (Right (Just d))
-        Nothing -> do
+        Nothing ->
           pure (Left [qt|invalid UUID payload: #{payload}|])
     Nothing ->
       LibPQ.socket connection >>= \case
@@ -66,7 +66,18 @@ processMessages ::
 processMessages =
   fmap Queued.queue_payload . NonEmpty.sortWith Queued.queue_created
 
--- TODO in the init thunk that calls 'listen', dequeue all currently present messages
+initQueue ::
+  ∀ (queue :: Symbol) e d t r .
+  Ord t =>
+  KnownSymbol queue =>
+  Members [Store UUID (Queued t d) ! e, Database ! e, Stop e, Embed IO] r =>
+  (d -> Sem r ()) ->
+  Sem r ()
+initQueue write = do
+  waiting <- resumeAs Nothing Store.deleteAll
+  traverse_ (traverse_ write . processMessages) waiting
+  listen @queue
+
 dequeue ::
   ∀ (queue :: Symbol) d t dt r .
   Ord t =>
@@ -74,14 +85,17 @@ dequeue ::
   Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Embed IO] r =>
   TBMQueue d ->
   Sem (Stop DbError : r) ()
-dequeue queue = do
-  restop @_ @Database $ Database.withInit (InitDb [qt|dequeue-#{symbolText @queue}|] (\ _ -> listen @queue)) do
+dequeue queue =
+  restop @_ @Database $ Database.withInit (InitDb [qt|dequeue-#{symbolText @queue}|] (\ _ -> initQueue @queue write)) do
     Database.connect \ connection -> do
       result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
       void $ runMaybeT do
         id' <- MaybeT (stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result)
         messages <- MaybeT (restop (Store.delete id'))
-        lift (traverse_ (atomically . writeTBMQueue queue) (processMessages messages))
+        lift (traverse_ write (processMessages messages))
+  where
+    write =
+      atomically . writeTBMQueue queue
 
 dequeueLoop ::
   ∀ (queue :: Symbol) d t dt r .

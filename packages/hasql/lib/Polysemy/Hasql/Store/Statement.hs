@@ -25,23 +25,30 @@ insert ::
   StatementEffects q e r d =>
   d ->
   Sem r ()
-insert record =
-  runStatement (restop Schema.insert) record
+insert =
+  runStatement (restop Schema.insert)
 
 upsert ::
   StatementEffects q e r d =>
   d ->
   Sem r ()
-upsert record =
-  runStatement (restop Schema.upsert) record
+upsert =
+  runStatement (restop Schema.upsert)
 
 delete ::
   ∀ d q e r .
   StatementEffects q e r d =>
   q ->
   Sem r [d]
-delete q =
-  runStatement (restop Schema.delete) q
+delete =
+  runStatement (restop Schema.delete)
+
+deleteAll ::
+  ∀ d q e r .
+  StatementEffects q e r d =>
+  Sem r [d]
+deleteAll =
+  runStatement (restop Schema.deleteAll) ()
 
 fetch ::
   ∀ d q e r .

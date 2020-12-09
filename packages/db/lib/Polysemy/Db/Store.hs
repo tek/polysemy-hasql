@@ -1,6 +1,7 @@
 module Polysemy.Db.Store where
 
 import Control.Lens (view, views)
+import Polysemy.AtomicState (atomicState')
 
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store(..), UidStore)
@@ -12,7 +13,7 @@ newtype StrictStore a =
     _records :: [a]
   }
   deriving (Eq, Show, Generic)
-  deriving newtype(Default, Functor, Applicative)
+  deriving newtype (Default, Functor, Applicative, Semigroup, Monoid)
 
 makeClassy ''StrictStore
 
@@ -34,6 +35,8 @@ interpretStoreAtomicState getId =
     Delete id' -> do
       result <- atomicGets @(StrictStore d) (views records (filter ((id' ==) . getId)))
       nonEmpty result <$ atomicModify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+    DeleteAll -> do
+      atomicState' @(StrictStore d) \ (StrictStore ds) -> (mempty, nonEmpty ds)
     Fetch id' ->
       atomicGets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
@@ -85,6 +88,8 @@ interpretStoreStrictState getId =
     Delete id' -> do
       result <- gets @(StrictStore d) (views records (filter ((id' ==) . getId)))
       nonEmpty result <$ modify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+    DeleteAll -> do
+      gets @(StrictStore d) (nonEmpty . _records) <* put @(StrictStore d) mempty
     Fetch id' ->
       gets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
@@ -119,6 +124,8 @@ interpretStoreNull =
       unit
     Delete _ ->
       pure Nothing
+    DeleteAll ->
+      pure Nothing
     Fetch _ ->
       pure Nothing
     FetchAll ->
@@ -139,16 +146,6 @@ fetchPayload ::
   Sem r (Maybe d)
 fetchPayload =
   fmap (fmap Uid._payload) . Store.fetch @i @(Uid i d)
-
--- TODO remove, seems pointless with 'Stop'
-fetchPayloadAs ::
-  ∀ i e' e d r .
-  Members [UidStore i d ! e', Stop e] r =>
-  (e' -> e) ->
-  i ->
-  Sem r (Maybe d)
-fetchPayloadAs liftError id' =
-  fmap Uid._payload <$> resumeHoist @_ @_ @(UidStore i d) liftError (Store.fetch @i @(Uid i d) id')
 
 fetchPayloadShow ::
   ∀ i e' e d r .

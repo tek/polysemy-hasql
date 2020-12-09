@@ -55,8 +55,6 @@ interpretOutputDbQueueFull =
 type Conn queue =
   AppendSymbol queue "-output"
 
--- TODO this needs to use a specialized type instead of Uid, since the payload may be using Uid as well, creating a
--- clash. furthermore, this wrapping type should not be in the Output type
 interpretOutputDbQueueFullGen ::
   ∀ (queue :: Symbol) rep d t dt r .
   KnownSymbol queue =>
