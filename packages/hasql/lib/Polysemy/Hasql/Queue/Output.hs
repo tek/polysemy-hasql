@@ -56,10 +56,10 @@ interpretOutputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
   GenQueryTable (UuidRep Auto) (IdQuery UUID) (Uuid d) =>
-  Members [Tagged (QueueName queue) HasqlConnection, Database ! DbError, Time t dt, Embed IO] r =>
+  Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Embed IO] r =>
   InterpreterFor (Output (Uuid d) ! QueueOutputError) r
 interpretOutputDbQueueFullGen =
   interpretStoreDbFullGenUid @Auto @(Prim Auto) .
   raiseUnder2 .
-  interpretOutputDbQueueFull @queue @(QueueName queue) .
+  interpretOutputDbQueueFull @queue @(Conn queue) .
   raiseUnder
