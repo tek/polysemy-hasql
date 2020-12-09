@@ -1,3 +1,5 @@
+{-# options_ghc -Wno-redundant-constraints #-}
+
 module Polysemy.Hasql.Table.ColumnType where
 
 import qualified Chronos as Chronos
@@ -22,6 +24,7 @@ instance GCode a ~ ('[] : cs) => GenColumnType a ('[] : cs) where
   genColumnType =
     "text"
 
+-- Coercible needed to prevent single field data from being unwrapped
 instance (Coercible c a, GCode a ~ '[ '[c]], ColumnType c) => GenColumnType a '[ '[c]] where
   genColumnType =
     columnType @c
