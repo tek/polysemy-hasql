@@ -1,15 +1,15 @@
 module Polysemy.Hasql.Queue.Output where
 
-import Prelude hiding (group)
-import Polysemy.Db.Data.Column (Auto, Prim, UuidRep)
-import Polysemy.Db.Data.IdQuery (IdQuery)
+import GHC.TypeLits (AppendSymbol)
+import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (UuidStore)
-import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
+import Polysemy.Db.Data.Store (Store)
+import Polysemy.Db.Random (Random, random)
 import Polysemy.Output (Output(Output))
 import Polysemy.Tagged (Tagged, tag)
+import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds(Seconds), Time)
-import GHC.TypeLits (AppendSymbol)
+import Prelude hiding (group)
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.SOP.Constraint (symbolText)
@@ -19,30 +19,33 @@ import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
+import Polysemy.Hasql.Queue.Data.Queued (Queued(Queued), QueuedRep)
+import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 
 interpretOutputDbQueue ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [UuidStore d ! DbError, Database ! DbError, Time t dt, Embed IO] r =>
-  InterpreterFor (Output (Uuid d) ! QueueOutputError) r
+  Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Random, Embed IO] r =>
+  InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueue =
   interpretResumable \case
-    Output d@(Uid id' _) -> do
+    Output d -> do
+      id' <- random
+      created <- Time.now
       resumeHoist QueueOutputError.Insert do
-        Store.insert d
+        Store.insert (Queued id' created d)
       resumeHoist QueueOutputError.Notify do
-        Database.retryingSql (Seconds 3) sql
+        Database.retryingSql (Seconds 3) (sql id')
         where
-          sql =
+          sql id' =
             [qt|notify "#{symbolText @queue}", '#{id'}'|]
 
 interpretOutputDbQueueFull ::
   ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [Tagged conn HasqlConnection, UuidStore d ! DbError, Time t dt, Embed IO] r =>
-  InterpreterFor (Output (Uuid d) ! QueueOutputError) r
+  Members [Tagged conn HasqlConnection, Store UUID (Queued t d) ! DbError, Time t dt, Random, Embed IO] r =>
+  InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueueFull =
   tag @conn @HasqlConnection .
   interpretDatabase .
@@ -52,14 +55,16 @@ interpretOutputDbQueueFull =
 type Conn queue =
   AppendSymbol queue "-output"
 
+-- TODO this needs to use a specialized type instead of Uid, since the payload may be using Uid as well, creating a
+-- clash. furthermore, this wrapping type should not be in the Output type
 interpretOutputDbQueueFullGen ::
-  ∀ (queue :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) rep d t dt r .
   KnownSymbol queue =>
-  GenQueryTable (UuidRep Auto) (IdQuery UUID) (Uuid d) =>
-  Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Embed IO] r =>
-  InterpreterFor (Output (Uuid d) ! QueueOutputError) r
+  GenQueryTable (QueuedRep rep) (IdQuery UUID) (Queued t d) =>
+  Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Random, Embed IO] r =>
+  InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueueFullGen =
-  interpretStoreDbFullGenUid @Auto @(Prim Auto) .
+  interpretStoreDbFullGenAs @(QueuedRep rep) @(Queued t d) id id IdQuery .
   raiseUnder2 .
   interpretOutputDbQueueFull @queue @(Conn queue) .
   raiseUnder

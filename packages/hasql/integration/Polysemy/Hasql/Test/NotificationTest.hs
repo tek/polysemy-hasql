@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Test.NotificationTest where
 
 import Polysemy.Async (asyncToIOFinal)
+import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.Uid (Uuid, intUuid)
 import Polysemy.Input (Input, input)
 import Polysemy.Output (Output, output)
@@ -49,7 +50,7 @@ test_notification =
     mapStop @QueueOutputError @Text show $
     interpretTimeGhc $
     (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
-    (interpretDbConnection "test-queue" conf . untag @"test-queue") $
-    interpretOutputDbQueueFullGen @"test-queue" $
-    interpretInputDbQueueFullGen @"test-queue" @"test-queue-input" (\ _ -> pure False) $
+    (interpretDbConnection "test-queue-output" conf . untag @"test-queue-output") $
+    interpretOutputDbQueueFullGen @"test-queue" @Auto $
+    interpretInputDbQueueFullGen @"test-queue" @Auto (\ _ -> pure False) $
     prog
