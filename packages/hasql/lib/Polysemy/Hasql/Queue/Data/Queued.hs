@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim)
+import Polysemy.Db.Data.Column (Auto, Json, Prim)
 
 data Queued t a =
   Queued {
@@ -10,11 +10,11 @@ data Queued t a =
   }
   deriving (Eq, Show, Generic)
 
-data QueuedRep r =
+data QueuedRep =
   QueuedRep {
     queue_id :: Prim Auto,
     queue_created :: Prim Auto,
-    queue_payload :: Flatten r
+    queue_payload :: Json Auto
   }
   deriving (Generic)
 

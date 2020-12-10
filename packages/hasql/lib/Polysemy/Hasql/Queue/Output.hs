@@ -1,7 +1,6 @@
 module Polysemy.Hasql.Queue.Output where
 
 import GHC.TypeLits (AppendSymbol)
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Random (Random, random)
@@ -19,7 +18,7 @@ import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Hasql.Queue.Data.Queued (Queued(Queued), QueuedRep)
+import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued(Queued), QueuedRep)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 
@@ -56,13 +55,13 @@ type Conn queue =
   AppendSymbol queue "-output"
 
 interpretOutputDbQueueFullGen ::
-  ∀ (queue :: Symbol) rep d t dt r .
+  ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  GenQueryTable (QueuedRep rep) (IdQuery UUID) (Queued t d) =>
+  GenQueryTable QueuedRep QueueIdQuery (Queued t d) =>
   Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Random, Embed IO] r =>
   InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueueFullGen =
-  interpretStoreDbFullGenAs @(QueuedRep rep) @(Queued t d) id id IdQuery .
+  interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
   raiseUnder2 .
   interpretOutputDbQueueFull @queue @(Conn queue) .
   raiseUnder

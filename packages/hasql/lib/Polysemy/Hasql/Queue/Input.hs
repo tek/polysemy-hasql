@@ -180,15 +180,15 @@ interpretInputDbQueueFull errorHandler =
   raiseUnder2
 
 interpretInputDbQueueFullGen ::
-  ∀ (queue :: Symbol) rep d t dt r .
+  ∀ (queue :: Symbol) d t dt r .
   Ord t =>
   KnownSymbol queue =>
-  GenQueryTable (QueuedRep rep) QueueIdQuery (Queued t d) =>
+  GenQueryTable QueuedRep QueueIdQuery (Queued t d) =>
   Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueFullGen errorHandler =
-  interpretStoreDbFullGenAs @(QueuedRep rep) @(Queued t d) id id QueueIdQuery .
+  interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
   raiseUnder2 .
   interpretInputDbQueueFull @queue (raise . errorHandler) .
   raiseUnder

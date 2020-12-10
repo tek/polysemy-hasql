@@ -130,6 +130,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.ArrayTest
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.InitTest
+      Polysemy.Hasql.Test.JsonTest
       Polysemy.Hasql.Test.NotificationTest
       Polysemy.Hasql.Test.PKTest
       Polysemy.Hasql.Test.QueryTest
