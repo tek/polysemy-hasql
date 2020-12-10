@@ -24,6 +24,7 @@ import Hasql.Decoders (
   int4,
   int8,
   interval,
+  jsonBytes,
   numeric,
   text,
   time,
@@ -33,8 +34,10 @@ import Hasql.Decoders (
   uuid,
   )
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
+import Polysemy.Db.Data.Column (Json)
 import Prelude hiding (Enum, bool)
 
+import qualified Data.Aeson as Aeson
 import Polysemy.Db.Data.Column (Enum, NewtypePrim, Prim)
 import Polysemy.Db.SOP.Constraint (NewtypeCoded)
 import Polysemy.Hasql.SOP.Enum (EnumTable)
@@ -203,6 +206,10 @@ instance ValueDecoder a => RepDecoder (Prim r) a where
 instance EnumTable a => RepDecoder (Enum r) a where
   repDecoder =
     enumDecodeValue
+
+instance FromJSON a => RepDecoder (Json r) a where
+  repDecoder =
+    jsonBytes (mapLeft toText . Aeson.eitherDecodeStrict')
 
 instance (NewtypeCoded a c, ValueDecoder c) => RepDecoder (NewtypePrim r) a where
   repDecoder =

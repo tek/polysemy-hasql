@@ -2,6 +2,8 @@ module Polysemy.Hasql.Database where
 
 import qualified Data.Map.Strict as Map
 import Hasql.Connection (Connection)
+import Hasql.Decoders (Row)
+import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session (statement)
 import Hasql.Statement (Statement)
 import Polysemy (bindT, getInitialStateT, getInspectorT, inspect, runT)
@@ -18,7 +20,8 @@ import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.Session (runSession)
-import Polysemy.Hasql.Statement (plain)
+import Polysemy.Hasql.Statement (plain, query)
+import Polysemy.Hasql.Table.ResultShape (ResultShape)
 import Polysemy.Internal.Tactics (liftT)
 
 retryingSql ::
@@ -36,6 +39,31 @@ retryingSqlDef ::
   Sem r ()
 retryingSqlDef =
   retryingSql (Seconds 3)
+
+retryingQuerySql ::
+  TimeUnit t =>
+  ResultShape d result =>
+  Members [Database ! e, Stop e] r =>
+  t ->
+  SqlCode ->
+  Row d ->
+  Params param ->
+  param ->
+  Sem r result
+retryingQuerySql interval sql row params q =
+  restop (Database.runStatementRetrying interval q (query sql row params))
+
+retryingQuerySqlDef ::
+  ∀ e d param result r .
+  ResultShape d result =>
+  Members [Database ! e, Stop e] r =>
+  SqlCode ->
+  Row d ->
+  Params param ->
+  param ->
+  Sem r result
+retryingQuerySqlDef =
+  retryingQuerySql (Seconds 3)
 
 connect ::
   Members [HasqlConnection, AtomicState (Map Text Int), Stop DbError, Embed IO] r =>

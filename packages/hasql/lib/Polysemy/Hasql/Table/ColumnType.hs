@@ -6,6 +6,7 @@ import qualified Chronos as Chronos
 import Data.Time (Day, DiffTime, LocalTime, TimeOfDay, TimeZone, UTCTime)
 import Generics.SOP.GGP (GCode)
 import Path (Path)
+import Polysemy.Db.Data.Column (Json, JsonB)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Enum, Flatten, NewtypePrim, Prim, Sum)
@@ -48,6 +49,10 @@ instance ColumnType Double where
 instance ColumnType Text where
   columnType =
     "text"
+
+instance ColumnType ByteString where
+  columnType =
+    "bytes"
 
 instance ColumnType UUID where
   columnType =
@@ -120,3 +125,5 @@ type instance UnconsRep (Flatten r : reps) = Multi r reps
 type instance UnconsRep (Prim r : reps) = Single (Prim r) reps
 type instance UnconsRep (NewtypePrim r : reps) = Single (NewtypePrim r) reps
 type instance UnconsRep (Enum r : reps) = Single (Enum r) reps
+type instance UnconsRep (Json r : reps) = Single (Json r) reps
+type instance UnconsRep (JsonB r : reps) = Single (JsonB r) reps

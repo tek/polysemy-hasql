@@ -8,6 +8,7 @@ import Generics.SOP.Type.Metadata (
   FieldInfo,
   demoteFieldInfo,
   )
+import Polysemy.Db.Data.Column (Json)
 
 import Polysemy.Db.Data.Column (Flatten, Sum)
 import Polysemy.Db.Data.TableName (TableName(TableName))
@@ -88,6 +89,12 @@ instance {-# overlappable #-} (
   ) => GenColumn field rep d where
   genColumn =
     genColumnPrim @rep @field @d
+
+instance (
+    BasicColumn rep field d
+  ) => GenColumn field (Json rep) d where
+  genColumn =
+    genColumnBasic @rep @field @d "json" Nothing
 
 instance (
     DataName d,

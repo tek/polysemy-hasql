@@ -36,6 +36,14 @@ data Enum a =
   Enum
   deriving (Eq, Show)
 
+data Json r =
+  Json r
+  deriving (Eq, Show)
+
+data JsonB r =
+  JsonB r
+  deriving (Eq, Show)
+
 data UidRep i a =
   UidRep {
      id :: i,

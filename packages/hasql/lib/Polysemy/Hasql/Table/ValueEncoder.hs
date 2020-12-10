@@ -10,7 +10,7 @@ import Data.Time (
   TimeZone,
   UTCTime,
   )
-import Hasql.Encoders (
+import Hasql.Encoders (jsonBytes, 
   Value,
   bool,
   bytea,
@@ -32,10 +32,12 @@ import Hasql.Encoders (
   uuid,
   )
 import Path (Path, toFilePath)
+import Polysemy.Db.Data.Column (Json)
 import Prelude hiding (Enum, bool)
 
 import Polysemy.Db.Data.Column (Enum, NewtypePrim, Prim)
 import Polysemy.Db.SOP.Constraint (NewtypeCoded)
+import qualified Data.Aeson as Aeson
 
 class ValueEncoder a where
   valueEncoder :: Value a
@@ -176,6 +178,10 @@ instance RepEncoder r a => RepEncoder (Prim r) a where
 instance Show a => RepEncoder (Enum r) a where
   repEncoder =
     enum show
+
+instance ToJSON a => RepEncoder (Json r) a where
+  repEncoder =
+    (toStrict . Aeson.encode) >$< jsonBytes
 
 instance (NewtypeCoded a c, RepEncoder r c) => RepEncoder (NewtypePrim r) a where
   repEncoder =
