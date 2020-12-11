@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queue where
 
 import GHC.TypeLits (AppendSymbol)
+import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery, Queued, QueuedRep)
@@ -30,3 +31,17 @@ type family QueueInput (queue :: Symbol) t d :: Constraint where
 type family QueueOutput (queue :: Symbol) t d :: Constraint where
   QueueOutput queue t d =
     (Ord t, KnownSymbol (OutputConn queue), GenQueryTable QueuedRep QueueIdQuery (Queued t d))
+
+outputQueueName ::
+  ∀ (queue :: Symbol) .
+  KnownSymbol (OutputConn queue) =>
+  Text
+outputQueueName =
+  symbolText @(OutputConn queue)
+
+inputQueueName ::
+  ∀ (queue :: Symbol) .
+  KnownSymbol (InputConn queue) =>
+  Text
+inputQueueName =
+  symbolText @(InputConn queue)
