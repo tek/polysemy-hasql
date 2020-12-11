@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Queue.Output where
 
-import GHC.TypeLits (AppendSymbol)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Random (Random, random)
@@ -18,7 +17,7 @@ import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Hasql.Queue.Data.Queue (Queue)
+import Polysemy.Hasql.Queue.Data.Queue (OutputConn, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued(Queued), QueuedRep)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
 
@@ -41,26 +40,24 @@ interpretOutputDbQueue =
             [qt|notify "#{symbolText @queue}", '#{id'}'|]
 
 interpretOutputDbQueueFull ::
-  ∀ (queue :: Symbol) (conn :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [Tagged conn HasqlConnection, Store UUID (Queued t d) ! DbError, Time t dt, Random, Embed IO] r =>
+  Member (Tagged (OutputConn queue) HasqlConnection) r =>
+  Members [Store UUID (Queued t d) ! DbError, Time t dt, Random, Embed IO] r =>
   InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueueFull =
-  tag @conn @HasqlConnection .
+  tag .
   interpretDatabase .
   interpretOutputDbQueue @queue .
   raiseUnder2
 
-type Conn queue =
-  AppendSymbol queue "-output"
-
 interpretOutputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt r .
   Queue queue t d =>
-  Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Random, Embed IO] r =>
+  Members [Tagged (OutputConn queue) HasqlConnection, Database ! DbError, Time t dt, Random, Embed IO] r =>
   InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueueFullGen =
   interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
   raiseUnder2 .
-  interpretOutputDbQueueFull @queue @(Conn queue) .
+  interpretOutputDbQueueFull @queue .
   raiseUnder

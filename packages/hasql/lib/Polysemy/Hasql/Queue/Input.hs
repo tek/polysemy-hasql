@@ -6,7 +6,6 @@ import Control.Concurrent.STM.TBMQueue (TBMQueue, closeTBMQueue, newTBMQueueIO, 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.UUID as UUID
 import qualified Database.PostgreSQL.LibPQ as LibPQ
-import GHC.TypeLits (AppendSymbol)
 import Hasql.Connection (withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
@@ -28,7 +27,7 @@ import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Hasql.Queue.Data.Queue (Queue)
+import Polysemy.Hasql.Queue.Data.Queue (InputConn, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued, QueuedRep)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued(..))
 import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
@@ -169,21 +168,18 @@ interpretInputDbQueueListen errorDelay errorHandler sem =
     acquire =
       dequeueThread @queue errorDelay errorHandler
 
-type Conn queue =
-  AppendSymbol queue "-input"
-
 interpretInputDbQueueFull ::
   ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Tagged (Conn queue) HasqlConnection, Store UUID (Queued t d) ! DbError, Time t dt, Resource, Async] r =>
+  Members [Tagged (InputConn queue) HasqlConnection, Store UUID (Queued t d) ! DbError, Time t dt, Resource, Async] r =>
   Member (Embed IO) r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueFull errorDelay errorHandler =
-  tag @(Conn queue) @HasqlConnection .
+  tag .
   interpretDatabase .
   interpretInputDbQueueListen @queue errorDelay (raise . raise . errorHandler) .
   raiseUnder2
@@ -192,7 +188,7 @@ interpretInputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt u r .
   TimeUnit u =>
   Queue queue t d =>
-  Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [Tagged (InputConn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
