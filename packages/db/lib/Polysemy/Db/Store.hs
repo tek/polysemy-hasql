@@ -87,6 +87,17 @@ interpretStoreStrictState getId =
     FetchAll ->
       gets @(StrictStore d) $ nonEmpty . view records
 
+interpretStoreTVar ::
+  Eq i =>
+  Member (Embed IO) r =>
+  (d -> i) ->
+  TVar (StrictStore d) ->
+  InterpreterFor (Store i d ! e) r
+interpretStoreTVar getId tvar =
+  runAtomicStateTVar tvar .
+  interpretStoreAtomicState getId .
+  raiseUnder
+
 interpretStoreStrict ::
   ∀ i d e r .
   Eq i =>
@@ -94,8 +105,10 @@ interpretStoreStrict ::
   (d -> i) ->
   StrictStore d ->
   InterpreterFor (Store i d ! e) r
-interpretStoreStrict getId init' = do
-  evalState init' . interpretStoreStrictState getId . raiseUnder
+interpretStoreStrict getId init' =
+  evalState init' .
+  interpretStoreStrictState getId .
+  raiseUnder
 
 interpretStoreUidStrict ::
   ∀ i d e r .
