@@ -15,7 +15,13 @@ type family OutputConn (queue :: Symbol) :: Symbol where
 
 type family Queue (queue :: Symbol) t d :: Constraint where
   Queue queue t d =
-    (Ord t, KnownSymbol queue, GenQueryTable QueuedRep QueueIdQuery (Queued t d))
+    (
+      Ord t,
+      KnownSymbol queue,
+      KnownSymbol (InputConn queue),
+      KnownSymbol (OutputConn queue),
+      GenQueryTable QueuedRep QueueIdQuery (Queued t d)
+    )
 
 type family QueueInput (queue :: Symbol) t d :: Constraint where
   QueueInput queue t d =
