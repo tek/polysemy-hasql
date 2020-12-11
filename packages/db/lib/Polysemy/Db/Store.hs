@@ -144,8 +144,8 @@ fetchPayload ::
   Member (UidStore i d) r =>
   i ->
   Sem r (Maybe d)
-fetchPayload =
-  fmap (fmap Uid._payload) . Store.fetch @i @(Uid i d)
+fetchPayload id' =
+  fmap Uid._payload <$> Store.fetch @i @(Uid i d) id'
 
 fetchPayloadShow ::
   ∀ i e' e d r .
