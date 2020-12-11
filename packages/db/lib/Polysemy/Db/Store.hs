@@ -3,6 +3,7 @@ module Polysemy.Db.Store where
 import Control.Lens (view, views)
 import Polysemy.AtomicState (atomicState')
 
+import Polysemy.Db.Atomic (interpretAtomic)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store(..), UidStore)
 import qualified Polysemy.Db.Data.Uid as Uid
@@ -18,13 +19,13 @@ newtype StrictStore a =
 makeClassy ''StrictStore
 
 interpretStoreAtomicState ::
-  ∀ i d r .
+  ∀ i d e r .
   Eq i =>
   (d -> i) ->
   Member (AtomicState (StrictStore d)) r =>
-  InterpreterFor (Store i d) r
+  InterpreterFor (Store i d ! e) r
 interpretStoreAtomicState getId =
-  interpret \case
+  interpretResumable \case
     Insert d ->
       atomicModify' @(StrictStore d) (over records (d :))
     Upsert d ->
@@ -42,42 +43,33 @@ interpretStoreAtomicState getId =
     FetchAll ->
       atomicGets @(StrictStore d) (nonEmpty . view records)
 
-interpretStoreAtomicWith ::
-  Eq i =>
-  Member (Embed IO) r =>
-  (d -> i) ->
-  TVar (StrictStore d) ->
-  InterpreterFor (Store i d) r
-interpretStoreAtomicWith getId tvar sem =
-  runAtomicStateTVar tvar . interpretStoreAtomicState getId . raiseUnder $ sem
-
 interpretStoreAtomic ::
+  ∀ i d e r .
   Eq i =>
   Member (Embed IO) r =>
   (d -> i) ->
   StrictStore d ->
-  InterpreterFor (Store i d) r
-interpretStoreAtomic getId init' sem = do
-  tvar <- newTVarIO init'
-  interpretStoreAtomicWith getId tvar sem
+  InterpreterFor (Store i d ! e) r
+interpretStoreAtomic getId init' =
+  interpretAtomic init' . interpretStoreAtomicState getId . raiseUnder
 
 interpretStoreUidAtomic ::
-  ∀ d i r .
+  ∀ i d e r .
   Eq i =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
-  InterpreterFor (Store i (Uid i d)) r
+  InterpreterFor (Store i (Uid i d) ! e) r
 interpretStoreUidAtomic =
   interpretStoreAtomic Uid._id
 
 interpretStoreStrictState ::
-  ∀ i d r .
+  ∀ i d e r .
   Eq i =>
   Member (State (StrictStore d)) r =>
   (d -> i) ->
-  InterpreterFor (Store i d) r
+  InterpreterFor (Store i d ! e) r
 interpretStoreStrictState getId =
-  interpret \case
+  interpretResumable \case
     Insert d ->
       modify' @(StrictStore d) (over records (d :))
     Upsert d ->
@@ -96,21 +88,21 @@ interpretStoreStrictState getId =
       gets @(StrictStore d) $ nonEmpty . view records
 
 interpretStoreStrict ::
-  ∀ d i r .
+  ∀ i d e r .
   Eq i =>
   Member (Embed IO) r =>
   (d -> i) ->
   StrictStore d ->
-  InterpreterFor (Store i d) r
+  InterpreterFor (Store i d ! e) r
 interpretStoreStrict getId init' = do
   evalState init' . interpretStoreStrictState getId . raiseUnder
 
 interpretStoreUidStrict ::
-  ∀ d i r .
+  ∀ i d e r .
   Eq i =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
-  InterpreterFor (Store i (Uid i d)) r
+  InterpreterFor (Store i (Uid i d) ! e) r
 interpretStoreUidStrict =
   interpretStoreStrict Uid._id
 
