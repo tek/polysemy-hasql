@@ -18,9 +18,9 @@ import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
+import Polysemy.Hasql.Queue.Data.Queue (Queue)
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued(Queued), QueuedRep)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 
 interpretOutputDbQueue ::
   ∀ (queue :: Symbol) d t dt r .
@@ -56,8 +56,7 @@ type Conn queue =
 
 interpretOutputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt r .
-  KnownSymbol queue =>
-  GenQueryTable QueuedRep QueueIdQuery (Queued t d) =>
+  Queue queue t d =>
   Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Random, Embed IO] r =>
   InterpreterFor (Output d ! QueueOutputError) r
 interpretOutputDbQueueFullGen =

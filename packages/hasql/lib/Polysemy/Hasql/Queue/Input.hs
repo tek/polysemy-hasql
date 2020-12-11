@@ -28,10 +28,10 @@ import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
+import Polysemy.Hasql.Queue.Data.Queue (Queue)
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued, QueuedRep)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued(..))
 import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 
 tryDequeue ::
   LibPQ.Connection ->
@@ -190,10 +190,8 @@ interpretInputDbQueueFull errorDelay errorHandler =
 
 interpretInputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt u r .
-  Ord t =>
   TimeUnit u =>
-  KnownSymbol queue =>
-  GenQueryTable QueuedRep QueueIdQuery (Queued t d) =>
+  Queue queue t d =>
   Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
