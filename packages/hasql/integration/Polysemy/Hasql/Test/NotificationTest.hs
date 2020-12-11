@@ -8,7 +8,7 @@ import Polysemy.Tagged (untag)
 import Polysemy.Test (UnitTest, assertJust)
 import Polysemy.Test.Data.Hedgehog (Hedgehog)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (MilliSeconds(MilliSeconds), Time, interpretTimeGhc)
+import Polysemy.Time (MilliSeconds(MilliSeconds), Seconds(Seconds), Time, interpretTimeGhc)
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
@@ -51,5 +51,5 @@ test_notification =
     (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
     (interpretDbConnection "test-queue-output" conf . untag @"test-queue-output") $
     interpretOutputDbQueueFullGen @"test-queue" $
-    interpretInputDbQueueFullGen @"test-queue" (\ _ -> pure False) $
+    interpretInputDbQueueFullGen @"test-queue" (Seconds 0) (\ _ -> pure False) $
     prog

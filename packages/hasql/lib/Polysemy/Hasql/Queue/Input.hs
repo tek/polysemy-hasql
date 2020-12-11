@@ -17,7 +17,8 @@ import Polysemy.Db.Data.Store (Store)
 import Polysemy.Input (Input(Input))
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Tagged (Tagged, tag)
-import Polysemy.Time (Time)
+import qualified Polysemy.Time as Time
+import Polysemy.Time (Time, TimeUnit)
 import Prelude hiding (group)
 
 import Polysemy.Db.Data.DbError (DbError)
@@ -98,21 +99,23 @@ dequeue queue =
       atomically . writeTBMQueue queue
 
 dequeueLoop ::
-  ∀ (queue :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
+  TimeUnit u =>
   KnownSymbol queue =>
   Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Embed IO] r =>
+  u ->
   (DbError -> Sem r Bool) ->
   TBMQueue d ->
   Sem r ()
-dequeueLoop errorHandler queue =
+dequeueLoop errorDelay errorHandler queue =
   spin
   where
     spin =
       result =<< bitraverse errorHandler pure =<< runStop (dequeue @queue queue)
     result = \case
       Right () -> spin
-      Left True -> spin
+      Left True -> Time.sleep errorDelay >> spin
       Left False -> atomically (closeTBMQueue queue)
 
 interpretInputDbQueue ::
@@ -126,15 +129,17 @@ interpretInputDbQueue queue =
       atomically (readTBMQueue queue)
 
 dequeueThread ::
-  ∀ (queue :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
+  TimeUnit u =>
   KnownSymbol queue =>
   Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Async, Embed IO] r =>
+  u ->
   (DbError -> Sem r Bool) ->
   Sem r (Concurrent.Async (Maybe ()), TBMQueue d)
-dequeueThread errorHandler = do
+dequeueThread errorDelay errorHandler = do
   queue <- embed (newTBMQueueIO 64)
-  handle <- async (dequeueLoop @queue errorHandler queue)
+  handle <- async (dequeueLoop @queue errorDelay errorHandler queue)
   pure (handle, queue)
 
 releaseInputQueue ::
@@ -149,46 +154,52 @@ releaseInputQueue handle _ = do
   resume_ (Database.retryingSqlDef [qt|unlisten "#{symbolText @queue}"|])
 
 interpretInputDbQueueListen ::
-  ∀ (queue :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
+  TimeUnit u =>
   KnownSymbol queue =>
   Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueListen errorHandler sem =
+interpretInputDbQueueListen errorDelay errorHandler sem =
   bracket acquire (uncurry (releaseInputQueue @queue)) \ (_, queue) ->
     interpretInputDbQueue queue sem
   where
     acquire =
-      dequeueThread @queue errorHandler
+      dequeueThread @queue errorDelay errorHandler
 
 type Conn queue =
   AppendSymbol queue "-input"
 
 interpretInputDbQueueFull ::
-  ∀ (queue :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
+  TimeUnit u =>
   KnownSymbol queue =>
   Members [Tagged (Conn queue) HasqlConnection, Store UUID (Queued t d) ! DbError, Time t dt, Resource, Async] r =>
   Member (Embed IO) r =>
+  u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueFull errorHandler =
+interpretInputDbQueueFull errorDelay errorHandler =
   tag @(Conn queue) @HasqlConnection .
   interpretDatabase .
-  interpretInputDbQueueListen @queue (raise . raise . errorHandler) .
+  interpretInputDbQueueListen @queue errorDelay (raise . raise . errorHandler) .
   raiseUnder2
 
 interpretInputDbQueueFullGen ::
-  ∀ (queue :: Symbol) d t dt r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
+  TimeUnit u =>
   KnownSymbol queue =>
   GenQueryTable QueuedRep QueueIdQuery (Queued t d) =>
   Members [Tagged (Conn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueFullGen errorHandler =
+interpretInputDbQueueFullGen errorDelay errorHandler =
   interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
   raiseUnder2 .
-  interpretInputDbQueueFull @queue (raise . errorHandler) .
+  interpretInputDbQueueFull @queue errorDelay (raise . errorHandler) .
   raiseUnder
