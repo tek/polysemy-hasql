@@ -155,7 +155,7 @@ fetchPayloadShow ::
   i ->
   Sem r (Maybe d)
 fetchPayloadShow liftError id' =
-  fmap Uid._payload <$> (resumeHoist @e' @_ @(UidStore i d) (liftError . show) (Store.fetch @i @(Uid i d) id'))
+  fmap Uid._payload <$> (resumeHoist @e' @(UidStore i d) (liftError . show) (Store.fetch @i @(Uid i d) id'))
 
 alter ::
   ∀ i d r .
