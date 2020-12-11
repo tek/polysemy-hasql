@@ -15,19 +15,18 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Input (Input(Input))
 import Polysemy.Resource (Resource, bracket)
-import Polysemy.Tagged (Tagged, tag)
+import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Time, TimeUnit)
 import Prelude hiding (group)
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Hasql (HasqlConnection)
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
-import Polysemy.Hasql.Queue.Data.Queue (InputConn, Queue)
+import Polysemy.Hasql.Queue.Data.Queue (InputQueueConnection, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued, QueuedRep)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued(..))
 import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
@@ -173,7 +172,7 @@ interpretInputDbQueueFull ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Tagged (InputConn queue) HasqlConnection, Store UUID (Queued t d) ! DbError, Time t dt, Resource, Async] r =>
+  Members [InputQueueConnection queue, Store UUID (Queued t d) ! DbError, Time t dt, Resource, Async] r =>
   Member (Embed IO) r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -188,7 +187,7 @@ interpretInputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt u r .
   TimeUnit u =>
   Queue queue t d =>
-  Members [Tagged (InputConn queue) HasqlConnection, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [InputQueueConnection queue, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
