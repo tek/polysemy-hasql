@@ -107,7 +107,7 @@ interpretDbConnectionCached name config =
       liftT (atomicModify' (_2 .~ Nothing))
 
 withDisconnect ::
-  Members [DbConnection c ! DbConnectionError, Resource] r =>
+  Members [DbConnection c !! DbConnectionError, Resource] r =>
   Sem r a ->
   Sem r a
 withDisconnect sem =

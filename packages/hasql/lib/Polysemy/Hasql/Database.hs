@@ -43,7 +43,7 @@ retryingSqlDef =
 retryingQuerySql ::
   TimeUnit t =>
   ResultShape d result =>
-  Members [Database ! e, Stop e] r =>
+  Members [Database !! e, Stop e] r =>
   t ->
   SqlCode ->
   Row d ->
@@ -56,7 +56,7 @@ retryingQuerySql interval sql row params q =
 retryingQuerySqlDef ::
   ∀ e d param result r .
   ResultShape d result =>
-  Members [Database ! e, Stop e] r =>
+  Members [Database !! e, Stop e] r =>
   SqlCode ->
   Row d ->
   Params param ->
@@ -82,7 +82,7 @@ connect (InitDb clientId initDb) =
       Nothing -> True
 
 resetConnection ::
-  Members [DbConnection c ! e, Stop DbError] r =>
+  Members [DbConnection c !! e, Stop DbError] r =>
   DbError ->
   Sem r a
 resetConnection err = do
@@ -122,7 +122,7 @@ interpretDatabaseState ::
   ∀ t dt r .
   Members [HasqlConnection, AtomicState (Map Text Int), Time t dt, Embed IO] r =>
   InitDb (Sem r) ->
-  InterpreterFor (Database ! DbError) r
+  InterpreterFor (Database !! DbError) r
 interpretDatabaseState initDb =
   interpretResumableH \case
     Info ->
@@ -145,7 +145,7 @@ interpretDatabaseState initDb =
 interpretDatabase ::
   ∀ t dt r .
   Members [HasqlConnection, Time t dt, Embed IO] r =>
-  InterpreterFor (Database ! DbError) r
+  InterpreterFor (Database !! DbError) r
 interpretDatabase =
   interpretAtomic mempty . interpretDatabaseState def . raiseUnder
 {-# INLINE interpretDatabase #-}

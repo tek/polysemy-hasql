@@ -9,12 +9,12 @@ import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.Schema as Schema
 import Polysemy.Hasql.Data.Schema (Schema(..))
 
-class Members [Schema q d ! e, ManagedTable d ! e, Stop e] r => StatementEffects q e r d where
+class Members [Schema q d !! e, ManagedTable d !! e, Stop e] r => StatementEffects q e r d where
 
-instance Members [Schema q d ! e, ManagedTable d ! e, Stop e] r => StatementEffects q e r d where
+instance Members [Schema q d !! e, ManagedTable d !! e, Stop e] r => StatementEffects q e r d where
 
 runStatement ::
-  Members [ManagedTable d ! e, Stop e] r =>
+  Members [ManagedTable d !! e, Stop e] r =>
   Sem r (Statement q o) ->
   q ->
   Sem r o

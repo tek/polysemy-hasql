@@ -53,7 +53,7 @@ tryDequeue connection =
 listen ::
   ∀ (queue :: Symbol) e r .
   KnownSymbol queue =>
-  Members [Database ! e, Stop e, Embed IO] r =>
+  Members [Database !! e, Stop e, Embed IO] r =>
   Sem r ()
 listen =
   restop (Database.retryingSqlDef [qt|listen "#{symbolText @queue}"|])
@@ -69,7 +69,7 @@ initQueue ::
   ∀ (queue :: Symbol) e d t r .
   Ord t =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) ! e, Database ! e, Stop e, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! e, Database !! e, Stop e, Embed IO] r =>
   (d -> Sem r ()) ->
   Sem r ()
 initQueue write = do
@@ -81,7 +81,7 @@ dequeue ::
   ∀ (queue :: Symbol) d t dt r .
   Ord t =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Embed IO] r =>
   TBMQueue d ->
   Sem (Stop DbError : r) ()
 dequeue queue =
@@ -101,7 +101,7 @@ dequeueLoop ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   TBMQueue d ->
@@ -131,7 +131,7 @@ dequeueThread ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Async, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   Sem r (Concurrent.Async (Maybe ()), TBMQueue d)
@@ -143,7 +143,7 @@ dequeueThread errorDelay errorHandler = do
 releaseInputQueue ::
   ∀ (queue :: Symbol) d e r .
   KnownSymbol queue =>
-  Members [Database ! e, Async, Embed IO] r =>
+  Members [Database !! e, Async, Embed IO] r =>
   Concurrent.Async (Maybe ()) ->
   TBMQueue d ->
   Sem r ()
@@ -156,7 +156,7 @@ interpretInputDbQueueListen ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
@@ -172,7 +172,7 @@ interpretInputDbQueueFull ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [InputQueueConnection queue, Store UUID (Queued t d) ! DbError, Time t dt, Resource, Async] r =>
+  Members [InputQueueConnection queue, Store UUID (Queued t d) !! DbError, Time t dt, Resource, Async] r =>
   Member (Embed IO) r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -187,7 +187,7 @@ interpretInputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt u r .
   TimeUnit u =>
   Queue queue t d =>
-  Members [InputQueueConnection queue, Database ! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [InputQueueConnection queue, Database !! DbError, Time t dt, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r

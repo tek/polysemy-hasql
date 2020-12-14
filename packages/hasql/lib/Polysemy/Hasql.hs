@@ -10,4 +10,4 @@ import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 
 type HasqlConnection =
-  DbConnection Connection ! DbConnectionError
+  DbConnection Connection !! DbConnectionError

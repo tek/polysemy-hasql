@@ -60,7 +60,7 @@ integrationTestWith run =
 
 integrationTest ::
   HasCallStack =>
-  Sem (Database ! DbError : HasqlConnection : TestEffects) () ->
+  Sem (Database !! DbError : HasqlConnection : TestEffects) () ->
   TestT IO ()
 integrationTest thunk =
   withFrozenCallStack do
@@ -68,7 +68,7 @@ integrationTest thunk =
 
 integrationTestWithDb ::
   HasCallStack =>
-  (DbConfig -> Sem (Database ! DbError : HasqlConnection : TestEffects) ()) ->
+  (DbConfig -> Sem (Database !! DbError : HasqlConnection : TestEffects) ()) ->
   TestT IO ()
 integrationTestWithDb thunk =
   withFrozenCallStack do

@@ -14,9 +14,9 @@ import Polysemy.Hasql.Table.TableStructure (GenTableStructure, genTableStructure
 
 interpretManagedTable ::
   ∀ d r .
-  Members [Database ! DbError, Embed IO] r =>
+  Members [Database !! DbError, Embed IO] r =>
   TableStructure ->
-  InterpreterFor (ManagedTable d ! DbError) r
+  InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTable table =
   interpretResumable \case
     ManagedTable.RunStatement q stmt ->
@@ -32,14 +32,14 @@ interpretManagedTable table =
 interpretManagedTableGen ::
   ∀ rep d r .
   GenTableStructure rep d =>
-  Members [Database ! DbError, Embed IO] r =>
-  InterpreterFor (ManagedTable d ! DbError) r
+  Members [Database !! DbError, Embed IO] r =>
+  InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableGen =
   interpretManagedTable (genTableStructure @rep @d)
 
 interpretManagedTableUnmanaged ::
-  Member (Database ! e) r =>
-  InterpreterFor (ManagedTable d ! e) r
+  Member (Database !! e) r =>
+  InterpreterFor (ManagedTable d !! e) r
 interpretManagedTableUnmanaged =
   interpretResumable \case
     ManagedTable.RunStatement q stmt ->

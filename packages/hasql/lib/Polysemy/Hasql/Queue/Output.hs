@@ -23,8 +23,8 @@ import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
 interpretOutputDbQueue ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) ! DbError, Database ! DbError, Time t dt, Random, Embed IO] r =>
-  InterpreterFor (Output d ! QueueOutputError) r
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Random, Embed IO] r =>
+  InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueue =
   interpretResumable \case
     Output d -> do
@@ -42,8 +42,8 @@ interpretOutputDbQueueFull ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
   Member (OutputQueueConnection queue) r =>
-  Members [Store UUID (Queued t d) ! DbError, Time t dt, Random, Embed IO] r =>
-  InterpreterFor (Output d ! QueueOutputError) r
+  Members [Store UUID (Queued t d) !! DbError, Time t dt, Random, Embed IO] r =>
+  InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFull =
   tag .
   interpretDatabase .
@@ -53,8 +53,8 @@ interpretOutputDbQueueFull =
 interpretOutputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt r .
   Queue queue t d =>
-  Members [OutputQueueConnection queue, Database ! DbError, Time t dt, Random, Embed IO] r =>
-  InterpreterFor (Output d ! QueueOutputError) r
+  Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Random, Embed IO] r =>
+  InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =
   interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
   raiseUnder2 .
