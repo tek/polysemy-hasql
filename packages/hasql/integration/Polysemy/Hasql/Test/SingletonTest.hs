@@ -30,7 +30,7 @@ data DatRep =
   deriving (Eq, Show, Generic)
 
 prog ::
-  Members [Store () Dat ! DbError, Stop DbError] r =>
+  Members [Store () Dat !! DbError, Stop DbError] r =>
   Sem r (Dat, Maybe (NonEmpty Dat))
 prog = do
   let a = Dat id' "foo"

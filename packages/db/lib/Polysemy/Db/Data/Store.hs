@@ -20,8 +20,8 @@ type UuidStore d =
 
 type family StoreEffects i e ds :: EffectRow where
   StoreEffects _ _ '[] = '[]
-  StoreEffects i e (d : ds) = (UidStore i d ! e : StoreEffects i e ds)
+  StoreEffects i e (d : ds) = (UidStore i d !! e : StoreEffects i e ds)
 
 type family Stores i e ds r :: Constraint where
   Stores _ _ '[] _ = ()
-  Stores i e (d : ds) r = (Member (UidStore i d ! e) r, Stores i e ds r)
+  Stores i e (d : ds) r = (Member (UidStore i d !! e) r, Stores i e ds r)

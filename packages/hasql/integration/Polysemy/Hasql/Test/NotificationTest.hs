@@ -27,7 +27,7 @@ defaultJson ''Dat
 prog ::
   ∀ oe t dt m r .
   Monad m =>
-  Members [Input (Maybe (Uuid Dat)), Output (Uuid Dat) ! oe, Stop oe, Stop DbError, Time t dt, Hedgehog m] r =>
+  Members [Input (Maybe (Uuid Dat)), Output (Uuid Dat) !! oe, Stop oe, Stop DbError, Time t dt, Hedgehog m] r =>
   Sem r ()
 prog = do
   Time.sleep (MilliSeconds 100)

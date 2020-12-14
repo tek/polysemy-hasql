@@ -23,14 +23,14 @@ import Polysemy.Hasql.Store.Statement (delete, fetch, fetchAll, deleteAll, inser
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 type StoreStack qOut dOut qIn dIn =
-  [Store qOut dOut ! DbError, Schema qIn dIn ! DbError, ManagedTable dIn ! DbError]
+  [Store qOut dOut !! DbError, Schema qIn dIn !! DbError, ManagedTable dIn !! DbError]
 
 type UidStoreStack i d =
   StoreStack i (Uid i d) (IdQuery i) (Uid i d)
 
 interpretStoreDb ::
-  Members [Schema q d ! e, ManagedTable d ! e] r =>
-  InterpreterFor (Store q d ! e) r
+  Members [Schema q d !! e, ManagedTable d !! e] r =>
+  InterpreterFor (Store q d !! e) r
 interpretStoreDb =
   interpretResumable \case
     Store.Insert record ->
@@ -47,11 +47,11 @@ interpretStoreDb =
       nonEmpty <$> fetchAll
 
 interpretStoreDbAs' ::
-  Member (Store qIn dIn ! e) r =>
+  Member (Store qIn dIn !! e) r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
-  InterpreterFor (Store qOut dOut ! e) r
+  InterpreterFor (Store qOut dOut !! e) r
 interpretStoreDbAs' toD fromD fromQ =
   interpretResumable \case
     Store.Insert record ->
@@ -68,16 +68,16 @@ interpretStoreDbAs' toD fromD fromQ =
       restop (fmap (fmap toD) <$> Store.fetchAll)
 
 interpretStoreDbAs ::
-  Members [Schema qIn dIn ! e, ManagedTable dIn ! e] r =>
+  Members [Schema qIn dIn !! e, ManagedTable dIn !! e] r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
-  InterpreterFor (Store qOut dOut ! e) r
+  InterpreterFor (Store qOut dOut !! e) r
 interpretStoreDbAs toD fromD fromQ =
   interpretStoreDb . interpretStoreDbAs' toD fromD fromQ . raiseUnder
 
 type StoreDeps t dt =
-  [Database ! DbError, Time t dt, Embed IO]
+  [Database !! DbError, Time t dt, Embed IO]
 
 interpretStoreDbFullAs ::
   ∀ dIn dOut qIn qOut t dt r .

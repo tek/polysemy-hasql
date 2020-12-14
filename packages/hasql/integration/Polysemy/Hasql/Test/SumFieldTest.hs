@@ -395,8 +395,8 @@ queryTable_SumId_SumPKQ =
   genQueryTable @(UidRep (Sum Auto SumPKRep) SumIdRep)
 
 sumIdQProg ::
-  Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) ! DbError) r =>
-  Members [Store SumPK SumIdRec ! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
+  Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) !! DbError) r =>
+  Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
   Sem r ()
 sumIdQProg = do
   restop (Store.upsert specimen)
@@ -409,7 +409,7 @@ sumIdQProg = do
       Uid (SumPKR 5) (SumId (CreationTime (mkDatetime 2020 1 1 0 0 0)))
 
 sumIdProg ::
-  Members [Store SumPK SumIdRec ! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Embed IO] r =>
+  Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Embed IO] r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()
 sumIdProg (QueryTable (Table stct _ _) _ _) =

@@ -43,7 +43,7 @@ commaSeparatedSql =
   SqlCode . commaSeparated . fmap unSqlCode
 
 escape ::
-  Members [Database ! DbError, Stop DbError, Embed IO] r =>
+  Members [Database !! DbError, Stop DbError, Embed IO] r =>
   ByteString ->
   Sem r (Maybe ByteString)
 escape payload = do

@@ -132,8 +132,8 @@ target =
   Uid (Uid.uuid 2) (Dat "hello" (num 5) (Lef 8) creation)
 
 prog ::
-  Members [Stop DbError, StoreQuery ContentNumber [Uuid Dat] ! DbError] r =>
-  Members [UuidStore Dat ! DbError, StoreQuery ContentNumber (Maybe (Uuid Dat)) ! DbError] r =>
+  Members [Stop DbError, StoreQuery ContentNumber [Uuid Dat] !! DbError] r =>
+  Members [UuidStore Dat !! DbError, StoreQuery ContentNumber (Maybe (Uuid Dat)) !! DbError] r =>
   Sem r (Int, Maybe (Uuid Dat))
 prog = do
   restop @DbError @(UuidStore Dat) do

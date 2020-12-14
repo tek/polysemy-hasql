@@ -23,7 +23,7 @@ interpretStoreAtomicState ::
   Eq i =>
   (d -> i) ->
   Member (AtomicState (StrictStore d)) r =>
-  InterpreterFor (Store i d ! e) r
+  InterpreterFor (Store i d !! e) r
 interpretStoreAtomicState getId =
   interpretResumable \case
     Insert d ->
@@ -49,7 +49,7 @@ interpretStoreAtomic ::
   Member (Embed IO) r =>
   (d -> i) ->
   StrictStore d ->
-  InterpreterFor (Store i d ! e) r
+  InterpreterFor (Store i d !! e) r
 interpretStoreAtomic getId init' =
   interpretAtomic init' . interpretStoreAtomicState getId . raiseUnder
 
@@ -58,7 +58,7 @@ interpretStoreUidAtomic ::
   Eq i =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
-  InterpreterFor (Store i (Uid i d) ! e) r
+  InterpreterFor (Store i (Uid i d) !! e) r
 interpretStoreUidAtomic =
   interpretStoreAtomic Uid._id
 
@@ -67,7 +67,7 @@ interpretStoreStrictState ::
   Eq i =>
   Member (State (StrictStore d)) r =>
   (d -> i) ->
-  InterpreterFor (Store i d ! e) r
+  InterpreterFor (Store i d !! e) r
 interpretStoreStrictState getId =
   interpretResumable \case
     Insert d ->
@@ -92,7 +92,7 @@ interpretStoreTVar ::
   Member (Embed IO) r =>
   (d -> i) ->
   TVar (StrictStore d) ->
-  InterpreterFor (Store i d ! e) r
+  InterpreterFor (Store i d !! e) r
 interpretStoreTVar getId tvar =
   runAtomicStateTVar tvar .
   interpretStoreAtomicState getId .
@@ -104,7 +104,7 @@ interpretStoreStrict ::
   Member (Embed IO) r =>
   (d -> i) ->
   StrictStore d ->
-  InterpreterFor (Store i d ! e) r
+  InterpreterFor (Store i d !! e) r
 interpretStoreStrict getId init' =
   evalState init' .
   interpretStoreStrictState getId .
@@ -115,7 +115,7 @@ interpretStoreUidStrict ::
   Eq i =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
-  InterpreterFor (Store i (Uid i d) ! e) r
+  InterpreterFor (Store i (Uid i d) !! e) r
 interpretStoreUidStrict =
   interpretStoreStrict Uid._id
 
@@ -155,7 +155,7 @@ fetchPayload id' =
 fetchPayloadShow ::
   ∀ i e' e d r .
   Show e' =>
-  Members [UidStore i d ! e', Stop e] r =>
+  Members [UidStore i d !! e', Stop e] r =>
   (Text -> e) ->
   i ->
   Sem r (Maybe d)
