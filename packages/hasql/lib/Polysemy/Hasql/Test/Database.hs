@@ -106,11 +106,11 @@ withTestQueryTable =
 withTestQueryTableGen ::
   ∀ rep q d a r .
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
-  GenQueryTable rep q d =>
+  GenQueryTable (Rep q) rep q d =>
   (QueryTable q d -> Sem r a) ->
   Sem r a
 withTestQueryTableGen =
-  withTestQueryTable (genQueryTable @rep)
+  withTestQueryTable (genQueryTable @(Rep q) @rep)
 
 createTestDb ::
   Members [Random, DbConnection Connection !! DbConnectionError, Stop DbError, Embed IO] r =>
@@ -165,7 +165,7 @@ type TestStoreDeps =
 withTestStoreTableGen ::
   ∀ rep q d r a .
   Members TestStoreDeps r =>
-  GenQueryTable rep q d =>
+  GenQueryTable (Rep q) rep q d =>
   (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
@@ -175,7 +175,7 @@ withTestStoreTableGen prog =
 withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members TestStoreDeps r =>
-  GenQueryTable (UidRep ir rep) (IdQuery i) (Uid i d) =>
+  GenQueryTable (Rep (IdQuery i)) (UidRep ir rep) (IdQuery i) (Uid i d) =>
   (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGen prog =
@@ -185,7 +185,7 @@ withTestStoreTableUidGen prog =
 withTestStoreGen ::
   ∀ rep q d r .
   Members TestStoreDeps r =>
-  GenQueryTable rep q d =>
+  GenQueryTable (Rep q) rep q d =>
   InterpretersFor (StoreStack q d q d) r
 withTestStoreGen prog =
   withTestQueryTableGen @rep \ table ->
@@ -194,7 +194,7 @@ withTestStoreGen prog =
 withTestStore ::
   ∀ q d r a .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep d) q d =>
+  GenQueryTable (Rep q) (Rep d) q d =>
   Sem (StoreStack q d q d ++ r) a ->
   Sem r a
 withTestStore prog =
@@ -204,7 +204,7 @@ withTestStore prog =
 withTestStoreUid ::
   ∀ i d r a .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
+  GenQueryTable (Rep (IdQuery i)) (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
   Sem (UidStoreStack i d ++ r) a ->
   Sem r a
 withTestStoreUid prog =

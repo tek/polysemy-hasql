@@ -23,3 +23,9 @@ data QueueIdQuery =
     queue_id :: UUID
   }
   deriving (Eq, Show, Generic)
+
+data QueueIdQueryRep =
+  QueueIdQueryRep {
+    queue_id :: Prim Auto
+  }
+  deriving (Eq, Show, Generic)

@@ -151,8 +151,8 @@ test_query :: UnitTest
 test_query = do
   integrationTest do
     withTestStoreTableUidGen @DatRep @(Prim PrimaryKey) \ table ->
-      interpretOneWith @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) $
-      interpretManyWith @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) do
+      interpretOneWith @(Rep ContentNumber) @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) $
+      interpretManyWith @(Rep ContentNumber) @(UidRep (Prim PrimaryKey) DatRep) (table ^. QueryTable.structure) do
         (count, result) <- restop @DbError @(UuidStore Dat) prog
         count === 2
         assertJust target result

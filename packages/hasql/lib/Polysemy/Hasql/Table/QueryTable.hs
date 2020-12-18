@@ -6,21 +6,21 @@ import Polysemy.Hasql.Table.QueryParams (QueryParams(queryParams))
 import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.Table (GenTable(genTable))
 
-class GenQueryTable rep q d where
+class GenQueryTable qrep rep q d where
   genQueryTable :: QueryTable q d
 
 instance (
     GenTable rep d,
-    QueryParams (Rep q) q,
+    QueryParams qrep q,
     QueryWhere rep d q
   ) =>
-  GenQueryTable rep q d where
+  GenQueryTable qrep rep q d where
     genQueryTable =
-      QueryTable (genTable @rep @d) (queryParams @(Rep q) @q) (queryWhere @rep @d @q)
+      QueryTable (genTable @rep @d) (queryParams @qrep @q) (queryWhere @rep @d @q)
 
 queryTable ::
   ∀ q d .
-  GenQueryTable (Rep d) q d =>
+  GenQueryTable (Rep q) (Rep d) q d =>
   QueryTable q d
 queryTable =
-  genQueryTable @(Rep d)
+  genQueryTable @(Rep q) @(Rep d)

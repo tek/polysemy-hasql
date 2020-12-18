@@ -36,31 +36,31 @@ interpretManyAsList =
   interpretManyAs id
 
 interpretManyGenAs ::
-  ∀ dIn dOut rep qOut qIn e r .
-  GenQueryTable rep qIn dIn =>
+  ∀ dIn dOut qrep rep qOut qIn e r .
+  GenQueryTable qrep rep qIn dIn =>
   Member (ManagedTable dIn !! e) r =>
   (qOut -> qIn) ->
   (dIn -> dOut) ->
   InterpreterFor (StoreQuery qOut [dOut] !! e) r
 interpretManyGenAs fromQ toD =
-  interpretManyAsList fromQ toD (genQueryTable @rep @qIn @dIn)
+  interpretManyAsList fromQ toD (genQueryTable @qrep @rep @qIn @dIn)
 
 interpretManyGenUidAs ::
-  ∀ rep ir i qOut qIn d e r .
-  GenQueryTable (UidRep ir rep) qIn (Uid i d) =>
+  ∀ qrep rep ir i qOut qIn d e r .
+  GenQueryTable qrep (UidRep ir rep) qIn (Uid i d) =>
   Member (ManagedTable (Uid i d) !! e) r =>
   (qOut -> qIn) ->
   InterpreterFor (StoreQuery qOut [Uid i d] !! e) r
 interpretManyGenUidAs fromQ =
-  interpretManyAsList fromQ id (genQueryTable @(UidRep ir rep) @qIn @(Uid i d))
+  interpretManyAsList fromQ id (genQueryTable @qrep @(UidRep ir rep) @qIn @(Uid i d))
 
 interpretManyGenUid ::
-  ∀ rep ir i q d e r .
-  GenQueryTable (UidRep ir rep) q (Uid i d) =>
+  ∀ qrep rep ir i q d e r .
+  GenQueryTable qrep (UidRep ir rep) q (Uid i d) =>
   Member (ManagedTable (Uid i d) !! e) r =>
   InterpreterFor (StoreQuery q [Uid i d] !! e) r
 interpretManyGenUid =
-  interpretManyAsList id id (genQueryTable @(UidRep ir rep) @q @(Uid i d))
+  interpretManyAsList id id (genQueryTable @qrep @(UidRep ir rep) @q @(Uid i d))
 
 interpretMany ::
   Member (ManagedTable d !! e) r =>
@@ -70,18 +70,18 @@ interpretMany =
   interpretManyAsList id id
 
 interpretManyWith ::
-  ∀ rep q d e r .
-  GenQueryTable rep q d =>
+  ∀ qrep rep q d e r .
+  GenQueryTable qrep rep q d =>
   Member (ManagedTable d !! e) r =>
   TableStructure ->
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretManyWith struct =
-  interpretMany (genQueryTable @rep & QueryTable.table . Table.structure .~ struct)
+  interpretMany (genQueryTable @qrep @rep & QueryTable.table . Table.structure .~ struct)
 
 interpretManyGen ::
-  ∀ rep q d e r .
-  GenQueryTable rep q d =>
+  ∀ qrep rep q d e r .
+  GenQueryTable qrep rep q d =>
   Member (ManagedTable d !! e) r =>
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretManyGen =
-  interpretMany (genQueryTable @rep)
+  interpretMany (genQueryTable @qrep @rep)

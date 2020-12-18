@@ -8,6 +8,7 @@ import Hasql.Decoders (Row)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Path (Abs, File, Path, absfile)
+import Polysemy.Db.Data.IdQuery (IdQueryRep)
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
@@ -238,7 +239,7 @@ queryParams_IdQuery =
 
 queryTable_SumField :: QueryTable (IdQuery UUID) SumField
 queryTable_SumField =
-  genQueryTable @SumFieldRep @(IdQuery UUID) @SumField
+  genQueryTable @IdQueryRep @SumFieldRep @(IdQuery UUID) @SumField
 
 id' :: UUID
 id' =
@@ -266,7 +267,7 @@ sumTest ::
   Eq d =>
   Show d =>
   Members (Hedgehog IO : TestStoreDeps) r =>
-  GenQueryTable rep UuidQuery d =>
+  GenQueryTable (Rep UuidQuery) rep UuidQuery d =>
   d ->
   Sem r ()
 sumTest specimen = do
@@ -381,7 +382,7 @@ queryTable_SumId ::
   ReifyRepTable (Rep SumIdRec) SumIdRec ~ ReifyRepTable SumIdRecRep SumIdRec =>
   QueryTable (IdQuery SumPK) (Uid SumPK SumId)
 queryTable_SumId =
-  genQueryTable @(UidRep (Sum Auto SumPKRep) SumIdRep)
+  genQueryTable @(Rep (IdQuery SumPK)) @(UidRep (Sum Auto SumPKRep) SumIdRep)
 
 queryParams_SumPKQ ::
   Rep SumPKQ ~ ProdTable '[NewtypePrim (NewtypePrim (Prim Auto))] =>
@@ -392,7 +393,7 @@ queryParams_SumPKQ =
 queryTable_SumId_SumPKQ ::
   QueryTable SumPKQ (Uid SumPK SumId)
 queryTable_SumId_SumPKQ =
-  genQueryTable @(UidRep (Sum Auto SumPKRep) SumIdRep)
+  genQueryTable @(Rep SumPKQ) @(UidRep (Sum Auto SumPKRep) SumIdRep)
 
 sumIdQProg ::
   Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) !! DbError) r =>
@@ -415,7 +416,7 @@ sumIdProg ::
 sumIdProg (QueryTable (Table stct _ _) _ _) =
   interpretDatabase $
     interpretManagedTable stct $
-    interpretOneGenUidWith @SumIdRep @(Sum Auto SumPKRep) stct $
+    interpretOneGenUidWith @(Rep SumPKQ) @SumIdRep @(Sum Auto SumPKRep) stct $
     sumIdQProg
 
 test_sumId :: UnitTest
@@ -461,3 +462,48 @@ test_multiSum =
   where
     record =
       Uid (SumPKL 5) (Dat1 5)
+
+data UnaryOneDat =
+  UnaryOneDat {
+    ud :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+data UnaryTwoDat =
+  UnaryTwoDat {
+    ud :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+data UnaryThreeDat =
+  UnaryThreeDat {
+    ud :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+data UnaryDatRep =
+  UnaryDatRep {
+     ud :: Prim Auto
+  }
+  deriving (Eq, Show, Generic)
+
+data Unary =
+  UnaryOne UnaryOneDat
+  |
+  UnaryTwo UnaryTwoDat
+  |
+  UnaryThree UnaryThreeDat
+  deriving (Eq, Show, Generic)
+
+data UnaryRep =
+  UnaryOneRep UnaryDatRep
+  |
+  UnaryTwoRep UnaryDatRep
+  |
+  UnaryThreeRep UnaryDatRep
+  deriving (Eq, Show, Generic)
+
+-- test_unaryVariants :: UnitTest
+-- test_unaryVariants =
+--   integrationTest do
+--     sumTest @(UuidRep UnaryRep) @(Uuid Unary) (Uid id' (UnaryOne (UnaryOneDat 5)))
