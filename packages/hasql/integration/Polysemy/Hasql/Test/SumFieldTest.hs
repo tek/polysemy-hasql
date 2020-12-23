@@ -2,18 +2,9 @@
 
 module Polysemy.Hasql.Test.SumFieldTest where
 
-import Generics.SOP (I, NP, NS)
-import Generics.SOP.GGP (GCode)
 import Hasql.Decoders (Row)
-import qualified Hasql.Encoders as Encoders
-import Hasql.Encoders (Params)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Db.Data.IdQuery (IdQueryRep)
-import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
-import Polysemy.Time (GhcTime, mkDatetime)
-import Prelude hiding (Enum)
-
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, NewtypePrim, Prim, PrimaryKey, Sum, UidRep)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
 import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
@@ -23,9 +14,12 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store, UidStore)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
-import Polysemy.Db.Data.TableStructure (Column, TableStructure)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid, Uid(Uid))
+import Polysemy.Db.Data.Uid (Uid, Uid(Uid), Uuid)
+import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
+import Polysemy.Time (GhcTime, mkDatetime)
+import Prelude hiding (Enum)
+
 import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Table (Table(Table))
@@ -34,30 +28,12 @@ import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
-import Polysemy.Hasql.Table.ColumnType (Single, UnconsRep)
-import Polysemy.Hasql.Table.Columns (columns)
-import Polysemy.Hasql.Table.QueryParam (queryParam, writeNulls, writeNulls2)
-import Polysemy.Hasql.Table.QueryParams (columnParams, productParams, queryParams, sumParams)
-import Polysemy.Hasql.Table.QueryRow (readNulls)
-import Polysemy.Hasql.Table.QueryRows (genQueryRows, genRows, queryRows, sumRows)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Hasql.Table.Representation (
-  ExplicitSum,
-  ExplicitTable,
-  NestedSum,
-  ProdCode,
-  ProdColumn,
-  ProdTable,
-  ReifyRepTable,
-  ReifySumType,
-  Rep,
-  SumColumn,
-  )
-import Polysemy.Hasql.Table.Table (genTable)
-import Polysemy.Hasql.Table.TableStructure (genTableStructure, tableStructure)
-import Polysemy.Hasql.Table.ValueEncoder (repEncoder)
+import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Column.Class (TableColumn)
+import Polysemy.Hasql.Column.Effect ( ResolveColumnEffects )
+import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 
 data Nume =
   One
@@ -81,8 +57,8 @@ data Sinister =
 
 data SinisterRep =
   SinisterRep {
-    sId :: Prim Auto,
-    sNewt :: NewtypePrim (Prim Auto)
+    sId :: Auto,
+    sNewt :: Auto
   }
   deriving (Eq, Show, Generic)
 
@@ -93,9 +69,9 @@ data Summy =
   deriving (Eq, Show, Generic)
 
 data SummyRep =
-  LaevusRep { lInt :: Prim Auto, lSinister :: Flatten SinisterRep }
+  LaevusRep { lInt :: Auto, lSinister :: Flatten SinisterRep }
   |
-  DexterRep { rPath :: Prim Auto, rNewt :: NewtypePrim (Prim Auto), rNume :: Enum Auto }
+  DexterRep { rPath :: Auto, rNewt :: Auto, rNume :: Auto }
   deriving (Eq, Show, Generic)
 
 instance ExplicitColumnOptions SummyRep where
@@ -111,135 +87,33 @@ data SumField =
 
 data SumFieldRep =
   SumFieldRep {
-    id :: Prim Auto,
-    f1 :: Sum Auto SummyRep
+    id :: Prim,
+    f1 :: Sum SummyRep
   }
   deriving (Eq, Show, Generic)
 
-row_queryRows_Sinister :: Row Sinister
+row_queryRows_Sinister ::
+  ∀ c .
+  TableColumn SinisterRep Sinister c =>
+  QueryRows c Sinister =>
+  Row Sinister
 row_queryRows_Sinister =
-  queryRows @SinisterRep
+  queryRows @c
 
-type SinisterRepFlatten =
-  Flatten (ProdColumn (ProdCode (GCode SinisterRep)))
-
-row_genRows_Laevus :: NP Row [Int, Sinister]
-row_genRows_Laevus =
-  genRows @(UnconsRep [Prim Auto, SinisterRepFlatten]) @[Int, Sinister]
-
-readNulls_Flatten_Sinister :: Row ()
-readNulls_Flatten_Sinister =
-  readNulls @(ProdColumn '[SinisterRepFlatten]) @'[Sinister]
-
-readNulls_Summy :: Row ()
-readNulls_Summy =
-  readNulls @(ProdColumn [Prim Auto, SinisterRepFlatten]) @'[Int, Sinister]
-
-row_sumRows_Sinister :: Row (NS (NP I) '[ '[Sinister]])
-row_sumRows_Sinister =
-  sumRows @'[ ProdColumn '[SinisterRepFlatten]] @'[ '[Sinister]] 0
-
-row_sumRows_Summy :: Row (NS (NP I) '[ '[Int, Sinister], '[Text, Int, Double]])
-row_sumRows_Summy =
-  sumRows @'[
-    ProdColumn '[Prim Auto, SinisterRepFlatten],
-    ProdColumn '[Prim Auto, Prim Auto, Prim Auto]
-  ] @'[ '[Int, Sinister], '[Text, Int, Double]] 0
-
-row_genQuery_Summy :: Row Summy
-row_genQuery_Summy =
-  genQueryRows @(ReifySumType (SumColumn (NestedSum (ExplicitSum Summy SummyRep))) Summy) @Summy @(GCode Summy)
-
-row_genRows_SumField :: NP Row '[UUID, Summy]
-row_genRows_SumField =
-  genRows @(UnconsRep [Prim Auto, Sum Auto (SumColumn (NestedSum (ExplicitSum Summy SummyRep)))]) @'[UUID, Summy]
-
-queryRows_SumField :: Row SumField
+queryRows_SumField ::
+  ∀ c .
+  TableColumn SumFieldRep SumField c =>
+  QueryRows c SumField =>
+  Row SumField
 queryRows_SumField =
-  queryRows @SumFieldRep
-
-repEncoder_Newt :: Encoders.Value Newt
-repEncoder_Newt =
-  repEncoder @(NewtypePrim (Prim Auto))
-
-writeNulls_Sinister :: Params Sinister
-writeNulls_Sinister =
-  writeNulls @(ProdCode (GCode SinisterRep)) @(ProdCode (GCode Sinister))
-
-writeNulls2_SumField :: Params SumField
-writeNulls2_SumField =
-  writeNulls2 @[
-    ProdColumn '[Prim Auto, SinisterRepFlatten],
-    ProdColumn '[Prim Auto, Prim Auto, Prim Auto]
-  ] @[ [Int, Sinister], [Text, Int, Double]]
-
-queryParam_Newt :: Params (Maybe Newt)
-queryParam_Newt =
-  queryParam @(NewtypePrim (Prim Auto))
-
-queryParams_Sinister :: Params Sinister
-queryParams_Sinister =
-  queryParams @(ProdColumn (ProdCode (GCode SinisterRep)))
-
-type SumColumns_Summy =
-  [
-    ProdColumn '[Prim Auto, SinisterRepFlatten],
-    ProdColumn '[Prim Auto, NewtypePrim (Prim Auto), Enum Auto]
-  ]
-
-type SumColumn_Summy =
-  SumColumn SumColumns_Summy
+  queryRows @c
 
 testSumField ::
-  Rep SumField ~ ExplicitTable SumFieldRep SumField =>
-  Rep SumField ~ ProdTable [Prim Auto, Sum Auto SumColumn_Summy] =>
+  ResolveColumnEffects Auto (Path Abs File) '[Prim] (Path Abs File) =>
+  ResolveColumnEffects Auto Nume '[Enum] Nume =>
   ()
 testSumField =
   ()
-
-productParams_Newt :: NP Params '[Newt, Double]
-productParams_Newt =
-  productParams @(Single (NewtypePrim Auto) '[Prim Auto])
-
-writeNulls_Newt :: Params ()
-writeNulls_Newt =
-  writeNulls @'[NewtypePrim Auto] @'[Newt]
-
-writeNulls_Summy2 :: Params ()
-writeNulls_Summy2 =
-  writeNulls @[NewtypePrim Auto, Prim Auto] @[Newt, Double]
-
-sumParams_Summy1 :: Params (NS (NP I) (GCode Summy))
-sumParams_Summy1 =
-  sumParams @SumColumns_Summy
-
-columnParams_Summy :: Params Summy
-columnParams_Summy =
-  columnParams @SumColumn_Summy
-
-queryParams_SumField :: Params SumField
-queryParams_SumField =
-  queryParams @(ProdTable [Prim Auto, Sum Auto SumColumn_Summy])
-
-struct :: TableStructure
-struct =
-  tableStructure @SumField
-
-structManual :: TableStructure
-structManual =
-  genTableStructure @SumFieldRep @SumField
-
-table :: Table SumField
-table =
-  genTable @SumFieldRep
-
-queryParams_IdQuery :: Params (IdQuery UUID)
-queryParams_IdQuery =
-  queryParams @(Rep (IdQuery UUID))
-
-queryTable_SumField :: QueryTable (IdQuery UUID) SumField
-queryTable_SumField =
-  genQueryTable @IdQueryRep @SumFieldRep @(IdQuery UUID) @SumField
 
 id' :: UUID
 id' =
@@ -267,17 +141,18 @@ sumTest ::
   Eq d =>
   Show d =>
   Members (Hedgehog IO : TestStoreDeps) r =>
-  GenQueryTable (Rep UuidQuery) rep UuidQuery d =>
+  GenQueryTable Auto rep UuidQuery d =>
   d ->
   Sem r ()
 sumTest specimen = do
-  result <- withTestStoreGen @rep @UuidQuery @d do
+  result <- withTestStoreGen @Auto @rep @UuidQuery @d do
     restop (Store.upsert specimen)
     restop (Store.fetch (IdQuery id'))
   assertJust specimen result
 
 test_reps :: IO ()
 test_reps = do
+  _ <- pure row_queryRows_Sinister
   _ <- pure testSumField
   unit
 
@@ -301,22 +176,22 @@ data Simple =
   deriving (Eq, Show, Generic)
 
 data TwoRep =
-  TwoARep { twoA :: Prim Auto }
+  TwoARep { twoA :: Prim }
   |
-  TwoBRep { twoB :: Prim Auto }
+  TwoBRep { twoB :: Prim }
   deriving (Generic)
 
 data SimpleRep =
   SimpleRep {
-    two :: Sum Auto TwoRep,
-    other :: Prim Auto
+    two :: Sum TwoRep,
+    other :: Auto
   }
   deriving (Generic)
 
 test_simpleSumField :: UnitTest
 test_simpleSumField =
   integrationTest do
-    sumTest @(UidRep (Prim Auto) SimpleRep) (Uid id' (Simple (TwoA 5) 9))
+    sumTest @(UidRep (Prim) SimpleRep) (Uid id' (Simple (TwoA 5) 9))
 
 data SumPK =
   SumPKL { l :: Int }
@@ -325,9 +200,9 @@ data SumPK =
   deriving (Eq, Show, Generic)
 
 data SumPKRep =
-  SumPKLRep { l :: Prim Auto }
+  SumPKLRep { l :: Prim }
   |
-  SumPKRRep { r :: Prim Auto }
+  SumPKRRep { r :: Prim }
   deriving (Eq, Show, Generic)
 
 data SumId =
@@ -335,7 +210,7 @@ data SumId =
   deriving (Eq, Show, Generic)
 
 data SumIdRep =
-  SumIdRep { number :: NewtypePrim (Prim Auto) }
+  SumIdRep { number :: Prim }
   deriving (Eq, Show, Generic)
 
 data SumPKQ =
@@ -345,55 +220,10 @@ data SumPKQ =
   deriving (Eq, Show, Generic)
 
 type SumIdRecRep =
-  UidRep (Sum Auto SumPKRep) SumIdRep
+  UidRep (Sum SumPKRep) SumIdRep
 
 type SumIdRec =
   Uid SumPK SumId
-
-queryParams_SumPKQuery :: Params (IdQuery SumPK)
-queryParams_SumPKQuery =
-  queryParams @(Rep (IdQuery SumPK)) @(IdQuery SumPK)
-
-queryRows_SumPKQuery :: Row (IdQuery SumPK)
-queryRows_SumPKQuery =
-  queryRows @(Rep (IdQuery SumPK)) @(IdQuery SumPK)
-
-queryParams_SumId :: Params SumIdRec
-queryParams_SumId =
-  queryParams @(Rep SumIdRec) @SumIdRec
-
-queryRows_SumId :: Row SumIdRec
-queryRows_SumId =
-  queryRows @(Rep SumIdRec) @SumIdRec
-
-columns_SumId :: [Column]
-columns_SumId =
-  columns @(UidRep (Sum Auto SumPKRep) SumIdRep) @SumIdRec
-
-tableStructure_SumId :: TableStructure
-tableStructure_SumId =
-  genTableStructure @(UidRep (Sum Auto SumPKRep) SumIdRep) @SumIdRec
-
-table_SumId :: Table SumIdRec
-table_SumId =
-  genTable @(UidRep (Sum Auto SumPKRep) SumIdRep)
-
-queryTable_SumId ::
-  ReifyRepTable (Rep SumIdRec) SumIdRec ~ ReifyRepTable SumIdRecRep SumIdRec =>
-  QueryTable (IdQuery SumPK) (Uid SumPK SumId)
-queryTable_SumId =
-  genQueryTable @(Rep (IdQuery SumPK)) @(UidRep (Sum Auto SumPKRep) SumIdRep)
-
-queryParams_SumPKQ ::
-  Rep SumPKQ ~ ProdTable '[NewtypePrim (NewtypePrim (Prim Auto))] =>
-  Params SumPKQ
-queryParams_SumPKQ =
-  queryParams @(Rep SumPKQ)
-
-queryTable_SumId_SumPKQ ::
-  QueryTable SumPKQ (Uid SumPK SumId)
-queryTable_SumId_SumPKQ =
-  genQueryTable @(Rep SumPKQ) @(UidRep (Sum Auto SumPKRep) SumIdRep)
 
 sumIdQProg ::
   Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) !! DbError) r =>
@@ -416,14 +246,14 @@ sumIdProg ::
 sumIdProg (QueryTable (Table stct _ _) _ _) =
   interpretDatabase $
     interpretManagedTable stct $
-    interpretOneGenUidWith @(Rep SumPKQ) @SumIdRep @(Sum Auto SumPKRep) stct $
+    interpretOneGenUidWith @Auto @Auto @Auto stct $
     sumIdQProg
 
 test_sumId :: UnitTest
 test_sumId =
   integrationTest do
-    _ <- pure queryTable_SumId
-    withTestStoreTableUidGen @SumIdRep @(Sum Auto SumPKRep) sumIdProg
+    -- _ <- pure queryTable_SumId
+    withTestStoreTableUidGen @SumIdRep @(Sum SumPKRep) sumIdProg
 
 data Dat1 =
   Dat1 {
@@ -433,7 +263,7 @@ data Dat1 =
 
 data Dat1Rep =
   Dat1Rep {
-    dat1_Int :: Prim Auto
+    dat1_Int :: Prim
   }
   deriving (Eq, Show, Generic)
 
@@ -445,16 +275,16 @@ data Dat2 =
 
 data Dat2Rep =
   Dat2Rep {
-    dat2_Int :: Prim Auto
+    dat2_Text :: Prim
   }
   deriving (Eq, Show, Generic)
 
 test_multiSum :: UnitTest
 test_multiSum =
   integrationTest do
-    interpretStoreDbFullGenUid @Dat1Rep @(Sum PrimaryKey SumPKRep) @_ @Dat1 do
+    interpretStoreDbFullGenUid @Dat1Rep @(Rep '[Sum SumPKRep, PrimaryKey]) @_ @Dat1 do
       restop @DbError @(UidStore SumPK Dat1) (Store.insert record)
-      interpretStoreDbFullGenUid @Dat2Rep @(Sum PrimaryKey SumPKRep) @_ @Dat2 do
+      interpretStoreDbFullGenUid @Dat2Rep @(Rep '[Sum SumPKRep, PrimaryKey]) @_ @Dat2 do
         restop @DbError (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
         _ <- evalLeft =<< resumeEither (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
         result <- restop @DbError @(UidStore SumPK Dat1) (Store.fetchAll @SumPK @(Uid SumPK Dat1))
@@ -463,47 +293,29 @@ test_multiSum =
     record =
       Uid (SumPKL 5) (Dat1 5)
 
-data UnaryOneDat =
-  UnaryOneDat {
-    ud :: Int
+data NumericFields =
+  NumericOne Int Text
+  |
+  NumericTwo Double (Maybe Int)
+  deriving (Eq, Show, Generic)
+
+data NumericFieldsRep =
+  NumericOneRep Prim Prim
+  |
+  NumericTwoRep Prim Prim
+  deriving (Eq, Show, Generic)
+
+data NumericDat =
+  NumericDat { numeric :: NumericFields }
+  deriving (Eq, Show, Generic)
+
+data NumericDatRep =
+  NumericDatRep {
+    numeric :: Sum NumericFieldsRep
   }
   deriving (Eq, Show, Generic)
 
-data UnaryTwoDat =
-  UnaryTwoDat {
-    ud :: Int
-  }
-  deriving (Eq, Show, Generic)
-
-data UnaryThreeDat =
-  UnaryThreeDat {
-    ud :: Int
-  }
-  deriving (Eq, Show, Generic)
-
-data UnaryDatRep =
-  UnaryDatRep {
-     ud :: Prim Auto
-  }
-  deriving (Eq, Show, Generic)
-
-data Unary =
-  UnaryOne UnaryOneDat
-  |
-  UnaryTwo UnaryTwoDat
-  |
-  UnaryThree UnaryThreeDat
-  deriving (Eq, Show, Generic)
-
-data UnaryRep =
-  UnaryOneRep UnaryDatRep
-  |
-  UnaryTwoRep UnaryDatRep
-  |
-  UnaryThreeRep UnaryDatRep
-  deriving (Eq, Show, Generic)
-
--- test_unaryVariants :: UnitTest
--- test_unaryVariants =
---   integrationTest do
---     sumTest @(UuidRep UnaryRep) @(Uuid Unary) (Uid id' (UnaryOne (UnaryOneDat 5)))
+test_numericFieldSum :: UnitTest
+test_numericFieldSum =
+  integrationTest do
+    sumTest @(UuidRep NumericDatRep) @(Uuid NumericDat) (Uid id' (NumericDat (NumericTwo 5.5 (Just 2))))

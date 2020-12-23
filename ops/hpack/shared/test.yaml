@@ -10,3 +10,5 @@ dependencies:
   - polysemy-time
   - tasty
   - tasty-hedgehog
+  - template-haskell
+  - th-test-utils

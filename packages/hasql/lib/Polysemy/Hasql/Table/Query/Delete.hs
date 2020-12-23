@@ -1,11 +1,11 @@
 module Polysemy.Hasql.Table.Query.Delete where
 
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
 import Polysemy.Hasql.Table.Query.Fragment (fromFragment)
+import Polysemy.Hasql.Data.DbType (Column(Column))
 
 deleteSql ::
-  TableStructure ->
+  Column ->
   SqlCode
-deleteSql (TableStructure (fromFragment -> SqlCode from) _) =
+deleteSql (Column _ (fromFragment -> SqlCode from) _ _ _) =
   SqlCode [qt|delete #{from}|]

@@ -11,12 +11,14 @@ import Hasql.Statement (Statement)
 
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.TableName (TableName(TableName))
-import qualified Polysemy.Db.Data.TableStructure as Column
-import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
+import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
+import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Table.TableStructure (GenTableStructure(genTableStructure))
+import Polysemy.Hasql.Column.DataColumn (TableStructure, tableStructure)
+import qualified Polysemy.Hasql.Data.DbType as Data
+import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector, nameSelector)
+import Polysemy.Hasql.DbType (baseColumns)
 
 runStatement ::
   Members [Embed IO, Stop QueryError] r =>
@@ -44,19 +46,19 @@ dbColumnsFor ::
   Members [Embed IO, Stop QueryError] r =>
   SqlCode ->
   Connection ->
-  TableName ->
-  Sem r (Maybe (NonEmpty Column))
-dbColumnsFor sql connection (TableName tableName) =
+  Name ->
+  Sem r (Maybe (NonEmpty ExistingColumn))
+dbColumnsFor sql connection (Name tableName) =
   nonEmpty . fmap cons <$> runStatement connection tableName (dbColumnsStatement sql)
   where
     cons (name, dataType) =
-      Column name dataType def Nothing
+      ExistingColumn (Name name) dataType
 
 tableColumns ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  TableName ->
-  Sem r (Maybe (NonEmpty Column))
+  Name ->
+  Sem r (Maybe (NonEmpty ExistingColumn))
 tableColumns =
   dbColumnsFor code
   where
@@ -66,8 +68,8 @@ tableColumns =
 typeColumns ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  TableName ->
-  Sem r (Maybe (NonEmpty Column))
+  Name ->
+  Sem r (Maybe (NonEmpty ExistingColumn))
 typeColumns =
   dbColumnsFor code
   where
@@ -76,7 +78,7 @@ typeColumns =
 
 -- TODO
 updateType ::
-  NonEmpty Column ->
+  NonEmpty ExistingColumn ->
   Sem r ()
 updateType _ =
   unit
@@ -84,70 +86,85 @@ updateType _ =
 initCtorType ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  TableStructure ->
+  Column ->
   Sem r ()
-initCtorType connection col@(TableStructure name _) = do
+initCtorType connection col@(Column name _ _ _ _) = do
   exists <- isJust <$> typeColumns connection name
   unless exists (run (Statement.createCtorType col))
   where
     run =
       runStatement connection ()
 
-initType ::
+initProd ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  CompositeType ->
+  Name ->
+  Selector ->
+  [Column] ->
   Sem r ()
-initType connection tpe@(CompositeType name _ cols) = do
+initProd connection name selector columns = do
   existing <- typeColumns connection name
   maybe createType updateType existing
   where
     createType = do
-      traverse_ (initCtorType connection) cols
-      run (Statement.createSumType tpe)
+      traverse_ (initType connection) columns
+      run (Statement.createProdType selector columns)
     run =
       runStatement connection ()
+
+-- TODO use effects for running statements
+initType ::
+  Members [Embed IO, Stop QueryError] r =>
+  Connection ->
+  Data.Column ->
+  Sem r ()
+initType connection (Column _ _ tpe _ dbType) =
+  case dbType of
+    Data.Prim ->
+      unit
+    Data.Prod columns ->
+      initProd connection (Name tpe) (nameSelector tpe) columns
+    Data.Sum columns ->
+      initProd connection (Name tpe) (nameSelector tpe) columns
 
 createTable ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  TableStructure ->
+  Column ->
   Sem r ()
-createTable connection struct@(TableStructure _ columns) = do
-  traverse_ (initType connection) types
-  run (Statement.createTable struct)
+createTable connection table = do
+  traverse_ (initType connection) (baseColumns table)
+  run (Statement.createTable table)
   where
     run =
       runStatement connection ()
-    types =
-      mapMaybe Column.customType (toList columns)
 
 dropTable ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  TableName ->
+  Name ->
   Sem r ()
 dropTable connection =
   runStatement connection () . Statement.dropTable
 
 columnMap ::
   Foldable t =>
-  t Column ->
-  Map Text Text
+  t ExistingColumn ->
+  Map Name Text
 columnMap cols =
   Map.fromList (columnTuple <$> toList cols)
   where
-    columnTuple (Column k v _ _) =
-      (k, v)
+    columnTuple ExistingColumn {..} =
+      (name, ctype)
 
 missingColumns ::
-  [Column] ->
+  [ExistingColumn] ->
   [Column] ->
   Maybe (NonEmpty Column)
 missingColumns dbColumns dataColumns =
   nonEmpty $ filter missingColumn dataColumns
   where
-    missingColumn (Column name _ _ _) =
+    missingColumn (Column name _ _ _ _) =
       not (Map.member name dbMap)
     dbMap =
       columnMap dbColumns
@@ -158,75 +175,88 @@ sameType "ARRAY" dataType =
 sameType dbType dataType =
   dbType == dataType
 
+userDefined :: Text
+userDefined =
+  "USER-DEFINED"
+
+primType :: Text -> Data.DbType -> Text
+primType tpe = \case
+  Data.Sum _ -> userDefined
+  Data.Prod _ -> userDefined
+  Data.Prim -> tpe
+
 mismatchedColumns ::
+  [ExistingColumn] ->
   [Column] ->
-  [Column] ->
-  Maybe (NonEmpty (Text, Column))
+  Maybe (NonEmpty (Name, Column))
 mismatchedColumns dbColumns dataColumns =
-  nonEmpty $ catMaybes (mismatchedColumn <$> toList dataColumns)
+  nonEmpty (mapMaybe mismatchedColumn (toList dataColumns))
   where
-    mismatchedColumn dataColumn@(Column name dataType _ comp) = do
-      dbType <- Map.lookup (fromMaybe name ("USER-DEFINED" <$ comp)) dbMap
-      if sameType dbType dataType then Nothing else Just (dbType, dataColumn)
+    mismatchedColumn dataColumn@(Column name _ tpe _ colType) = do
+      -- dbType <- Map.lookup (fromMaybe name ("USER-DEFINED" <$ comp)) dbMap
+      dbType <- Map.lookup name dbMap
+      if sameType dbType (primType tpe colType) then Nothing else Just (Name dbType, dataColumn)
     dbMap =
       columnMap dbColumns
 
 reportMismatchedColumns ::
   Member (Stop DbError) r =>
-  TableName ->
-  NonEmpty (Text, Column) ->
+  Name ->
+  NonEmpty (Name, Column) ->
   Sem r ()
-reportMismatchedColumns (TableName name) columns =
+reportMismatchedColumns (Name name) columns =
   stop (DbError.Table [qt|mismatched columns in table `#{name}`: #{columnsDescription}|])
   where
     columnsDescription =
       Text.intercalate ";" (toList (columnDescription <$> columns))
-    columnDescription (dbType, Column colName dataType _ _) =
-      [qt|db: #{colName} :: #{dbType}, app: #{colName} :: #{dataType}|]
+    columnDescription (dbType, Column colName _ tpe _ _) =
+      [qt|db: #{colName} :: #{dbType}, app: #{colName} :: #{tpe}|]
 
 updateTable ::
   Members [Embed IO, Stop DbError] r =>
-  NonEmpty Column ->
+  NonEmpty ExistingColumn ->
   Connection ->
-  TableStructure ->
+  Column ->
   Sem r ()
-updateTable (toList -> existing) connection (TableStructure name target) = do
+updateTable (toList -> existing) connection column@(Column name selector _ _ _) = do
   mapStop (DbError.Query . show) $ traverse_ alter missing
   traverse_ (reportMismatchedColumns name) (mismatchedColumns existing target)
   where
     alter =
-      runStatement connection () . Statement.alter name
+      runStatement connection () . Statement.alter selector
     missing =
       missingColumns existing target
+    target =
+      baseColumns column
 
 initTable ::
   Members [Embed IO, Stop DbError] r =>
   Connection ->
-  TableStructure ->
+  Column ->
   Sem r ()
-initTable connection t@(TableStructure name _) =
+initTable connection t@(Column name _ _ _ _) =
   process =<< liftError (tableColumns connection name)
   where
     process (Just existing) =
       updateTable existing connection t
     process Nothing =
-      liftError $ createTable connection t
+      liftError (createTable connection t)
     liftError =
       mapStop (DbError.Query . show)
 
 initTableGen ::
   ∀ d rep r .
   Members [Embed IO, Stop DbError] r =>
-  GenTableStructure d rep =>
+  TableStructure d rep =>
   Connection ->
   Sem r ()
 initTableGen connection = do
-  initTable connection (genTableStructure @d @rep)
+  initTable connection (tableStructure @d @rep)
 
 initTableE ::
   ∀ d rep r .
   Member (Embed IO) r =>
-  GenTableStructure d rep =>
+  TableStructure d rep =>
   Connection ->
   Sem r (Either DbError ())
 initTableE =

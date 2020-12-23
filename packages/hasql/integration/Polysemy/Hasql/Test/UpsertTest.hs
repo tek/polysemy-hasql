@@ -27,9 +27,8 @@ prog = do
   Store.upsert specimen
   Store.fetchAll
 
-
 test_upsert :: UnitTest
 test_upsert = do
   integrationTest do
-    withTestStoreUid do
-      assertJust [specimen] =<< (restop @DbError prog)
+    withTestStoreUid @Int @Dat do
+      assertJust [specimen] =<< restop @DbError prog

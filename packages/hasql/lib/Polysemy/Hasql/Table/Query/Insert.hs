@@ -1,56 +1,46 @@
 module Polysemy.Hasql.Table.Query.Insert where
 
-import qualified Polysemy.Db.Data.TableStructure as Column (Column(..))
-import qualified Polysemy.Db.Data.TableStructure as TableStructure (TableStructure(..))
-import Polysemy.Db.Data.TableStructure (Column, CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import Polysemy.Hasql.Table.Query.Fragment (intoFragment)
 import Polysemy.Hasql.Table.Query.Prepared (dollar)
 import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated)
+import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Prod, Sum, Prim))
+
+import Polysemy.Hasql.DbType (baseColumns)
 
 row :: Text -> Text
 row a =
   [qt|row(#{a})|]
 
-compositeConstructor :: Int -> [Column] -> (Int, Text)
-compositeConstructor index columns =
-  (newIndex, row cols)
-  where
-    cols =
-      commaSeparated @[] (dollar <$> [index..newIndex - 1])
-    newIndex =
-      index + length columns
+insertColumn :: Int -> Column -> (Int, Text)
+insertColumn index = \case
+  Column _ _ _ _ Prim ->
+    (index + 1, dollar index)
+  Column _ _ _ _ (Prod cols) ->
+    second (row . commaSeparated) (mapAccumL insertColumn index cols)
+  Column _ _ _ _ (Sum cols) ->
+    second (row . commaSeparated) (mapAccumL insertColumn index cols)
 
-compositeColumns :: Int -> [TableStructure] -> (Int, Text)
-compositeColumns index structs =
-  (newIndex, row (commaSeparated (sumIndex : conss)))
-  where
-    sumIndex =
-      dollar index
-    (newIndex, conss) =
-      mapAccumL compositeConstructor (index + 1) (TableStructure._columns <$> structs)
+insertColumns :: Int -> [Column] -> [Text]
+insertColumns start =
+  snd . mapAccumL insertColumn start
 
-compositeColumnCount :: [TableStructure] -> Int
-compositeColumnCount =
-  sum . fmap (length . TableStructure._columns)
-
-insertValues :: [Column] -> [Text]
-insertValues =
-  snd . mapAccumL column 1 . fmap Column.customType
-  where
-    column index = \case
-      Just (CompositeType _ _ composites) ->
-        compositeColumns index composites
-      Nothing ->
-        (index + 1, dollar index)
+insertValues :: Column -> [Text]
+insertValues = \case
+  Column _ _ _ _ Prim ->
+    [dollar 1]
+  Column _ _ _ _ (Prod cols) ->
+    insertColumns 1 cols
+  Column _ _ _ _ (Sum cols) ->
+    insertColumns 1 cols
 
 insert ::
-  TableStructure ->
+  Column ->
   SqlCode
-insert (TableStructure (intoFragment -> SqlCode into) columns) =
+insert table@(Column _ (intoFragment -> SqlCode into) _ _ _) =
   SqlCode [qt|insert #{into} (#{cols}) values (#{values})|]
   where
     cols =
-      commaColumns columns
+      commaColumns (baseColumns table)
     values =
-      commaSeparated (insertValues (toList columns))
+      commaSeparated (insertValues table)

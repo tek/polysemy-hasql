@@ -3,23 +3,22 @@ module Polysemy.Hasql.Statement where
 import Hasql.Decoders (Row, noResult)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement(Statement))
-import Prelude hiding (All, Compose, Generic)
 
 import Polysemy.Db.Data.DbName (DbName(DbName))
-import Polysemy.Db.Data.TableName (TableName(TableName))
-import Polysemy.Db.Data.TableStructure (Column(Column), CompositeType(CompositeType), TableStructure(TableStructure))
 import Polysemy.Db.Text.Quote (dquote)
-import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions
+import qualified Polysemy.Hasql.Data.DbType as Column
+import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.QueryWhere (QueryWhere(QueryWhere))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
+import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode, unSqlCode))
 import Polysemy.Hasql.Data.Table (Table(Table))
+import Polysemy.Hasql.Data.Where (Where(Where))
+import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName)
 import Polysemy.Hasql.Table.Query.Delete (deleteSql)
-import Polysemy.Hasql.Table.Query.Fragment (addFragment, alterFragment, conflictFragment)
+import Polysemy.Hasql.Table.Query.Fragment (addColumnFragment, alterFragment, conflictFragment)
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
-import Polysemy.Hasql.Table.Query.Select (assembleColumns, selectColumns)
+import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
-import Polysemy.Hasql.Table.Query.Text (commaSeparated, commaSeparatedSql)
+import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated, commaSeparatedSql)
 import Polysemy.Hasql.Table.ResultShape (ResultShape(resultShape))
 
 query ::
@@ -37,7 +36,7 @@ plain (SqlCode sql) =
 
 select ::
   ∀ d .
-  TableStructure ->
+  Column ->
   Row d ->
   Statement () [d]
 select table row =
@@ -46,8 +45,8 @@ select table row =
 selectWhereSql ::
   QueryTable query d ->
   SqlCode
-selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _) _ (QueryWhere (SqlCode qw))) =
-  SqlCode $ [qt|#{sel} where #{qw}|]
+selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _) _ (Where (SqlCode qw))) =
+  SqlCode [qt|#{sel} where #{qw}|]
 
 -- |Construct a query of the shape "select ... from ... where ..."
 -- The point of the 'ResultShape' constraint is to help with inferring the @d@ type from the @result@ type so no manual
@@ -66,13 +65,13 @@ insert (Table structure row params) =
   query (Query.insert structure) row params
 
 upsertSql ::
-  TableStructure ->
+  Column ->
   SqlCode
-upsertSql table@(TableStructure _ columns) =
+upsertSql table =
   SqlCode [qt|#{ins} #{conflict}|]
   where
     SqlCode conflict =
-      conflictFragment columns st
+      conflictFragment table st
     SqlCode ins =
       Query.insert table
     st =
@@ -87,13 +86,13 @@ upsert (Table structure row params) =
 deleteWhereSql ::
   QueryTable d q ->
   SqlCode
-deleteWhereSql (QueryTable (Table structure@(TableStructure _ columns) _ _) _ (QueryWhere (SqlCode qw))) =
+deleteWhereSql (QueryTable (Table table _ _) _ (Where (SqlCode qw))) =
   [qt|#{del} where #{qw} returning #{cols}|]
   where
     SqlCode del =
-      deleteSql structure
+      deleteSql table
     cols =
-      commaSeparated (assembleColumns columns)
+      commaColumns (baseColumns table)
 
 deleteWhere ::
   ResultShape d result =>
@@ -109,88 +108,106 @@ deleteAll (Table structure row _) =
   query (deleteSql structure) row noParams
 
 createTableSql ::
-  TableStructure ->
+  Column ->
   SqlCode
-createTableSql (TableStructure (TableName (dquote -> name)) columns) =
-  SqlCode [qt|create table #{name} (#{formattedColumns})|]
+createTableSql column@(Column _ (Selector selector) _ _ _) =
+  SqlCode [qt|create table #{selector} (#{formattedColumns})|]
   where
     formattedColumns =
-      commaSeparated (toList (formattedColumn <$> columns))
-    formattedColumn (Column (dquote -> n) t (ColumnOptions.format -> params) _) =
-      [qt|#{n} #{t}#{params}|]
+      commaSeparated (toList (unSqlCode . columnSpec <$> baseColumns column))
 
 createTable ::
-  TableStructure ->
+  Column ->
   Statement () ()
 createTable =
   plain . createTableSql
 
-createCtorTypeSql :: TableStructure -> SqlCode
-createCtorTypeSql (TableStructure (TableName (dquote -> name)) columns) =
-  [qt|create type #{name} as (#{formattedColumns})|]
+createCtorTypeSql :: Column -> SqlCode
+createCtorTypeSql column =
+  [qt|create type #{quotedName column} as (#{formattedColumns})|]
   where
     formattedColumns =
-      commaSeparated (toList (formattedColumn <$> columns))
-    formattedColumn (Column (dquote -> n) t _ _) =
-      [qt|#{n} #{t}|]
+      commaSeparated (toList (formattedColumn <$> baseColumns column))
+    formattedColumn col =
+      [qt|#{quotedName col} #{dquote (Column._tpe col)}|]
 
 createCtorType ::
-  TableStructure ->
+  Column ->
   Statement () ()
 createCtorType =
   plain . createCtorTypeSql
 
-createSumTypeSql :: CompositeType -> SqlCode
-createSumTypeSql (CompositeType (TableName (dquote -> name)) (Column indexName indexType _ _) columns) =
-  [qt|create type #{name} as (#{formattedColumns})|]
+createProdTypeSql ::
+  Selector ->
+  [Column] ->
+  SqlCode
+createProdTypeSql (Selector prodName) columns =
+  [qt|create type #{prodName} as (#{formattedColumns})|]
   where
     formattedColumns =
-      commaSeparated ([qt|#{dquote indexName} #{indexType}|] : toList (formattedColumn <$> columns))
-    formattedColumn (TableStructure (TableName (dquote -> n)) _) =
+      commaSeparated (formattedColumn <$> columns)
+    formattedColumn (Column (Name name) _ tpe _ _) =
+      [qt|#{name} #{tpe}|]
+
+createProdType ::
+  Selector ->
+  [Column] ->
+  Statement () ()
+createProdType =
+  plain .: createProdTypeSql
+
+createSumTypeSql :: Column -> SqlCode
+-- createSumTypeSql (Column (quotedName -> name) (Column indexName indexType _ _) columns) =
+createSumTypeSql column =
+  [qt|create type #{quotedName column} as (#{formattedColumns})|]
+  where
+    formattedColumns =
+      commaSeparated ([qt|#{dquote "sum_index"} bigint|] : toList (formattedColumn <$> baseColumns column))
+    formattedColumn (quotedName -> n) =
       [qt|#{n} #{n}|]
 
 createSumType ::
-  CompositeType ->
+  Column ->
   Statement () ()
 createSumType =
   plain . createSumTypeSql
 
 dropTypeSql ::
-  TableName ->
+  Text ->
   SqlCode
-dropTypeSql (TableName (dquote -> name)) =
+dropTypeSql (dquote -> name) =
    SqlCode [qt|drop type if exists #{name} cascade|]
 
 dropType ::
-  TableName ->
+  Text ->
   Statement () ()
 dropType =
   plain . dropTypeSql
 
 dropTableSql ::
-  TableName ->
+  Name ->
   SqlCode
-dropTableSql (TableName (dquote -> name)) =
+dropTableSql (Name (dquote -> name)) =
    SqlCode [qt|drop table if exists #{name}|]
 
 dropTable ::
-  TableName ->
+  Name ->
   Statement () ()
 dropTable =
   plain . dropTableSql
 
 alterSql ::
-  TableName ->
+  Selector ->
   NonEmpty Column ->
   SqlCode
 alterSql (alterFragment -> SqlCode alter') (toList -> columns) =
   SqlCode [qt|#{alter'} #{colAdds}|]
   where
     SqlCode colAdds =
-      commaSeparatedSql (addFragment <$> columns)
+      commaSeparatedSql (addColumnFragment <$> columns)
 
 alter ::
-  TableName ->
+  Selector ->
   NonEmpty Column ->
   Statement () ()
 alter =

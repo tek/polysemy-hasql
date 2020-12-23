@@ -1,13 +1,13 @@
 module Polysemy.Hasql.Queue.Data.Queue where
 
 import GHC.TypeLits (AppendSymbol)
+import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Tagged (Tagged)
 
 import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery, Queued, QueuedRep)
-import Polysemy.Hasql.Table.Representation (Rep)
 
 type family InputConn (queue :: Symbol) :: Symbol where
   InputConn queue =
@@ -24,16 +24,16 @@ type family Queue (queue :: Symbol) t d :: Constraint where
       KnownSymbol queue,
       KnownSymbol (InputConn queue),
       KnownSymbol (OutputConn queue),
-      GenQueryTable (Rep QueueIdQuery) QueuedRep QueueIdQuery (Queued t d)
+      GenQueryTable Auto QueuedRep QueueIdQuery (Queued t d)
     )
 
 type family QueueInput (queue :: Symbol) t d :: Constraint where
   QueueInput queue t d =
-    (Ord t, KnownSymbol (InputConn queue), GenQueryTable (Rep QueueIdQuery) QueuedRep QueueIdQuery (Queued t d))
+    (Ord t, KnownSymbol (InputConn queue), GenQueryTable Auto QueuedRep QueueIdQuery (Queued t d))
 
 type family QueueOutput (queue :: Symbol) t d :: Constraint where
   QueueOutput queue t d =
-    (Ord t, KnownSymbol (OutputConn queue), GenQueryTable (Rep QueueIdQuery) QueuedRep QueueIdQuery (Queued t d))
+    (Ord t, KnownSymbol (OutputConn queue), GenQueryTable Auto QueuedRep QueueIdQuery (Queued t d))
 
 type family InputQueueConnection (queue :: symbol) :: Effect where
   InputQueueConnection queue =

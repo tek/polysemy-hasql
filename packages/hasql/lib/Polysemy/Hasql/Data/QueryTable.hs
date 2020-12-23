@@ -1,24 +1,24 @@
 module Polysemy.Hasql.Data.QueryTable where
 
-import Control.Lens (Lens')
 import Hasql.Encoders (Params)
 
-import Polysemy.Db.Data.TableStructure (TableStructure)
-import Polysemy.Hasql.Data.QueryWhere (QueryWhere)
+import Control.Lens (Lens')
+import Polysemy.Hasql.Data.Where (Where)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table)
+import Polysemy.Hasql.Data.DbType (Column)
 import qualified Text.Show as Show
 
 data QueryTable q a =
   QueryTable {
     _table :: Table a,
     _qparams :: Params q,
-    _qwhere :: QueryWhere a q
+    _qwhere :: Where a q
   }
 
 makeClassy ''QueryTable
 
-structure :: Lens' (QueryTable q a) TableStructure
+structure :: Lens' (QueryTable q a) Column
 structure =
   table . Table.structure
 

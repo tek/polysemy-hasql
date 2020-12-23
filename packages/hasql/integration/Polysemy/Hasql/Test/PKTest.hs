@@ -2,21 +2,26 @@
 
 module Polysemy.Hasql.Test.PKTest where
 
-import Polysemy.Db.Data.Column (Auto, Flatten, NewtypePrim, Prim, PrimaryKey)
+import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, UidRep)
 import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
 import Polysemy.Db.Data.Uid (Uid(Uid))
+import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
+
+import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
-import Polysemy.Hasql.Table.Representation (ProdColumn, ProdTable, Rep)
-import Polysemy.Hasql.Table.TableStructure (tableStructure)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
+import qualified Polysemy.Hasql.Column.Class as Class
+import Polysemy.Hasql.Column.Data.Effect (ADT, Newtype)
+import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Column.Meta (ADTMeta', ColumnMeta(ColumnMeta))
+import qualified Polysemy.Hasql.Data.DbType as Data
+import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
 
 newtype Id =
   Id { unId :: Int }
@@ -39,34 +44,45 @@ prog specimen = do
     Store.upsert specimen
     Store.fetch (IdQuery 2)
 
-struct :: TableStructure
+struct :: Data.Column
 struct =
-  tableStructure @(Uid Id Rec)
+  tableStructure @(UidRep PrimaryKey Auto) @(Uid Id Rec)
 
 table :: QueryTable (IdQuery Id) (Uid Id Rec)
 table =
   queryTable
 
-testRep ::
-  Rep (Uid Id Rec) ~ ProdTable [NewtypePrim (Prim PrimaryKey), Flatten (ProdColumn [Prim Auto, Prim Auto])] =>
+type RecType =
+  'Kind.Column ('NamedField "Rec") '[ADT (ADTMeta' (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) (Product (UidRep PrimaryKey Auto))] ('Kind.Prod (Uid Id Rec) '[
+    'Kind.Column ('NamedField "id") '[Newtype Id Int, PrimaryKey, Prim] ('Kind.Prim Id),
+    'Kind.Column ('NamedField "payload") '[ADT (ADTMeta' (Flatten Auto) Rec) (Flatten Auto)] (
+      'Kind.Prod Rec '[
+        'Kind.Column ('NamedField "a") '[Prim] ('Kind.Prim Int),
+        'Kind.Column ('NamedField "b") '[Prim] ('Kind.Prim Text)
+      ]
+    )
+  ])
+
+testDerivation ::
+  Class.Column ('ColumnMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
   ()
-testRep =
+testDerivation =
   ()
 
-targetStructure :: TableStructure
+targetStructure :: Data.Column
 targetStructure =
-  TableStructure "rec" [
-    Column "id" "bigint" def { primaryKey = True } Nothing,
-    Column "a" "bigint" def Nothing,
-    Column "b" "text" def Nothing
+  Data.Column "rec" [qt|"rec"|] "uid" def $ Data.Prod [
+    Data.Column "id" [qt|"id"|] "bigint" def { primaryKey = True } Data.Prim,
+    Data.Column "a" [qt|"a"|] "bigint" def Data.Prim,
+    Data.Column "b" [qt|"b"|] "text" def Data.Prim
   ]
 
 test_pk :: UnitTest
 test_pk =
   integrationTest do
-    _ <- pure testRep
+    _ <- pure testDerivation
     targetStructure === struct
-    result <- withTestStoreGen @Auto (restop @DbError (prog specimen))
+    result <- withTestStoreGen @Auto @(UidRep PrimaryKey Auto) @(IdQuery Id) @(Uid Id Rec) (restop @DbError (prog specimen))
     assertJust specimen =<< evalEither result
   where
     specimen =

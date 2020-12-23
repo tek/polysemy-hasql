@@ -14,6 +14,7 @@ let
     (pack "path" "0.8.0" "0isldidz2gypw2pz399g6rn77x9mppd1mvj5h6ify4pj4mpla0pb")
     (pack "path-io" "0.3.1" "07m7q36pdkqk18bmf0lkafjc9npksym7dhn2am1m9c1rvj3b26qf")
     (pack "postgresql-binary" "0.12.3.1" "1qqd5rln67lkff7dxkar1d4p5ggd59kqcv15la2d2i0pdxmbkhkl")
+    (pack "th-test-utils" "1.1.0" "1nmpa6hz2zv12drb9w82rwq3f2agn7lw4g3mvj3mrsb3g33g251k")
   ];
   versionOverrides = builtins.listToAttrs versions;
 

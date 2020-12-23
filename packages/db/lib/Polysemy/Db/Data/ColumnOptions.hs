@@ -15,3 +15,7 @@ instance Default ColumnOptions where
 instance Semigroup ColumnOptions where
   ColumnOptions u1 n1 p1 <> ColumnOptions u2 n2 p2 =
     ColumnOptions (u1 || u2) (n1 && n2) (p1 || p2)
+
+instance Monoid ColumnOptions where
+  mempty =
+    ColumnOptions False True False

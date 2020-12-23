@@ -5,7 +5,7 @@ import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (column, jsonBytes)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (int8, param)
-import Polysemy.Db.Data.Column (Auto, Json, Prim)
+import Polysemy.Db.Data.Column (Json, Prim)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Uid (Uid(Uid))
@@ -34,16 +34,16 @@ data Dat =
 
 data DatRep =
   DatRep {
-    field1 :: Prim Auto,
-    field2 :: Prim Auto,
-    field3 :: Json Auto
+    field1 :: Prim,
+    field2 :: Prim,
+    field3 :: Json
   }
   deriving (Eq, Show, Generic)
 
 test_json :: UnitTest
 test_json =
   integrationTest do
-    interpretStoreDbFullGenUid @DatRep @(Prim Auto) @Int @Dat do
+    interpretStoreDbFullGenUid @DatRep @Prim @Int @Dat do
       restop @DbError $ Store.insert dat
     result <- evalMaybe =<< Database.retryingQuerySqlDef @DbError query enc dec 5
     assertRight f3 (Aeson.eitherDecodeStrict' result)

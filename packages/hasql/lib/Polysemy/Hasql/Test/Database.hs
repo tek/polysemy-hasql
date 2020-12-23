@@ -1,14 +1,10 @@
 module Polysemy.Hasql.Test.Database where
 
-import Control.Lens (Lens', set, view)
+import Control.Lens (Lens', view)
 import qualified Data.UUID as UUID
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
-import Polysemy.Db.Random (Random, random, runRandomIO)
-import Polysemy.Resource (Resource, bracket)
-import Polysemy.Time (Time)
-
-import Polysemy.Db.Data.Column (UidRep)
+import Polysemy.Db.Data.Column (Auto, PrimaryKey, UidRep)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
@@ -16,8 +12,12 @@ import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Data.IdQuery (IdQuery)
-import Polysemy.Db.Data.TableName (TableName(TableName))
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Random (Random, random, runRandomIO)
+import Polysemy.Db.Text.Quote (dquote)
+import Polysemy.Resource (Resource, bracket)
+import Polysemy.Time (GhcTime, Time)
+
 import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
@@ -33,22 +33,22 @@ import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Store (StoreStack, UidStoreStack, interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Hasql.Table.Representation (Rep)
 import Polysemy.Hasql.Table.Table (GenTable, genTable)
-import Polysemy.Time (GhcTime)
+import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
 
 suffixedTable ::
-  Lens' t TableName ->
+  Lens' t (Table d) ->
   Text ->
   t ->
   t
-suffixedTable lens suffix table =
-  set lens suffixedName table
+suffixedTable lens suffix =
+  lens . Table.structure %~ applySuffix
   where
-    suffixedName =
-      TableName [qt|#{canonicalName}-#{suffix}|]
-    TableName canonicalName =
-      view lens table
+    applySuffix (Column (Name name) _ tpe opt dbTpe) =
+      Column (Name suffixed) (Selector (dquote suffixed)) tpe opt dbTpe
+      where
+        suffixed =
+          [qt|#{name}-#{suffix}|]
 
 bracketTestTable ::
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
@@ -76,7 +76,7 @@ withTestTable ::
 withTestTable lens table use = do
   suffix <- UUID.toText <$> random
   resumeHoist DbError.Connection $ DbConnection.use \ _ ->
-    bracketTestTable lens (suffixedTable (lens . tableName) suffix table) (raise . use)
+    bracketTestTable lens (suffixedTable lens suffix table) (raise . use)
 
 withTestPlainTable ::
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
@@ -104,13 +104,13 @@ withTestQueryTable =
   withTestTable QueryTable.table
 
 withTestQueryTableGen ::
-  ∀ rep q d a r .
+  ∀ qrep rep q d a r .
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
-  GenQueryTable (Rep q) rep q d =>
+  GenQueryTable qrep rep q d =>
   (QueryTable q d -> Sem r a) ->
   Sem r a
 withTestQueryTableGen =
-  withTestQueryTable (genQueryTable @(Rep q) @rep)
+  withTestQueryTable (genQueryTable @qrep @rep)
 
 createTestDb ::
   Members [Random, DbConnection Connection !! DbConnectionError, Stop DbError, Embed IO] r =>
@@ -165,48 +165,48 @@ type TestStoreDeps =
 withTestStoreTableGen ::
   ∀ rep q d r a .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep q) rep q d =>
+  GenQueryTable Auto rep q d =>
   (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
-  withTestQueryTableGen @rep \ table ->
+  withTestQueryTableGen @Auto @rep \ table ->
     interpretStoreDbFull table (prog table)
 
 withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep (IdQuery i)) (UidRep ir rep) (IdQuery i) (Uid i d) =>
+  GenQueryTable Auto (UidRep ir rep) (IdQuery i) (Uid i d) =>
   (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGen prog =
-  withTestQueryTableGen @(UidRep ir rep) \ table ->
+  withTestQueryTableGen @Auto @(UidRep ir rep) \ table ->
     interpretStoreDbFullUid table (prog table)
 
 withTestStoreGen ::
-  ∀ rep q d r .
+  ∀ qrep rep q d r .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep q) rep q d =>
+  GenQueryTable qrep rep q d =>
   InterpretersFor (StoreStack q d q d) r
 withTestStoreGen prog =
-  withTestQueryTableGen @rep \ table ->
+  withTestQueryTableGen @qrep @rep \ table ->
     interpretStoreDbFull table prog
 
 withTestStore ::
   ∀ q d r a .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep q) (Rep d) q d =>
+  GenQueryTable Auto Auto q d =>
   Sem (StoreStack q d q d ++ r) a ->
   Sem r a
 withTestStore prog =
-  withTestQueryTableGen @(Rep d) \ table ->
+  withTestQueryTableGen @Auto @Auto \ table ->
     interpretStoreDbFull table prog
 
 withTestStoreUid ::
   ∀ i d r a .
   Members TestStoreDeps r =>
-  GenQueryTable (Rep (IdQuery i)) (Rep (Uid i d)) (IdQuery i) (Uid i d) =>
+  GenQueryTable Auto (UidRep PrimaryKey Auto) (IdQuery i) (Uid i d) =>
   Sem (UidStoreStack i d ++ r) a ->
   Sem r a
 withTestStoreUid prog =
-  withTestQueryTableGen @(Rep (Uid i d)) \ table ->
+  withTestQueryTableGen @Auto @(UidRep PrimaryKey Auto) \ table ->
     interpretStoreDbFullUid table prog

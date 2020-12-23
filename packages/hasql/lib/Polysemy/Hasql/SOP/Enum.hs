@@ -43,13 +43,11 @@ genEnumTable =
 class EnumTable a where
   enumTable :: Map Text a
 
-instance
-  (
-  IsEnum a,
-  ReifySOP a (GCode a),
-  GDatatypeInfoOf a ~ 'T.ADT mod name ctors strictness,
-  T.DemoteConstructorInfos ctors (GCode a)
-  ) =>
-  EnumTable a where
-  enumTable =
-    genEnumTable
+instance (
+    IsEnum a,
+    ReifySOP a (GCode a),
+    GDatatypeInfoOf a ~ 'T.ADT mod name ctors strictness,
+    T.DemoteConstructorInfos ctors (GCode a)
+  ) => EnumTable a where
+    enumTable =
+      genEnumTable

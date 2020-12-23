@@ -16,3 +16,4 @@ dependencies:
 ghc-options:
   - -Wall
   - -Wredundant-constraints
+  - -Wsimplifiable-class-constraints

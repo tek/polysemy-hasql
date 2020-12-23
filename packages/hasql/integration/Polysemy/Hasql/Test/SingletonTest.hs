@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.SingletonTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim)
+import Polysemy.Db.Data.Column (Prim)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
@@ -24,8 +24,8 @@ data Dat =
 
 data DatRep =
   DatRep {
-    id :: Prim Auto,
-    content :: Prim Auto
+    id :: Prim,
+    content :: Prim
   }
   deriving (Eq, Show, Generic)
 

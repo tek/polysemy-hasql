@@ -16,10 +16,13 @@ dependencies:
   - composition
   - data-default
   - either
+  - first-class-families
+  - fcf-containers
   - polysemy-resume
   - random
   - relude
   - string-interpolate
+  - symbols
   - template-haskell
   - time
   - unordered-containers

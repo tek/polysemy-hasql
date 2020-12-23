@@ -41,29 +41,6 @@ import Data.UUID (UUID)
 import GHC.Err (undefined)
 import GHC.IO.Unsafe (unsafePerformIO)
 import GHC.TypeLits (KnownSymbol, Symbol)
-import Relude hiding (
-  Reader,
-  State,
-  Sum,
-  Type,
-  ask,
-  asks,
-  evalState,
-  filterM,
-  get,
-  gets,
-  hoistEither,
-  modify,
-  modify',
-  put,
-  readFile,
-  runReader,
-  runState,
-  state,
-  trace,
-  traceShow,
-  undefined,
-  )
 import Language.Haskell.TH.Quote (QuasiQuoter)
 import qualified Language.Haskell.TH.Syntax as TH
 import Polysemy (
@@ -96,6 +73,33 @@ import Polysemy.Internal.Bundle (Append)
 import Polysemy.Reader (Reader)
 import Polysemy.Resume
 import Polysemy.State (State, evalState, get, gets, modify, modify', put, runState)
+import Relude hiding (
+  All,
+  Any,
+  Compose,
+  Product,
+  Reader,
+  State,
+  Sum,
+  Type,
+  ask,
+  asks,
+  evalState,
+  filterM,
+  get,
+  gets,
+  hoistEither,
+  modify,
+  modify',
+  put,
+  readFile,
+  runReader,
+  runState,
+  state,
+  trace,
+  traceShow,
+  undefined,
+  )
 import System.IO.Error (userError)
 
 unit ::

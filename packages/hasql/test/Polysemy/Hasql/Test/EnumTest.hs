@@ -1,9 +1,10 @@
 module Polysemy.Hasql.Test.EnumTest where
 
 import Polysemy.Db.Data.Column (Auto)
-import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
-import Polysemy.Hasql.Table.TableStructure (genTableStructure)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
+
+import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Data.DbType (DbType(Prim, Prod), Column(Column))
 
 data En =
   One
@@ -21,20 +22,20 @@ data EnumsCol =
   EnumsCol { e :: NonEmpty En }
   deriving (Eq, Show, Generic)
 
-enumColTable :: TableStructure
+enumColTable :: Column
 enumColTable =
-  genTableStructure @Auto @EnumCol
+  tableStructure @Auto @EnumCol
 
 test_enumColTable :: UnitTest
 test_enumColTable =
   runTestAuto do
-    TableStructure "enum_col" [Column "e" "text" def Nothing] === enumColTable
+    Column "enum_col" [qt|"enum_col"|] "enum_col" def (Prod [Column "e" [qt|"e"|] "text" def Prim]) === enumColTable
 
-enumsColTable :: TableStructure
+enumsColTable :: Column
 enumsColTable =
-  genTableStructure @Auto @EnumsCol
+  tableStructure @Auto @EnumsCol
 
 test_enumsColTable :: UnitTest
 test_enumsColTable =
   runTestAuto do
-    TableStructure "enums_col" [Column "e" "text[]" def Nothing] === enumsColTable
+    Column "enums_col" [qt|"enums_col"|] "enums_col" def (Prod [Column "e" [qt|"e"|] "text[]" def Prim]) === enumsColTable

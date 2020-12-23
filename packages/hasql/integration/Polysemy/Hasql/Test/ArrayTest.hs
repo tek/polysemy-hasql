@@ -1,8 +1,9 @@
 module Polysemy.Hasql.Test.ArrayTest where
 
+import Polysemy.Db.Data.Column (Auto)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Prim)
+import Polysemy.Db.Data.Column (Enum, Prim)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import qualified Polysemy.Db.Data.Store as Store
@@ -30,8 +31,8 @@ data ArrayField =
 
 data ArrayFieldRep =
   ArrayFieldRep {
-    id :: Prim Auto,
-    f1 :: Enum Auto
+    id :: Prim,
+    f1 :: Enum
   }
   deriving (Eq, Show, Generic)
 
@@ -50,9 +51,8 @@ prog = do
   _ <- Store.upsert array
   Store.fetch (IdQuery id')
 
-
 test_arrayField :: UnitTest
 test_arrayField =
   integrationTest do
-    result <- withTestStoreGen @ArrayFieldRep (restop @DbError prog)
+    result <- withTestStoreGen @Auto @ArrayFieldRep @UuidQuery @ArrayField (restop @DbError prog)
     assertJust array result

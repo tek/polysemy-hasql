@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Store where
 
+import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Resource (Resource)
 import Polysemy.Time (Time, interpretTimeGhc)
 
@@ -21,7 +22,6 @@ import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Schema.Generic (interpretSchema)
 import Polysemy.Hasql.Store.Statement (delete, deleteAll, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Hasql.Table.Representation (Rep)
 
 type StoreStack qOut dOut qIn dIn =
   [Store qOut dOut !! DbError, Schema qIn dIn !! DbError, ManagedTable dIn !! DbError]
@@ -103,18 +103,18 @@ interpretStoreDbFullUid =
 
 interpretStoreDbFullGenAs ::
   ∀ rep dIn dOut qIn qOut t dt r .
-  GenQueryTable (Rep qIn) rep qIn dIn =>
+  GenQueryTable Auto rep qIn dIn =>
   Members (StoreDeps t dt) r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
   InterpretersFor (StoreStack qOut dOut qIn dIn) r
 interpretStoreDbFullGenAs toD fromD fromQ =
-  interpretStoreDbFullAs toD fromD fromQ (genQueryTable @(Rep qIn) @rep)
+  interpretStoreDbFullAs toD fromD fromQ (genQueryTable @Auto @rep)
 
 interpretStoreDbFullGenUid ::
   ∀ rep ir i d t dt r .
-  GenQueryTable (Rep (IdQuery i)) (UidRep ir rep) (IdQuery i) (Uid i d) =>
+  GenQueryTable Auto (UidRep ir rep) (IdQuery i) (Uid i d) =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (UidStoreStack i d) r
 interpretStoreDbFullGenUid =
@@ -131,15 +131,15 @@ interpretStoreDbFull table =
 
 interpretStoreDbFullGen ::
   ∀ rep q d t dt r .
-  GenQueryTable (Rep q) rep q d =>
+  GenQueryTable Auto rep q d =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack q d q d) r
 interpretStoreDbFullGen =
-  interpretStoreDbFull (genQueryTable @(Rep q) @rep)
+  interpretStoreDbFull (genQueryTable @Auto @rep)
 
 interpretStoreDbSingle ::
   ∀ rep q d r .
-  GenQueryTable (Rep q) rep q d =>
+  GenQueryTable Auto rep q d =>
   Members [Resource, Embed IO] r =>
   Text ->
   DbConfig ->

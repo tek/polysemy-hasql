@@ -1,5 +1,20 @@
 module Polysemy.Db.Data.Column where
 
+import Polysemy.Db.Data.FieldId (FieldId)
+
+data Rep (r :: [*]) =
+  Rep
+  deriving (Eq, Show)
+
+data ForceRep (r :: [*]) =
+  ForceRep
+  deriving (Eq, Show)
+
+type family ConsRep (h :: *) (t :: *) :: * where
+  ConsRep (Rep h) (Rep t) = (Rep (h ++ t))
+  ConsRep h (Rep t) = Rep (h : t)
+  ConsRep h t = Rep [h, t]
+
 data PrimaryKey =
   PrimaryKey
   deriving (Eq, Show)
@@ -8,8 +23,12 @@ data ForeignKey =
   ForeignKey
   deriving (Eq, Show)
 
-data Flatten r =
+data Flatten adt =
   Flatten
+  deriving (Eq, Show)
+
+data Product adt =
+  Product
   deriving (Eq, Show)
 
 data Auto =
@@ -20,28 +39,36 @@ data Unique =
   Unique
   deriving (Eq, Show)
 
-data Prim a =
+data Prim =
   Prim
   deriving (Eq, Show)
 
-data NewtypePrim a =
-  NewtypePrim
+data ForcePrim a =
+  ForcePrim
   deriving (Eq, Show)
 
-data Sum r s =
+data Con (name :: FieldId) =
+  Con
+  deriving (Eq, Show)
+
+data Sum adt =
   Sum
   deriving (Eq, Show)
 
-data Enum a =
+data Enum =
   Enum
   deriving (Eq, Show)
 
-data Json r =
-  Json r
+data Json =
+  Json
   deriving (Eq, Show)
 
-data JsonB r =
-  JsonB r
+data JsonB =
+  JsonB
+  deriving (Eq, Show)
+
+data PrimQuery (field :: Symbol) =
+  PrimQuery
   deriving (Eq, Show)
 
 data UidRep i a =
@@ -49,7 +76,7 @@ data UidRep i a =
      id :: i,
      payload :: Flatten a
   }
-  deriving (Eq, Show, Generic)
+  deriving (Generic)
 
 type UuidRep a =
-  UidRep (Prim Auto) a
+  UidRep Auto a

@@ -2,7 +2,6 @@ module Polysemy.Hasql.Query.Many where
 
 import Polysemy.Db.Data.Column (UidRep)
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
-import Polysemy.Db.Data.TableStructure (TableStructure)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
@@ -11,6 +10,8 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Statement (selectWhere)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+
+import Polysemy.Hasql.Data.DbType (Column)
 
 interpretManyAs ::
   ∀ qOut qIn dIn dOut dResult e r .
@@ -73,7 +74,7 @@ interpretManyWith ::
   ∀ qrep rep q d e r .
   GenQueryTable qrep rep q d =>
   Member (ManagedTable d !! e) r =>
-  TableStructure ->
+  Column ->
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretManyWith struct =
   interpretMany (genQueryTable @qrep @rep & QueryTable.table . Table.structure .~ struct)

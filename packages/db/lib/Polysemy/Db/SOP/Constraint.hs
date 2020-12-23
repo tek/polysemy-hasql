@@ -1,15 +1,9 @@
 module Polysemy.Db.SOP.Constraint where
 
 import GHC.TypeLits (symbolVal)
-import Generics.SOP (All, All2, IsProductType, Top)
+import Generics.SOP (All, All2, Top)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo)
-import Generics.SOP.Type.Metadata (
-  ConstructorInfo(Record),
-  DatatypeInfo(ADT, Newtype),
-  DemoteFieldInfos,
-  FieldInfo,
-  )
-import Prelude hiding (All)
+import Generics.SOP.Type.Metadata (ConstructorInfo(Record), DatatypeInfo(ADT, Newtype), FieldInfo)
 
 import Polysemy.Db.Text.Case (unCamelCase, unCamelCaseString)
 
@@ -34,22 +28,13 @@ type IsNullary =
 type IsEnum a =
   All IsNullary (GCode a)
 
-type AllProduct (c :: * -> Constraint) a (xs :: [*]) =
-  (IsProductType a xs, All c xs)
-
-type SymbolNames names =
-  All KnownSymbol names
-
-type FieldNames fields names =
-  DemoteFieldInfos fields names
-
 class IsDataT (d :: DatatypeInfo) (name :: Symbol) | d -> name where
 
 instance IsDataT ('Newtype mod name ctors) name where
 
 instance IsDataT ('ADT mod name ctors strictness) name where
 
-class IsData a types name | a -> types name where
+class IsData (a :: *) (types :: [*]) (name :: Symbol) | a -> types name where
 
 instance (
     ProductCoded a types,
@@ -79,18 +64,22 @@ class Ctors (d :: *) (ctors :: [ConstructorInfo]) (types :: [[*]]) | d -> ctors 
 
 instance (CtorsT (GDatatypeInfoOf d) ctors, types ~ GCode d) => Ctors d ctors types where
 
-class DataName a where
-  dataName :: String
+class DataName (d :: *) (name :: Symbol) | d -> name where
+  dataNameString :: String
 
-instance
-  ∀ a name .
-  (
+instance (
   KnownSymbol name,
-  IsDataT (GDatatypeInfoOf a) name
-  ) =>
-  DataName a where
-    dataName =
+  IsDataT (GDatatypeInfoOf d) name
+  ) => DataName d name where
+    dataNameString =
       symbolVal (Proxy @name)
+
+dataName ::
+  ∀ d name .
+  DataName d name =>
+  Text
+dataName =
+  toText (dataNameString @d)
 
 symbolString ::
   ∀ (name :: Symbol) .
@@ -107,11 +96,11 @@ symbolText =
   toText (symbolString @name)
 
 dataSlug ::
-  ∀ a .
-  DataName a =>
+  ∀ a name .
+  DataName a name =>
   Text
 dataSlug =
-  unCamelCase '-' (dataName @a)
+  unCamelCase '-' (dataNameString @a)
 
 slugString_ ::
   String ->
@@ -140,11 +129,11 @@ slugSymbol_ =
   slugText_ (symbolVal (Proxy @a))
 
 dataSlug_ ::
-  ∀ a .
-  DataName a =>
+  ∀ a name .
+  DataName a name =>
   Text
 dataSlug_ =
-  slugText_ (dataName @a)
+  slugText_ (dataNameString @a)
 
 class RecordFields a (names :: [FieldInfo]) types | a -> names types where
 

@@ -28,22 +28,34 @@ source-repository head
 library
   exposed-modules:
       Polysemy.Hasql
+      Polysemy.Hasql.Column.Class
+      Polysemy.Hasql.Column.Data.Effect
+      Polysemy.Hasql.Column.DataColumn
+      Polysemy.Hasql.Column.Effect
+      Polysemy.Hasql.Column.Meta
       Polysemy.Hasql.ColumnOptions
+      Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
+      Polysemy.Hasql.Data.DbType
+      Polysemy.Hasql.Data.ExistingColumn
       Polysemy.Hasql.Data.ManagedTable
       Polysemy.Hasql.Data.QueryTable
-      Polysemy.Hasql.Data.QueryWhere
       Polysemy.Hasql.Data.QueueOutputError
       Polysemy.Hasql.Data.Schema
       Polysemy.Hasql.Data.SqlCode
       Polysemy.Hasql.Data.StoreTable
       Polysemy.Hasql.Data.Table
+      Polysemy.Hasql.Data.Where
       Polysemy.Hasql.Database
       Polysemy.Hasql.DbConnection
+      Polysemy.Hasql.DbType
+      Polysemy.Hasql.Kind.Data.DbType
       Polysemy.Hasql.ManagedTable
       Polysemy.Hasql.Query.Many
       Polysemy.Hasql.Query.One
+      Polysemy.Hasql.QueryParams
+      Polysemy.Hasql.QueryRows
       Polysemy.Hasql.Queue
       Polysemy.Hasql.Queue.Data.Queue
       Polysemy.Hasql.Queue.Data.Queued
@@ -57,10 +69,11 @@ library
       Polysemy.Hasql.Store.Statement
       Polysemy.Hasql.Table
       Polysemy.Hasql.Table.ColumnOptions
-      Polysemy.Hasql.Table.Columns
-      Polysemy.Hasql.Table.ColumnType
+      Polysemy.Hasql.Table.DecoderValue
+      Polysemy.Hasql.Table.EncoderValue
       Polysemy.Hasql.Table.Enum
-      Polysemy.Hasql.Table.Identifier
+      Polysemy.Hasql.Table.PrimDecoder
+      Polysemy.Hasql.Table.PrimEncoder
       Polysemy.Hasql.Table.Query.Delete
       Polysemy.Hasql.Table.Query.Fragment
       Polysemy.Hasql.Table.Query.Insert
@@ -68,27 +81,24 @@ library
       Polysemy.Hasql.Table.Query.Select
       Polysemy.Hasql.Table.Query.Set
       Polysemy.Hasql.Table.Query.Text
-      Polysemy.Hasql.Table.Query.Where
       Polysemy.Hasql.Table.QueryParam
-      Polysemy.Hasql.Table.QueryParams
       Polysemy.Hasql.Table.QueryRow
-      Polysemy.Hasql.Table.QueryRows
       Polysemy.Hasql.Table.QueryTable
-      Polysemy.Hasql.Table.Representation
+      Polysemy.Hasql.Table.ReadNull
       Polysemy.Hasql.Table.ResultShape
       Polysemy.Hasql.Table.Table
-      Polysemy.Hasql.Table.TableName
-      Polysemy.Hasql.Table.TableStructure
-      Polysemy.Hasql.Table.ValueDecoder
-      Polysemy.Hasql.Table.ValueEncoder
+      Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
+      Polysemy.Hasql.Test.Error.Column.E1
+      Polysemy.Hasql.Type.Data.DbType
+      Polysemy.Hasql.Where
       Paths_polysemy_hasql
   autogen-modules:
       Paths_polysemy_hasql
   hs-source-dirs:
       lib
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively
+  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively
   build-depends:
       aeson
     , async
@@ -132,18 +142,19 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.InitTest
       Polysemy.Hasql.Test.JsonTest
-      Polysemy.Hasql.Test.NotificationTest
       Polysemy.Hasql.Test.PKTest
       Polysemy.Hasql.Test.QueryTest
+      Polysemy.Hasql.Test.QueueTest
       Polysemy.Hasql.Test.Run
       Polysemy.Hasql.Test.SingletonTest
       Polysemy.Hasql.Test.SumFieldTest
+      Polysemy.Hasql.Test.SumTableTest
       Polysemy.Hasql.Test.UpsertTest
       Paths_polysemy_hasql
   hs-source-dirs:
       integration
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , async
@@ -172,7 +183,9 @@ test-suite polysemy-hasql-integration
     , symbols
     , tasty
     , tasty-hedgehog
+    , template-haskell
     , text
+    , th-test-utils
     , time
     , type-errors
     , type-errors-pretty
@@ -190,6 +203,8 @@ test-suite polysemy-hasql-unit
   other-modules:
       Polysemy.Hasql.Test.EnumTest
       Polysemy.Hasql.Test.GenTest
+      Polysemy.Hasql.Test.HasGeneric
+      Polysemy.Hasql.Test.ParamTest
       Polysemy.Hasql.Test.RepTest
       Polysemy.Hasql.Test.StatementTest
       Polysemy.Hasql.Test.TableTest
@@ -197,7 +212,7 @@ test-suite polysemy-hasql-unit
   hs-source-dirs:
       test
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -fplugin=Polysemy.Plugin -O2 -flate-specialise -fspecialise-aggressively -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , async
@@ -226,7 +241,9 @@ test-suite polysemy-hasql-unit
     , symbols
     , tasty
     , tasty-hedgehog
+    , template-haskell
     , text
+    , th-test-utils
     , time
     , type-errors
     , type-errors-pretty

@@ -1,11 +1,14 @@
 module Polysemy.Hasql.Test.TableTest where
 
-import Polysemy.Db.Data.TableStructure (Column(Column), TableStructure(TableStructure))
+import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Hasql.Table (missingColumns)
-import Polysemy.Hasql.Table.Identifier (dbIdentifier)
-import Polysemy.Hasql.Table.TableStructure (tableStructure)
+import Polysemy.Db.Text.DbIdentifier (dbIdentifier)
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
+
+import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
+import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Prod, Prim))
 
 data Rec =
   Rec {
@@ -14,9 +17,9 @@ data Rec =
   }
   deriving (Eq, Show, Generic)
 
-recTable :: TableStructure
+recTable :: Column
 recTable =
-  tableStructure @Rec
+  tableStructure @Auto @Rec
 
 test_recColumns :: UnitTest
 test_recColumns =
@@ -24,20 +27,26 @@ test_recColumns =
     target === recTable
   where
     target =
-      TableStructure "rec" [Column "field1" "text" def Nothing, Column "field2" "bigint" def Nothing]
+      Column "rec" [qt|"rec"|] "rec" def (Prod [
+        Column "field1" [qt|"field1"|] "text" def Prim,
+        Column "field2" [qt|"field2"|] "bigint" def Prim
+      ])
 
 data UuidCol =
   UuidCol { uuid :: UUID }
   deriving (Eq, Show, Generic)
 
-uuidColTable :: TableStructure
+uuidColTable :: Column
 uuidColTable =
-  tableStructure @UuidCol
+  tableStructure @Auto @UuidCol
 
 test_uuidColTable :: UnitTest
 test_uuidColTable =
   runTestAuto do
-    TableStructure "uuid_col" [Column "uuid" "uuid" def Nothing] === uuidColTable
+    target === uuidColTable
+  where
+    target =
+      Column "uuid_col" [qt|"uuid_col"|] "uuid_col" def (Prod [Column "uuid" [qt|"uuid"|] "uuid" def Prim])
 
 test_tableName :: UnitTest
 test_tableName =
@@ -47,15 +56,23 @@ test_tableName =
 
 targetMissing :: [Column]
 targetMissing =
-  [Column "f4" "text" def Nothing]
+  [Column "f4" [qt|"f4"|] "text" def Prim]
 
-updateColumnsExisting :: [Column]
+updateColumnsExisting :: [ExistingColumn]
 updateColumnsExisting =
-  [Column "f1" "bigint" def Nothing, Column "f2" "uuid" def Nothing, Column "f3" "text" def Nothing]
+  [
+    ExistingColumn "f1" "bigint",
+    ExistingColumn "f2" "uuid",
+    ExistingColumn "f3" "text"
+  ]
 
 updateColumnsTarget :: [Column]
 updateColumnsTarget =
-  [Column "f1" "bigint" def Nothing, Column "f2" "text" def Nothing, Column "f4" "text" def Nothing]
+  [
+    Column "f1" [qt|"f1"|] "bigint" def Prim,
+    Column "f2" [qt|"f2"|] "text" def Prim,
+    Column "f4" [qt|"f4"|] "text" def Prim
+  ]
 
 test_updateTasks :: UnitTest
 test_updateTasks =

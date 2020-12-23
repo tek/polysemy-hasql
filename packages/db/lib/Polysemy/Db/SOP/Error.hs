@@ -15,6 +15,10 @@ type family ErrorWithType2 part1 d part2 d' :: k where
   ErrorWithType2 part1 d part2 d' =
     TypeError ('Text part1 <> 'Text " " <> 'ShowType d <> 'Text " " <> 'Text part2 <> 'Text " " <> 'ShowType d')
 
-type family JoinComma (ns :: [Symbol]) :: ErrorMessage where
-  JoinComma (n : n1 : ns) = 'Text n <> ", " <> JoinComma (n1 : ns)
-  JoinComma '[n] = 'Text n
+type family JoinComma (ns :: [ErrorMessage]) :: ErrorMessage where
+  JoinComma (n : n1 : ns) = n <> ", " <> JoinComma (n1 : ns)
+  JoinComma '[n] = n
+
+type family JoinCommaSym (ns :: [Symbol]) :: ErrorMessage where
+  JoinCommaSym (n : n1 : ns) = 'Text n <> ", " <> JoinCommaSym (n1 : ns)
+  JoinCommaSym '[n] = 'Text n

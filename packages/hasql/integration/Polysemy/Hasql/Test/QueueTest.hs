@@ -1,4 +1,4 @@
-module Polysemy.Hasql.Test.NotificationTest where
+module Polysemy.Hasql.Test.QueueTest where
 
 import Polysemy.Async (asyncToIOFinal)
 import Polysemy.Db.Data.Uid (Uuid, intUuid)
@@ -42,14 +42,14 @@ prog = do
     d2 =
       intUuid 2 (Dat "bonjour")
 
-test_notification :: UnitTest
-test_notification =
+test_queue :: UnitTest
+test_queue =
   integrationTestWithDb \ conf ->
     asyncToIOFinal $
     mapStop @QueueOutputError @Text show $
     interpretTimeGhc $
     (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
     (interpretDbConnection "test-queue-output" conf . untag @"test-queue-output") $
-    interpretOutputDbQueueFullGen @"test-queue" $
+    interpretOutputDbQueueFullGen @"test-queue" @(Uuid Dat) $
     interpretInputDbQueueFullGen @"test-queue" (Seconds 0) (\ _ -> pure False) $
     prog

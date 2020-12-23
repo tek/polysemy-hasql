@@ -1,54 +1,53 @@
 module Polysemy.Hasql.Table.Query.Fragment where
 
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(ColumnOptions))
-import Polysemy.Db.Data.TableName (TableName(TableName))
-import Polysemy.Db.Data.TableStructure (Column(Column))
-import Polysemy.Db.Text.Quote (dquote)
-import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Hasql.Table.Query.Text (commaFields)
+
+import Polysemy.Hasql.Table.Query.Text (commaSeparated)
+import Polysemy.Hasql.Data.DbType (Column(Column), Selector(Selector))
+import Polysemy.Hasql.DbType (baseColumns, columnSpec)
 
 uniqueOrPrimary :: ColumnOptions -> Bool
 uniqueOrPrimary (ColumnOptions u _ p) =
   u || p
 
 pattern UniqueName :: Text -> Column
-pattern UniqueName name <- Column name _ (uniqueOrPrimary -> True) _
+pattern UniqueName sel <- Column _ (Selector sel) _ (uniqueOrPrimary -> True) _
 
 fromFragment ::
-  TableName ->
+  Selector ->
   SqlCode
-fromFragment (TableName (dquote -> name)) =
+fromFragment (Selector name) =
   SqlCode [qt|from #{name}|]
 
 intoFragment ::
-  TableName ->
+  Selector ->
   SqlCode
-intoFragment (TableName (dquote -> name)) =
+intoFragment (Selector name) =
   SqlCode [qt|into #{name}|]
 
 alterFragment ::
-  TableName ->
+  Selector ->
   SqlCode
-alterFragment (TableName (dquote -> name)) =
+alterFragment (Selector name) =
   SqlCode [qt|alter table #{name}|]
 
-addFragment ::
+addColumnFragment ::
   Column ->
   SqlCode
-addFragment (Column (dquote -> name) type' (ColumnOptions.format -> params) _) =
-  SqlCode [qt|add #{name} #{type'}#{params}|]
+addColumnFragment column =
+  SqlCode "add " <> columnSpec column
 
 conflictFragment ::
-  [Column] ->
+  Column ->
   SqlCode ->
   SqlCode
-conflictFragment columns (SqlCode setters) =
+conflictFragment (baseColumns -> columns) (SqlCode setters) =
   SqlCode (format uniques)
   where
     format Nothing =
       ""
-    format (Just (commaFields -> cols)) =
+    format (Just (commaSeparated -> cols)) =
       [qt|on conflict (#{cols}) do update #{setters}|]
     uniques =
       nonEmpty [n | UniqueName n <- columns]

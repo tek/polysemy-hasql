@@ -40,22 +40,26 @@ library
       Polysemy.Db.Data.DbPassword
       Polysemy.Db.Data.DbPort
       Polysemy.Db.Data.DbUser
+      Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.IdQuery
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
-      Polysemy.Db.Data.TableName
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Data.Uid
       Polysemy.Db.Debug
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint
+      Polysemy.Db.SOP.Constructor
       Polysemy.Db.SOP.Contravariant
       Polysemy.Db.SOP.Error
       Polysemy.Db.SOP.FieldNames
+      Polysemy.Db.SOP.HasGeneric
+      Polysemy.Db.SOP.Text
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery
       Polysemy.Db.Text.Case
+      Polysemy.Db.Text.DbIdentifier
       Polysemy.Db.Text.Quote
       Paths_polysemy_db
   other-modules:
@@ -65,7 +69,7 @@ library
   hs-source-dirs:
       lib
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints
+  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints
   build-depends:
       aeson
     , base
@@ -74,6 +78,8 @@ library
     , containers
     , data-default
     , either
+    , fcf-containers
+    , first-class-families
     , generics-sop
     , lens
     , polysemy
@@ -81,6 +87,7 @@ library
     , random
     , relude
     , string-interpolate
+    , symbols
     , template-haskell
     , text
     , time

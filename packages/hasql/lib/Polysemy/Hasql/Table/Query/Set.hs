@@ -1,22 +1,17 @@
 module Polysemy.Hasql.Table.Query.Set where
 
-import Polysemy.Db.Data.TableStructure (TableStructure(TableStructure))
-
-import qualified Polysemy.Db.Data.TableStructure as Column
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.Table.Query.Insert (insertValues)
 import Polysemy.Hasql.Table.Query.Prepared (assign)
 import Polysemy.Hasql.Table.Query.Text (commaSeparated)
+import Polysemy.Hasql.Data.DbType (Column)
+import Polysemy.Hasql.DbType (baseColumnSelectors)
 
 set ::
-  TableStructure ->
+  Column ->
   SqlCode
-set (TableStructure _ columns) =
+set column =
   SqlCode [qt|set #{assigns}|]
   where
     assigns =
-      commaSeparated (zipWith assign cols values)
-    cols =
-      (Column.columnName <$> columns)
-    values =
-      insertValues (toList columns)
+      commaSeparated (zipWith assign (baseColumnSelectors column) (insertValues column))

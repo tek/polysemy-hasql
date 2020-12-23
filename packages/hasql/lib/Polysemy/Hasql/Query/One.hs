@@ -2,7 +2,6 @@ module Polysemy.Hasql.Query.One where
 
 import Polysemy.Db.Data.Column (UidRep)
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
-import Polysemy.Db.Data.TableStructure (TableStructure)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
@@ -11,6 +10,8 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Statement (selectWhere)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+
+import Polysemy.Hasql.Data.DbType (Column)
 
 interpretOneAs ::
   ∀ qOut qIn dIn dOut e r .
@@ -55,7 +56,7 @@ interpretOneGenUidWith ::
   ∀ qrep rep ir i q d e r .
   GenQueryTable qrep (UidRep ir rep) q (Uid i d) =>
   Member (ManagedTable (Uid i d) !! e) r =>
-  TableStructure ->
+  Column ->
   InterpreterFor (StoreQuery q (Maybe (Uid i d)) !! e) r
 interpretOneGenUidWith struct =
   interpretOneAs id id (genQueryTable @qrep @(UidRep ir rep) & QueryTable.table . Table.structure .~ struct)
@@ -72,7 +73,7 @@ interpretOneWith ::
   ∀ qrep rep q d e r .
   GenQueryTable qrep rep q d =>
   Member (ManagedTable d !! e) r =>
-  TableStructure ->
+  Column ->
   InterpreterFor (StoreQuery q (Maybe d) !! e) r
 interpretOneWith struct =
   interpretOne (genQueryTable @qrep @rep & QueryTable.table . Table.structure .~ struct)

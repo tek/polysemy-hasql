@@ -1,12 +1,10 @@
 module Polysemy.Db.SOP.Contravariant where
 
-import Generics.SOP (
-  All,
+import Generics.SOP (SListI,
   I(I),
   K(K),
   NP,
   Projection,
-  Top,
   hcollapse,
   hmap,
   hzipWith,
@@ -16,11 +14,10 @@ import Generics.SOP (
   unI,
   (:.:)(Comp),
   )
-import Prelude hiding (All)
 
 sequenceContravariantNPF ::
   ∀ (ds :: [*]) (cv :: * -> *) (f :: * -> *) .
-  All Top ds =>
+  SListI ds =>
   Contravariant cv =>
   (∀ a . Monoid (cv a)) =>
   NP (cv :.: f) ds ->
@@ -36,7 +33,7 @@ sequenceContravariantNPF contrs =
 
 sequenceContravariantNP ::
   ∀ (ds :: [*]) (cv :: * -> *) .
-  All Top ds =>
+  SListI ds =>
   Contravariant cv =>
   (∀ a . Monoid (cv a)) =>
   NP cv ds ->

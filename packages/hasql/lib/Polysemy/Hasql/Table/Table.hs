@@ -1,25 +1,28 @@
 module Polysemy.Hasql.Table.Table where
 
+import Polysemy.Db.Data.Column (Auto)
+
 import Polysemy.Hasql.Data.Table (Table(Table))
-import Polysemy.Hasql.Table.QueryParams (QueryParams(queryParams))
-import Polysemy.Hasql.Table.QueryRows (QueryRows(queryRows))
-import Polysemy.Hasql.Table.Representation (Rep)
-import Polysemy.Hasql.Table.TableStructure (GenTableStructure(genTableStructure))
+import Polysemy.Hasql.Column.Class (TableColumn, tableColumn)
+import Polysemy.Hasql.Column.DataColumn (DataTable, dataTable)
+import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
+import Polysemy.Hasql.QueryRows (QueryRows(queryRows))
 
 class GenTable rep d where
   genTable :: Table d
 
 instance (
-    QueryRows rep d,
-    QueryParams rep d,
-    GenTableStructure rep d
+    TableColumn rep d c,
+    QueryRows c d,
+    QueryParams c d,
+    DataTable c
   ) => GenTable rep d where
     genTable =
-      Table (genTableStructure @rep @d) (queryRows @rep @d) (queryParams @rep @d)
+      Table (dataTable (tableColumn @rep @d)) (queryRows @c @d) (queryParams @c @d)
 
 table ::
   ∀ (d :: *) .
-  GenTable (Rep d) d =>
+  GenTable Auto d =>
   Table d
 table = do
-  genTable @(Rep d)
+  genTable @Auto

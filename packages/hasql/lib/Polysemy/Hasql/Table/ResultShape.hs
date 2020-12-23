@@ -2,7 +2,6 @@ module Polysemy.Hasql.Table.ResultShape where
 
 import Data.Vector (Vector)
 import Hasql.Decoders (Result, Row, noResult, rowList, rowMaybe, rowVector)
-import Prelude hiding (All, Generic)
 
 class ResultShape a b where
   resultShape :: Row a -> Result b
