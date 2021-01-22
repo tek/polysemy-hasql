@@ -46,7 +46,7 @@ newtype Content =
 data XXor =
   Lef { l :: Double }
   |
-  Righ { r :: Double }
+  Righ { r :: Bool }
   deriving (Eq, Show, Generic)
 
 data XXorRep =
@@ -111,7 +111,7 @@ data ContentNumber =
 type XXorMeta =
   'ADTSum '[
     'ConMeta ('NamedField "Lef") '[ 'ColumnMeta ('NamedField "l") Auto Double],
-    'ConMeta ('NamedField "Righ") '[ 'ColumnMeta ('NamedField "r") Auto Double]
+    'ConMeta ('NamedField "Righ") '[ 'ColumnMeta ('NamedField "r") Auto Bool]
     ]
 
 type LefCol =
@@ -121,7 +121,7 @@ type XXorCols =
   [
     SumIndexColumn,
     LefCol,
-    'Kind.Column ('NamedField "Righ") '[Prim] ('Kind.Prim Double)
+    'Kind.Column ('NamedField "Righ") '[Prim] ('Kind.Prim Bool)
   ]
 
 type XXorType rep =
@@ -251,7 +251,7 @@ prog = do
     Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" (num 1) (Lef 8) creation))
     Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" (num 5) (Lef 8) creation))
     Store.insert (Uid (Uid.uuid 5) (Dat "hello" (num 7) (Lef 9) creation))
-    Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ 8) creation))
+    Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ True) creation))
     r1 :: [Uuid Dat] <- restop (StoreQuery.basic (ContentNumber "hello" Nothing Nothing (Lef 8)))
     r2 <- restop (StoreQuery.basic (ContentNumber "hello" Nothing (Just 6) (Lef 8)))
     pure (length r1, r2)

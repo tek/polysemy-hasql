@@ -18,6 +18,7 @@ class ColumnType (d :: *) where
   type ColumnTypeDefined d :: Bool
   type ColumnTypeDefined d = 'True
 
+instance ColumnType Bool where columnType = "bool"
 instance ColumnType Int where columnType = "bigint"
 instance ColumnType Double where columnType = "double precision"
 instance ColumnType Text where columnType = "text"
