@@ -1,6 +1,9 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
 import Polysemy.Db.Data.Column (Json, Prim)
+import GHC.TypeLits (AppendSymbol)
+
+import Polysemy.Hasql.Column.Class (TableName)
 
 data Queued t a =
   Queued {
@@ -9,6 +12,12 @@ data Queued t a =
     queue_payload :: a
   }
   deriving (Eq, Show, Generic)
+
+instance (
+    TableName d inner,
+    name ~ AppendSymbol "Queued" inner,
+    KnownSymbol name
+  ) => TableName (Queued t d) name where
 
 data QueuedRep =
   QueuedRep {
