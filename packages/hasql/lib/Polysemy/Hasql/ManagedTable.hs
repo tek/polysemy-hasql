@@ -23,7 +23,7 @@ interpretManagedTable table@(Column (Name name) _ _ _ _) =
       restop (Database.withInit initDb (Database.runStatementRetrying interval q stmt))
   where
     initDb =
-      InitDb name \c -> initTable c table
+      InitDb name \ c -> initTable c table
 
 interpretManagedTableGen ::
   ∀ rep d r .

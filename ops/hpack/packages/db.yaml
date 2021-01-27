@@ -18,6 +18,7 @@ dependencies:
   - either
   - first-class-families
   - fcf-containers
+  - polysemy-db-data
   - polysemy-resume
   - random
   - relude

@@ -11,6 +11,7 @@ let
   hs = import hsSrc { inherit base; };
 
   packages = {
+    polysemy-db-data = base + /packages/data;
     polysemy-db = base + /packages/db;
     polysemy-hasql = base + /packages/hasql;
   };

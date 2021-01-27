@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           polysemy-db
+name:           polysemy-db-data
 version:        0.1.0.0
 synopsis:       Polysemy effects for databases
 description:    Please see the README on Github at <https://github.com/tek/polysemy-hasql>
@@ -27,38 +27,17 @@ source-repository head
 
 library
   exposed-modules:
-      Polysemy.Db.Atomic
-      Polysemy.Db.Data.Column
-      Polysemy.Db.Data.ColumnOptions
-      Polysemy.Db.Data.Cond
-      Polysemy.Db.Data.CreationTime
-      Polysemy.Db.Data.DbConnectionError
-      Polysemy.Db.Data.DbError
-      Polysemy.Db.Data.FieldId
-      Polysemy.Db.Data.IdQuery
-      Polysemy.Db.Data.Store
-      Polysemy.Db.Data.StoreQuery
-      Polysemy.Db.Data.TableStructure
-      Polysemy.Db.Debug
-      Polysemy.Db.Prelude
-      Polysemy.Db.Random
-      Polysemy.Db.SOP.Constraint
-      Polysemy.Db.SOP.Constructor
-      Polysemy.Db.SOP.Contravariant
-      Polysemy.Db.SOP.Error
-      Polysemy.Db.SOP.FieldNames
-      Polysemy.Db.SOP.HasGeneric
-      Polysemy.Db.SOP.Text
-      Polysemy.Db.Store
-      Polysemy.Db.StoreQuery
-      Polysemy.Db.Text.Case
-      Polysemy.Db.Text.DbIdentifier
-      Polysemy.Db.Text.Quote
-      Paths_polysemy_db
-  other-modules:
-      Prelude
+      Polysemy.Db.Data.DbConfig
+      Polysemy.Db.Data.DbHost
+      Polysemy.Db.Data.DbName
+      Polysemy.Db.Data.DbPassword
+      Polysemy.Db.Data.DbPort
+      Polysemy.Db.Data.DbUser
+      Polysemy.Db.Data.Uid
+      Polysemy.Db.Json
+      Paths_polysemy_db_data
   autogen-modules:
-      Paths_polysemy_db
+      Paths_polysemy_db_data
   hs-source-dirs:
       lib
   default-extensions: AllowAmbiguousTypes ApplicativeDo BangPatterns BinaryLiterals BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies DisambiguateRecordFields DoAndIfThenElse DuplicateRecordFields EmptyDataDecls ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs KindSignatures LambdaCase LiberalTypeSynonyms MultiParamTypeClasses MultiWayIf NamedFieldPuns OverloadedStrings OverloadedLists PackageImports PartialTypeSignatures PatternGuards PatternSynonyms PolyKinds QuantifiedConstraints QuasiQuotes RankNTypes RecordWildCards RecursiveDo ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators TypeSynonymInstances UndecidableInstances UnicodeSyntax ViewPatterns
@@ -67,28 +46,14 @@ library
       aeson
     , base
     , comonad
-    , composition
-    , containers
     , data-default
-    , either
-    , fcf-containers
-    , first-class-families
-    , generics-sop
     , lens
-    , polysemy
-    , polysemy-db-data
-    , polysemy-resume
-    , random
     , relude
-    , string-interpolate
-    , symbols
     , template-haskell
-    , text
-    , time
-    , type-errors
-    , type-errors-pretty
     , unordered-containers
     , uuid
   mixins:
       base hiding (Prelude)
+    , relude hiding (Relude)
+    , relude (Relude as Prelude)
   default-language: Haskell2010

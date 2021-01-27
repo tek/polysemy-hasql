@@ -21,19 +21,19 @@ import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql (HasqlConnection)
+import Polysemy.Hasql.Column.Class (TableColumn)
+import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
+import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Hasql.Column.Class (TableColumn)
-import Polysemy.Hasql.Column.Effect ( ResolveColumnEffects )
-import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 
 data Nume =
   One

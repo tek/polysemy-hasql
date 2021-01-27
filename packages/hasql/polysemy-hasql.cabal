@@ -115,6 +115,7 @@ library
     , path
     , polysemy
     , polysemy-db
+    , polysemy-db-data
     , polysemy-plugin
     , polysemy-resume
     , polysemy-time
@@ -172,6 +173,7 @@ test-suite polysemy-hasql-integration
     , path
     , polysemy
     , polysemy-db
+    , polysemy-db-data
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-resume
@@ -202,7 +204,6 @@ test-suite polysemy-hasql-unit
   main-is: Main.hs
   other-modules:
       Polysemy.Hasql.Test.EnumTest
-      Polysemy.Hasql.Test.GenTest
       Polysemy.Hasql.Test.HasGeneric
       Polysemy.Hasql.Test.ParamTest
       Polysemy.Hasql.Test.RepTest
@@ -230,6 +231,7 @@ test-suite polysemy-hasql-unit
     , path
     , polysemy
     , polysemy-db
+    , polysemy-db-data
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-resume

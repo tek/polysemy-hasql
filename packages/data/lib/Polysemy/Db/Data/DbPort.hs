@@ -1,4 +1,11 @@
+{-# language NoImplicitPrelude #-}
+
 module Polysemy.Db.Data.DbPort where
+
+import Data.Default (Default(def))
+import Prelude (Enum, Eq, Int, Integral, Num, Ord, Read, Real, Show)
+
+import Polysemy.Db.Json (defaultJson)
 
 newtype DbPort =
   DbPort Int
@@ -7,6 +14,6 @@ newtype DbPort =
 
 instance Default DbPort where
   def =
-    9122
+    5432
 
 defaultJson ''DbPort

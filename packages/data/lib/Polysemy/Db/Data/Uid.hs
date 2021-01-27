@@ -1,11 +1,16 @@
+{-# language NoImplicitPrelude #-}
+
 module Polysemy.Db.Data.Uid where
 
-import Data.Aeson (Value(Object), genericParseJSON, object, withObject, (.:), (.=))
+import Control.Comonad (Comonad(..))
+import Control.Lens (makeClassy)
+import Data.Aeson (FromJSON(..), ToJSON(..), Value(Object), genericParseJSON, object, withObject, (.:), (.=))
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.UUID as UUID
-import Prelude hiding (id, (.:))
+import Data.UUID (UUID)
+import Prelude (Eq, Functor, Generic, Int, Show, fromIntegral, (<$>), (<*>), (<>), (<|>))
 
-import Control.Comonad (Comonad(..))
+import Polysemy.Db.Json (jsonOptions)
 
 data Uid i a =
   Uid {
