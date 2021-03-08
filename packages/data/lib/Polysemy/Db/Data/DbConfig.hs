@@ -12,6 +12,8 @@ import Polysemy.Db.Data.DbPort (DbPort)
 import Polysemy.Db.Data.DbUser (DbUser)
 import Polysemy.Db.Json (defaultJson)
 
+-- |Connection information for a database.
+-- >>> DbConfig "localhost" 5432 "users" "post" "gres"
 data DbConfig =
   DbConfig {
     _host :: DbHost,

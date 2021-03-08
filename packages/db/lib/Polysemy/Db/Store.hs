@@ -43,6 +43,15 @@ interpretStoreAtomicState getId =
     FetchAll ->
       atomicGets @(StrictStore d) (nonEmpty . view records)
 
+-- |This is a blackbox interpreter that takes an initial list of records and stores them in an 'AtomicState'.
+-- The @getId@ parameter is used to extract the query id from the record type.
+--
+-- This interpreter uses 'Resumable', which is a more restrictive version of 'Polysemy.Error'.
+--
+-- Given the program shown above:
+--
+-- >>> runM (runStop (runAsResumable (interpretStoreAtomic User.id mempty progStore)))
+-- Right (Just (User 1 "root"))
 interpretStoreAtomic ::
   ∀ i d e r .
   Eq i =>

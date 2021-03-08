@@ -2,12 +2,27 @@ module Polysemy.Hasql.Table.QueryTable where
 
 import Polysemy.Db.Data.Column (Auto)
 
+import Polysemy.Hasql.Column.Class (TableColumn)
 import Polysemy.Hasql.Data.QueryTable (QueryTable, QueryTable(QueryTable))
-import Polysemy.Hasql.Where (Where(queryWhere))
 import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
 import Polysemy.Hasql.Table.Table (GenTable(genTable))
-import Polysemy.Hasql.Column.Class (TableColumn)
+import Polysemy.Hasql.Where (Where(queryWhere))
 
+-- |Derives a full 'QueryTable' using a represenation type.
+-- Given a record type:
+--
+-- @
+-- data User = User { id :: Int, name :: Text } deriving Generic
+-- @
+--
+-- the representation type could look like this:
+--
+-- @
+-- data UserRep = UserRep { id :: PrimaryKey, name :: Prim } deriving Generic
+-- @
+--
+-- indicating that the @id@ column should be created with a @primary key@ option, and the @name@ column should be an
+-- ordinary primitive.
 class GenQueryTable (qrep :: *) (rep :: *) (q :: *) (d :: *) where
   genQueryTable :: QueryTable q d
 

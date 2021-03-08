@@ -8,21 +8,25 @@ import qualified Hasql.Session as Session (statement)
 import Hasql.Statement (Statement)
 import Polysemy (bindT, getInitialStateT, getInspectorT, inspect, runT)
 import Polysemy.Db.Atomic (interpretAtomic)
+import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds(Seconds), Time, TimeUnit)
 
-import Polysemy.Hasql (HasqlConnection)
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database(..), InitDb(InitDb), hoistInitDb)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
+import Polysemy.Hasql.DeriveStatement (deriveQuery)
 import Polysemy.Hasql.Session (runSession)
 import Polysemy.Hasql.Statement (plain, query)
 import Polysemy.Hasql.Table.ResultShape (ResultShape)
 import Polysemy.Internal.Tactics (liftT)
+
+type HasqlConnection =
+  DbConnection Connection !! DbConnectionError
 
 retryingSql ::
   TimeUnit t =>
@@ -140,8 +144,16 @@ interpretDatabaseState initDb =
       pureT =<< connectWithReset (hoistInitDb (raise . raise) initDb) q statement
     RunStatementRetrying interval q statement ->
       pureT =<< retrying (hoistInitDb (raise . raise) initDb) interval q statement
+    Sql param sql ->
+      pureT =<< connectWithReset (hoistInitDb (raise . raise) initDb) param (deriveQuery sql)
 {-# INLINE interpretDatabaseState #-}
 
+-- |Run a 'Database' effect in terms of a Hasql 'Connection'.
+-- To fully run with dependencies:
+--
+-- @
+-- runM (interpretTimeGhc (interpretDbConnection (interpretDatabase prog)))
+-- @
 interpretDatabase ::
   ∀ t dt r .
   Members [HasqlConnection, Time t dt, Embed IO] r =>

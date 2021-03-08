@@ -50,6 +50,7 @@ library
       Polysemy.Hasql.Database
       Polysemy.Hasql.DbConnection
       Polysemy.Hasql.DbType
+      Polysemy.Hasql.DeriveStatement
       Polysemy.Hasql.Kind.Data.DbType
       Polysemy.Hasql.ManagedTable
       Polysemy.Hasql.Query.Many
@@ -141,6 +142,7 @@ test-suite polysemy-hasql-integration
   other-modules:
       Polysemy.Hasql.Test.ArrayTest
       Polysemy.Hasql.Test.DbConfig
+      Polysemy.Hasql.Test.DeleteTest
       Polysemy.Hasql.Test.InitTest
       Polysemy.Hasql.Test.JsonTest
       Polysemy.Hasql.Test.PKTest

@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Test.UpsertTest where
 
-import Polysemy.Test (UnitTest, assertJust)
+import Polysemy.Db.Store (interpretStoreUidAtomic)
+import Polysemy.Test (UnitTest, assertJust, assertRight, runTestAuto)
 
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
@@ -32,3 +33,10 @@ test_upsert = do
   integrationTest do
     withTestStoreUid @Int @Dat do
       assertJust [specimen] =<< restop @DbError prog
+
+test_upsert_strict :: UnitTest
+test_upsert_strict =
+  runTestAuto do
+    r <- runStop @() $ interpretStoreUidAtomic @Int @Dat def do
+      dbgs =<< restop @() prog
+    assertRight () r

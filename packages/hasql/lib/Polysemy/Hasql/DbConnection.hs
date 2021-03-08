@@ -1,9 +1,9 @@
 module Polysemy.Hasql.DbConnection where
 
-import Polysemy (interpretH)
 import Control.Lens (_2)
 import Hasql.Connection (Connection, Settings)
 import qualified Hasql.Connection as Connection (acquire, release, settings)
+import Polysemy (interpretH)
 import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Resource (Resource, finally)
 
@@ -16,9 +16,9 @@ import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Data.DbPassword (DbPassword(DbPassword))
 import Polysemy.Db.Data.DbPort (DbPort(DbPort))
 import Polysemy.Db.Data.DbUser (DbUser(DbUser))
-import Polysemy.Hasql (HasqlConnection)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
+import Polysemy.Hasql.Database (HasqlConnection)
 
 connectionSettings ::
   DbHost ->
@@ -114,9 +114,14 @@ withDisconnect sem =
   finally sem (resume DbConnection.disconnect \ _ -> unit)
 
 -- |Connects to a database and shares the connection among all consumers of the interpreter.
+-- To fully run it:
+--
+-- >>> runM (resourceToIO (interpretDbConnection prog))
 interpretDbConnection ::
   Members [Resource, Embed IO] r =>
+  -- |The arbitrary name of the connection, for inspection purposes
   Text ->
+  -- |The connection configuration
   DbConfig ->
   InterpreterFor HasqlConnection r
 interpretDbConnection name config sem =

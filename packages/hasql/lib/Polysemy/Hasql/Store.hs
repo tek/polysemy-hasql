@@ -128,6 +128,14 @@ interpretStoreDbFull table =
   resumable (interpretSchema table) .
   interpretStoreDb
 
+-- |Out-of-the box interpreter for 'Store' that generically derives a table and delegates queries to 'Schema' and table
+-- housekeeping to 'ManagedTable'.
+--
+-- @
+-- runM $ resourceToIO $ interpretTimeGhc $ interpretDbConnection $ interpretDatabase $ interpretStoreDbFullGen @Auto do
+--   Store.insert (User 1 "admin")
+--   Store.fetchAll
+-- @
 interpretStoreDbFullGen ::
   ∀ rep q d t dt r .
   GenQueryTable Auto rep q d =>
