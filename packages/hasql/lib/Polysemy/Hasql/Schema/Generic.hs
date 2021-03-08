@@ -37,6 +37,6 @@ interpretSchemaSingleton table@(Table structure row _) =
     Upsert ->
       Statement.insert table
     Delete ->
-      [] <$ Statement.deleteAll table
+      Statement.deleteAll table
     DeleteAll ->
       Statement.deleteAll table

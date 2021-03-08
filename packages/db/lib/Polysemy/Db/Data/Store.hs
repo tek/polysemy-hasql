@@ -23,7 +23,7 @@ data Store p d :: Effect where
   Insert :: d -> Store p d m ()
   Upsert :: d -> Store p d m ()
   Delete :: p -> Store p d m (Maybe (NonEmpty d))
-  DeleteAll :: Store p d m ()
+  DeleteAll :: Store p d m (Maybe (NonEmpty d))
   Fetch :: p -> Store p d m (Maybe d)
   FetchAll :: Store p d m (Maybe (NonEmpty d))
 

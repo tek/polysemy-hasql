@@ -40,7 +40,7 @@ interpretStoreDb =
     Store.Delete id' ->
       nonEmpty <$> delete id'
     Store.DeleteAll ->
-      deleteAll
+      nonEmpty <$> deleteAll
     Store.Fetch id' ->
       fetch id'
     Store.FetchAll ->
@@ -61,7 +61,7 @@ interpretStoreDbAs' toD fromD fromQ =
     Store.Delete id' ->
       restop (fmap (fmap toD) <$> Store.delete (fromQ id'))
     Store.DeleteAll ->
-      restop Store.deleteAll
+      restop (fmap (fmap toD) <$> Store.deleteAll)
     Store.Fetch id' ->
       restop (fmap toD <$> Store.fetch (fromQ id'))
     Store.FetchAll ->

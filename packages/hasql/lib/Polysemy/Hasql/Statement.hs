@@ -85,9 +85,10 @@ upsert (Table structure _ params) =
   query (upsertSql structure) unit params
 
 deleteWhereSql ::
-  QueryTable d q ->
+  Table d ->
+  SqlCode ->
   SqlCode
-deleteWhereSql (QueryTable (Table table _ _) _ (Where (SqlCode qw))) =
+deleteWhereSql (Table structure _ _) (SqlCode qw) =
   [qt|#{del}#{qwFragment} returning #{cols}|]
   where
     qwFragment =
@@ -95,22 +96,22 @@ deleteWhereSql (QueryTable (Table table _ _) _ (Where (SqlCode qw))) =
       then "" :: Text
       else [qt| where #{qw}|]
     SqlCode del =
-      deleteSql table
+      deleteSql structure
     cols =
-      commaColumns (baseColumns table)
+      commaColumns (baseColumns structure)
 
 deleteWhere ::
   ResultShape d result =>
   QueryTable query d ->
   Statement query result
-deleteWhere table@(QueryTable (Table _ row _) params _) =
-  query (deleteWhereSql table) row params
+deleteWhere (QueryTable table@(Table _ row _) params (Where qw)) =
+  query (deleteWhereSql table qw) row params
 
 deleteAll ::
   Table d ->
-  Statement () ()
-deleteAll (Table structure _ _) =
-  query (deleteSql structure) unit noParams
+  Statement () [d]
+deleteAll table@(Table _ row _) =
+  query (deleteWhereSql table "") row noParams
 
 createTableSql ::
   Column ->
