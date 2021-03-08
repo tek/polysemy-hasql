@@ -9,6 +9,6 @@ data Schema q d :: Effect where
   Insert :: Schema q d m (Statement d ())
   Upsert :: Schema q d m (Statement d ())
   Delete :: Schema q d m (Statement q [d])
-  DeleteAll :: Schema q d m (Statement () [d])
+  DeleteAll :: Schema q d m (Statement () ())
 
 makeSem ''Schema

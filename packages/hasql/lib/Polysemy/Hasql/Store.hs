@@ -1,17 +1,16 @@
 module Polysemy.Hasql.Store where
 
-import Polysemy.Db.Data.Column (Auto)
-import Polysemy.Resource (Resource)
-import Polysemy.Time (Time, interpretTimeGhc)
-
 import Polysemy (raise3Under)
-import Polysemy.Db.Data.Column (UidRep)
+import Polysemy.Db.Data.Column (Auto, UidRep)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Resource (Resource)
+import Polysemy.Time (Time, interpretTimeGhc)
+
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Data.QueryTable (QueryTable, structure)
@@ -41,7 +40,7 @@ interpretStoreDb =
     Store.Delete id' ->
       nonEmpty <$> delete id'
     Store.DeleteAll ->
-      nonEmpty <$> deleteAll
+      deleteAll
     Store.Fetch id' ->
       fetch id'
     Store.FetchAll ->
@@ -62,7 +61,7 @@ interpretStoreDbAs' toD fromD fromQ =
     Store.Delete id' ->
       restop (fmap (fmap toD) <$> Store.delete (fromQ id'))
     Store.DeleteAll ->
-      restop (fmap (fmap toD) <$> Store.deleteAll)
+      restop Store.deleteAll
     Store.Fetch id' ->
       restop (fmap toD <$> Store.fetch (fromQ id'))
     Store.FetchAll ->

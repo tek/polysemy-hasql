@@ -1,11 +1,12 @@
 module Polysemy.Hasql.Statement where
 
+import qualified Data.Text as Text
 import Hasql.Decoders (Row, noResult)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement(Statement))
-
 import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Text.Quote (dquote)
+
 import qualified Polysemy.Hasql.Data.DbType as Column
 import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
@@ -25,8 +26,8 @@ query ::
   ResultShape d result =>
   SqlCode ->
   Row d ->
-  Params query ->
-  Statement query result
+  Params p ->
+  Statement p result
 query (SqlCode sql) row params =
   Statement (encodeUtf8 sql) params (resultShape row) True
 
@@ -61,8 +62,8 @@ selectWhere table@(QueryTable (Table _ row _) params _) =
 insert ::
   Table d ->
   Statement d ()
-insert (Table structure row params) =
-  query (Query.insert structure) row params
+insert (Table structure _ params) =
+  query (Query.insert structure) unit params
 
 upsertSql ::
   Column ->
@@ -80,15 +81,19 @@ upsertSql table =
 upsert ::
   Table d ->
   Statement d ()
-upsert (Table structure row params) =
-  query (upsertSql structure) row params
+upsert (Table structure _ params) =
+  query (upsertSql structure) unit params
 
 deleteWhereSql ::
   QueryTable d q ->
   SqlCode
 deleteWhereSql (QueryTable (Table table _ _) _ (Where (SqlCode qw))) =
-  [qt|#{del} where #{qw} returning #{cols}|]
+  [qt|#{del}#{qwFragment} returning #{cols}|]
   where
+    qwFragment =
+      if Text.null qw
+      then "" :: Text
+      else [qt| where #{qw}|]
     SqlCode del =
       deleteSql table
     cols =
@@ -103,9 +108,9 @@ deleteWhere table@(QueryTable (Table _ row _) params _) =
 
 deleteAll ::
   Table d ->
-  Statement () [d]
-deleteAll (Table structure row _) =
-  query (deleteSql structure) row noParams
+  Statement () ()
+deleteAll (Table structure _ _) =
+  query (deleteSql structure) unit noParams
 
 createTableSql ::
   Column ->

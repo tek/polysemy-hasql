@@ -46,7 +46,7 @@ delete =
 deleteAll ::
   ∀ d q e r .
   StatementEffects q e r d =>
-  Sem r [d]
+  Sem r ()
 deleteAll =
   runStatement (restop Schema.deleteAll) ()
 
