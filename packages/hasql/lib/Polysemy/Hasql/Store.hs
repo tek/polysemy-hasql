@@ -13,7 +13,8 @@ import Polysemy.Time (Time, interpretTimeGhc)
 
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
-import Polysemy.Hasql.Data.QueryTable (QueryTable, structure)
+import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
+import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Data.Schema (Schema(..))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
@@ -88,7 +89,7 @@ interpretStoreDbFullAs ::
   QueryTable qIn dIn ->
   InterpretersFor (StoreStack qOut dOut qIn dIn) r
 interpretStoreDbFullAs toD fromD fromQ table =
-  interpretManagedTable (table ^. structure) .
+  interpretManagedTable (table ^. QueryTable.table) .
   resumable (interpretSchema table) .
   interpretStoreDbAs toD fromD fromQ
 
@@ -124,7 +125,7 @@ interpretStoreDbFull ::
   QueryTable q d ->
   InterpretersFor (StoreStack q d q d) r
 interpretStoreDbFull table =
-  interpretManagedTable (table ^. structure) .
+  interpretManagedTable (table ^. QueryTable.table) .
   resumable (interpretSchema table) .
   interpretStoreDb
 

@@ -243,9 +243,9 @@ sumIdProg ::
   Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Embed IO] r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()
-sumIdProg (QueryTable (Table stct _ _) _ _) =
+sumIdProg (QueryTable table@(Table stct _ _) _ _) =
   interpretDatabase $
-    interpretManagedTable stct $
+    interpretManagedTable table $
     interpretOneGenUidWith @Auto @Auto @Auto stct $
     sumIdQProg
 

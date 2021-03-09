@@ -2,6 +2,11 @@ module Polysemy.Hasql.Test.Run where
 
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
+import Polysemy.Db.Data.DbConfig (DbConfig)
+import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
+import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Db.Random (Random, runRandomIO)
 import Polysemy.Fail (Fail)
 import Polysemy.Resource (Resource)
 import qualified Polysemy.Test as Hedgehog
@@ -9,10 +14,6 @@ import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
 import Polysemy.Time (GhcTime, interpretTimeGhc)
 
-import Polysemy.Db.Data.DbConfig (DbConfig)
-import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
-import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Random (Random, runRandomIO)
 import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Test.Database (withTestConnection)
@@ -26,6 +27,7 @@ type TestEffects =
     Stop DbError,
     Stop QueryError,
     Stop Text,
+    Error InitDbError,
     Error DbError,
     Error Text,
     Test,
@@ -47,6 +49,7 @@ integrationTestWith run =
         r <-
           runError @Text $
           mapError @DbError @Text show $
+          mapError @InitDbError @Text show $
           stopToError @Text $
           mapStop @QueryError @Text show $
           mapStop @DbError @Text show $

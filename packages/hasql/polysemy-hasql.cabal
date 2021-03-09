@@ -39,7 +39,9 @@ library
       Polysemy.Hasql.Data.DbConnection
       Polysemy.Hasql.Data.DbType
       Polysemy.Hasql.Data.ExistingColumn
+      Polysemy.Hasql.Data.ManagedQueryTable
       Polysemy.Hasql.Data.ManagedTable
+      Polysemy.Hasql.Data.Query
       Polysemy.Hasql.Data.QueryTable
       Polysemy.Hasql.Data.QueueOutputError
       Polysemy.Hasql.Data.Schema
@@ -51,8 +53,12 @@ library
       Polysemy.Hasql.DbConnection
       Polysemy.Hasql.DbType
       Polysemy.Hasql.DeriveStatement
+      Polysemy.Hasql.InitDbError
       Polysemy.Hasql.Kind.Data.DbType
       Polysemy.Hasql.ManagedTable
+      Polysemy.Hasql.Query
+      Polysemy.Hasql.Query.Any
+      Polysemy.Hasql.Query.Basic
       Polysemy.Hasql.Query.Many
       Polysemy.Hasql.Query.One
       Polysemy.Hasql.QueryParams
@@ -140,6 +146,7 @@ test-suite polysemy-hasql-integration
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Polysemy.Hasql.Test.AnyTest
       Polysemy.Hasql.Test.ArrayTest
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.DeleteTest

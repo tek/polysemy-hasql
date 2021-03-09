@@ -3,6 +3,8 @@ module Polysemy.Db.StoreQuery where
 import Control.Lens (view)
 import qualified Data.Map.Strict as Map
 
+import qualified Polysemy.Db.Data.Store as Store
+import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
 import Polysemy.Db.Store (StrictStore(StrictStore))
 import qualified Polysemy.Db.Store as StrictStore (records)
@@ -110,3 +112,13 @@ interpretStoreQueryAtomicMulti ::
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretStoreQueryAtomicMulti match =
   interpretStoreQueryAtomicMultiWith match def
+
+interpretStoreQueryAny ::
+  ∀ q d i e r .
+  Member (Store i d !! e) r =>
+  (q -> d -> Bool) ->
+  InterpreterFor (StoreQuery q Bool !! e) r
+interpretStoreQueryAny match =
+  interpretResumable \case
+    Basic q ->
+      maybe False (any (match q)) <$> restop @e @(Store i d) (Store.fetchAll @i)

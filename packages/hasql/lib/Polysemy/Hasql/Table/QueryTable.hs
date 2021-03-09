@@ -4,9 +4,23 @@ import Polysemy.Db.Data.Column (Auto)
 
 import Polysemy.Hasql.Column.Class (TableColumn)
 import Polysemy.Hasql.Data.QueryTable (QueryTable, QueryTable(QueryTable))
+import qualified Polysemy.Hasql.Data.Where as Data
 import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
 import Polysemy.Hasql.Table.Table (GenTable(genTable))
 import Polysemy.Hasql.Where (Where(queryWhere))
+
+class GenQuery (qrep :: *) (rep :: *) (q :: *) (d :: *) where
+  genQuery :: Data.Where d q
+
+instance (
+    TableColumn rep d c,
+    TableColumn qrep q qc,
+    Where qc q c d
+  ) =>
+  GenQuery qrep rep q d where
+    genQuery =
+      queryWhere @qc @q @c @d
+
 
 -- |Derives a full 'QueryTable' using a represenation type.
 -- Given a record type:
@@ -31,11 +45,11 @@ instance (
     TableColumn qrep q qc,
     GenTable rep d,
     QueryParams qc q,
-    Where qc q c d
+    GenQuery qrep rep q d
   ) =>
   GenQueryTable qrep rep q d where
     genQueryTable =
-      QueryTable (genTable @rep @d) (queryParams @qc @q) (queryWhere @qc @q @c @d)
+      QueryTable (genTable @rep @d) (queryParams @qc @q) (genQuery @qrep @rep @q @d)
 
 queryTable ::
   ∀ q d .

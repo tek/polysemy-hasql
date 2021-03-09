@@ -18,7 +18,7 @@ prog ::
   Member (Store () Dat) r =>
   Sem r ()
 prog =
-  Store.deleteAll
+  void $ Store.deleteAll
 
 test_deleteEmpty :: UnitTest
 test_deleteEmpty = do

@@ -33,6 +33,7 @@ library
       Polysemy.Db.Data.DbPassword
       Polysemy.Db.Data.DbPort
       Polysemy.Db.Data.DbUser
+      Polysemy.Db.Data.InitDbError
       Polysemy.Db.Data.Uid
       Polysemy.Db.Json
       Paths_polysemy_db_data

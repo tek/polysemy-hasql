@@ -1,7 +1,8 @@
 module Polysemy.Hasql.Statement where
 
 import qualified Data.Text as Text
-import Hasql.Decoders (Row, noResult)
+import qualified Hasql.Decoders as Decoders
+import Hasql.Decoders (Row, int8, noResult, nullable)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement(Statement))
 import Polysemy.Db.Data.DbName (DbName(DbName))
@@ -15,7 +16,7 @@ import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Data.Where (Where(Where))
 import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName)
 import Polysemy.Hasql.Table.Query.Delete (deleteSql)
-import Polysemy.Hasql.Table.Query.Fragment (addColumnFragment, alterFragment, conflictFragment)
+import Polysemy.Hasql.Table.Query.Fragment (addColumnFragment, alterFragment, conflictFragment, fromFragment)
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
 import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
@@ -58,6 +59,18 @@ selectWhere ::
   Statement query result
 selectWhere table@(QueryTable (Table _ row _) params _) =
   query (selectWhereSql table) row params
+
+anyWhereSql ::
+  QueryTable query d ->
+  SqlCode
+anyWhereSql (QueryTable (Table (Column _ (fromFragment -> SqlCode from) _ _ _) _ _) _ (Where (SqlCode qw))) =
+  SqlCode [qt|select 1 #{from} where #{qw} limit 1|]
+
+anyWhere ::
+  QueryTable query d ->
+  Statement query Bool
+anyWhere table@(QueryTable _ params _) =
+  isJust <$> query (anyWhereSql table) (Decoders.column (nullable int8)) params
 
 insert ::
   Table d ->
