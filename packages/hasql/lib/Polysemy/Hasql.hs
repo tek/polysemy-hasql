@@ -12,13 +12,13 @@ module Polysemy.Hasql (
   interpretDbConnection,
   DbConfig(DbConfig),
 
-  -- ** Derived Schema Interpreters
+  -- ** Derived Crud Interpreters
   -- $derived
   interpretStoreDbFullGen,
   -- $derived2
   QueryTable,
 
-  -- * Schema Derivation
+  -- * Crud Derivation
   -- $derivation
   GenQueryTable(genQueryTable),
   Auto,

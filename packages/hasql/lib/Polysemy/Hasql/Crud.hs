@@ -1,13 +1,13 @@
-module Polysemy.Hasql.Schema.Generic where
+module Polysemy.Hasql.Crud where
 
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.Schema (Schema(..))
+import Polysemy.Hasql.Data.Crud (Crud(..))
 import Polysemy.Hasql.Data.Table (Table(Table))
 import qualified Polysemy.Hasql.Statement as Statement
 
 interpretSchema ::
   QueryTable p d ->
-  InterpreterFor (Schema p d) r
+  InterpreterFor (Crud p d) r
 interpretSchema qTable@(QueryTable table@(Table structure row _) _ _) =
   interpret $ pure . \case
     Fetch ->
@@ -25,7 +25,7 @@ interpretSchema qTable@(QueryTable table@(Table structure row _) _ _) =
 
 interpretSchemaSingleton ::
   Table d ->
-  InterpreterFor (Schema () d) r
+  InterpreterFor (Crud () d) r
 interpretSchemaSingleton table@(Table structure row _) =
   interpret $ pure . \case
     Fetch ->

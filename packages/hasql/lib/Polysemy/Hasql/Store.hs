@@ -11,26 +11,26 @@ import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Resource (Resource)
 import Polysemy.Time (Time, interpretTimeGhc)
 
+import Polysemy.Hasql.Crud (interpretSchema)
+import Polysemy.Hasql.Data.Crud (Crud(..))
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Data.Schema (Schema(..))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
-import Polysemy.Hasql.Schema.Generic (interpretSchema)
 import Polysemy.Hasql.Store.Statement (delete, deleteAll, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 type StoreStack qOut dOut qIn dIn =
-  [Store qOut dOut !! DbError, Schema qIn dIn !! DbError, ManagedTable dIn !! DbError]
+  [Store qOut dOut !! DbError, Crud qIn dIn !! DbError, ManagedTable dIn !! DbError]
 
 type UidStoreStack i d =
   StoreStack i (Uid i d) (IdQuery i) (Uid i d)
 
 interpretStoreDb ::
-  Members [Schema q d !! e, ManagedTable d !! e] r =>
+  Members [Crud q d !! e, ManagedTable d !! e] r =>
   InterpreterFor (Store q d !! e) r
 interpretStoreDb =
   interpretResumable \case
@@ -69,7 +69,7 @@ interpretStoreDbAs' toD fromD fromQ =
       restop (fmap (fmap toD) <$> Store.fetchAll)
 
 interpretStoreDbAs ::
-  Members [Schema qIn dIn !! e, ManagedTable dIn !! e] r =>
+  Members [Crud qIn dIn !! e, ManagedTable dIn !! e] r =>
   (dIn -> dOut) ->
   (dOut -> dIn) ->
   (qOut -> qIn) ->
@@ -129,7 +129,7 @@ interpretStoreDbFull table =
   resumable (interpretSchema table) .
   interpretStoreDb
 
--- |Out-of-the box interpreter for 'Store' that generically derives a table and delegates queries to 'Schema' and table
+-- |Out-of-the box interpreter for 'Store' that generically derives a table and delegates queries to 'Crud' and table
 -- housekeeping to 'ManagedTable'.
 --
 -- @

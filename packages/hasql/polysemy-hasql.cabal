@@ -35,6 +35,8 @@ library
       Polysemy.Hasql.Column.Meta
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
+      Polysemy.Hasql.Crud
+      Polysemy.Hasql.Data.Crud
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
       Polysemy.Hasql.Data.DbType
@@ -44,7 +46,6 @@ library
       Polysemy.Hasql.Data.Query
       Polysemy.Hasql.Data.QueryTable
       Polysemy.Hasql.Data.QueueOutputError
-      Polysemy.Hasql.Data.Schema
       Polysemy.Hasql.Data.SqlCode
       Polysemy.Hasql.Data.StoreTable
       Polysemy.Hasql.Data.Table
@@ -68,7 +69,6 @@ library
       Polysemy.Hasql.Queue.Data.Queued
       Polysemy.Hasql.Queue.Input
       Polysemy.Hasql.Queue.Output
-      Polysemy.Hasql.Schema.Generic
       Polysemy.Hasql.Session
       Polysemy.Hasql.SOP.Enum
       Polysemy.Hasql.Statement
