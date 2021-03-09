@@ -16,10 +16,10 @@ interpretQueryWith ::
   Params q ->
   Where d q ->
   InterpreterFor (Query q d) r
-interpretQueryWith params query =
+interpretQueryWith params qwhere =
   interpret \case
     Query.Params -> pure params
-    Query.Query -> pure query
+    Query.Query -> pure qwhere
 
 interpretQuery ::
   ∀ qrep rep q qc d r .

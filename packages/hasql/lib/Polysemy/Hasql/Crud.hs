@@ -1,15 +1,19 @@
 module Polysemy.Hasql.Crud where
 
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
+import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Hasql.Data.Crud (Crud(..))
+import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
+import Polysemy.Hasql.Data.Query (Query)
+import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Table (Table(Table))
+import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 
-interpretSchema ::
-  QueryTable p d ->
-  InterpreterFor (Crud p d) r
-interpretSchema qTable@(QueryTable table@(Table structure row _) _ _) =
-  interpret $ pure . \case
+interpretCrudWith ::
+  QueryTable q d ->
+  InterpreterFor (Crud q d !! e) r
+interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) =
+  interpretResumable $ pure . \case
     Fetch ->
       Statement.selectWhere qTable
     FetchAll ->
@@ -23,10 +27,19 @@ interpretSchema qTable@(QueryTable table@(Table structure row _) _ _) =
     DeleteAll ->
       Statement.deleteAll table
 
-interpretSchemaSingleton ::
+interpretCrud ::
+  ∀ q d e r .
+  Show e =>
+  Members [Query q d, ManagedTable d !! e, Error InitDbError] r =>
+  InterpreterFor (Crud q d !! e) r
+interpretCrud sem = do
+  table <- queryTable
+  interpretCrudWith table sem
+
+interpretCrudSingleton ::
   Table d ->
   InterpreterFor (Crud () d) r
-interpretSchemaSingleton table@(Table structure row _) =
+interpretCrudSingleton table@(Table structure row _) =
   interpret $ pure . \case
     Fetch ->
       listToMaybe <$> Statement.select structure row

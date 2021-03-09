@@ -7,7 +7,7 @@ import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Hasql.Data.Crud (Crud)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
-import Polysemy.Hasql.Crud (interpretSchemaSingleton)
+import Polysemy.Hasql.Crud (interpretCrudSingleton)
 import Polysemy.Hasql.Store (interpretStoreDb)
 import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Test.Database (withTestPlainTable)
@@ -44,7 +44,7 @@ test_singletonDb =
   integrationTest do
     (a, b) <- withTestPlainTable (genTable @DatRep) $ \ table ->
       interpretManagedTable table $
-        resumable @_ @(Crud _ _) (interpretSchemaSingleton table) $
+        resumable @_ @(Crud _ _) (interpretCrudSingleton table) $
         interpretStoreDb $
         prog
     assertJust (pure a) b

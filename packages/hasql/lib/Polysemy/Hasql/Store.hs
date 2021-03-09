@@ -11,12 +11,12 @@ import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Resource (Resource)
 import Polysemy.Time (Time, interpretTimeGhc)
 
-import Polysemy.Hasql.Crud (interpretSchema)
+import Polysemy.Hasql.Crud (interpretCrudWith)
 import Polysemy.Hasql.Data.Crud (Crud(..))
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryTable (QueryTable)
+import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
@@ -77,6 +77,12 @@ interpretStoreDbAs ::
 interpretStoreDbAs toD fromD fromQ =
   interpretStoreDb . interpretStoreDbAs' toD fromD fromQ . raiseUnder
 
+interpretStoreDbUid ::
+  Members [Crud (IdQuery i) (Uid i d) !! e, ManagedTable (Uid i d) !! e] r =>
+  InterpreterFor (Store i (Uid i d) !! e) r
+interpretStoreDbUid =
+  interpretStoreDbAs id id IdQuery
+
 type StoreDeps t dt =
   [Database !! DbError, Time t dt, Embed IO]
 
@@ -88,9 +94,9 @@ interpretStoreDbFullAs ::
   (qOut -> qIn) ->
   QueryTable qIn dIn ->
   InterpretersFor (StoreStack qOut dOut qIn dIn) r
-interpretStoreDbFullAs toD fromD fromQ table =
-  interpretManagedTable (table ^. QueryTable.table) .
-  resumable (interpretSchema table) .
+interpretStoreDbFullAs toD fromD fromQ qtable@(QueryTable table _ _) =
+  interpretManagedTable table .
+  interpretCrudWith qtable .
   interpretStoreDbAs toD fromD fromQ
 
 interpretStoreDbFullUid ::
@@ -126,7 +132,7 @@ interpretStoreDbFull ::
   InterpretersFor (StoreStack q d q d) r
 interpretStoreDbFull table =
   interpretManagedTable (table ^. QueryTable.table) .
-  resumable (interpretSchema table) .
+  interpretCrudWith table .
   interpretStoreDb
 
 -- |Out-of-the box interpreter for 'Store' that generically derives a table and delegates queries to 'Crud' and table
