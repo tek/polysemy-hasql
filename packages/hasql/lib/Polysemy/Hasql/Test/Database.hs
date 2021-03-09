@@ -125,6 +125,7 @@ createTestDb dbConfig@(DbConfig _ _ (DbName name) _ _) connection = do
   mapStop convertQueryError (runStatement connection () (Statement.createDb suffixedName))
   pure suffixed
 
+-- TODO this should use `Error`
 withTestDb ::
   Members [Stop DbError, Embed IO, Resource] r =>
   DbConfig ->

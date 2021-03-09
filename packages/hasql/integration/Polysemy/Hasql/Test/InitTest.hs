@@ -2,8 +2,8 @@ module Polysemy.Hasql.Test.InitTest where
 
 import Control.Lens (view)
 import qualified Data.Set as Set
-import qualified Data.UUID as UUID
 import Polysemy.Db.Data.Column (Prim)
+import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
@@ -32,8 +32,8 @@ data InitRep =
 data Res =
   Res {
     f1 :: Text,
-    f2 :: Int,
-    f3 :: UUID
+    f2 :: Maybe Int,
+    f3 :: Maybe UUID
   }
   deriving (Eq, Show, Generic)
 
@@ -42,13 +42,19 @@ test_initTable =
   integrationTest do
     withTestTableGen @InitRep @Init \ (view tableName -> name) -> do
       restop @DbError @Database $ Database.connect \ connection -> do
-        () <- Database.sql (Res "a" 5 UUID.nil) [qt|insert into "#{unName name}" (f1) values ($1)|]
+        () <- Database.sql (Init "a") [qt|insert into "#{unName name}" (f1) values ($1)|]
         initTable connection (Column name [qt|"#{unName name}"|] "" def (Prod extra))
         assertJust (Set.fromList existing) . fmap (Set.fromList . toList) =<< tableColumns connection name
-        (r :: Maybe Res) <- Database.sql () [qt|select * from "#{unName name}"|]
-        dbgs r
+        assertJust (Res "a" Nothing Nothing) =<< Database.sql () [qt|select * from "#{unName name}"|]
   where
     extra =
-      [Column "f2" [qt|"f2"|] "bigint" def Prim, Column "f3" [qt|"f3"|] "uuid" def Prim]
+      [
+        Column "f2" [qt|"f2"|] "bigint" def { notNull = False } Prim,
+        Column "f3" [qt|"f3"|] "uuid" def { notNull = False } Prim
+      ]
     existing =
-      [ExistingColumn "f1" "text", ExistingColumn "f2" "bigint", ExistingColumn "f3" "uuid"]
+      [
+        ExistingColumn "f1" "text",
+        ExistingColumn "f2" "bigint",
+        ExistingColumn "f3" "uuid"
+      ]

@@ -1,5 +1,6 @@
 module Polysemy.Hasql.ManagedTable where
 
+import Control.Lens (mapMOf)
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
@@ -12,6 +13,7 @@ import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.Query as Query
 import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
+import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.InitDbError (initDbError)
 import Polysemy.Hasql.Table (initTable)
@@ -25,7 +27,7 @@ interpretManagedTable ::
 interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
   interpretResumable \case
     ManagedTable.Table ->
-      pure table
+      restop (mapMOf Table.tableName Database.name table)
     ManagedTable.RunStatement q stmt ->
       restop (Database.withInit initDb (Database.runStatement q stmt))
     ManagedTable.RetryStatement interval q stmt ->
@@ -50,7 +52,7 @@ interpretManagedTableUnmanaged ::
 interpretManagedTableUnmanaged =
   interpretResumable \case
     ManagedTable.Table ->
-      pure table
+      restop (mapMOf Table.tableName Database.name table)
     ManagedTable.RunStatement q stmt ->
       restop (Database.runStatement q stmt)
     ManagedTable.RetryStatement interval q stmt ->

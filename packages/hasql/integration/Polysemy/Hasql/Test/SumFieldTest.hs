@@ -10,6 +10,7 @@ import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
+import Polysemy.Db.Data.InitDbError (InitDbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store, UidStore)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
@@ -24,10 +25,10 @@ import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Column.Class (TableColumn)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
-import Polysemy.Hasql.Query.One (interpretOneGenUidWith)
+import Polysemy.Hasql.Query (interpretQuery)
+import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
@@ -241,18 +242,19 @@ sumIdQProg = do
 
 sumIdProg ::
   Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Embed IO] r =>
+  Member (Error InitDbError) r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()
-sumIdProg (QueryTable table@(Table stct _ _) _ _) =
+sumIdProg (QueryTable table _ _) =
   interpretDatabase $
+    interpretQuery @Auto @(UidRep (Sum SumPKRep) SumIdRep) $
     interpretManagedTable table $
-    interpretOneGenUidWith @Auto @Auto @Auto stct $
+    interpretOne $
     sumIdQProg
 
 test_sumId :: UnitTest
 test_sumId =
   integrationTest do
-    -- _ <- pure queryTable_SumId
     withTestStoreTableUidGen @SumIdRep @(Sum SumPKRep) sumIdProg
 
 data Dat1 =

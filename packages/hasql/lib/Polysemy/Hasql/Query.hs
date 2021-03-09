@@ -3,6 +3,7 @@
 module Polysemy.Hasql.Query where
 
 import Hasql.Encoders (Params)
+import Polysemy.Db.Data.Column (Auto)
 
 import Polysemy.Hasql.Column.Class (TableColumn)
 import qualified Polysemy.Hasql.Data.Query as Query
@@ -28,3 +29,12 @@ interpretQuery ::
   InterpreterFor (Query q d) r
 interpretQuery =
   interpretQueryWith (queryParams @qc @q) (genQuery @qrep @rep @q @d)
+
+interpretQueryAuto ::
+  ∀ q qc d r .
+  TableColumn Auto q qc =>
+  QueryParams qc q =>
+  GenQuery Auto Auto q d =>
+  InterpreterFor (Query q d) r
+interpretQueryAuto =
+  interpretQuery @Auto @Auto

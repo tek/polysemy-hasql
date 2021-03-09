@@ -4,6 +4,7 @@ import Hasql.Connection (Connection)
 import Hasql.Statement (Statement)
 import Polysemy.Time (TimeUnit)
 
+import Polysemy.Hasql.Data.DbType (Name)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.DeriveStatement (DeriveQuery)
 
@@ -53,6 +54,7 @@ raiseInitDb (InitDb t th) =
 -- For documentation on the individual constructors, see the module page.
 data Database :: Effect where
   Info :: Database m (Text, Int)
+  Name :: Name -> Database m Name
   WithInit :: InitDb m -> m a -> Database m a
   Connect :: (Connection -> m a) -> Database m a
   RunStatement :: p -> Statement p o -> Database m o

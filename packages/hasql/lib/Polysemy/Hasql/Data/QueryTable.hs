@@ -1,15 +1,15 @@
 module Polysemy.Hasql.Data.QueryTable where
 
-import Hasql.Encoders (Params)
-
 import Control.Lens (Lens')
+import Hasql.Encoders (Params)
+import qualified Text.Show as Show
+
 import Polysemy.Hasql.Data.DbType (Column)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Data.Where (Where)
-import qualified Text.Show as Show
 
--- |The full declaration of a postgres table with Hasql codecs for querying a type @a@ with a type @q@.
+-- |The full declaration of a postgres table with Hasql codecs for querying a type @d@ with a type @q@.
 --
 -- @
 -- data User = User { id :: Int }
@@ -22,16 +22,16 @@ import qualified Text.Show as Show
 --            (Hasql.Encoders.int8)
 --            (Where "id = $1")
 -- @
-data QueryTable q a =
+data QueryTable q d =
   QueryTable {
-    _table :: Table a,
+    _table :: Table d,
     _qparams :: Params q,
-    _qwhere :: Where a q
+    _qwhere :: Where d q
   }
 
 makeClassy ''QueryTable
 
-structure :: Lens' (QueryTable q a) Column
+structure :: Lens' (QueryTable q d) Column
 structure =
   table . Table.structure
 

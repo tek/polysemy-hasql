@@ -9,7 +9,7 @@ import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Data.IdQuery (UuidQuery)
+import Polysemy.Db.Data.InitDbError (InitDbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UuidStore)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
@@ -18,22 +18,21 @@ import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
-import Polysemy.Time (mkDatetime)
+import Polysemy.Time (GhcTime, mkDatetime)
 
 import Polysemy.Hasql.Column.Class (SumIndexColumn, TableColumn, tableColumn)
 import Polysemy.Hasql.Column.Data.Effect (ADT, Newtype, Tc)
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
 import Polysemy.Hasql.Column.Meta (ADTMeta', ADTMetadata(ADTSum, ADTProd), ColumnMeta(ColumnMeta), ConMeta(ConMeta))
-import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
-import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryTable (QueryTable)
+import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
 import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
-import Polysemy.Hasql.Query.Many (interpretManyWith)
-import Polysemy.Hasql.Query.One (interpretOneWith)
+import Polysemy.Hasql.Query (interpretQuery)
+import Polysemy.Hasql.Query.Many (interpretMany)
+import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
-import Polysemy.Hasql.Test.Database (withTestStoreTableUidGen)
+import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import qualified Polysemy.Hasql.Type.Data.DbType as Type
 import Polysemy.Hasql.Where (QCond(SimpleCond), Segment(SumSegment, FieldSegment), queryWhere)
@@ -257,17 +256,17 @@ prog = do
     pure (length r1, r2)
 
 prog' ::
-  Members [ManagedTable (Uuid Dat) !! DbError, UuidStore Dat !! DbError, Stop DbError, Hedgehog IO] r =>
-  QueryTable UuidQuery (Uuid Dat) ->
+  Members [Database !! DbError, Stop DbError, Error InitDbError, GhcTime, Hedgehog IO, Embed IO] r =>
   Sem r ()
-prog' table =
-  interpretOneWith @Auto @(UidRep PrimaryKey DatRep) @ContentNumber @(Uuid Dat) (table ^. QueryTable.structure) $
-  interpretManyWith @Auto @(UidRep PrimaryKey DatRep) @ContentNumber @(Uuid Dat) (table ^. QueryTable.structure) do
-    (count, result) <- restop @DbError @(UuidStore Dat) prog
+prog' =
+  interpretQuery @Auto @(UidRep PrimaryKey DatRep) $
+  interpretStoreDbFullGenUid @DatRep @PrimaryKey $
+  interpretOne @ContentNumber @(Uuid Dat) $
+  interpretMany @ContentNumber @(Uuid Dat) do
+    (count, result) <- prog
     2 === count
     assertJust target result
 
 test_query :: UnitTest
 test_query = do
-  integrationTest do
-    withTestStoreTableUidGen @DatRep @PrimaryKey @Dat @UUID prog'
+  integrationTest prog'

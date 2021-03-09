@@ -11,6 +11,7 @@ import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Internal.Tactics (liftT)
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds(Seconds), Time, TimeUnit)
 
@@ -23,7 +24,6 @@ import Polysemy.Hasql.DeriveStatement (deriveQuery)
 import Polysemy.Hasql.Session (runSession)
 import Polysemy.Hasql.Statement (plain, query)
 import Polysemy.Hasql.Table.ResultShape (ResultShape)
-import Polysemy.Internal.Tactics (liftT)
 
 type HasqlConnection =
   DbConnection Connection !! DbConnectionError
@@ -131,6 +131,8 @@ interpretDatabaseState initDb =
   interpretResumableH \case
     Info ->
       liftT $ resumeHoist DbError.Connection DbConnection.info
+    Name name ->
+      pureT name
     WithInit (InitDb clientId initDbThunk) ma -> do
       s <- getInitialStateT
       ins <- getInspectorT
