@@ -5,12 +5,11 @@ module Polysemy.Hasql.Query where
 import Hasql.Encoders (Params)
 import Polysemy.Db.Data.Column (Auto)
 
-import Polysemy.Hasql.Column.Class (TableColumn)
 import qualified Polysemy.Hasql.Data.Query as Query
 import Polysemy.Hasql.Data.Query (Query)
+import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Where (Where)
-import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
-import Polysemy.Hasql.Table.QueryTable (GenQuery, genQuery)
+import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 interpretQueryWith ::
   Params q ->
@@ -22,19 +21,18 @@ interpretQueryWith params qwhere =
     Query.Query -> pure qwhere
 
 interpretQuery ::
-  ∀ qrep rep q qc d r .
-  TableColumn qrep q qc =>
-  QueryParams qc q =>
-  GenQuery qrep rep q d =>
+  ∀ qrep rep q d r .
+  GenQueryTable qrep rep q d =>
   InterpreterFor (Query q d) r
 interpretQuery =
-  interpretQueryWith (queryParams @qc @q) (genQuery @qrep @rep @q @d)
+  interpretQueryWith params qwhere
+  where
+    QueryTable _ params qwhere =
+      genQueryTable @qrep @rep
 
 interpretQueryAuto ::
-  ∀ q qc d r .
-  TableColumn Auto q qc =>
-  QueryParams qc q =>
-  GenQuery Auto Auto q d =>
+  ∀ q d r .
+  GenQueryTable Auto Auto q d =>
   InterpreterFor (Query q d) r
 interpretQueryAuto =
   interpretQuery @Auto @Auto

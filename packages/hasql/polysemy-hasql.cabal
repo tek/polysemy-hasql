@@ -41,7 +41,6 @@ library
       Polysemy.Hasql.Data.DbConnection
       Polysemy.Hasql.Data.DbType
       Polysemy.Hasql.Data.ExistingColumn
-      Polysemy.Hasql.Data.ManagedQueryTable
       Polysemy.Hasql.Data.ManagedTable
       Polysemy.Hasql.Data.Query
       Polysemy.Hasql.Data.QueryTable
