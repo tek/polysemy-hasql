@@ -37,7 +37,10 @@ instance (
 --
 -- indicating that the @id@ column should be created with a @primary key@ option, and the @name@ column should be an
 -- ordinary primitive.
-class GenQueryTable (qrep :: *) (rep :: *) (q :: *) (d :: *) where
+class (
+    GenTable rep d,
+    GenQuery qrep rep q d
+  ) => GenQueryTable (qrep :: *) (rep :: *) (q :: *) (d :: *) where
   genQueryTable :: QueryTable q d
 
 instance (
