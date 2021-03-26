@@ -127,7 +127,7 @@ createTestDb dbConfig@(DbConfig _ _ (DbName name) _ _) connection = do
 
 -- TODO this should use `Error`
 withTestDb ::
-  Members [Stop DbError, Embed IO, Resource] r =>
+  Members [Stop DbError, Resource, Embed IO, Final IO] r =>
   DbConfig ->
   (DbConfig -> Sem r a) ->
   Sem r a
@@ -142,7 +142,7 @@ withTestDb baseConfig f =
       mapStop convertQueryError (runStatement connection () (Statement.dropDb name))
 
 withTestConnection ::
-  Members [Stop DbError, Embed IO, Time t dt, Resource] r =>
+  Members [Stop DbError, Time t dt, Resource, Embed IO, Final IO] r =>
   DbConfig ->
   Sem (Database !! DbError : HasqlConnection : r) a ->
   Sem r a

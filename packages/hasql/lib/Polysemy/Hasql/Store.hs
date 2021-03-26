@@ -154,7 +154,7 @@ interpretStoreDbFullGen =
 interpretStoreDbSingle ::
   ∀ rep q d r .
   GenQueryTable Auto rep q d =>
-  Members [Resource, Embed IO] r =>
+  Members [Resource, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->
   InterpretersFor (StoreStack q d q d) r

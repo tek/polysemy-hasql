@@ -36,6 +36,7 @@ library
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Crud
+      Polysemy.Hasql.Data.ConnectionState
       Polysemy.Hasql.Data.Crud
       Polysemy.Hasql.Data.Database
       Polysemy.Hasql.Data.DbConnection
@@ -159,6 +160,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.SumFieldTest
       Polysemy.Hasql.Test.SumTableTest
       Polysemy.Hasql.Test.UpsertTest
+      Polysemy.Hasql.Test.WithInitTest
       Paths_polysemy_hasql
   hs-source-dirs:
       integration

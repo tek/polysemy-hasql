@@ -1,12 +1,9 @@
 module Polysemy.Hasql.DbConnection where
 
-import Control.Lens (_2)
+import Control.Concurrent (myThreadId, throwTo)
 import Hasql.Connection (Connection, Settings)
 import qualified Hasql.Connection as Connection (acquire, release, settings)
 import Polysemy (interpretH)
-import Polysemy.Internal.Tactics (liftT)
-import Polysemy.Resource (Resource, finally)
-
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
@@ -16,9 +13,19 @@ import Polysemy.Db.Data.DbName (DbName(DbName))
 import Polysemy.Db.Data.DbPassword (DbPassword(DbPassword))
 import Polysemy.Db.Data.DbPort (DbPort(DbPort))
 import Polysemy.Db.Data.DbUser (DbUser(DbUser))
+import Polysemy.Error (fromExceptionSem)
+import Polysemy.Internal.Tactics (liftT)
+import Polysemy.Resource (Resource, bracket_, finally)
+
+import qualified Polysemy.Hasql.Data.ConnectionState as ConnectionState
+import Polysemy.Hasql.Data.ConnectionState (ConnectionState(ConnectionState))
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Database (HasqlConnection)
+
+data KillCommand =
+  KillCommand
+  deriving (Show, Exception)
 
 connectionSettings ::
   DbHost ->
@@ -40,30 +47,71 @@ connect (DbConfig host port name user password) =
     dbError err =
       DbConnectionError.Acquire (maybe "unspecified error" decodeUtf8 err)
 
+withThreadIdInState ::
+  Members [AtomicState ConnectionState, Resource, Embed IO] r =>
+  Sem r a ->
+  Sem r a
+withThreadIdInState =
+  bracket_ (setTid . Just =<< embed myThreadId) (setTid Nothing)
+  where
+    setTid tid =
+      atomicModify' (ConnectionState.activeCommand .~ tid)
+
+catchingKill ::
+  Members [Stop DbConnectionError, Final IO] r =>
+  Sem r a ->
+  Sem r a
+catchingKill =
+  stopOnError . mapError exception . fromExceptionSem . raiseUnder . raise
+  where
+    exception (_ :: KillCommand) =
+      DbConnectionError.Query "command was interrupted by DbConnection.Kill"
+
+connecting ::
+  Members [AtomicState ConnectionState, Stop DbConnectionError, Resource, Embed IO] r =>
+  DbConfig ->
+  (Int -> Connection -> Sem r a) ->
+  Sem r a
+connecting config use =
+  uncurry use =<< create =<< atomicGet
+  where
+    create (ConnectionState count Nothing tid) = do
+      conn <- connect config
+      atomicPut (ConnectionState (count + 1) (Just conn) tid)
+      pure (count + 1, conn)
+    create (ConnectionState count (Just conn) _) =
+      pure (count, conn)
+
 cachedUse ::
-  Members [AtomicState (Int, Maybe Connection), Embed IO, Stop DbConnectionError] r =>
-  ((Int, Connection) -> Sem r a) ->
+  Members [AtomicState ConnectionState, Stop DbConnectionError, Resource, Embed IO, Final IO] r =>
+  (Int -> Connection -> Sem r a) ->
   DbConfig ->
   Sem r a
 cachedUse f config = do
-  f =<< create =<< atomicGet
-  where
-    create (count, Nothing) = do
-      conn <- connect config
-      atomicPut (count + 1, Just conn)
-      pure (count + 1, conn)
-    create (count, Just conn) =
-      pure (count, conn)
+  connecting config \ count conn ->
+    withThreadIdInState (catchingKill (f count conn))
 
+-- TODO error when ConnectionState.activeCommand is `Just`
 disconnect ::
-  Members [AtomicState (Int, Maybe Connection), Stop DbConnectionError, Embed IO] r =>
-  Maybe Connection ->
+  Members [AtomicState ConnectionState, Stop DbConnectionError, Embed IO] r =>
+  ConnectionState ->
   Sem r ()
 disconnect = \case
-  Just connection -> do
+  ConnectionState _ (Just connection) _ -> do
     stopEither . first DbConnectionError.Release =<< tryAny (Connection.release connection)
-    atomicModify' (_2 .~ Nothing)
-  Nothing ->
+    atomicModify' (ConnectionState.connection .~ Nothing)
+  ConnectionState _ Nothing _ ->
+    unit
+
+kill ::
+  Members [AtomicState ConnectionState, Stop DbConnectionError, Embed IO] r =>
+  ConnectionState ->
+  Sem r ()
+kill = \case
+  ConnectionState _ (Just _) (Just tid) -> do
+    embed (throwTo tid KillCommand)
+    disconnect  =<< atomicGet
+  ConnectionState _ _ _ ->
     unit
 
 useSingleton ::
@@ -86,25 +134,31 @@ interpretDbConnectionSingleton config =
       useSingleton (callT (f 0)) config
     DbConnection.Disconnect ->
       liftT unit
+    DbConnection.Kill ->
+      liftT unit
     DbConnection.Reset ->
       liftT unit
 
+-- TODO connection should probably use an `MVar`. If a connection is in use by `listen`, using it again will block
+-- indefinitely.
 interpretDbConnectionCached ::
   ∀ r .
-  Members [AtomicState (Int, Maybe Connection), Embed IO] r =>
+  Members [AtomicState ConnectionState, Resource, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->
   InterpreterFor HasqlConnection r
 interpretDbConnectionCached name config =
   interpretResumableH \case
     DbConnection.Info ->
-      liftT ((name,) <$> atomicGets fst)
+      liftT ((name,) <$> atomicGets ConnectionState._count)
     DbConnection.Use f -> do
-      cachedUse (callT (uncurry f)) config
+      cachedUse (curry (callT (uncurry f))) config
     DbConnection.Disconnect ->
-      liftT (disconnect . snd =<< atomicGet)
+      liftT (disconnect =<< atomicGet)
+    DbConnection.Kill -> do
+      liftT (kill =<< atomicGet)
     DbConnection.Reset ->
-      liftT (atomicModify' (_2 .~ Nothing))
+      liftT (atomicModify' (ConnectionState.connection .~ Nothing))
 
 withDisconnect ::
   Members [DbConnection c !! DbConnectionError, Resource] r =>
@@ -118,11 +172,12 @@ withDisconnect sem =
 --
 -- >>> runM (resourceToIO (interpretDbConnection prog))
 interpretDbConnection ::
-  Members [Resource, Embed IO] r =>
+  Members [Resource, Embed IO, Final IO] r =>
   -- |The arbitrary name of the connection, for inspection purposes
   Text ->
   -- |The connection configuration
   DbConfig ->
   InterpreterFor HasqlConnection r
 interpretDbConnection name config sem =
-  interpretAtomic (0, Nothing) (interpretDbConnectionCached name config (raiseUnder (withDisconnect sem)))
+  interpretAtomic (ConnectionState 0 Nothing Nothing) $
+  interpretDbConnectionCached name config (raiseUnder (withDisconnect sem))
