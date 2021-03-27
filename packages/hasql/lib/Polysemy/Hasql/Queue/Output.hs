@@ -1,16 +1,18 @@
 module Polysemy.Hasql.Queue.Output where
 
+import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Random (Random, random)
+import Polysemy.Db.SOP.Constraint (symbolText)
+import qualified Polysemy.Log as Log
+import Polysemy.Log (Log)
 import Polysemy.Output (Output(Output))
 import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds(Seconds), Time)
 import Prelude hiding (group)
 
-import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
@@ -23,7 +25,7 @@ import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
 interpretOutputDbQueue ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Random, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueue =
   interpretResumable \case
@@ -32,6 +34,7 @@ interpretOutputDbQueue =
       created <- Time.now
       resumeHoist QueueOutputError.Insert do
         Store.insert (Queued id' created d)
+      Log.debug [qt|executing `notify` for queue #{symbolText @queue}|]
       resumeHoist QueueOutputError.Notify do
         Database.retryingSql (Seconds 3) (sql id')
         where
@@ -42,7 +45,7 @@ interpretOutputDbQueueFull ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
   Member (OutputQueueConnection queue) r =>
-  Members [Store UUID (Queued t d) !! DbError, Time t dt, Random, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFull =
   tag .
@@ -53,7 +56,7 @@ interpretOutputDbQueueFull =
 interpretOutputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt r .
   Queue queue t d =>
-  Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Random, Embed IO] r =>
+  Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =
   interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .

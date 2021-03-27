@@ -35,6 +35,18 @@
         "url": "https://github.com/polysemy-research/polysemy/archive/478c86e080f38334f7ea5b0259f900916db58c33.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "polysemy-log": {
+        "branch": "master",
+        "description": "Polysemy effects for logging",
+        "homepage": null,
+        "owner": "tek",
+        "repo": "polysemy-log",
+        "rev": "b1f22a37fc0ccfabb9baa8164df085615418b70d",
+        "sha256": "0nzxamij02lz3w7ahg0xv3c1rhxfa1k33dcqf1riy6gj29sr410a",
+        "type": "tarball",
+        "url": "https://github.com/tek/polysemy-log/archive/b1f22a37fc0ccfabb9baa8164df085615418b70d.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "polysemy-resume": {
         "branch": "master",
         "description": "cross-interpreter errors for polysemy",

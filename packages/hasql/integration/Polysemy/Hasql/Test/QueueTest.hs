@@ -5,6 +5,7 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Uid (Uuid, intUuid)
 import Polysemy.Input (Input, input)
+import Polysemy.Log (interpretLogNull)
 import Polysemy.Output (Output, output)
 import Polysemy.Tagged (Tagged, tag, untag)
 import Polysemy.Test (UnitTest, assertJust)
@@ -61,6 +62,7 @@ test_queue =
     asyncToIOFinal $
     mapStop @QueueOutputError @Text show $
     interpretTimeGhc $
+    interpretLogNull $
     (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
     (interpretDbConnection "test-queue-output" conf . untag @"test-queue-output") $
     interpretOutputDbQueueFullGen @"test-queue" @(Uuid Dat) $

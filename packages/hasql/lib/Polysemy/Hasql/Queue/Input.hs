@@ -11,17 +11,19 @@ import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
+import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
+import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Input (Input(Input))
+import qualified Polysemy.Log as Log
+import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Time, TimeUnit)
 import Prelude hiding (group)
 
-import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.SOP.Constraint (symbolText)
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
@@ -53,9 +55,10 @@ tryDequeue connection =
 listen ::
   ∀ (queue :: Symbol) e r .
   KnownSymbol queue =>
-  Members [Database !! e, Stop e, Embed IO] r =>
+  Members [Database !! e, Stop e, Log, Embed IO] r =>
   Sem r ()
-listen =
+listen = do
+  Log.debug [qt|executing `listen` for queue #{symbolText @queue}|]
   restop (Database.retryingSqlDef [qt|listen "#{symbolText @queue}"|])
 
 processMessages ::
@@ -69,7 +72,7 @@ initQueue ::
   ∀ (queue :: Symbol) e d t r .
   Ord t =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! e, Database !! e, Stop e, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! e, Database !! e, Log, Stop e, Embed IO] r =>
   (d -> Sem r ()) ->
   Sem r ()
 initQueue write = do
@@ -81,7 +84,7 @@ dequeue ::
   ∀ (queue :: Symbol) d t dt r .
   Ord t =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO] r =>
   TBMQueue d ->
   Sem (Stop DbError : r) ()
 dequeue queue =
@@ -101,7 +104,7 @@ dequeueLoop ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   TBMQueue d ->
@@ -131,7 +134,7 @@ dequeueThread ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Async, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   Sem r (Concurrent.Async (Maybe ()), TBMQueue d)
@@ -143,11 +146,12 @@ dequeueThread errorDelay errorHandler = do
 releaseInputQueue ::
   ∀ (queue :: Symbol) d e r .
   KnownSymbol queue =>
-  Members [Database !! e, Async, Embed IO] r =>
+  Members [Database !! e, Log, Async, Embed IO] r =>
   Concurrent.Async (Maybe ()) ->
   TBMQueue d ->
   Sem r ()
 releaseInputQueue handle _ = do
+  Log.debug [qt|executing `unlisten` for queue `#{symbolText @queue}`|]
   Async.cancel handle
   resume_ (Database.retryingSqlDef [qt|unlisten "#{symbolText @queue}"|])
 
@@ -156,7 +160,7 @@ interpretInputDbQueueListen ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
@@ -172,7 +176,7 @@ interpretInputDbQueueFull ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [InputQueueConnection queue, Store UUID (Queued t d) !! DbError, Time t dt, Resource, Async] r =>
+  Members [InputQueueConnection queue, Store UUID (Queued t d) !! DbError, Time t dt, Log, Resource, Async] r =>
   Member (Embed IO) r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -187,7 +191,7 @@ interpretInputDbQueueFullGen ::
   ∀ (queue :: Symbol) d t dt u r .
   TimeUnit u =>
   Queue queue t d =>
-  Members [InputQueueConnection queue, Database !! DbError, Time t dt, Resource, Async, Embed IO] r =>
+  Members [InputQueueConnection queue, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r

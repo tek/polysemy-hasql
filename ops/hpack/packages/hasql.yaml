@@ -27,6 +27,7 @@ dependencies:
   - hasql ^>= 1.4.3
   - path
   - polysemy-db-data
+  - polysemy-log
   - polysemy-plugin
   - polysemy-resume
   - polysemy-time
