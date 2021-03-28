@@ -17,6 +17,7 @@ import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid, Uid(Uid), Uuid)
+import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
@@ -241,7 +242,7 @@ sumIdQProg = do
       Uid (SumPKR 5) (SumId (CreationTime (mkDatetime 2020 1 1 0 0 0)))
 
 sumIdProg ::
-  Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Embed IO] r =>
+  Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Log, Embed IO] r =>
   Member (Error InitDbError) r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()

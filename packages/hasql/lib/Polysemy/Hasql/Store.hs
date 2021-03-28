@@ -22,6 +22,7 @@ import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Store.Statement (delete, deleteAll, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+import Polysemy.Log (Log)
 
 type StoreStack qOut dOut qIn dIn =
   [Store qOut dOut !! DbError, Crud qIn dIn !! DbError, ManagedTable dIn !! DbError]
@@ -84,7 +85,7 @@ interpretStoreDbUid =
   interpretStoreDbAs id id IdQuery
 
 type StoreDeps t dt =
-  [Database !! DbError, Time t dt, Embed IO]
+  [Database !! DbError, Time t dt, Log, Embed IO]
 
 interpretStoreDbFullAs ::
   ∀ dIn dOut qIn qOut t dt r .
@@ -154,7 +155,7 @@ interpretStoreDbFullGen =
 interpretStoreDbSingle ::
   ∀ rep q d r .
   GenQueryTable Auto rep q d =>
-  Members [Resource, Embed IO, Final IO] r =>
+  Members [Resource, Log, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->
   InterpretersFor (StoreStack q d q d) r

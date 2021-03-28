@@ -36,6 +36,7 @@ import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import qualified Polysemy.Hasql.Type.Data.DbType as Type
 import Polysemy.Hasql.Where (QCond(SimpleCond), Segment(SumSegment, FieldSegment), queryWhere)
+import Polysemy.Log (Log)
 
 newtype Content =
   Content { unContent :: Text }
@@ -256,7 +257,7 @@ prog = do
     pure (length r1, r2)
 
 prog' ::
-  Members [Database !! DbError, Stop DbError, Error InitDbError, GhcTime, Hedgehog IO, Embed IO] r =>
+  Members [Database !! DbError, Stop DbError, Error InitDbError, GhcTime, Hedgehog IO, Log, Embed IO] r =>
   Sem r ()
 prog' =
   interpretQuery @Auto @(UidRep PrimaryKey DatRep) $

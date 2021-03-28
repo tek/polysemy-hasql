@@ -18,11 +18,13 @@ import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Test.Database (withTestConnection)
 import Polysemy.Hasql.Test.DbConfig (dbConfig)
+import Polysemy.Log (interpretLogNull, Log)
 
 type TestEffects =
   [
     GhcTime,
     Random,
+    Log,
     Stop DbConnectionError,
     Stop DbError,
     Stop QueryError,
@@ -54,6 +56,7 @@ integrationTestWith run =
           mapStop @QueryError @Text show $
           mapStop @DbError @Text show $
           mapStop @DbConnectionError @Text show $
+          interpretLogNull $
           runRandomIO $
           interpretTimeGhc $
           run conf

@@ -4,6 +4,7 @@ import Control.Lens (mapMOf)
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Log (Log)
 
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
@@ -21,7 +22,7 @@ import Polysemy.Hasql.Table.Table (GenTable, genTable)
 
 interpretManagedTable ::
   ∀ d r .
-  Members [Database !! DbError, Embed IO] r =>
+  Members [Database !! DbError, Log, Embed IO] r =>
   Table d ->
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
@@ -39,7 +40,7 @@ interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
 interpretManagedTableGen ::
   ∀ rep d r .
   GenTable rep d =>
-  Members [Database !! DbError, Embed IO] r =>
+  Members [Database !! DbError, Log, Embed IO] r =>
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableGen =
   interpretManagedTable (genTable @rep @d)

@@ -35,6 +35,7 @@ import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Hasql.Table.Table (GenTable, genTable)
 import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
+import Polysemy.Log (Log)
 
 suffixedTable ::
   Lens' t (Table d) ->
@@ -158,6 +159,7 @@ type TestStoreDeps =
     Database !! DbError,
     Error DbError,
     Random,
+    Log,
     Stop QueryError,
     Stop DbError,
     GhcTime

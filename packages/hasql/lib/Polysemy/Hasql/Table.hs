@@ -8,17 +8,19 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Session (QueryError)
 import qualified Hasql.Session as Session (run, statement)
 import Hasql.Statement (Statement)
-
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
-import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import qualified Polysemy.Hasql.Statement as Statement
+import qualified Polysemy.Log as Log
+import Polysemy.Log (Log)
+
 import Polysemy.Hasql.Column.DataColumn (TableStructure, tableStructure)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector, nameSelector)
+import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
+import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
+import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.DbType (baseColumns)
+import qualified Polysemy.Hasql.Statement as Statement
 
 runStatement ::
   Members [Embed IO, Stop QueryError] r =>
@@ -230,11 +232,12 @@ updateTable (toList -> existing) connection column@(Column name selector _ _ _) 
       baseColumns column
 
 initTable ::
-  Members [Embed IO, Stop DbError] r =>
+  Members [Log, Stop DbError, Embed IO] r =>
   Connection ->
   Column ->
   Sem r ()
-initTable connection t@(Column name _ _ _ _) =
+initTable connection t@(Column name _ _ _ _) = do
+  Log.debug [qt|initializing table #{name}|]
   process =<< liftError (tableColumns connection name)
   where
     process (Just existing) =
@@ -246,7 +249,7 @@ initTable connection t@(Column name _ _ _ _) =
 
 initTableGen ::
   ∀ d rep r .
-  Members [Embed IO, Stop DbError] r =>
+  Members [Log, Stop DbError, Embed IO] r =>
   TableStructure d rep =>
   Connection ->
   Sem r ()
@@ -255,7 +258,7 @@ initTableGen connection = do
 
 initTableE ::
   ∀ d rep r .
-  Member (Embed IO) r =>
+  Members [Log, Embed IO] r =>
   TableStructure d rep =>
   Connection ->
   Sem r (Either DbError ())
