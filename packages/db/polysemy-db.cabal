@@ -29,6 +29,7 @@ library
   exposed-modules:
       Polysemy.Db
       Polysemy.Db.Atomic
+      Polysemy.Db.AtomicState
       Polysemy.Db.Data.Column
       Polysemy.Db.Data.ColumnOptions
       Polysemy.Db.Data.Cond

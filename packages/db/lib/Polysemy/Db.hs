@@ -3,8 +3,10 @@ module Polysemy.Db (
   module Polysemy.Db.Data.Store,
   module Polysemy.Db.Data.StoreQuery,
   module Polysemy.Db.Store,
+  interpretAtomicStateStore,
 ) where
 
+import Polysemy.Db.AtomicState (interpretAtomicStateStore)
 import Polysemy.Db.Data.Store (Store, delete, deleteAll, fetch, fetchAll, insert, upsert)
 import Polysemy.Db.Data.StoreQuery (StoreQuery, basic)
 import Polysemy.Db.Store (interpretStoreAtomic)

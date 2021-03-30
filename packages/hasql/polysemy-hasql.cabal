@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Polysemy.Hasql
+      Polysemy.Hasql.AtomicState
       Polysemy.Hasql.Column.Class
       Polysemy.Hasql.Column.Data.Effect
       Polysemy.Hasql.Column.DataColumn
@@ -149,6 +150,7 @@ test-suite polysemy-hasql-integration
   other-modules:
       Polysemy.Hasql.Test.AnyTest
       Polysemy.Hasql.Test.ArrayTest
+      Polysemy.Hasql.Test.AtomicState
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.DeleteTest
       Polysemy.Hasql.Test.InitTest

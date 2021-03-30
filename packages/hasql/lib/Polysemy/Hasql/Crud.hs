@@ -26,6 +26,7 @@ interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) =
       Statement.deleteWhere qTable
     DeleteAll ->
       Statement.deleteAll table
+{-# INLINE interpretCrudWith #-}
 
 interpretCrud ::
   ∀ q d e r .
@@ -35,12 +36,13 @@ interpretCrud ::
 interpretCrud sem = do
   table <- queryTable
   interpretCrudWith table sem
+{-# INLINE interpretCrud #-}
 
-interpretCrudSingleton ::
+interpretCrudSingletonWith ::
   Table d ->
-  InterpreterFor (Crud () d) r
-interpretCrudSingleton table@(Table structure row _) =
-  interpret $ pure . \case
+  InterpreterFor (Crud () d !! e) r
+interpretCrudSingletonWith table@(Table structure row _) =
+  interpretResumable $ pure . \case
     Fetch ->
       listToMaybe <$> Statement.select structure row
     FetchAll ->
@@ -53,3 +55,13 @@ interpretCrudSingleton table@(Table structure row _) =
       Statement.deleteAll table
     DeleteAll ->
       Statement.deleteAll table
+{-# INLINE interpretCrudSingletonWith #-}
+
+interpretCrudSingleton ::
+  Show e =>
+  Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
+  InterpreterFor (Crud () d !! e) r
+interpretCrudSingleton sem = do
+  QueryTable table _ _ <- queryTable
+  interpretCrudSingletonWith table sem
+{-# INLINE interpretCrudSingleton #-}

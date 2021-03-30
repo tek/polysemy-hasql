@@ -26,12 +26,14 @@ module Polysemy.Hasql (
   -- * Misc
   HasqlConnection,
   DbConnectionError,
+  interpretAtomicStateDb,
 ) where
 
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
-
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
+
+import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)

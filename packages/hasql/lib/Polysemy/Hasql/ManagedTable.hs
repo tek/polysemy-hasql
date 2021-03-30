@@ -36,6 +36,7 @@ interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
   where
     initDb =
       InitDb name \ c -> initTable c column
+{-# INLINE interpretManagedTable #-}
 
 interpretManagedTableGen ::
   ∀ rep d r .
@@ -44,6 +45,16 @@ interpretManagedTableGen ::
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableGen =
   interpretManagedTable (genTable @rep @d)
+{-# INLINE interpretManagedTableGen #-}
+
+interpretManagedTableAuto ::
+  ∀ d r .
+  GenTable Auto d =>
+  Members [Database !! DbError, Log, Embed IO] r =>
+  InterpreterFor (ManagedTable d !! DbError) r
+interpretManagedTableAuto =
+  interpretManagedTable (genTable @Auto @d)
+{-# INLINE interpretManagedTableAuto #-}
 
 interpretManagedTableUnmanaged ::
   ∀ d e r .
