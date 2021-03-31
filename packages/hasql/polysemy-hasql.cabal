@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Polysemy.Db.Reader
       Polysemy.Hasql
       Polysemy.Hasql.AtomicState
       Polysemy.Hasql.Column.Class
@@ -70,6 +71,7 @@ library
       Polysemy.Hasql.Queue.Data.Queued
       Polysemy.Hasql.Queue.Input
       Polysemy.Hasql.Queue.Output
+      Polysemy.Hasql.Reader
       Polysemy.Hasql.Session
       Polysemy.Hasql.SOP.Enum
       Polysemy.Hasql.Statement
