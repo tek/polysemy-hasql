@@ -27,18 +27,22 @@ module Polysemy.Hasql (
   HasqlConnection,
   DbConnectionError,
   interpretAtomicStateDb,
+  interpretAtomicStateDbAuto,
+  interpretReaderDb,
+  interpretReaderDbAuto,
 ) where
 
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 
-import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
+import Polysemy.Hasql.AtomicState (interpretAtomicStateDb, interpretAtomicStateDbAuto)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Database (HasqlConnection, interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
+import Polysemy.Hasql.Reader (interpretReaderDb, interpretReaderDbAuto)
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable(genQueryTable))
 
