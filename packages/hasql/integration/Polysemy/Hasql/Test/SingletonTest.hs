@@ -5,14 +5,14 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Hasql.Data.Crud (Crud)
+import Polysemy.Test (UnitTest, assertJust)
+
+import Polysemy.Hasql.Crud (interpretCrudSingletonWith)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
-import Polysemy.Hasql.Crud (interpretCrudSingleton)
 import Polysemy.Hasql.Store (interpretStoreDb)
 import Polysemy.Hasql.Table.Table (genTable)
 import Polysemy.Hasql.Test.Database (withTestPlainTable)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Test (UnitTest, assertJust)
 
 data Dat =
   Dat {
@@ -44,7 +44,7 @@ test_singletonDb =
   integrationTest do
     (a, b) <- withTestPlainTable (genTable @DatRep) $ \ table ->
       interpretManagedTable table $
-        resumable @_ @(Crud _ _) (interpretCrudSingleton table) $
+        interpretCrudSingletonWith table $
         interpretStoreDb $
         prog
     assertJust (pure a) b

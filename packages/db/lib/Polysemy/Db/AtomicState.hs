@@ -5,33 +5,36 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 
 insertState ::
-  Members [Store () s !! e, Stop e] r =>
-  s ->
-  Sem r s
+  ∀ d e r .
+  Members [Store () d !! e, Stop e] r =>
+  d ->
+  Sem r d
 insertState initial =
-  restop do
-    initial <$ (Store.deleteAll >> Store.insert initial)
+  restop @e @(Store () d) do
+    initial <$ (Store.deleteAll @() @d >> Store.insert @() @d initial)
 
 readState ::
-  Members [Store () s !! e, Stop e] r =>
-  s ->
-  Sem r s
+  ∀ d e r .
+  Members [Store () d !! e, Stop e] r =>
+  d ->
+  Sem r d
 readState initial = do
-  stored <- restop (Store.fetch ())
-  maybe (insertState initial) pure stored
+  stored <- restop @e @(Store () d) (Store.fetch @() @d ())
+  maybe (insertState @d @e initial) pure stored
 
 -- |Interpret 'AtomicState' as a singleton table.
 --
 -- Given an initial value, every state action reads the value from the database and writes it back.
 interpretAtomicStateStore ::
+  ∀ d e r .
   Member (Store () d !! e) r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateStore initial =
   interpretResumable \case
     AtomicState f -> do
-      (newState, a) <- f <$> readState initial
-      a <$ insertState newState
+      (newState, a) <- f <$> readState @d @e initial
+      a <$ insertState @d @e newState
     AtomicGet ->
-      readState initial
+      readState @d @e initial
 {-# INLINE interpretAtomicStateStore #-}

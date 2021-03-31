@@ -45,6 +45,5 @@ dependencies:
 
 ghc-options:
   - -fplugin=Polysemy.Plugin
-  - -O2
   - -flate-specialise
   - -fspecialise-aggressively
