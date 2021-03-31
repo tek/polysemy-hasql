@@ -19,6 +19,7 @@ import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 --
 -- Given an initial value, every state action reads the value from the database, potentially writing it on first access.
 interpretReaderDb ::
+  ∀ d e r .
   Show e =>
   Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
   d ->
@@ -36,6 +37,7 @@ interpretReaderDb initial =
 --
 -- Uses the automatic derivation strategy.
 interpretReaderDbAuto ::
+  ∀ d r .
   GenQueryTable Auto Auto () d =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
