@@ -5,3 +5,4 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode)
 newtype Where d q =
   Where SqlCode
   deriving (Eq, Show)
+  deriving newtype (IsString, Semigroup, Monoid)

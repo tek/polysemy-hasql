@@ -19,6 +19,7 @@ interpretQueryWith params qwhere =
   interpret \case
     Query.Params -> pure params
     Query.Query -> pure qwhere
+{-# INLINE interpretQueryWith #-}
 
 interpretQuery ::
   ∀ qrep rep q d r .
@@ -29,6 +30,7 @@ interpretQuery =
   where
     QueryTable _ params qwhere =
       genQueryTable @qrep @rep
+{-# INLINE interpretQuery #-}
 
 interpretQueryAuto ::
   ∀ q d r .
@@ -36,3 +38,12 @@ interpretQueryAuto ::
   InterpreterFor (Query q d) r
 interpretQueryAuto =
   interpretQuery @Auto @Auto
+{-# INLINE interpretQueryAuto #-}
+
+interpretQuerySingleton ::
+  InterpreterFor (Query q d) r
+interpretQuerySingleton =
+  interpret \case
+    Query.Params -> pure mempty
+    Query.Query -> pure mempty
+{-# INLINE interpretQuerySingleton #-}

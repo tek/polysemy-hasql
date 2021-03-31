@@ -30,6 +30,10 @@ module Polysemy.Hasql (
   interpretAtomicStateDbAuto,
   interpretReaderDb,
   interpretReaderDbAuto,
+  interpretQueryWith,
+  interpretQuery,
+  interpretQueryAuto,
+  interpretQuerySingleton,
 ) where
 
 import Polysemy.Db.Data.Column (Auto)
@@ -42,6 +46,7 @@ import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Database (HasqlConnection, interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
+import Polysemy.Hasql.Query (interpretQuery, interpretQueryAuto, interpretQuerySingleton, interpretQueryWith)
 import Polysemy.Hasql.Reader (interpretReaderDb, interpretReaderDbAuto)
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable(genQueryTable))
