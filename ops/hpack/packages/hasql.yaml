@@ -32,6 +32,7 @@ dependencies:
   - polysemy-resume
   - polysemy-time
   - postgresql-libpq
+  - relude
   - scientific
   - stm-chans
   - symbols
@@ -45,5 +46,3 @@ dependencies:
 
 ghc-options:
   - -fplugin=Polysemy.Plugin
-  - -flate-specialise
-  - -fspecialise-aggressively

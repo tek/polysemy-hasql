@@ -45,7 +45,7 @@ let
     };
   };
   postgresVm = nixos.vm;
-  ensurePostgresVm = pkgs.writeScriptBin "ensure-postgres-vm" ''
+  ensurePostgresVm = pkgs.writeScript "ensure-postgres-vm" ''
     #!${pkgs.zsh}/bin/zsh
     if ${pkgs.procps}/bin/pgrep -F ${pidfile} -L -f ${pidfile} &>/dev/null
     then

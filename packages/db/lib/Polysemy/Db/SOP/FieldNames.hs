@@ -20,7 +20,7 @@ type family CtorFieldSymbols (con :: Symbol) (index :: Nat) (ds :: [*]) :: [Fiel
 type family CtorsFields (cs :: [ConstructorInfo]) (dss :: [[*]]) :: [[FieldId]] where
   CtorsFields '[] '[] =
     '[]
-  CtorsFields ('Record _ fields : cs) (ds : dss) =
+  CtorsFields ('Record _ fields : cs) (_ : dss) =
     RecordFieldSymbols fields : CtorsFields cs dss
   CtorsFields ('Constructor name : cs) (ds : dss) =
     CtorFieldSymbols name 1 ds : CtorsFields cs dss

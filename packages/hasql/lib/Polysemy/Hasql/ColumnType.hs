@@ -1,3 +1,5 @@
+{-# language CPP #-}
+
 module Polysemy.Hasql.ColumnType where
 
 import qualified Chronos as Chronos
@@ -16,7 +18,11 @@ import Polysemy.Hasql.Column.Data.Effect (ADT, CustomType, Newtype, Tc)
 class ColumnType (d :: *) where
   columnType :: Text
   type ColumnTypeDefined d :: Bool
+#if MIN_VERSION_GLASGOW_HASKELL(8,10,0,0)
+  type ColumnTypeDefined _ = 'True
+#else
   type ColumnTypeDefined d = 'True
+#endif
 
 instance ColumnType Bool where columnType = "bool"
 instance ColumnType Int where columnType = "bigint"

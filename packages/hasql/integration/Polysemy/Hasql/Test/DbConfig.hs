@@ -1,8 +1,12 @@
+{-# language CPP #-}
+
 module Polysemy.Hasql.Test.DbConfig where
 
-import System.Environment (lookupEnv)
-
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
+
+#if !MIN_VERSION_relude(1,0,0)
+import System.Environment (lookupEnv)
+#endif
 
 dbConfig ::
   MonadIO m =>

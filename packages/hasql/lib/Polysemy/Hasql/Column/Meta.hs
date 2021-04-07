@@ -68,7 +68,7 @@ type family ADTConsGen (names :: [Symbol]) (repss :: [[*]]) (rnss :: Ids)  (dss 
     'ConMeta ('NamedField name) (ZipFields reps rns ds dns) : ADTConsGen names repss rnss dss dnss
 
 type family ADTEnumGen (rep :: *) (d :: *) (dss :: [[*]]) :: Maybe ADTMetadata where
-  ADTEnumGen rep d '[] =
+  ADTEnumGen _ _ '[] =
     'Just 'ADTEnum
   ADTEnumGen rep d ('[] : dss) =
     ADTEnumGen rep d dss
@@ -76,7 +76,7 @@ type family ADTEnumGen (rep :: *) (d :: *) (dss :: [[*]]) :: Maybe ADTMetadata w
     'Nothing
 
 type family ADTSumGen (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: ADTMetadata where
-  ADTSumGen rep d repss rnss dss dnss =
+  ADTSumGen _ d repss rnss dss dnss =
     'ADTSum (ADTConsGen (ConstructorNames d) repss rnss dss dnss)
 
 type family ADTEnumOrSum (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: ADTMetadata where
@@ -84,7 +84,7 @@ type family ADTEnumOrSum (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss
     Eval (FromMaybe (ADTSumGen rep d repss rnss dss dnss) (ADTEnumGen rep d dss))
 
 type family ADTMetaGen (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: ADTMetadata where
-  ADTMetaGen rep d '[reps] '[rns] '[ds] '[dns] =
+  ADTMetaGen _ _ '[reps] '[rns] '[ds] '[dns] =
     'ADTProd (ZipFields reps rns ds dns)
   ADTMetaGen rep d repss rnss dss dnss =
     ADTEnumOrSum rep d repss rnss dss dnss
@@ -120,7 +120,7 @@ type family ProdDefaultRep (rep :: *) :: * where
 type family ADTMetaExplicit (rep :: *) (d :: *) (meta :: DatatypeInfo) :: ADTMetadata where
   ADTMetaExplicit rep d ('ADT _ _ _ _) =
     ADTMetaGen rep d (GCode rep) (FieldNames rep) (GCode d) (FieldNames d)
-  ADTMetaExplicit rep d ('Newtype _ _ _) =
+  ADTMetaExplicit _ d ('Newtype _ _ _) =
     'ADTNewtype (NewtypePayload (GCode d))
   ADTMetaExplicit rep d meta =
     ErrorWithType "ADTMetaExplicit" '(rep, d, meta)

@@ -111,7 +111,7 @@ type MatchedNt =
   Either [*] ([*], *)
 
 type family MatchNt (inferred :: Maybe *) (pre :: [*]) (reps :: [*]) :: MatchedNt where
-  MatchNt _ pre (Newtype nt wrapped : reps) =
+  MatchNt _ pre (Newtype _ wrapped : reps) =
     'Right '(pre ++ reps, wrapped)
   MatchNt inferred pre (rep : reps) =
     MatchNt inferred (pre ++ '[rep]) reps

@@ -9,5 +9,5 @@ copyright: 2020 Torsten Schmits
 category: Database
 build-type: Simple
 extra-source-files:
-  - README.md
-  - Changelog.md
+  - readme.md
+  - changelog.md

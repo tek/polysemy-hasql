@@ -28,7 +28,7 @@ instance NullColumns '[] '[] where
 
 type family WithMaybe (d :: *) (init :: [*]) (effs :: [*]) :: [*] where
   WithMaybe d init '[] = Tc Maybe d : init
-  WithMaybe _ init (Tc Maybe a : effs) = init
+  WithMaybe _ init (Tc Maybe _ : _) = init
   WithMaybe d init (_ : effs) = WithMaybe d init effs
 
 instance {-# overlappable #-} (

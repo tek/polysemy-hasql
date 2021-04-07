@@ -4,6 +4,7 @@ import Data.Foldable (foldl1)
 import qualified Data.Text as Text
 import Fcf (Eval, Exp, FromMaybe, If, IsJust, Pure, Pure1, type (@@))
 import Fcf.Class.Foldable (FoldMap)
+import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, K(K), NP, hcollapse, hcpure)
 import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
 import Polysemy.Db.Data.FieldId (FieldId, FieldIdSymbol, FieldIdText, JoinCommaFieldIds, quotedFieldId)
@@ -12,12 +13,11 @@ import Polysemy.Db.SOP.Error (ErrorWithType, ErrorWithType2)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
-import Fcf.Class.Functor (FMap)
-import qualified Polysemy.Hasql.Data.Where as Data (Where(Where))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Hasql.Table.Query.Prepared (dollar)
 import Polysemy.Hasql.Column.Data.Effect (ContainsFlatten)
+import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
+import qualified Polysemy.Hasql.Data.Where as Data (Where(Where))
 import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
+import Polysemy.Hasql.Table.Query.Prepared (dollar)
 
 simpleSlug ::
   ∀ (name :: Symbol) .
@@ -267,17 +267,17 @@ type family ForceMaybe (d :: *) :: * where
   ForceMaybe d = Maybe d
 
 type family ReplicateSum (qCol :: Kind.Column) (dCols :: [Kind.Column]) :: [Kind.Column] where
-  ReplicateSum qCol '[] =
+  ReplicateSum _ '[] =
     '[]
   ReplicateSum qCol (_ : dCols) =
     qCol : ReplicateSum qCol dCols
 
 type family SumPrimNames (q :: *) (d :: *) (cs :: [QCond]) :: [[Segment]] where
-  SumPrimNames q d '[] =
+  SumPrimNames _ _ '[] =
     '[]
   SumPrimNames q d ('SimpleCond q d n : cs) =
     n : SumPrimNames q d cs
-  SumPrimNames q d ('SimpleCond q1 d1 n : cs) =
+  SumPrimNames q d ('SimpleCond q1 d1 n : _) =
     TypeError (
       "internal [SumPrimNames]:" %
       "type mismatch between column types of query and data for prim/sum query:" %
@@ -308,7 +308,7 @@ type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Col
   MatchCon meta prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column conName _ ('Kind.Prod _ d)) =
     MatchQueryColumnE meta ('ConSegment conName : prefix) d @@ ('Kind.Column qname '[] ('Kind.Prim q))
   -- TODO
-  MatchCon meta prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column qname _ ('Kind.Prim d)) =
+  MatchCon _ prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column qname _ ('Kind.Prim d)) =
     FromMaybe '[] @@ MatchPrim prefix qname qname q d
   MatchCon _ _ _ _ =
     '[]
@@ -333,15 +333,15 @@ type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool
     'Nothing
 
 type family MatchCol' (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Column) (dCol :: Kind.Column) :: Maybe QConds where
-  MatchCol' meta prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column dname _ ('Kind.Prim d)) =
+  MatchCol' _ prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column dname _ ('Kind.Prim d)) =
     MatchPrim prefix qname dname q d
   MatchCol' meta prefix q ('Kind.Column name effs ('Kind.Prod d cols)) =
     MatchProd meta prefix (ContainsFlatten effs) q ('Kind.Column name effs ('Kind.Prod d cols))
   MatchCol' meta prefix ('Kind.Column qname _ ('Kind.Sum _ qCols)) ('Kind.Column qname _ ('Kind.Sum _ dCols)) =
     'Just (MatchCons meta ('SumSegment qname : prefix) qCols dCols)
-  MatchCol' meta prefix ('Kind.Column qname _ ('Kind.Sum _ cols)) ('Kind.Column qname _ _) =
+  MatchCol' _ _ ('Kind.Column qname _ ('Kind.Sum _ _)) ('Kind.Column qname _ _) =
     'Just (TypeError ("Query column " <> qname <> " is a sum type, but the data column is not."))
-  MatchCol' meta prefix _ _ =
+  MatchCol' _ _ _ _ =
     'Nothing
 
 data MatchCol (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Column) :: Kind.Column -> Exp (Maybe QConds)
@@ -383,9 +383,9 @@ type family MatchTable (meta :: QueryMeta) (qCol :: Kind.Column) (dCol :: Kind.C
     MatchQueryColumnE meta '[] dCols @@ ('Kind.Column n e ('Kind.Prim t))
   MatchTable meta ('Kind.Column _ _ ('Kind.Sum _ qCols)) ('Kind.Column _ _ ('Kind.Sum _ dCols)) =
     MatchCons meta '[] qCols dCols
-  MatchTable meta ('Kind.Column qn e ('Kind.Prim t)) ('Kind.Column name _ ('Kind.Sum _ dCols)) =
+  MatchTable meta ('Kind.Column qn e ('Kind.Prim t)) ('Kind.Column _ _ ('Kind.Sum _ dCols)) =
     GroupSumPrim (MatchCons meta '[] (ReplicateSum ('Kind.Column qn e ('Kind.Prim t)) dCols) dCols)
-  MatchTable meta qCol dCol =
+  MatchTable _ qCol dCol =
     ErrorWithType "MatchTable" '(qCol, dCol)
 
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
