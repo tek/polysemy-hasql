@@ -172,7 +172,7 @@ library
     , chronos
     , containers
     , contravariant
-    , fcf-containers
+    , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
     , ghc-prim
@@ -291,7 +291,7 @@ test-suite polysemy-hasql-integration
     , chronos
     , containers
     , contravariant
-    , fcf-containers
+    , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
     , ghc-prim
@@ -407,7 +407,7 @@ test-suite polysemy-hasql-unit
     , chronos
     , containers
     , contravariant
-    , fcf-containers
+    , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
     , ghc-prim

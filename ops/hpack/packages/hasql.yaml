@@ -23,7 +23,7 @@ dependencies:
   - contravariant
   - ghc-prim
   - first-class-families
-  - fcf-containers
+  - fcf-containers ^>= 0.6
   - hasql ^>= 1.4.3
   - path
   - polysemy-db-data
