@@ -17,7 +17,7 @@ dependencies:
   - data-default
   - either
   - first-class-families
-  - fcf-containers
+  - fcf-containers ^>= 0.6
   - polysemy-db-data
   - polysemy-resume
   - random

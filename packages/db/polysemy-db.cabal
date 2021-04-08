@@ -129,7 +129,7 @@ library
     , containers
     , data-default
     , either
-    , fcf-containers
+    , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
     , lens
