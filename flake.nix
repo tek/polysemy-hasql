@@ -4,8 +4,8 @@
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs/c0e881852006b132236cbf0301bd1939bb50867e;
     tryp-hs = {
-      # url = github:tek/tryp-hs;
-      url = path:/home/tek/code/tek/nix/tryp-hs;
+      url = github:tek/tryp-hs;
+      # url = path:/home/tek/code/tek/nix/tryp-hs;
       inputs.nixpkgs.follows = "nixpkgs";
     };
     polysemy-test.url = github:tek/polysemy-test;
@@ -43,6 +43,12 @@
       polysemy-log = hackage "0.2.2.1" "1c8kn28a5j9k52jfg5n6nb4ywd76mgrgaqwmf1q0km2kgdi9y40s";
       polysemy-resume = hackage "0.1.0.2" "08sm3db7vpwj3xhlqn98yfpn1hlzv00jkah9q02k1ym024g5iir0";
     };
+
+    preStartCommand = project: ''
+      ${(import ./ops/nix/integration.nix project).ensurePostgresVm}
+      export polysemy_db_test_host=localhost
+      export polysemy_db_test_port=10000
+    '';
   in
   tryp-hs.flake {
     base = ./.;
@@ -57,16 +63,6 @@
     };
     ghci.extraArgs = ["-fplugin=Polysemy.Plugin"];
     versionFile = "ops/hpack/shared/meta.yaml";
-    modify = project: outputs:
-    let
-      vm = (import ./ops/nix/integration.nix project).ensurePostgresVm;
-      preCmd = ''
-        ${vm}
-        export polysemy_db_test_host=localhost
-        export polysemy_db_test_port=10000
-      '';
-    in {
-      legacyPackages.run = outputs.legacyPackages.run.override { preStartCommand = preCmd; };
-    };
+    runConfig = project: { preStartCommand = preStartCommand project; };
   };
 }

@@ -2990,13 +2990,17 @@
         "thax": "thax_13"
       },
       "locked": {
-        "narHash": "sha256-7WwdBXx53sphL/zTBJgr79KkhVEMMbPkO2o0h0EGG+4=",
-        "path": "/home/tek/code/tek/nix/tryp-hs",
-        "type": "path"
+        "lastModified": 1617884016,
+        "narHash": "sha256-v/Ek7SOqSbe6FQdbi0R5B/LDUpA8/79r5XS/H/juczc=",
+        "owner": "tek",
+        "repo": "tryp-hs",
+        "rev": "5cb1df9b92d47fd62c6386ae227d8f68578c743e",
+        "type": "github"
       },
       "original": {
-        "path": "/home/tek/code/tek/nix/tryp-hs",
-        "type": "path"
+        "owner": "tek",
+        "repo": "tryp-hs",
+        "type": "github"
       }
     },
     "tryp-hs_2": {
