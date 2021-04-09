@@ -1,3 +1,6 @@
+{-# language CPP #-}
+#define sop5 MIN_VERSION_generics_sop(0,5,0)
+
 module Polysemy.Db.SOP.FieldNames where
 
 import Fcf (Eval)
@@ -26,8 +29,15 @@ type family CtorsFields (cs :: [ConstructorInfo]) (dss :: [[*]]) :: [[FieldId]] 
     CtorFieldSymbols name 1 ds : CtorsFields cs dss
 
 type family ADTCtorsFields (adt :: DatatypeInfo) (dss :: [[*]]) :: [[FieldId]] where
+#if sop5
   ADTCtorsFields ('ADT _ _ ctors _) dss =
     CtorsFields ctors dss
+
+#else
+  ADTCtorsFields ('ADT _ _ ctors) dss =
+    CtorsFields ctors dss
+
+#endif
 
 class DemoteFieldNames (d :: *) where
   type FieldNames d :: [[FieldId]]

@@ -1,3 +1,6 @@
+{-# language CPP #-}
+#define sop5 MIN_VERSION_generics_sop(0,5,0)
+
 module Polysemy.Hasql.Column.Meta where
 
 import Fcf (Eval, FromMaybe, type (@@))
@@ -118,8 +121,13 @@ type family ProdDefaultRep (rep :: *) :: * where
     Rep '[Product rep]
 
 type family ADTMetaExplicit (rep :: *) (d :: *) (meta :: DatatypeInfo) :: ADTMetadata where
+#if sop5
   ADTMetaExplicit rep d ('ADT _ _ _ _) =
     ADTMetaGen rep d (GCode rep) (FieldNames rep) (GCode d) (FieldNames d)
+#else
+  ADTMetaExplicit rep d ('ADT _ _ _ _) =
+    ADTMetaGen rep d (GCode rep) (FieldNames rep) (GCode d) (FieldNames d)
+#endif
   ADTMetaExplicit _ d ('Newtype _ _ _) =
     'ADTNewtype (NewtypePayload (GCode d))
   ADTMetaExplicit rep d meta =
@@ -134,8 +142,13 @@ type family AllAuto (dss :: [[*]]) :: [[*]] where
   AllAuto (ds : dss) = AsAutoCon ds : AllAuto dss
 
 type family ADTMetaAuto (d :: *) (meta :: DatatypeInfo) :: ADTMetadata where
+#if sop5
   ADTMetaAuto d ('ADT _ _ _ _) =
     ADTMetaGen Auto d (AllAuto (GCode d)) (FieldNames d) (GCode d) (FieldNames d)
+#else
+  ADTMetaAuto d ('ADT _ _ _) =
+    ADTMetaGen Auto d (AllAuto (GCode d)) (FieldNames d) (GCode d) (FieldNames d)
+#endif
   ADTMetaAuto d ('Newtype _ _ _) =
     'ADTNewtype (NewtypePayload (GCode d))
   ADTMetaAuto d _ =
