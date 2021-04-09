@@ -56,9 +56,9 @@ library
       Polysemy.Db.Text.Case
       Polysemy.Db.Text.DbIdentifier
       Polysemy.Db.Text.Quote
-      Paths_polysemy_db
   other-modules:
       Prelude
+      Paths_polysemy_db
   autogen-modules:
       Paths_polysemy_db
   hs-source-dirs:

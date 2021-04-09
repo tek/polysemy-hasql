@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# language CPP #-}
+#define sop5 MIN_VERSION_generics_sop(0,5,0)
 
 module Polysemy.Hasql.SOP.Enum where
 
@@ -22,6 +24,7 @@ import qualified Generics.SOP.Type.Metadata as T
 
 import Polysemy.Db.SOP.Constraint (IsEnum, IsNullary, ReifySOP)
 
+#if sop5
 genEnumTable ::
   ∀ a mod name ctors strictness .
   IsEnum a =>
@@ -29,6 +32,18 @@ genEnumTable ::
   GDatatypeInfoOf a ~ 'T.ADT mod name ctors strictness =>
   T.DemoteConstructorInfos ctors (GCode a) =>
   Map Text a
+
+#else
+genEnumTable ::
+  ∀ a mod name ctors .
+  IsEnum a =>
+  ReifySOP a (GCode a) =>
+  GDatatypeInfoOf a ~ 'T.ADT mod name ctors =>
+  T.DemoteConstructorInfos ctors (GCode a) =>
+  Map Text a
+
+#endif
+
 genEnumTable =
   Map.fromList (hcollapse cs)
   where

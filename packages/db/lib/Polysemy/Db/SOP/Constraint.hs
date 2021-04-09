@@ -1,3 +1,6 @@
+{-# language CPP #-}
+#define sop5 MIN_VERSION_generics_sop(0,5,0)
+
 module Polysemy.Db.SOP.Constraint where
 
 import GHC.TypeLits (symbolVal)
@@ -32,7 +35,11 @@ class IsDataT (d :: DatatypeInfo) (name :: Symbol) | d -> name where
 
 instance IsDataT ('Newtype mod name ctors) name where
 
+#if sop5
 instance IsDataT ('ADT mod name ctors strictness) name where
+#else
+instance IsDataT ('ADT mod name ctors) name where
+#endif
 
 class IsData (a :: *) (types :: [*]) (name :: Symbol) | a -> types name where
 
@@ -46,7 +53,13 @@ class IsRecordT (d :: DatatypeInfo) (name :: Symbol) names | d -> name names whe
 
 instance IsRecordT ('Newtype mod name ('Record ctor names)) name names where
 
+#if sop5
 instance IsRecordT ('ADT mod name '[ 'Record ctor names] strictness) name names where
+
+#else
+instance IsRecordT ('ADT mod name '[ 'Record ctor names]) name names where
+
+#endif
 
 class IsRecord (a :: *) (types :: [*]) (name :: Symbol) (fields :: [FieldInfo]) | a -> types name fields where
 
@@ -58,7 +71,13 @@ instance (
 
 class CtorsT (d :: DatatypeInfo) (ctors :: [ConstructorInfo]) | d -> ctors where
 
+#if sop5
 instance CtorsT ('ADT mod name ctors strictness) ctors where
+
+#else
+instance CtorsT ('ADT mod name ctors) ctors where
+
+#endif
 
 class Ctors (d :: *) (ctors :: [ConstructorInfo]) (types :: [[*]]) | d -> ctors types where
 

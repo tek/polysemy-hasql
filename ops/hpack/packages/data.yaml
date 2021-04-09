@@ -10,7 +10,7 @@ ghc-options:
 
 library:
   source-dirs: lib
-  generated-exposed-modules:
+  generated-other-modules:
     - Paths_polysemy_db_data
 
 dependencies:

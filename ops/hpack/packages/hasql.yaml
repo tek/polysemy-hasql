@@ -6,7 +6,7 @@ defaults:
 
 library:
   source-dirs: lib
-  generated-exposed-modules:
+  generated-other-modules:
     - Paths_polysemy_hasql
 
 tests:

@@ -102,6 +102,7 @@ library
       Polysemy.Hasql.Test.Error.Column.E1
       Polysemy.Hasql.Type.Data.DbType
       Polysemy.Hasql.Where
+  other-modules:
       Paths_polysemy_hasql
   autogen-modules:
       Paths_polysemy_hasql

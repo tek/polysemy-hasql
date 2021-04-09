@@ -36,6 +36,7 @@ library
       Polysemy.Db.Data.InitDbError
       Polysemy.Db.Data.Uid
       Polysemy.Db.Json
+  other-modules:
       Paths_polysemy_db_data
   autogen-modules:
       Paths_polysemy_db_data
