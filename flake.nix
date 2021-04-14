@@ -4,7 +4,6 @@
   inputs = {
     polysemy-log.url = github:tek/polysemy-log;
     polysemy-resume.url = github:tek/polysemy-resume;
-    polysemy-resume.inputs.polysemy-test.follows = "polysemy-log/polysemy-conc/polysemy-time/polysemy-test";
   };
 
   outputs = { polysemy-log, polysemy-resume, ... }:
