@@ -12,7 +12,7 @@
       polysemy-log = hackage "0.2.2.1" "1c8kn28a5j9k52jfg5n6nb4ywd76mgrgaqwmf1q0km2kgdi9y40s";
       polysemy-plugin = hackage "0.3.0.0" "1frz0iksmg8bpm7ybnpz9h75hp6hajd20vpdvmi04aspklmr6hj0";
       polysemy-resume = hackage "0.1.0.2" "08sm3db7vpwj3xhlqn98yfpn1hlzv00jkah9q02k1ym024g5iir0";
-      polysemy-test = hackage "0.3.1.1" "0x0zg1kljr7a1mwmm3zrmha5inz3l2pkldnq65fvsig8f3x8rsar";
+      polysemy-test = hackage "0.3.1.2" "1hrca7ycqkmhfjngv13lw8852hdzfp9yamqrf3gdfiyxv0sklayx";
       polysemy-time = hackage "0.1.2.1" "09l8r5fx0vnapdn8p0cwiwprgg3i67m58dd4j5hcdhw34gfqnnsr";
     };
 
