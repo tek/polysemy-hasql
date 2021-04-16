@@ -6,8 +6,6 @@
   outputs = { hix, ... }:
   let
     compat = { hackage, versions, jailbreak, ... }: {
-      co-log = jailbreak (hackage "0.4.0.1" "05f37lq1kwlmm62n1n932l8jnqirmlf87var2n2zb0cslmv63yxg");
-      co-log-polysemy = jailbreak (hackage "0.0.1.2" "17bcs8dvrhwfcyklknkqg11gxgxm2jaa7kbm6xx4vm1976abzwss");
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       polysemy = hackage "1.5.0.0" "1xl472xqdxnp4ysyqnackpfn6wbx03rlgwmy9907bklrh557il6d";
       polysemy-conc = hackage "0.1.0.2" "0ijz5l8q53d1s7i100gvjdhzv80dpd140m7a9hyam113ybglc8lg";
@@ -36,9 +34,9 @@
     overrides = [compat main];
     compatOverrides = compat;
     packages = {
-      polysemy-db = "packages/db";
-      polysemy-db-data = "packages/data";
-      polysemy-hasql = "packages/hasql";
+      polysemy-db = ./packages/db;
+      polysemy-db-data = ./packages/data;
+      polysemy-hasql = ./packages/hasql;
     };
     ghci.extraArgs = ["-fplugin=Polysemy.Plugin"];
     versionFile = "ops/hpack/shared/meta.yaml";
