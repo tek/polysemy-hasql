@@ -3,17 +3,15 @@
 
 module Polysemy.Db.SOP.FieldNames where
 
-import Fcf (Eval)
 import GHC.TypeLits (type (+))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo(Constructor, Record), DatatypeInfo(ADT), FieldInfo(FieldInfo))
 
 import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField))
-import Polysemy.Db.SOP.Text (CanonicalName)
 
 type family RecordFieldSymbols (fs :: [FieldInfo]) :: [FieldId] where
   RecordFieldSymbols '[] = '[]
-  RecordFieldSymbols ('FieldInfo name : fs) = 'NamedField (Eval (CanonicalName name)) : RecordFieldSymbols fs
+  RecordFieldSymbols ('FieldInfo name : fs) = 'NamedField name : RecordFieldSymbols fs
 
 type family CtorFieldSymbols (con :: Symbol) (index :: Nat) (ds :: [*]) :: [FieldId] where
   CtorFieldSymbols _ _ '[] = '[]

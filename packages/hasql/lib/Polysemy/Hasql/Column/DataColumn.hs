@@ -101,8 +101,10 @@ instance (
     FieldIdText name
   ) => DataColumn ('Kind.Column name effs t) where
     dataColumn prefix (Type.Column tpe options dbType) =
-      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) tpe options (dataDbType (addPrefix name prefix) dbType)
+      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) tpe options dataType
       where
+        dataType =
+          dataDbType (addPrefix name prefix) dbType
         name =
           fieldIdText @name
 

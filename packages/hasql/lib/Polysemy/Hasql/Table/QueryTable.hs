@@ -41,7 +41,7 @@ class (
     GenTable rep d,
     GenQuery qrep rep q d
   ) => GenQueryTable (qrep :: *) (rep :: *) (q :: *) (d :: *) where
-  genQueryTable :: QueryTable q d
+    genQueryTable :: QueryTable q d
 
 instance (
     TableColumn rep d c,
@@ -49,8 +49,7 @@ instance (
     GenTable rep d,
     QueryParams qc q,
     GenQuery qrep rep q d
-  ) =>
-  GenQueryTable qrep rep q d where
+  ) => GenQueryTable qrep rep q d where
     genQueryTable =
       QueryTable (genTable @rep @d) (queryParams @qc @q) (genQuery @qrep @rep @q @d)
 

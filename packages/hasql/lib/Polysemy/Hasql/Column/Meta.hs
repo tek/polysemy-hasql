@@ -4,6 +4,7 @@
 module Polysemy.Hasql.Column.Meta where
 
 import Fcf (Eval, FromMaybe, type (@@))
+import GHC.TypeLits (AppendSymbol)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo(Newtype, ADT))
 import Polysemy.Db.Data.Column (Auto, Flatten, Product, Rep, Sum)
@@ -11,7 +12,7 @@ import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField), FieldIdSymb
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.SOP.FieldNames (FieldNames)
-import Type.Errors (ErrorMessage(ShowType))
+import Type.Errors (ErrorMessage(ShowType, Text))
 import Type.Errors.Pretty (TypeError, type (%), type (<>))
 
 type Ids =
@@ -45,18 +46,30 @@ data MaybeADT =
 type family NewtypePayload (dss :: [[*]]) :: * where
   NewtypePayload '[ '[d]] = d
 
+type family FieldNameMismatch (d :: *) (rn :: ErrorMessage) (dn :: ErrorMessage) :: k where
+  FieldNameMismatch d rn dn =
+    TypeError (
+      "column name mismatch in rep for column of type " <> 'ShowType d %
+      "data field is named '" <> dn <> "'" %
+      "rep field is named '" <> rn <> "'"
+    )
+
+type family MatchName (d :: *) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) :: Symbol where
+  MatchName _ rn rn _ =
+    rn
+  MatchName _ rn dn dn =
+    rn
+  MatchName d rn dn _ =
+    FieldNameMismatch d ('Text rn) ('Text dn)
+
 type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [FieldId]) :: [ColumnMeta] where
   ZipFields '[] '[] '[] '[] = '[]
   ZipFields (rep : reps) ('NumberedField _ n : rns) (d : ds) ('NumberedField name n : dns) =
     'ColumnMeta ('NumberedField name n) rep d : ZipFields reps rns ds dns
-  ZipFields (rep : reps) (name : rns) (d : ds) (name : dns) =
-    'ColumnMeta name rep d : ZipFields reps rns ds dns
+  ZipFields (rep : reps) ('NamedField rn : rns) (d : ds) ('NamedField dn : dns) =
+    'ColumnMeta ('NamedField (MatchName d rn dn (AppendSymbol "_" rn))) rep d : ZipFields reps rns ds dns
   ZipFields _ (rn : _) (d : _) (dn : _) =
-    TypeError (
-      "column name mismatch in rep for column of type " <> 'ShowType d %
-      "data field is named '" <> FieldIdSymbol @@ dn <> "'" %
-      "rep field is named '" <> FieldIdSymbol @@ rn <> "'"
-    )
+    FieldNameMismatch d (FieldIdSymbol @@ rn) (FieldIdSymbol @@ dn) 
   ZipFields (rep : _) (rn : _) '[] '[] =
     TypeError ("Extra field '" <> rn <> " :: " <> 'ShowType rep <> "' in rep")
   ZipFields '[] '[] (d : _) (dn : _) =

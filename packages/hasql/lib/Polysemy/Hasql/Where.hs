@@ -5,9 +5,10 @@ import qualified Data.Text as Text
 import Fcf (Eval, Exp, FromMaybe, If, IsJust, Pure, Pure1, type (@@))
 import Fcf.Class.Foldable (FoldMap)
 import Fcf.Class.Functor (FMap)
+import GHC.TypeLits (AppendSymbol)
 import Generics.SOP (All, K(K), NP, hcollapse, hcpure)
 import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
-import Polysemy.Db.Data.FieldId (FieldId, FieldIdSymbol, FieldIdText, JoinCommaFieldIds, quotedFieldId)
+import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdSymbol, FieldIdText, JoinCommaFieldIds, quotedFieldId)
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 import Polysemy.Db.SOP.Error (ErrorWithType, ErrorWithType2)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
@@ -294,13 +295,11 @@ type family GroupSumPrim (simple :: QConds) :: QConds where
   GroupSumPrim cs =
     '[ErrorWithType "internal GroupSumPrim: cannot group non-simple conds" cs]
 
-type family MatchPrim (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (q :: *) (d :: *) :: Maybe QConds where
-  MatchPrim (p : ps) name name q d =
+type family MatchPrim (prefix :: [Segment]) (name :: FieldId) (q :: *) (d :: *) :: Maybe QConds where
+  MatchPrim (p : ps) name q d =
     'Just '[ 'SimpleCond (ForceMaybe q) d (('FieldSegment name) : p : ps)]
-  MatchPrim prefix name name q d =
+  MatchPrim prefix name q d =
     'Just '[ 'SimpleCond q d (('FieldSegment name) : prefix)]
-  MatchPrim _ _ _ _ _ =
-    'Nothing
 
 type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Column) (dCol :: Kind.Column) :: QConds where
   MatchCon meta prefix ('Kind.Column _ _ ('Kind.Prod _ q)) ('Kind.Column conName _ ('Kind.Prod _ d)) =
@@ -309,7 +308,7 @@ type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Col
     MatchQueryColumnE meta ('ConSegment conName : prefix) d @@ ('Kind.Column qname '[] ('Kind.Prim q))
   -- TODO
   MatchCon _ prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column qname _ ('Kind.Prim d)) =
-    FromMaybe '[] @@ MatchPrim prefix qname qname q d
+    FromMaybe '[] @@ MatchPrim prefix qname q d
   MatchCon _ _ _ _ =
     '[]
 
@@ -332,21 +331,42 @@ type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool
   MatchProd _ _ _ _ _ =
     'Nothing
 
-type family MatchCol' (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Column) (dCol :: Kind.Column) :: Maybe QConds where
-  MatchCol' _ prefix ('Kind.Column qname _ ('Kind.Prim q)) ('Kind.Column dname _ ('Kind.Prim d)) =
-    MatchPrim prefix qname dname q d
-  MatchCol' meta prefix q ('Kind.Column name effs ('Kind.Prod d cols)) =
+type family MatchDbType (meta :: QueryMeta) (prefix :: [Segment]) (name :: FieldId) (qCol :: Kind.Column) (dCol :: Kind.Column) :: Maybe QConds where
+  MatchDbType _ prefix name ('Kind.Column _ _ ('Kind.Prim q)) ('Kind.Column _ _ ('Kind.Prim d)) =
+    MatchPrim prefix name q d
+  MatchDbType meta prefix name ('Kind.Column _ _ ('Kind.Sum _ qCols)) ('Kind.Column _ _ ('Kind.Sum _ dCols)) =
+    'Just (MatchCons meta ('SumSegment name : prefix) qCols dCols)
+  MatchDbType _ _ name ('Kind.Column _ _ ('Kind.Sum _ _)) ('Kind.Column _ _ _) =
+    'Just (TypeError ("Query column " <> name <> " is a sum type, but the data column is not."))
+  MatchDbType _ _ name _ _ =
+    'Just (TypeError ("Incompatible column kinds for " <> name))
+
+type family MatchColWithUnderscore (meta :: QueryMeta) (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (dname_ :: Symbol) (qCol :: Kind.Column) (dCol :: Kind.Column) :: Maybe QConds where
+  MatchColWithUnderscore meta prefix qname qname _ qCol dCol =
+    MatchDbType meta prefix qname qCol dCol
+  MatchColWithUnderscore meta prefix qname ('NamedField dname) dname qCol dCol =
+    MatchDbType meta prefix qname qCol dCol
+  MatchColWithUnderscore _ _ _ _ _ _ _ =
+    'Nothing
+
+-- |Match a data column against a query column.
+-- This decides primarily based upon equality of field names, but it has to compensate for underscore prefixes, which it
+-- does by passing an additional argument to 'MatchDbType', the query field name prefixed with underscore.
+-- Since product types cannot directly match, the first equation delegates them directly to 'MatchProd', ignoreing the
+-- column names.
+type family MatchCol' (meta :: QueryMeta) (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (qCol :: Kind.Column) (dCol :: Kind.Column) :: Maybe QConds where
+  MatchCol' meta prefix _ _ q ('Kind.Column name effs ('Kind.Prod d cols)) =
     MatchProd meta prefix (ContainsFlatten effs) q ('Kind.Column name effs ('Kind.Prod d cols))
-  MatchCol' meta prefix ('Kind.Column qname _ ('Kind.Sum _ qCols)) ('Kind.Column qname _ ('Kind.Sum _ dCols)) =
-    'Just (MatchCons meta ('SumSegment qname : prefix) qCols dCols)
-  MatchCol' _ _ ('Kind.Column qname _ ('Kind.Sum _ _)) ('Kind.Column qname _ _) =
-    'Just (TypeError ("Query column " <> qname <> " is a sum type, but the data column is not."))
-  MatchCol' _ _ _ _ =
+  MatchCol' meta prefix qname qname qCol dCol =
+    MatchDbType meta prefix qname qCol dCol
+  MatchCol' meta prefix ('NamedField qname) ('NamedField dname) qCol dCol =
+    MatchColWithUnderscore meta prefix ('NamedField qname) ('NamedField dname) (AppendSymbol "_" qname) qCol dCol
+  MatchCol' _ _ _ _ _ _ =
     'Nothing
 
 data MatchCol (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Column) :: Kind.Column -> Exp (Maybe QConds)
-type instance Eval (MatchCol meta prefix qCol dCol) =
-  MatchCol' meta prefix qCol dCol
+type instance Eval (MatchCol meta prefix ('Kind.Column qname qEff qCols) ('Kind.Column dname dEff dCols)) =
+  MatchCol' meta prefix qname dname ('Kind.Column qname qEff qCols) ('Kind.Column dname dEff dCols)
 
 type family MatchCols (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Column) (dCols :: [Kind.Column]) :: Maybe QConds where
   MatchCols meta prefix qCol dCols =

@@ -47,7 +47,7 @@ data Rec =
   Rec {
     a :: Text,
     b :: NT,
-    c :: Maybe Double,
+    _c :: Maybe Double,
     sumField :: SumRec
   }
   deriving (Eq, Show, Generic)

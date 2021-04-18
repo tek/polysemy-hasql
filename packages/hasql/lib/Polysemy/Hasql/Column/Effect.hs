@@ -190,7 +190,7 @@ instance ResolveRep (ForceRep reps) ('D d) ('Effs reps) ('T d)
 class ResolveColumnEffects (rep :: *) (d :: *) (effs :: [*]) (t :: *) | rep d -> effs t
 
 instance (
-  ResolveRep (Rep '[]) ('D d) ('Effs effs) ('T t)
+    ResolveRep (Rep '[]) ('D d) ('Effs effs) ('T t)
   ) => ResolveColumnEffects Auto d effs t
 
 instance {-# overlappable #-} (

@@ -6,7 +6,7 @@ import Polysemy.Db.Text.Quote (dquote)
 
 dbIdentifier :: String -> Text
 dbIdentifier =
-  unCamelCase '_'
+  unCamelCase '_' . dropWhile ('_' ==)
 
 dbIdentifierT :: Text -> Text
 dbIdentifierT =

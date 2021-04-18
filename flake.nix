@@ -27,8 +27,7 @@
       export polysemy_db_test_host=localhost
       export polysemy_db_test_port=10000
     '';
-  in
-  hix.flake {
+  in hix.flake {
     base = ./.;
     main = "polysemy-hasql";
     overrides = [compat main];
