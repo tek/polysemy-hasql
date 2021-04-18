@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "chronos": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1617491657,
+        "narHash": "sha256-nomb1prLVSb2o4CJJyPJBLqiVVUIcfBnIoKMIn6OzVo=",
+        "owner": "andrewthad",
+        "repo": "chronos",
+        "rev": "aa6d2b0969c4c5216ff9e45da1574e194fafefc1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "andrewthad",
+        "repo": "chronos",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "locked": {
         "lastModified": 1618217525,
@@ -123,6 +139,7 @@
     },
     "root": {
       "inputs": {
+        "chronos": "chronos",
         "hix": "hix"
       }
     },

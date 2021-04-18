@@ -2,10 +2,11 @@
   description = "Polysemy Effects for Databases";
 
   inputs.hix.url = github:tek/hix;
+  inputs.chronos = { url = github:andrewthad/chronos; flake = false; };
 
-  outputs = { hix, ... }:
+  outputs = { hix, chronos, ... }:
   let
-    compat = { hackage, versions, jailbreak, ... }: {
+    compat = { hackage, jailbreak, ... }: {
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       polysemy = hackage "1.5.0.0" "1xl472xqdxnp4ysyqnackpfn6wbx03rlgwmy9907bklrh557il6d";
       polysemy-conc = hackage "0.1.0.2" "0ijz5l8q53d1s7i100gvjdhzv80dpd140m7a9hyam113ybglc8lg";
@@ -16,7 +17,8 @@
       polysemy-time = hackage "0.1.2.1" "09l8r5fx0vnapdn8p0cwiwprgg3i67m58dd4j5hcdhw34gfqnnsr";
     };
 
-    main = { hackage, ... }: {
+    main = { hackage, source, minimal, ... }: {
+      chronos = minimal (source.root chronos);
       path = hackage "0.8.0" "0isldidz2gypw2pz399g6rn77x9mppd1mvj5h6ify4pj4mpla0pb";
       tasty-hedgehog = hackage "1.1.0.0" "0cs96s7z5csrlwj334v8zl459j5s4ws6gmjh59cv01wwvvrrjwd9";
       relude = hackage "1.0.0.1" "164p21334c3pyfzs839cv90438naxq9pmpyvy87113mwy51gm6xn";
