@@ -337,6 +337,7 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.EnumTest
       Polysemy.Hasql.Test.HasGeneric
       Polysemy.Hasql.Test.ParamTest
+      Polysemy.Hasql.Test.PartialTest
       Polysemy.Hasql.Test.RepTest
       Polysemy.Hasql.Test.StatementTest
       Polysemy.Hasql.Test.TableTest

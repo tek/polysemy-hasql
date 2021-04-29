@@ -38,10 +38,13 @@ library
       Polysemy.Db.Data.DbError
       Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.IdQuery
+      Polysemy.Db.Data.PartialField
+      Polysemy.Db.Data.PartialFields
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Debug
+      Polysemy.Db.Partial
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.SOP.Constraint

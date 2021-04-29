@@ -9,6 +9,7 @@ module Polysemy.Db.Prelude (
   module Data.Default,
   module Data.Either.Combinators,
   module Data.Foldable,
+  module Data.Kind,
   module Data.List.NonEmpty,
   module Data.Map.Strict,
   module Data.UUID,
@@ -33,6 +34,7 @@ import Data.Composition ((.:), (.:.), (.::))
 import Data.Default (Default(def))
 import Data.Either.Combinators (mapLeft)
 import Data.Foldable (foldl, traverse_)
+import Data.Kind (Type)
 import Data.List.NonEmpty ((<|))
 import Data.Map.Strict (Map, lookup)
 import Data.String.Interpolate (i)
@@ -67,7 +69,6 @@ import Polysemy (
   runFinal,
   )
 import Polysemy.AtomicState (AtomicState, atomicGet, atomicGets, atomicModify', atomicPut, runAtomicStateTVar)
-import Polysemy.Db.Debug (dbg, dbgs, dbgs_)
 import Polysemy.Error (Error, fromEither, mapError, note, runError, throw)
 import Polysemy.Internal.Bundle (Append)
 import Polysemy.Reader (Reader)
@@ -101,6 +102,8 @@ import Relude hiding (
   undefined,
   )
 import System.IO.Error (userError)
+
+import Polysemy.Db.Debug (dbg, dbgs, dbgs_)
 
 unit ::
   Applicative f =>
