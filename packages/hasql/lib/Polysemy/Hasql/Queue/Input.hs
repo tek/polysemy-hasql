@@ -9,6 +9,7 @@ import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Hasql.Connection (withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
+import Polysemy.Db.Data.Column (PrimQuery)
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -29,9 +30,9 @@ import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (InputQueueConnection, Queue)
-import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued, QueuedRep)
+import Polysemy.Hasql.Queue.Data.Queued (Queued, QueuedRep)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued(..))
-import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
+import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 
 tryDequeue ::
   LibPQ.Connection ->
@@ -196,7 +197,7 @@ interpretInputDbQueueFullGen ::
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueFullGen errorDelay errorHandler =
-  interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
+  interpretStoreDbFullGen @(PrimQuery "queue_id") @QueuedRep .
   raiseUnder2 .
   interpretInputDbQueueFull @queue errorDelay (raise . errorHandler) .
   raiseUnder

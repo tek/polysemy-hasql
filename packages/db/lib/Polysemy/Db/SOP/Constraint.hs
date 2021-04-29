@@ -5,6 +5,7 @@ module Polysemy.Db.SOP.Constraint where
 
 import GHC.TypeLits (symbolVal)
 import Generics.SOP (All, All2, Top)
+import Generics.SOP.Constraint (Head)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo)
 import Generics.SOP.Type.Metadata (ConstructorInfo(Record), DatatypeInfo(ADT, Newtype), FieldInfo)
 
@@ -12,6 +13,9 @@ import Polysemy.Db.Text.Case (unCamelCase, unCamelCaseString)
 
 type Coded (d :: *) (dss :: [[*]]) =
   GCode d ~ dss
+
+type ProductGCode d =
+  Head (GCode d)
 
 type ProductCoded (d :: *) (ds :: [*]) =
   Coded d '[ds]

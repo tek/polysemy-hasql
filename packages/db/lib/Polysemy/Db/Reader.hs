@@ -1,6 +1,6 @@
 module Polysemy.Db.Reader where
 
-import Polysemy.Internal.Tactics (runT, liftT)
+import Polysemy.Internal.Tactics (liftT, runT)
 import Polysemy.Reader (Reader(Ask, Local))
 
 import Polysemy.Db.AtomicState (readState)

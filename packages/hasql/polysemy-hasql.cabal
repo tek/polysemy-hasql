@@ -27,7 +27,6 @@ source-repository head
 
 library
   exposed-modules:
-      Polysemy.Db.Reader
       Polysemy.Hasql
       Polysemy.Hasql.AtomicState
       Polysemy.Hasql.Column.Class
@@ -215,6 +214,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.DeleteTest
       Polysemy.Hasql.Test.InitTest
       Polysemy.Hasql.Test.JsonTest
+      Polysemy.Hasql.Test.PartialTest
       Polysemy.Hasql.Test.PKTest
       Polysemy.Hasql.Test.QueryTest
       Polysemy.Hasql.Test.QueueTest

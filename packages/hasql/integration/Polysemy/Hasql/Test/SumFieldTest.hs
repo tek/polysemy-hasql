@@ -12,7 +12,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store, UidStore)
+import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
@@ -31,10 +31,10 @@ import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Query (interpretQuery)
 import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
-import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
+import Polysemy.Hasql.Store (interpretStoreDbFullGenUidAs)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
-import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGen)
+import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGenAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Nume =
@@ -229,11 +229,11 @@ type SumIdRec =
 
 sumIdQProg ::
   Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) !! DbError) r =>
-  Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
+  Members [Store (IdQuery SumPK) SumIdRec !! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
   Sem r ()
 sumIdQProg = do
   restop (Store.upsert specimen)
-  r1 <- restop (Store.fetch (SumPKR 5))
+  r1 <- restop (Store.fetch (IdQuery (SumPKR 5)))
   r2 <- restop (StoreQuery.basic (SumPKQ Nothing))
   assertJust specimen r1
   assertJust specimen r2
@@ -242,7 +242,7 @@ sumIdQProg = do
       Uid (SumPKR 5) (SumId (CreationTime (mkDatetime 2020 1 1 0 0 0)))
 
 sumIdProg ::
-  Members [Store SumPK SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Log, Embed IO] r =>
+  Members [Store (IdQuery SumPK) SumIdRec !! DbError, HasqlConnection, Stop DbError, GhcTime, Hedgehog IO, Log, Embed IO] r =>
   Member (Error InitDbError) r =>
   QueryTable (IdQuery SumPK) SumIdRec ->
   Sem r ()
@@ -256,7 +256,7 @@ sumIdProg (QueryTable table _ _) =
 test_sumId :: UnitTest
 test_sumId =
   integrationTest do
-    withTestStoreTableUidGen @SumIdRep @(Sum SumPKRep) sumIdProg
+    withTestStoreTableUidGenAs @Auto @SumIdRep @(Sum SumPKRep) sumIdProg
 
 data Dat1 =
   Dat1 {
@@ -285,12 +285,12 @@ data Dat2Rep =
 test_multiSum :: UnitTest
 test_multiSum =
   integrationTest do
-    interpretStoreDbFullGenUid @Dat1Rep @(Rep '[Sum SumPKRep, PrimaryKey]) @_ @Dat1 do
-      restop @DbError @(UidStore SumPK Dat1) (Store.insert record)
-      interpretStoreDbFullGenUid @Dat2Rep @(Rep '[Sum SumPKRep, PrimaryKey]) @_ @Dat2 do
+    interpretStoreDbFullGenUidAs @Auto @Dat1Rep @(Rep '[Sum SumPKRep, PrimaryKey]) @SumPK @(IdQuery SumPK) @Dat1 do
+      restop @DbError @(Store (IdQuery SumPK) (Uid SumPK Dat1)) (Store.insert record)
+      interpretStoreDbFullGenUidAs @Auto @Dat2Rep @(Rep '[Sum SumPKRep, PrimaryKey]) @SumPK @(IdQuery SumPK) @Dat2 do
         restop @DbError (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
         _ <- evalLeft =<< resumeEither (Store.insert (Uid (SumPKL 6) (Dat2 "six")))
-        result <- restop @DbError @(UidStore SumPK Dat1) (Store.fetchAll @SumPK @(Uid SumPK Dat1))
+        result <- restop @DbError @(Store (IdQuery SumPK) (Uid SumPK Dat1)) Store.fetchAll
         assertJust (pure record) result
   where
     record =

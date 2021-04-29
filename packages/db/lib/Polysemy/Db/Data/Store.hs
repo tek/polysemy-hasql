@@ -1,8 +1,9 @@
 module Polysemy.Db.Data.Store where
 
 import Polysemy.Db.Data.Uid (Uid, Uuid)
+-- import Polysemy.Db.Partial.Store (UpdateStorePartial)
 
--- |A 'Store' is characterized by a record type @d@ and a parameter type @p@.
+-- |A 'Store' is characterized by a record type @d@ and a primary key type @i@.
 -- The parameter is usually something like 'UUID' or 'Int', assumed to be a field in @d@.
 -- Programs using 'Store' need no knowledge about the database that might be backing the effect:
 --
@@ -19,13 +20,14 @@ import Polysemy.Db.Data.Uid (Uid, Uuid)
 --
 -- The parameter type doesn't necessarily have to correspond to the field's type; it's up to the interpreter to make
 -- them agree.
-data Store p d :: Effect where
-  Insert :: d -> Store p d m ()
-  Upsert :: d -> Store p d m ()
-  Delete :: p -> Store p d m (Maybe (NonEmpty d))
-  DeleteAll :: Store p d m (Maybe (NonEmpty d))
-  Fetch :: p -> Store p d m (Maybe d)
-  FetchAll :: Store p d m (Maybe (NonEmpty d))
+data Store i d :: Effect where
+  Insert :: d -> Store i d m ()
+  Upsert :: d -> Store i d m ()
+  Delete :: i -> Store i d m (Maybe (NonEmpty d))
+  DeleteAll :: Store i d m (Maybe (NonEmpty d))
+  Fetch :: i -> Store i d m (Maybe d)
+  FetchAll :: Store i d m (Maybe (NonEmpty d))
+  -- Update :: UpdateStorePartial i d u => i -> u -> Store i d m ()
 
 makeSem ''Store
 

@@ -5,15 +5,16 @@ import Generics.SOP.GGP (gfrom, gto)
 
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (FieldUpdate(FieldUpdate), PartialField)
-import Polysemy.Db.Data.PartialFields (PartialFields(PartialFields), PartialFieldsT, Types)
+import Polysemy.Db.Data.PartialFields (FieldTypes, PartialFields(PartialFields))
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ReifySOP, symbolText)
+import Polysemy.Db.SOP.FieldNames (FieldNames)
 
 partial ::
   ∀ d .
-  All Top (Types d) =>
-  PartialFieldsT d
+  All Top (FieldTypes d) =>
+  PartialFields d
 partial =
-  PartialFields (hpure PartialField.Keep :: NP PartialField (Types d))
+  PartialFields (hpure PartialField.Keep :: NP PartialField (FieldTypes d))
 
 field ::
   ∀ (name :: Symbol) (a :: *) .
@@ -22,41 +23,41 @@ field ::
 field =
   FieldUpdate
 
-class InsertField (ds :: [*]) (fs :: [Symbol]) name a | ds -> a where
-  insertField :: PartialFields d ds fs -> FieldUpdate name a -> PartialFields d ds fs
+class InsertField (ds :: [*]) (fs :: [Symbol]) (name :: Symbol) (a :: *) | ds -> a where
+  insertField :: NP PartialField ds -> FieldUpdate name a -> NP PartialField ds
 
 instance (
     KnownSymbol name
   ) => InsertField (a : ds) (name : fs) name a where
-  insertField (PartialFields (_ :* fs)) (FieldUpdate a) =
-    PartialFields (PartialField.Update (symbolText @name) a :* fs)
+  insertField (_ :* fs) (FieldUpdate a) =
+    PartialField.Update (symbolText @name) a :* fs
 
 instance {-# overlappable #-} (
     InsertField ds fs name a
   ) => InsertField (d : ds) (_name : fs) name a where
-  insertField (PartialFields (f :* fs)) a =
-    PartialFields (f :* fs')
-    where
-      PartialFields fs' =
-        insertField @ds @fs (PartialFields fs) a
+  insertField (f :* fs) a =
+    f :* insertField @ds @fs fs a
+
+class InsertField' (d :: *) (name :: Symbol) (a :: *) | d -> a where
+  insertField' :: NP PartialField (FieldTypes d) -> FieldUpdate name a -> NP PartialField (FieldTypes d)
 
 (.>) ::
-  ∀ d ds fs name a .
-  InsertField ds fs name a =>
-  PartialFields d ds fs ->
+  ∀ d name a .
+  InsertField (FieldTypes d) (FieldNames d) name a =>
+  PartialFields d ->
   FieldUpdate name a ->
-  PartialFields d ds fs
-(.>) =
-  insertField @ds @fs @name @a
+  PartialFields d
+(.>) (PartialFields fs) f =
+  PartialFields (insertField @(FieldTypes d) @(FieldNames d) fs f)
 
-infixl 5 .>
+infixl .>
 
-class UpdatePartial (ds :: [*]) where
-  updatePartialNP :: PartialFields a ds fs -> NP I ds -> NP I ds
+class UpdatePartial (d :: *) where
+  updatePartialNP :: PartialFields d -> NP I (FieldTypes d) -> NP I (FieldTypes d)
 
 instance (
-    All Top ds
-  ) => UpdatePartial ds where
+    All Top (FieldTypes d)
+  ) => UpdatePartial d where
   updatePartialNP (PartialFields update) record =
     hzipWith extract record update
     where
@@ -65,10 +66,10 @@ instance (
         PartialField.Keep -> old
 
 updatePartial ::
-  ReifySOP d '[ds] =>
-  ConstructSOP d '[ds] =>
-  UpdatePartial ds =>
-  PartialFields d ds fs ->
+  ReifySOP d '[FieldTypes d] =>
+  ConstructSOP d '[FieldTypes d] =>
+  UpdatePartial d =>
+  PartialFields d ->
   d ->
   d
 updatePartial update (gfrom -> SOP (unZ -> d)) =

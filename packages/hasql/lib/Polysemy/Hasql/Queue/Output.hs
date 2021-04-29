@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Queue.Output where
 
+import Polysemy.Db.Data.Column (PrimQuery)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
@@ -19,8 +20,8 @@ import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (OutputQueueConnection, Queue)
-import Polysemy.Hasql.Queue.Data.Queued (QueueIdQuery(QueueIdQuery), Queued(Queued), QueuedRep)
-import Polysemy.Hasql.Store (interpretStoreDbFullGenAs)
+import Polysemy.Hasql.Queue.Data.Queued (Queued(Queued), QueuedRep)
+import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 
 interpretOutputDbQueue ::
   ∀ (queue :: Symbol) d t dt r .
@@ -59,7 +60,7 @@ interpretOutputDbQueueFullGen ::
   Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =
-  interpretStoreDbFullGenAs @QueuedRep @(Queued t d) id id QueueIdQuery .
+  interpretStoreDbFullGen @(PrimQuery "queue_id") @QueuedRep .
   raiseUnder2 .
   interpretOutputDbQueueFull @queue .
   raiseUnder

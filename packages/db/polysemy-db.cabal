@@ -45,8 +45,10 @@ library
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Debug
       Polysemy.Db.Partial
+      Polysemy.Db.Partial.Store
       Polysemy.Db.Prelude
       Polysemy.Db.Random
+      Polysemy.Db.Reader
       Polysemy.Db.SOP.Constraint
       Polysemy.Db.SOP.Constructor
       Polysemy.Db.SOP.Contravariant

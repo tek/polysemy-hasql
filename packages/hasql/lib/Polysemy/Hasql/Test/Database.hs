@@ -4,17 +4,17 @@ import Control.Lens (Lens', view)
 import qualified Data.UUID as UUID
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
-import Polysemy.Db.Data.Column (Auto, PrimaryKey, UidRep)
+import Polysemy.Db.Data.Column (Auto, PrimQuery, PrimaryKey, UidRep)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName(DbName))
-import Polysemy.Db.Data.IdQuery (IdQuery)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Random (Random, random, runRandomIO)
 import Polysemy.Db.Text.Quote (dquote)
+import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Time (GhcTime, Time)
 
@@ -22,6 +22,7 @@ import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
+import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
@@ -30,12 +31,10 @@ import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Store (StoreStack, UidStoreStack, interpretStoreDbFull, interpretStoreDbFullUid)
+import Polysemy.Hasql.Store (StoreStack, UidStoreStack, UidStoreStack', interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 import Polysemy.Hasql.Table.Table (GenTable, genTable)
-import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
-import Polysemy.Log (Log)
 
 suffixedTable ::
   Lens' t (Table d) ->
@@ -175,14 +174,24 @@ withTestStoreTableGen prog =
   withTestQueryTableGen @Auto @rep \ table ->
     interpretStoreDbFull table (prog table)
 
+withTestStoreTableUidGenAs ::
+  ∀ qrep rep ir q d i r a .
+  Members TestStoreDeps r =>
+  GenQueryTable qrep (UidRep ir rep) q (Uid i d) =>
+  (QueryTable q (Uid i d) -> Sem (UidStoreStack' i q d ++ r) a) ->
+  Sem r a
+withTestStoreTableUidGenAs prog =
+  withTestQueryTableGen @qrep @(UidRep ir rep) \ table ->
+    interpretStoreDbFullUid table (prog table)
+
 withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members TestStoreDeps r =>
-  GenQueryTable Auto (UidRep ir rep) (IdQuery i) (Uid i d) =>
-  (QueryTable (IdQuery i) (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
+  GenQueryTable (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
+  (QueryTable i (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGen prog =
-  withTestQueryTableGen @Auto @(UidRep ir rep) \ table ->
+  withTestQueryTableGen @(PrimQuery "id") @(UidRep ir rep) \ table ->
     interpretStoreDbFullUid table (prog table)
 
 withTestStoreGen ::
@@ -207,9 +216,9 @@ withTestStore prog =
 withTestStoreUid ::
   ∀ i d r a .
   Members TestStoreDeps r =>
-  GenQueryTable Auto (UidRep PrimaryKey Auto) (IdQuery i) (Uid i d) =>
+  GenQueryTable (PrimQuery "id") (UidRep PrimaryKey Auto) i (Uid i d) =>
   Sem (UidStoreStack i d ++ r) a ->
   Sem r a
 withTestStoreUid prog =
-  withTestQueryTableGen @Auto @(UidRep PrimaryKey Auto) \ table ->
+  withTestQueryTableGen @(PrimQuery "id") @(UidRep PrimaryKey Auto) \ table ->
     interpretStoreDbFullUid table prog

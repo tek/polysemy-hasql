@@ -3,13 +3,13 @@
 
 module Polysemy.Db.SOP.FieldNames where
 
+import Fcf (Eval, Exp, type (@@))
+import Fcf.Class.Functor (FMap)
 import GHC.TypeLits (type (+))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo(Constructor, Record), DatatypeInfo(ADT), FieldInfo(FieldInfo))
 
 import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField))
-import Fcf (type (@@), Eval, Exp)
-import Fcf.Class.Functor (FMap)
 
 type family RecordFieldSymbols (fs :: [FieldInfo]) :: [FieldId] where
   RecordFieldSymbols '[] = '[]
@@ -40,16 +40,16 @@ type family ADTCtorsFields (adt :: DatatypeInfo) (dss :: [[*]]) :: [[FieldId]] w
 #endif
 
 class DemoteFieldNames (d :: *) where
-  type FieldNames d :: [[FieldId]]
+  type FieldIds d :: [[FieldId]]
 
 instance DemoteFieldNames d where
-  type FieldNames d = ADTCtorsFields (GDatatypeInfoOf d) (GCode d)
+  type FieldIds d = ADTCtorsFields (GDatatypeInfoOf d) (GCode d)
 
 data FieldInfoSymbol :: FieldInfo -> Exp Symbol
 type instance Eval (FieldInfoSymbol ('FieldInfo name)) = name
 
-type family SimpleFieldNames' (info :: DatatypeInfo) :: [Symbol] where
-  SimpleFieldNames' ('ADT _ _ '[ 'Record _ fs] _) = FMap FieldInfoSymbol @@ fs
+type family FieldNames' (info :: DatatypeInfo) :: [Symbol] where
+  FieldNames' ('ADT _ _ '[ 'Record _ fs] _) = FMap FieldInfoSymbol @@ fs
 
-type family SimpleFieldNames d :: [Symbol] where
-  SimpleFieldNames d = SimpleFieldNames' (GDatatypeInfoOf d)
+type family FieldNames d :: [Symbol] where
+  FieldNames d = FieldNames' (GDatatypeInfoOf d)

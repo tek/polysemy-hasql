@@ -1,9 +1,9 @@
 module Polysemy.Hasql.Test.PartialTest where
 
-import Polysemy.Db.Data.PartialFields (PartialFieldsT)
 import Polysemy.Db.Data.Uid (Uid(Uid))
 import Polysemy.Db.Partial (field, partial, updatePartial, (.>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
+import Polysemy.Db.Data.PartialFields (PartialFields)
 
 data Dat =
   Dat {
@@ -13,13 +13,9 @@ data Dat =
   }
   deriving (Eq, Show, Generic)
 
-partialUpdate :: PartialFieldsT Dat
+partialUpdate :: PartialFields Dat
 partialUpdate =
   partial @Dat .> field @"int" 5 .> field @"double" 17.5
-
-partialUpdateUid :: Uid Int (PartialFieldsT Dat)
-partialUpdateUid =
-  Uid 1 partialUpdate
 
 record :: Uid Int Dat
 record =

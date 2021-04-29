@@ -11,7 +11,7 @@ import Polysemy.Db.Data.Column (Auto, Flatten, Product, Rep, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)
-import Polysemy.Db.SOP.FieldNames (FieldNames)
+import Polysemy.Db.SOP.FieldNames (FieldIds)
 import Type.Errors (ErrorMessage(ShowType, Text))
 import Type.Errors.Pretty (TypeError, type (%), type (<>))
 
@@ -136,10 +136,10 @@ type family ProdDefaultRep (rep :: *) :: * where
 type family ADTMetaExplicit (rep :: *) (d :: *) (meta :: DatatypeInfo) :: ADTMetadata where
 #if sop5
   ADTMetaExplicit rep d ('ADT _ _ _ _) =
-    ADTMetaGen rep d (GCode rep) (FieldNames rep) (GCode d) (FieldNames d)
+    ADTMetaGen rep d (GCode rep) (FieldIds rep) (GCode d) (FieldIds d)
 #else
   ADTMetaExplicit rep d ('ADT _ _ _ _) =
-    ADTMetaGen rep d (GCode rep) (FieldNames rep) (GCode d) (FieldNames d)
+    ADTMetaGen rep d (GCode rep) (FieldIds rep) (GCode d) (FieldIds d)
 #endif
   ADTMetaExplicit _ d ('Newtype _ _ _) =
     'ADTNewtype (NewtypePayload (GCode d))
@@ -157,10 +157,10 @@ type family AllAuto (dss :: [[*]]) :: [[*]] where
 type family ADTMetaAuto (d :: *) (meta :: DatatypeInfo) :: ADTMetadata where
 #if sop5
   ADTMetaAuto d ('ADT _ _ _ _) =
-    ADTMetaGen Auto d (AllAuto (GCode d)) (FieldNames d) (GCode d) (FieldNames d)
+    ADTMetaGen Auto d (AllAuto (GCode d)) (FieldIds d) (GCode d) (FieldIds d)
 #else
   ADTMetaAuto d ('ADT _ _ _) =
-    ADTMetaGen Auto d (AllAuto (GCode d)) (FieldNames d) (GCode d) (FieldNames d)
+    ADTMetaGen Auto d (AllAuto (GCode d)) (FieldIds d) (GCode d) (FieldIds d)
 #endif
   ADTMetaAuto d ('Newtype _ _ _) =
     'ADTNewtype (NewtypePayload (GCode d))

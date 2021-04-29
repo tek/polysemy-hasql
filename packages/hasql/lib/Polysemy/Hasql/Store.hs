@@ -1,13 +1,13 @@
 module Polysemy.Hasql.Store where
 
 import Polysemy (raise3Under)
-import Polysemy.Db.Data.Column (Auto, UidRep)
+import Polysemy.Db.Data.Column (PrimQuery, UidRep)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Log (Log)
 import Polysemy.Resource (Resource)
 import Polysemy.Time (Time, interpretTimeGhc)
 
@@ -16,19 +16,21 @@ import Polysemy.Hasql.Data.Crud (Crud(..))
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
+import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Store.Statement (delete, deleteAll, fetch, fetchAll, insert, upsert)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Log (Log)
 
 type StoreStack qOut dOut qIn dIn =
   [Store qOut dOut !! DbError, Crud qIn dIn !! DbError, ManagedTable dIn !! DbError]
 
+type UidStoreStack' i q d =
+  [Store q (Uid i d) !! DbError, Crud q (Uid i d) !! DbError, ManagedTable (Uid i d) !! DbError]
+
 type UidStoreStack i d =
-  StoreStack i (Uid i d) (IdQuery i) (Uid i d)
+  StoreStack i (Uid i d) i (Uid i d)
 
 interpretStoreDb ::
   Members [Crud q d !! e, ManagedTable d !! e] r =>
@@ -48,84 +50,30 @@ interpretStoreDb =
     Store.FetchAll ->
       nonEmpty <$> fetchAll
 
-interpretStoreDbAs' ::
-  Member (Store qIn dIn !! e) r =>
-  (dIn -> dOut) ->
-  (dOut -> dIn) ->
-  (qOut -> qIn) ->
-  InterpreterFor (Store qOut dOut !! e) r
-interpretStoreDbAs' toD fromD fromQ =
-  interpretResumable \case
-    Store.Insert record ->
-      restop (Store.insert (fromD record))
-    Store.Upsert record ->
-      restop (Store.upsert (fromD record))
-    Store.Delete id' ->
-      restop (fmap (fmap toD) <$> Store.delete (fromQ id'))
-    Store.DeleteAll ->
-      restop (fmap (fmap toD) <$> Store.deleteAll)
-    Store.Fetch id' ->
-      restop (fmap toD <$> Store.fetch (fromQ id'))
-    Store.FetchAll ->
-      restop (fmap (fmap toD) <$> Store.fetchAll)
-
-interpretStoreDbAs ::
-  Members [Crud qIn dIn !! e, ManagedTable dIn !! e] r =>
-  (dIn -> dOut) ->
-  (dOut -> dIn) ->
-  (qOut -> qIn) ->
-  InterpreterFor (Store qOut dOut !! e) r
-interpretStoreDbAs toD fromD fromQ =
-  interpretStoreDb . interpretStoreDbAs' toD fromD fromQ . raiseUnder
-
 interpretStoreDbUid ::
-  Members [Crud (IdQuery i) (Uid i d) !! e, ManagedTable (Uid i d) !! e] r =>
+  Members [Crud i (Uid i d) !! e, ManagedTable (Uid i d) !! e] r =>
   InterpreterFor (Store i (Uid i d) !! e) r
 interpretStoreDbUid =
-  interpretStoreDbAs id id IdQuery
+  interpretStoreDb
 
 type StoreDeps t dt =
   [Database !! DbError, Time t dt, Log, Embed IO]
 
-interpretStoreDbFullAs ::
-  ∀ dIn dOut qIn qOut t dt r .
+interpretStoreDbFullGenUidAs ::
+  ∀ qrep rep ir i q d t dt r .
+  GenQueryTable qrep (UidRep ir rep) q (Uid i d) =>
   Members (StoreDeps t dt) r =>
-  (dIn -> dOut) ->
-  (dOut -> dIn) ->
-  (qOut -> qIn) ->
-  QueryTable qIn dIn ->
-  InterpretersFor (StoreStack qOut dOut qIn dIn) r
-interpretStoreDbFullAs toD fromD fromQ qtable@(QueryTable table _ _) =
-  interpretManagedTable table .
-  interpretCrudWith qtable .
-  interpretStoreDbAs toD fromD fromQ
-
-interpretStoreDbFullUid ::
-  ∀ i d t dt r .
-  Members (StoreDeps t dt) r =>
-  QueryTable (IdQuery i) (Uid i d) ->
-  InterpretersFor (UidStoreStack i d) r
-interpretStoreDbFullUid =
-  interpretStoreDbFullAs id id IdQuery
-
-interpretStoreDbFullGenAs ::
-  ∀ rep dIn dOut qIn qOut t dt r .
-  GenQueryTable Auto rep qIn dIn =>
-  Members (StoreDeps t dt) r =>
-  (dIn -> dOut) ->
-  (dOut -> dIn) ->
-  (qOut -> qIn) ->
-  InterpretersFor (StoreStack qOut dOut qIn dIn) r
-interpretStoreDbFullGenAs toD fromD fromQ =
-  interpretStoreDbFullAs toD fromD fromQ (genQueryTable @Auto @rep)
+  InterpretersFor (UidStoreStack' i q d) r
+interpretStoreDbFullGenUidAs =
+  interpretStoreDbFullGen @qrep @(UidRep ir rep) @q @(Uid i d)
 
 interpretStoreDbFullGenUid ::
   ∀ rep ir i d t dt r .
-  GenQueryTable Auto (UidRep ir rep) (IdQuery i) (Uid i d) =>
+  GenQueryTable (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (UidStoreStack i d) r
 interpretStoreDbFullGenUid =
-  interpretStoreDbFullGenAs @(UidRep ir rep) @(Uid i d) id id IdQuery
+  interpretStoreDbFullGenUidAs @(PrimQuery "id") @rep @ir
 
 interpretStoreDbFull ::
   Members (StoreDeps t dt) r =>
@@ -136,6 +84,14 @@ interpretStoreDbFull table =
   interpretCrudWith table .
   interpretStoreDb
 
+interpretStoreDbFullUid ::
+  ∀ i q d t dt r .
+  Members (StoreDeps t dt) r =>
+  QueryTable q (Uid i d) ->
+  InterpretersFor (UidStoreStack' i q d) r
+interpretStoreDbFullUid =
+  interpretStoreDbFull
+
 -- |Out-of-the box interpreter for 'Store' that generically derives a table and delegates queries to 'Crud' and table
 -- housekeeping to 'ManagedTable'.
 --
@@ -145,16 +101,16 @@ interpretStoreDbFull table =
 --   Store.fetchAll
 -- @
 interpretStoreDbFullGen ::
-  ∀ rep q d t dt r .
-  GenQueryTable Auto rep q d =>
+  ∀ qrep rep q d t dt r .
+  GenQueryTable qrep rep q d =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack q d q d) r
 interpretStoreDbFullGen =
-  interpretStoreDbFull (genQueryTable @Auto @rep)
+  interpretStoreDbFull (genQueryTable @qrep @rep)
 
 interpretStoreDbSingle ::
-  ∀ rep q d r .
-  GenQueryTable Auto rep q d =>
+  ∀ qrep rep q d r .
+  GenQueryTable qrep rep q d =>
   Members [Resource, Log, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->
@@ -163,7 +119,7 @@ interpretStoreDbSingle name host =
   interpretDbConnection name host .
   interpretTimeGhc .
   interpretDatabase .
-  interpretStoreDbFullGen @rep .
+  interpretStoreDbFullGen @qrep @rep .
   raise3Under .
   raise3Under .
   raise3Under

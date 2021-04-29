@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queue where
 
 import GHC.TypeLits (AppendSymbol)
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Column (Auto, PrimQuery)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Tagged (Tagged)
@@ -24,7 +24,7 @@ type family Queue (queue :: Symbol) t d :: Constraint where
       KnownSymbol queue,
       KnownSymbol (InputConn queue),
       KnownSymbol (OutputConn queue),
-      GenQueryTable Auto QueuedRep QueueIdQuery (Queued t d)
+      GenQueryTable (PrimQuery "queue_id") QueuedRep UUID (Queued t d)
     )
 
 type family QueueInput (queue :: Symbol) t d :: Constraint where
