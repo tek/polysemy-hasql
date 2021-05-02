@@ -13,7 +13,7 @@ import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Text.DbIdentifier (dbSymbol)
-import Polysemy.Db.Tree.Data.Effect (ADT, CustomType, Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (ADT, CustomType, Newtype, Tycon)
 
 class ColumnType (d :: *) where
   columnType :: Text
@@ -102,25 +102,25 @@ instance (
 
 instance (
     EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tc [] d : effs) [d] where
+  ) => EffectfulColumnType (Tycon [] d : effs) [d] where
     effectfulColumnType =
       effectfulColumnType @effs @d <> "[]"
 
 instance (
     EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tc Vector d : effs) (Vector d) where
+  ) => EffectfulColumnType (Tycon Vector d : effs) (Vector d) where
     effectfulColumnType =
       effectfulColumnType @effs @d <> "[]"
 
 instance (
     EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tc NonEmpty d : effs) (NonEmpty d) where
+  ) => EffectfulColumnType (Tycon NonEmpty d : effs) (NonEmpty d) where
     effectfulColumnType =
       effectfulColumnType @effs @d <> "[]"
 
 instance (
     EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tc Maybe d : effs) (Maybe d) where
+  ) => EffectfulColumnType (Tycon Maybe d : effs) (Maybe d) where
     effectfulColumnType =
       effectfulColumnType @effs @d
 

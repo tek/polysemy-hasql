@@ -5,7 +5,7 @@ import Fcf.Class.Foldable (Any)
 import Polysemy.Db.Data.Column (Flatten)
 import Polysemy.Db.Tree.Meta (ADTMetadata)
 
-data Tc (f :: * -> *) (d :: *)
+data Tycon (f :: * -> *) (d :: *)
 data Newtype (nt :: *) (d :: *)
 data ADT (meta :: ADTMetadata) (rep :: *)
 data CustomType (t :: Symbol)

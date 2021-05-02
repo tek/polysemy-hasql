@@ -3,7 +3,7 @@ module Polysemy.Hasql.Table.WriteNull where
 import Hasql.Encoders (Params)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ProductCoded)
-import Polysemy.Db.Tree.Data.Effect (Tc)
+import Polysemy.Db.Tree.Data.Effect (Tycon)
 
 import Polysemy.Hasql.Table.QueryParam (QueryParam, queryParam)
 
@@ -27,8 +27,8 @@ instance NullColumns '[] '[] where
     mempty
 
 type family WithMaybe (d :: *) (init :: [*]) (effs :: [*]) :: [*] where
-  WithMaybe d init '[] = Tc Maybe d : init
-  WithMaybe _ init (Tc Maybe _ : _) = init
+  WithMaybe d init '[] = Tycon Maybe d : init
+  WithMaybe _ init (Tycon Maybe _ : _) = init
   WithMaybe d init (_ : effs) = WithMaybe d init effs
 
 instance {-# overlappable #-} (

@@ -4,7 +4,7 @@ import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tc)
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
 import Polysemy.Db.Tree.Meta (ADTMeta, ADTMetadata(ADTEnum), MaybeADT(MaybeADT))
 
 newtype D =
@@ -30,9 +30,9 @@ class EffectfulTree (d :: *) (eff :: *) (d' :: *) | d -> eff d'
 
 instance {-# overlappable #-} (eff ~ NoEffect, d' ~ d) => EffectfulTree d eff d'
 
-instance EffectfulTree (Maybe d) (Tc Maybe d) d
-instance EffectfulTree [d] (Tc [] d) d
-instance EffectfulTree (NonEmpty d) (Tc NonEmpty d) d
+instance EffectfulTree (Maybe d) (Tycon Maybe d) d
+instance EffectfulTree [d] (Tycon [] d) d
+instance EffectfulTree (NonEmpty d) (Tycon NonEmpty d) d
 
 ----------------------------------------------------------------------------------------------------
 
@@ -124,29 +124,29 @@ instance (
 
 ----------------------------------------------------------------------------------------------------
 
-type MatchedTc =
+type MatchedTycon =
   Either [*] ([*], *, *)
 
-type family MatchTc (inferred :: *) (inner :: *) (d :: *) (pre :: [*]) (reps :: [*]) :: MatchedTc where
-  MatchTc _ _ (f d') pre (Tc f d' : rest) =
-    'Right '(pre ++ rest, Tc f d', d')
-  MatchTc NoEffect _ _ pre '[] =
+type family MatchTycon (inferred :: *) (inner :: *) (d :: *) (pre :: [*]) (reps :: [*]) :: MatchedTycon where
+  MatchTycon _ _ (f d') pre (Tycon f d' : rest) =
+    'Right '(pre ++ rest, Tycon f d', d')
+  MatchTycon NoEffect _ _ pre '[] =
     'Left pre
-  MatchTc eff inner _ pre '[] =
+  MatchTycon eff inner _ pre '[] =
     'Right '(pre, eff, inner)
-  MatchTc eff inner d pre (rep : reps) =
-    MatchTc eff inner d (pre ++ '[rep]) reps
+  MatchTycon eff inner d pre (rep : reps) =
+    MatchTycon eff inner d (pre ++ '[rep]) reps
 
-class TcOrNewtype (eff :: MatchedTc) (d :: D) (effs :: Effs) (t :: T) | eff d -> effs t
+class TyconOrNewtype (eff :: MatchedTycon) (d :: D) (effs :: Effs) (t :: T) | eff d -> effs t
 
 instance (
     ResolveRep (Rep reps) ('D d') ('Effs effs) t
-  ) => TcOrNewtype ('Right '(reps, eff, d')) d ('Effs (eff : effs)) t
+  ) => TyconOrNewtype ('Right '(reps, eff, d')) d ('Effs (eff : effs)) t
 
 instance (
     IsNewtype d nt,
     NewtypeOrADT (MatchNt nt '[] reps) ('D d) effs t
-  ) => TcOrNewtype ('Left reps) ('D d) effs t
+  ) => TyconOrNewtype ('Left reps) ('D d) effs t
 
 ----------------------------------------------------------------------------------------------------
 
@@ -155,21 +155,21 @@ type family MatchPrim (d :: *) (pre :: [*]) (reps :: [*]) :: Either [*] [*] wher
   MatchPrim d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
   MatchPrim d pre (rep : rest) = MatchPrim d (pre ++ '[rep]) rest
 
-class PrimOrTc (reps :: Either [*] [*]) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
+class PrimOrTycon (reps :: Either [*] [*]) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
 
-instance PrimOrTc ('Right reps) ('D d) ('Effs reps) ('T d)
+instance PrimOrTycon ('Right reps) ('D d) ('Effs reps) ('T d)
 
 instance (
     EffectfulTree d eff d',
-    TcOrNewtype (MatchTc eff d' d '[] reps) ('D d) effs t
-  ) => PrimOrTc ('Left reps) ('D d) effs t
+    TyconOrNewtype (MatchTycon eff d' d '[] reps) ('D d) effs t
+  ) => PrimOrTycon ('Left reps) ('D d) effs t
 
 ----------------------------------------------------------------------------------------------------
 
 class ResolveRep (reps :: *) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
 
 instance (
-    PrimOrTc (MatchPrim d '[] reps) ('D d) effs t
+    PrimOrTycon (MatchPrim d '[] reps) ('D d) effs t
   ) => ResolveRep (Rep reps) ('D d) effs t
 
 instance ResolveRep (ForceRep reps) ('D d) ('Effs reps) ('T d)

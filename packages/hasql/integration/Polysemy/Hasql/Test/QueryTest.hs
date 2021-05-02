@@ -17,7 +17,7 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta (ADTMeta', ADTMetadata(ADTSum, ADTProd), ColumnMeta(ColumnMeta), ConMeta(ConMeta))
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
@@ -145,8 +145,8 @@ type ContentNumberType =
   'Kind.Tree ('NamedField "ContentNumber") '[ADT ContentNumberMeta Auto] (
     'Kind.Prod ContentNumber '[
       'Kind.Tree ('NamedField "content") '[Newtype Content Text, Prim] ('Kind.Prim Content),
-      'Kind.Tree ('NamedField "otherNumber") '[Tc Maybe Int, Prim] ('Kind.Prim (Maybe Int)),
-      'Kind.Tree ('NamedField "number") '[Tc Maybe (LessOrEq Int), Newtype (LessOrEq Int) Int, Prim] ('Kind.Prim (Maybe (LessOrEq Int))),
+      'Kind.Tree ('NamedField "otherNumber") '[Tycon Maybe Int, Prim] ('Kind.Prim (Maybe Int)),
+      'Kind.Tree ('NamedField "number") '[Tycon Maybe (LessOrEq Int), Newtype (LessOrEq Int) Int, Prim] ('Kind.Prim (Maybe (LessOrEq Int))),
       XXorColAuto
     ]
   )

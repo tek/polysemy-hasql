@@ -6,7 +6,7 @@ import Polysemy.Db.Data.Column (Auto, Con, Enum, Flatten, ForcePrim, Prim, Prima
 import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta (
   ADTMeta,
   ADTMeta',
@@ -147,7 +147,7 @@ type PrimDouble name =
   'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Double)
 
 type PrimMaybeDouble name =
-  'Kind.Tree ('NamedField name) '[ Tc Maybe Double, Prim] ('Kind.Prim (Maybe Double))
+  'Kind.Tree ('NamedField name) '[ Tycon Maybe Double, Prim] ('Kind.Prim (Maybe Double))
 
 type PrimInt name =
   'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Int)
@@ -159,7 +159,7 @@ type ProddoType name =
   'Kind.Tree ('NamedField name) '[ADT ProddoMeta (Product ProddoRep)] ('Kind.Prod Proddo '[PrimInt "prInt"])
 
 type NewtType =
-  'Kind.Tree ('NamedField "newt") [Tc Maybe Newt, Newtype Newt Text, Prim] ('Kind.Prim (Maybe Newt))
+  'Kind.Tree ('NamedField "newt") [Tycon Maybe Newt, Newtype Newt Text, Prim] ('Kind.Prim (Maybe Newt))
 
 type SummerConssType =
   [
@@ -187,7 +187,7 @@ type DatType =
       ,
       NewtType
       ,
-      'Kind.Tree ('NamedField "nummo") '[Tc [] Nummo, Enum] ('Kind.Prim [Nummo])
+      'Kind.Tree ('NamedField "nummo") '[Tycon [] Nummo, Enum] ('Kind.Prim [Nummo])
       ,
       'Kind.Tree ('NamedField "flatty") '[ADT FlattyMeta (Flatten FlattyRep)] ('Kind.Prod Flatty [
         PrimInt "flat1",
@@ -210,7 +210,7 @@ type DatTypeAuto =
       'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.Sum Summer SummerConssType),
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom),
       NewtType,
-      'Kind.Tree ('NamedField "nummo") '[Tc [] Nummo, Enum] ('Kind.Prim [Nummo]),
+      'Kind.Tree ('NamedField "nummo") '[Tycon [] Nummo, Enum] ('Kind.Prim [Nummo]),
       'Kind.Tree ('NamedField "flatty") '[ADT FlattyMetaAuto Auto] ('Kind.Prod Flatty [PrimInt "flat1", PrimText "flat2"])
     ]
   )
@@ -254,14 +254,14 @@ effectfulTest ::
   IsADT (Rep PR) Proddo ('Just ProddoMeta) =>
   MaybeADTResolves (ADTMeta (Rep '[]) Text) 'Nothing =>
   ResolveColumnEffects (Rep '[ForcePrim Newt]) Newt '[Prim] Newt =>
-  ResolveColumnEffects Auto (Maybe [Newt]) '[Tc Maybe [Newt], Tc [] Newt, Newtype Newt Text, Prim] Text =>
-  ResolveColumnEffects (Rep '[Tc Maybe [Newt], Tc [] Newt, Newtype Newt Text]) (Maybe [Newt]) '[Tc Maybe [Newt], Tc [] Newt, Newtype Newt Text, Prim] Text =>
+  ResolveColumnEffects Auto (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] Text =>
+  ResolveColumnEffects (Rep '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text]) (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] Text =>
   ResolveColumnEffects Auto Proddo '[ADT ProddoMeta Auto] Proddo =>
   ResolveColumnEffects (Rep '[Product Auto]) Proddo '[ADT ProddoMeta (Product Auto)] Proddo =>
   ResolveColumnEffects (Rep '[Product ProddoRep]) Proddo '[ADT ProddoMeta (Product ProddoRep)] Proddo =>
-  ResolveColumnEffects (Rep '[Product ProddoRep]) (Maybe Proddo) '[Tc Maybe Proddo, ADT ProddoMeta (Product ProddoRep)] Proddo =>
-  ResolveColumnEffects Auto (Maybe Proddo) '[Tc Maybe Proddo, ADT ProddoMeta Auto] Proddo =>
-  ResolveColumnEffects Auto (Maybe [Proddo]) '[Tc Maybe [Proddo], Tc [] Proddo, ADT ProddoMeta Auto] Proddo =>
+  ResolveColumnEffects (Rep '[Product ProddoRep]) (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta (Product ProddoRep)] Proddo =>
+  ResolveColumnEffects Auto (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta Auto] Proddo =>
+  ResolveColumnEffects Auto (Maybe [Proddo]) '[Tycon Maybe [Proddo], Tycon [] Proddo, ADT ProddoMeta Auto] Proddo =>
   ResolveRep (Rep '[]) ('D Custom) ('Effs '[Prim]) ('T Custom) =>
   NewtypeOrADT ('Left PR) ('D Proddo) ('Effs '[ADT ProddoMeta (Product ProddoRep)]) ('T Proddo) =>
   ()

@@ -8,7 +8,7 @@ import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Test (UnitTest, runTestAuto)
 
 import Polysemy.Hasql.Column.Class (tableColumn)
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
@@ -109,8 +109,8 @@ type SummerMeta =
 
 type DatType =
   'Kind.Tree ('NamedField "Dat") '[ADT (ADTMeta' (Product DatRep) Dat) (Product DatRep)] ('Kind.Prod Dat [
-    'Kind.Tree ('NamedField "double") [Tc Maybe Double, Prim] PrimMaybeDouble,
-    'Kind.Tree ('NamedField "newt") [Tc [] Newt, Newtype Newt Text, Prim] ('Kind.Prim [Newt]),
+    'Kind.Tree ('NamedField "double") [Tycon Maybe Double, Prim] PrimMaybeDouble,
+    'Kind.Tree ('NamedField "newt") [Tycon [] Newt, Newtype Newt Text, Prim] ('Kind.Prim [Newt]),
     'Kind.Tree ('NamedField "proddo") '[ADT ProddoMeta (Product ProddoRep)] ProddoType,
     'Kind.Tree ('NamedField "summer") '[ADT SummerMeta (Sum SummerRep)] SummerType
   ])

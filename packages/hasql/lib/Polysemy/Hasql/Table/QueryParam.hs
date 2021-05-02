@@ -4,7 +4,7 @@ import Data.Vector (Vector)
 import Hasql.Encoders (Params, Value, array, dimension, element, nonNullable, nullable, param)
 
 import Polysemy.Hasql.Table.EncoderValue (EncoderValue, encoderValue)
-import Polysemy.Db.Tree.Data.Effect (Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 value :: Value a -> Params a
 value =
@@ -33,25 +33,25 @@ instance (
 
 instance (
     EncoderValue effs d
-  ) => QueryParam (Tc [] d : effs) [d] where
+  ) => QueryParam (Tycon [] d : effs) [d] where
   queryParam =
     foldable (encoderValue @effs)
 
 instance (
     EncoderValue effs d
-  ) => QueryParam (Tc Vector d : effs) (Vector d) where
+  ) => QueryParam (Tycon Vector d : effs) (Vector d) where
   queryParam =
     foldable (encoderValue @effs)
 
 instance (
     EncoderValue effs d
-  ) => QueryParam (Tc NonEmpty d : effs) (NonEmpty d) where
+  ) => QueryParam (Tycon NonEmpty d : effs) (NonEmpty d) where
   queryParam =
     foldable (encoderValue @effs)
 
 instance (
     EncoderValue effs d
-  ) => QueryParam (Tc Maybe d : effs) (Maybe d) where
+  ) => QueryParam (Tycon Maybe d : effs) (Maybe d) where
   queryParam =
     param (nullable (encoderValue @effs))
 
