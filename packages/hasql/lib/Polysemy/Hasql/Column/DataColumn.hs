@@ -39,7 +39,7 @@ prefixed name = \case
   BasePrefix prefix -> [qt|(#{prefix}).#{quotedDbId name}|]
   TypePrefix prefix -> [qt|#{prefix}.#{quotedDbId name}|]
 
-class MapColumns (cols :: [Kind.Tree [*]]) (cls :: Kind.Tree [*] -> Constraint) where
+class MapColumns (cols :: [Kind.Tree]) (cls :: Kind.Tree -> Constraint) where
   mapColumns :: ∀ a . (∀ x . cls x => Type.Column x -> a) -> NP Type.Column cols -> [a]
 
 instance (
@@ -48,7 +48,7 @@ instance (
     mapColumns f cols =
       hcollapse (hcmap (Proxy @cls) (K . f) cols)
 
-class DataProduct (flatten :: Bool) (c :: Kind.Tree [*]) where
+class DataProduct (flatten :: Bool) (c :: Kind.Tree) where
   dataProduct :: ColumnPrefix -> Type.Column c -> [Data.Column]
 
 instance (
@@ -63,7 +63,7 @@ instance (
   dataProduct =
     pure .: dataColumn
 
-class DataProductOrFlatten (c :: Kind.Tree [*]) where
+class DataProductOrFlatten (c :: Kind.Tree) where
   dataProductOrFlatten :: ColumnPrefix -> Type.Column c -> [Data.Column]
 
 instance (
@@ -74,7 +74,7 @@ instance (
     dataProductOrFlatten =
       dataProduct @flatten @c
 
-class DataDbType (t :: Kind.Node [*]) where
+class DataDbType (t :: Kind.Node) where
   dataDbType :: ColumnPrefix -> Type.DbType t -> Data.DbType
 
 instance (
@@ -93,7 +93,7 @@ instance DataDbType ('Kind.Prim d) where
     dataDbType _ (Type.Prim _) =
       Data.Prim
 
-class DataColumn (c :: Kind.Tree [*]) where
+class DataColumn (c :: Kind.Tree) where
   dataColumn :: ColumnPrefix -> Type.Column c -> Data.Column
 
 instance (
@@ -108,7 +108,7 @@ instance (
         name =
           fieldIdText @name
 
-class DataTable (c :: Kind.Tree [*]) where
+class DataTable (c :: Kind.Tree) where
   dataTable :: Type.Column c -> Data.Column
 
 instance (

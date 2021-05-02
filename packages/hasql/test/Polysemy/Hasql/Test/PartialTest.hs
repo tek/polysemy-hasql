@@ -31,15 +31,15 @@ test_partialUpdate =
     target === updatePartial partialUpdate record
 
 type TreeType =
-  'Kind.Tree ('NamedField "Dat") () ('Kind.Prod Dat '[
-    'Kind.Tree ('NamedField "int") () ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") () ('Kind.Prim Double)
+  'Kind.Tree ('NamedField "Dat") '[] ('Kind.Prod Dat '[
+    'Kind.Tree ('NamedField "int") '[] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "double") '[] ('Kind.Prim Double)
   ])
 
 type DataType =
-  'Kind.Tree ('NamedField "Dat") () ('Kind.Prod Dat '[
-    'Kind.Tree ('NamedField "int") () ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") () ('Kind.Prim Double)
+  'Kind.Tree ('NamedField "Dat") '[] ('Kind.Prod Dat '[
+    'Kind.Tree ('NamedField "int") '[] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "double") '[] ('Kind.Prim Double)
   ])
 
 datTree :: Type.Tree DataTag Identity DataType

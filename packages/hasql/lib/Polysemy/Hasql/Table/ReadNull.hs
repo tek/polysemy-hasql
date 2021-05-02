@@ -8,7 +8,7 @@ ignoreDecoder :: Row (Maybe a)
 ignoreDecoder =
   join <$> column (nullable (custom \ _ _ -> pure Nothing))
 
-class NullColumns (cs :: [Kind.Tree [*]]) where
+class NullColumns (cs :: [Kind.Tree]) where
   nullColumns :: Row ()
 
 instance NullColumns '[] where
@@ -38,7 +38,7 @@ instance (
 --   nullColumns =
 --     void (queryRow @eff @rep @(Maybe d)) *> nullColumns @ds @cs
 
-class ReadNullCon (c :: Kind.Tree [*]) where
+class ReadNullCon (c :: Kind.Tree) where
   readNullCon :: Row ()
 
 instance ReadNullCon ('Kind.Tree n eff ('Kind.Prim d)) where
@@ -59,7 +59,7 @@ instance (
 --   readNullCon =
 --     readNullCon @rSub @dSub *> readNullCon @reps @ds
 
-class ReadNullCons (cs :: [Kind.Tree [*]]) where
+class ReadNullCons (cs :: [Kind.Tree]) where
   readNullCons :: Row ()
 
 instance ReadNullCons '[] where

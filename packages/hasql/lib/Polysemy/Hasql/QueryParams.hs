@@ -32,7 +32,7 @@ import Polysemy.Hasql.Column.Class (SumIndexColumn)
 import Polysemy.Hasql.Table.QueryParam (QueryParam(queryParam))
 import Polysemy.Hasql.Table.WriteNull (WriteNullCon(writeNullCon), WriteNullCons(writeNullCons))
 
-class ProductParams (ds :: [*]) (cs :: [Kind.Tree [*]]) where
+class ProductParams (ds :: [*]) (cs :: [Kind.Tree]) where
   productParams :: NP Params ds
 
 instance ProductParams '[] '[] where
@@ -60,7 +60,7 @@ unconsNS = \case
   Z x -> Left x
   S x -> Right x
 
-class ConParams (ds :: [*]) (c :: Kind.Tree [*]) where
+class ConParams (ds :: [*]) (c :: Kind.Tree) where
   conParams :: Params (NP I ds)
 
 instance (
@@ -76,7 +76,7 @@ instance (
   conParams =
     unI . hd >$< queryParam @eff @d
 
-class SumParams (dss :: [[*]]) (cs :: [Kind.Tree [*]]) where
+class SumParams (dss :: [[*]]) (cs :: [Kind.Tree]) where
   sumParams :: Params (NS (NP I) dss)
 
 instance SumParams '[] '[] where
@@ -143,7 +143,7 @@ sumIndex ::
 sumIndex =
   contramap hindex (queryParam @'[Prim])
 
-class QueryParams (rep :: Kind.Tree [*]) (d :: *) where
+class QueryParams (rep :: Kind.Tree) (d :: *) where
   queryParams :: Params d
 
 instance (
@@ -167,7 +167,7 @@ instance (
     queryParams =
       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
 
-class PartialQueryParams (rep :: Kind.Tree [*]) (d :: *) where
+class PartialQueryParams (rep :: Kind.Tree) (d :: *) where
   partialQueryParams :: Params (PartialFields d)
 
 instance (

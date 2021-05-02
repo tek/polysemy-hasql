@@ -10,7 +10,6 @@ import Polysemy.Db.SOP.Constraint (ConstructSOP, ReifySOP)
 import Polysemy.Db.Tree (
   TableName,
   Tree(..),
-  TreeImpl(..),
   TreePayload(..),
   TreePrim(..),
   TreeProduct(..),
@@ -33,17 +32,17 @@ type family DataTreeCols (meta :: ColumnMeta) :: [[*]] where
 newtype DataPrim meta =
   DataPrim { unDataPrim :: ColumnMetaType meta }
 
-class GenDataTree d (tree :: Kind.Tree Type) | d -> tree where
+class GenDataTree d (tree :: Kind.Tree) | d -> tree where
   genDataTree :: d -> DataTree tree
 
 instance (
     TableName d name,
     meta ~ 'ColumnMeta ('NamedField name) (Rep '[Product Auto]) d,
     -- ConstructSOP d (DataTreeCols meta),
-    Tree DataTag Identity Type d meta tree
+    Tree DataTag Identity d meta tree
   ) => GenDataTree d tree where
     genDataTree d =
-      tree @DataTag @Identity @Type @d @meta d
+      tree @DataTag @Identity @d @meta d
 
 newtype ColMetaData meta =
   ColMetaData { unColMetaData :: ColumnMetaType meta }
@@ -51,40 +50,34 @@ newtype ColMetaData meta =
 instance (
     a ~ ColumnMetaType meta
     -- ReifySOP (ColumnMetaType meta) (DataTreeCols meta)
-  ) => TreePrim DataTag Identity Type a meta where
+  ) => TreePrim DataTag Identity a meta where
   treePrim :: a -> Identity (ColumnMetaType meta)
   treePrim a =
     pure a
 
-instance TreeImpl DataTag Identity Type where
-  type ConParam DataTag Identity Type =
-    DataTag
-  type ColParam DataTag Identity Type _ =
-    ()
-
-instance TreePayload DataTag Identity Type a meta where
+instance TreePayload DataTag Identity a meta where
   treePayload _ =
     DataTag
 
 instance (
     ConstructSOP d '[ds]
-  ) => TreeProduct DataTag Identity Type d (NP I ds) where
+  ) => TreeProduct DataTag Identity d (NP I ds) where
     treeProduct =
       unZ . unSOP . gfrom
 
-instance TreeProductElem DataTag Identity Type (NP I (d : ds)) (NP I ds) ('ColumnMeta x y d) d where
+instance TreeProductElem DataTag Identity (NP I (d : ds)) (NP I ds) ('ColumnMeta x y d) d where
   treeProductElem (I d :* ds) =
     (ds, d)
 
 dataTree ::
-  ∀ d (tree :: Kind.Tree Type) .
+  ∀ d (tree :: Kind.Tree) .
   GenDataTree d tree =>
   d ->
   DataTree tree
 dataTree =
   genDataTree
 
-class ReifyDataProd (tree :: Kind.Tree Type) d where
+class ReifyDataProd (tree :: Kind.Tree) d where
   reifyDataProd :: DataTree tree -> I d
 
 instance (
@@ -93,7 +86,7 @@ instance (
   reifyDataProd t =
     I (reifyDataTree t)
 
-class ReifyDataTree (tree :: Kind.Tree Type) d | tree -> d where
+class ReifyDataTree (tree :: Kind.Tree) d | tree -> d where
   reifyDataTree :: DataTree tree -> d
 
 instance ReifyDataTree ('Kind.Tree name eff ('Kind.Prim d)) d where

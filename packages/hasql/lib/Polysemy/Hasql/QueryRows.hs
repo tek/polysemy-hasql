@@ -11,7 +11,7 @@ import Polysemy.Hasql.Column.Class (SumIndexColumn)
 import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
 import Polysemy.Hasql.Table.ReadNull (ReadNullCon(readNullCon), ReadNullCons(readNullCons))
 
-class ProductRows (ds :: [*]) (cs :: [Kind.Tree [*]]) where
+class ProductRows (ds :: [*]) (cs :: [Kind.Tree]) where
   productRows :: NP Row ds
 
 instance ProductRows '[] '[] where
@@ -32,7 +32,7 @@ instance {-# overlappable #-} (
     productRows =
       queryRows @c @d :* productRows @ds @cs
 
-class ConRow (ds :: [*]) (c :: Kind.Tree [*]) where
+class ConRow (ds :: [*]) (c :: Kind.Tree) where
   conRow :: NP Row ds
 
 instance (
@@ -47,7 +47,7 @@ instance (
   conRow =
     queryRow @eff @d :* Nil
 
-class SumRows (dss :: [[*]]) (cs :: [Kind.Tree [*]]) where
+class SumRows (dss :: [[*]]) (cs :: [Kind.Tree]) where
   sumRows :: Int -> Row (NS (NP I) dss)
 
 instance SumRows '[] '[] where
@@ -68,7 +68,7 @@ instance (
       readNullCon @c
       S <$> sumRows @dss @cs (index - 1)
 
-class QueryRows (rep :: Kind.Tree [*]) (d :: *) where
+class QueryRows (rep :: Kind.Tree) (d :: *) where
   queryRows :: Row d
 
 instance (

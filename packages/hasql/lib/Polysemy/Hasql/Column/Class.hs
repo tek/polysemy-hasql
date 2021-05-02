@@ -39,7 +39,7 @@ instance (
         options =
           repOptions @(RepToList rep) <> implicitColumnOptions @d
 
-class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Tree [*]]) | metas -> cs where
+class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Tree]) | metas -> cs where
   prodColumns :: NP Type.Column cs
 
 instance ProdColumns '[] '[] where
@@ -53,7 +53,7 @@ instance (
     prodColumns =
       column @meta :* prodColumns @metas
 
-class ConColumn (meta :: ConMeta) (c :: Kind.Tree [*]) | meta -> c where
+class ConColumn (meta :: ConMeta) (c :: Kind.Tree) | meta -> c where
   conColumn :: Type.Column c
 
 instance {-# overlappable #-} (
@@ -71,7 +71,7 @@ instance (
     conColumn =
       column @meta
 
-class SumColumns (cons :: [ConMeta]) (cs :: [Kind.Tree [*]]) | cons -> cs where
+class SumColumns (cons :: [ConMeta]) (cs :: [Kind.Tree]) | cons -> cs where
   sumColumns :: NP Type.Column cs
 
 instance SumColumns '[] '[] where
@@ -85,7 +85,7 @@ instance (
     sumColumns =
       conColumn @con :* sumColumns @cons
 
-class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.Node [*]) | d meta eff ct -> t where
+class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.Node) | d meta eff ct -> t where
   adtColumn :: Type.DbType t
 
 instance (
@@ -107,7 +107,7 @@ instance (
   adtColumn =
     Type.Sum (indexColumn :* sumColumns @cols)
 
-class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.Node [*]) | eff d ct -> t where
+class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.Node) | eff d ct -> t where
   columnForKind :: Type.DbType t
 
 instance (
@@ -126,7 +126,7 @@ instance {-# overlappable #-} (
     columnForKind =
       columnForKind @effs @d @ct
 
-class Column (meta :: ColumnMeta) (c :: Kind.Tree [*]) | meta -> c where
+class Column (meta :: ColumnMeta) (c :: Kind.Tree) | meta -> c where
   column :: Type.Column c
 
 instance (
@@ -159,7 +159,7 @@ instance {-# overlappable #-} (
 
 instance TableMeta (PrimQuery name) d ('ColumnMeta ('NamedField name) (Rep '[Prim]) d)
 
-class TableColumn (rep :: *) (d :: *) (c :: Kind.Tree [*]) | rep d -> c where
+class TableColumn (rep :: *) (d :: *) (c :: Kind.Tree) | rep d -> c where
   tableColumn :: Type.Column c
 
 instance (

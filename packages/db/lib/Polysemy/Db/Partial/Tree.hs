@@ -18,7 +18,7 @@ import qualified Polysemy.Db.Type.Data.Tree as Type
 type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
 
-class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Tree Type]) | metas -> cs where
+class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Tree]) | metas -> cs where
   prodColumns :: NP PartialTree cs
 
 instance ProdColumns '[] '[] where
@@ -32,12 +32,12 @@ instance (
     prodColumns =
       column @meta :* prodColumns @metas
 
-class ConColumn (meta :: ConMeta) (c :: Kind.Tree Type) | meta -> c where
+class ConColumn (meta :: ConMeta) (c :: Kind.Tree) | meta -> c where
   conColumn :: PartialTree c
 
 instance {-# overlappable #-} (
     ProdColumns cols cs,
-    c ~ 'Kind.Tree name () ('Kind.Prod (Con name) cs)
+    c ~ 'Kind.Tree name '[] ('Kind.Prod (Con name) cs)
   ) => ConColumn ('ConMeta name cols) c where
     conColumn =
       Type.Tree () (Type.Prod (prodColumns @cols))
@@ -49,7 +49,7 @@ instance (
     conColumn =
       column @meta
 
-class SumColumns (cons :: [ConMeta]) (cs :: [Kind.Tree Type]) | cons -> cs where
+class SumColumns (cons :: [ConMeta]) (cs :: [Kind.Tree]) | cons -> cs where
   sumColumns :: NP PartialTree cs
 
 instance SumColumns '[] '[] where
@@ -63,7 +63,7 @@ instance (
     sumColumns =
       conColumn @con :* sumColumns @cons
 
-class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.Node Type) | d meta eff ct -> t where
+class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.Node) | d meta eff ct -> t where
   adtColumn :: PartialNode t
 
 instance (
@@ -73,7 +73,7 @@ instance (
     Type.Prod (prodColumns @cols)
 
 type SumIndexColumn =
-  'Kind.Tree ('NamedField "sum_index") () ('Kind.Prim Int)
+  'Kind.Tree ('NamedField "sum_index") '[] ('Kind.Prim Int)
 
 indexColumn :: PartialTree SumIndexColumn
 indexColumn =
@@ -85,7 +85,7 @@ instance (
   adtColumn =
     Type.Sum (indexColumn :* sumColumns @cols)
 
-class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.Node Type) | eff d ct -> t where
+class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.Node) | eff d ct -> t where
   columnForKind :: PartialNode t
 
 instance (
@@ -104,13 +104,13 @@ instance {-# overlappable #-} (
     columnForKind =
       columnForKind @effs @d @ct
 
-class Tree (meta :: ColumnMeta) (c :: Kind.Tree Type) | meta -> c where
+class Tree (meta :: ColumnMeta) (c :: Kind.Tree) | meta -> c where
   column :: PartialTree c
 
 instance (
     ResolveTreeEffects rep d effs t,
     ColumnForKind effs d t c
-  ) => Tree ('ColumnMeta name rep d) ('Kind.Tree name () c) where
+  ) => Tree ('ColumnMeta name rep d) ('Kind.Tree name '[] c) where
     column =
       Type.Tree () (columnForKind @effs @d @t)
 
@@ -133,24 +133,24 @@ instance {-# overlappable #-} (
     meta ~ 'ColumnMeta ('NamedField name) (Rep '[Product Auto]) d
   ) => TableMeta d meta
 
-class TableTree (d :: *) (c :: Kind.Tree Type) | d -> c where
+class Root (d :: *) (c :: Kind.Tree) | d -> c where
   tableTree :: PartialTree c
 
 instance (
     TableMeta d meta,
     Tree meta c
-  ) => TableTree d c where
+  ) => Root d c where
   tableTree =
     column @meta
 
 partialTree ::
   ∀ d t .
-  TableTree d t =>
+  Root d t =>
   PartialTree t
 partialTree =
   tableTree @d
 
-class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node Type) where
+class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node) where
   insertFieldNode :: FieldUpdate path a -> PartialNode n -> PartialNode n
 
 instance (
@@ -165,25 +165,25 @@ instance (
     insertFieldNode update (Type.Sum sub) =
       Type.Sum (hcmap (Proxy @(InsertFieldTree path a)) (insertFieldTree update) sub)
 
-class InsertFieldTree (path :: FieldPath) (a :: *) (t :: Kind.Tree Type) where
+class InsertFieldTree (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
   insertFieldTree :: FieldUpdate path a -> PartialTree t -> PartialTree t
 
 instance (
     KnownSymbol name
-  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField name) () ('Kind.Prim a)) where
+  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField name) '[] ('Kind.Prim a)) where
   insertFieldTree (FieldUpdate a) (Type.Tree t _) =
     Type.Tree t (Type.Prim (PartialField.Update (symbolText @name) a))
 
-instance {-# overlappable #-} InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) () _n) where
+instance {-# overlappable #-} InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) '[] _n) where
   insertFieldTree _ =
     id
 
-class InsertField (path :: FieldPath) (a :: *) (t :: Kind.Tree Type) where
+class InsertField (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
   insertField :: FieldUpdate path a -> PartialTree t -> PartialTree t
 
 instance (
     InsertFieldNode path a n
-  ) => InsertField path a ('Kind.Tree ('NamedField _name) () n) where
+  ) => InsertField path a ('Kind.Tree ('NamedField _name) '[] n) where
   insertField update (Type.Tree t n) =
     Type.Tree t (insertFieldNode @path @a @n update n)
 
@@ -195,7 +195,7 @@ instance (
 (..>) =
   flip insertField
 
-class UpdatePartialTree (t :: Kind.Tree Type) where
+class UpdatePartialTree (t :: Kind.Tree) where
 
 updatePartialTree ::
   PartialTree t ->

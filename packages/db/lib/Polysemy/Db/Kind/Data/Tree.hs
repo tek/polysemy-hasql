@@ -2,29 +2,29 @@ module Polysemy.Db.Kind.Data.Tree where
 
 import Polysemy.Db.Data.FieldId (FieldId)
 
-data Node a =
+data Node =
   Prim {
     tpe :: *
   }
   |
   Prod {
     tpe :: *,
-    sub :: [Tree a]
+    sub :: [Tree]
   }
   |
   Sum {
     tpe :: *,
-    sub :: [Tree a]
+    sub :: [Tree]
   }
 
-type family ColumnDataType (dt :: Node a) :: * where
+data Tree =
+  Tree {
+    name :: FieldId,
+    eff :: [*],
+    node :: Node
+  }
+
+type family ColumnDataType (dt :: Node) :: * where
   ColumnDataType ('Prim d) = d
   ColumnDataType ('Prod d _) = d
   ColumnDataType ('Sum d _) = d
-
-data Tree a =
-  Tree {
-    name :: FieldId,
-    eff :: a,
-    node :: Node a
-  }

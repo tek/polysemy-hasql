@@ -9,7 +9,7 @@ import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdTextRaw)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
 -- TODO generalize Prod/Sum or make the index column first class
-data Node (t :: Type) (n :: Type -> Type) :: ∀ e . Kind.Node e -> Type where
+data Node (t :: Type) (n :: Type -> Type) :: Kind.Node -> Type where
   Prim :: n d -> Node t n ('Kind.Prim d)
   Prod :: NP (Tree t n) sub -> Node t n ('Kind.Prod d sub)
   Sum :: NP (Tree t n) sub -> Node t n ('Kind.Sum d sub)
@@ -30,7 +30,7 @@ instance (
   show (Sum sub) =
     [qt|Prod [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
 
-data Tree (t :: Type) (n :: Type -> Type) :: ∀ e . Kind.Tree e -> Type where
+data Tree (t :: Type) (n :: Type -> Type) :: Kind.Tree -> Type where
   Tree :: t -> Node t n node -> Tree t n ('Kind.Tree name eff node)
 
 data ColumnData =

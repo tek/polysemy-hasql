@@ -19,7 +19,7 @@ maybeParam ::
 maybeParam =
   queryParam @eff @(NullParam a)
 
-class NullColumns (ds :: [*]) (cs :: [Kind.Tree [*]]) where
+class NullColumns (ds :: [*]) (cs :: [Kind.Tree]) where
   nullColumns :: Params d
 
 instance NullColumns '[] '[] where
@@ -50,7 +50,7 @@ instance (
   nullColumns =
     nullColumns @dSub @c <> nullColumns @ds @cs
 
-class WriteNullCon (ds :: [*]) (c :: Kind.Tree [*]) where
+class WriteNullCon (ds :: [*]) (c :: Kind.Tree) where
   writeNullCon :: Params d
 
 instance (
@@ -65,7 +65,7 @@ instance (
   writeNullCon =
     nullColumns @ds @cs
 
-class WriteNullCons (dss :: [[*]]) (cs :: [Kind.Tree [*]]) where
+class WriteNullCons (dss :: [[*]]) (cs :: [Kind.Tree]) where
   writeNullCons :: Params a
 
 instance WriteNullCons '[] '[] where
