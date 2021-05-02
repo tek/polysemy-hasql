@@ -26,7 +26,7 @@ import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
-import Polysemy.Hasql.Data.Table (Table, tableName)
+import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
@@ -63,7 +63,7 @@ bracketTestTable lens t use connection =
     acquire =
       createTable connection (view Table.structure table)
     release _ =
-      dropTable connection (view tableName table)
+      dropTable connection (view Table.name table)
     table =
       view lens t
 

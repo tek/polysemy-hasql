@@ -1,13 +1,11 @@
-module Polysemy.Hasql.Column.Effect where
+module Polysemy.Db.Tree.Effect where
 
-import Data.Vector (Vector)
+import Prelude hiding (Enum)
+
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tc)
 import Polysemy.Db.Tree.Meta (ADTMeta, ADTMetadata(ADTEnum), MaybeADT(MaybeADT))
-import Prelude hiding (Enum)
-
-import Polysemy.Hasql.ColumnType (ColumnTypeDefined)
 
 newtype D =
   D *
@@ -20,28 +18,21 @@ newtype Effs =
 
 ----------------------------------------------------------------------------------------------------
 
-class ColumnTypeResolves (resolves :: Bool) (prim :: Bool) | resolves -> prim
+class TreeTypeResolves (resolves :: Bool) (prim :: Bool) | resolves -> prim
 
-instance {-# incoherent #-} prim ~ 'False => ColumnTypeResolves resolves prim
+instance {-# incoherent #-} prim ~ 'False => TreeTypeResolves resolves prim
 
-instance prim ~ 'True => ColumnTypeResolves 'True prim
-
-----------------------------------------------------------------------------------------------------
-
-class PrimColumn (d :: *) (decision :: Bool) | d -> decision
-
-instance ColumnTypeResolves (ColumnTypeDefined d) decision => PrimColumn d decision
+instance prim ~ 'True => TreeTypeResolves 'True prim
 
 ----------------------------------------------------------------------------------------------------
 
-class EffectfulColumn (d :: *) (eff :: *) (d' :: *) | d -> eff d'
+class EffectfulTree (d :: *) (eff :: *) (d' :: *) | d -> eff d'
 
-instance {-# overlappable #-} (eff ~ NoEffect, d' ~ d) => EffectfulColumn d eff d'
+instance {-# overlappable #-} (eff ~ NoEffect, d' ~ d) => EffectfulTree d eff d'
 
-instance EffectfulColumn (Maybe d) (Tc Maybe d) d
-instance EffectfulColumn [d] (Tc [] d) d
-instance EffectfulColumn (NonEmpty d) (Tc NonEmpty d) d
-instance EffectfulColumn (Vector d) (Tc Vector d) d
+instance EffectfulTree (Maybe d) (Tc Maybe d) d
+instance EffectfulTree [d] (Tc [] d) d
+instance EffectfulTree (NonEmpty d) (Tc NonEmpty d) d
 
 ----------------------------------------------------------------------------------------------------
 
@@ -159,18 +150,17 @@ instance (
 
 ----------------------------------------------------------------------------------------------------
 
-type family MatchPrim (global :: Bool) (d :: *) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
-  MatchPrim 'True _ pre '[] = 'Right (WithPrim pre)
-  MatchPrim 'False _ pre '[] = 'Left pre
-  MatchPrim _ d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
-  MatchPrim global d pre (rep : rest) = MatchPrim global d (pre ++ '[rep]) rest
+type family MatchPrim (d :: *) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
+  MatchPrim _ pre '[] = 'Left pre
+  MatchPrim d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
+  MatchPrim d pre (rep : rest) = MatchPrim d (pre ++ '[rep]) rest
 
 class PrimOrTc (reps :: Either [*] [*]) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
 
 instance PrimOrTc ('Right reps) ('D d) ('Effs reps) ('T d)
 
 instance (
-    EffectfulColumn d eff d',
+    EffectfulTree d eff d',
     TcOrNewtype (MatchTc eff d' d '[] reps) ('D d) effs t
   ) => PrimOrTc ('Left reps) ('D d) effs t
 
@@ -179,24 +169,23 @@ instance (
 class ResolveRep (reps :: *) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
 
 instance (
-    PrimColumn d prim,
-    PrimOrTc (MatchPrim prim d '[] reps) ('D d) effs t
+    PrimOrTc (MatchPrim d '[] reps) ('D d) effs t
   ) => ResolveRep (Rep reps) ('D d) effs t
 
 instance ResolveRep (ForceRep reps) ('D d) ('Effs reps) ('T d)
 
 ----------------------------------------------------------------------------------------------------
 
-class ResolveColumnEffects (rep :: *) (d :: *) (effs :: [*]) (t :: *) | rep d -> effs t
+class ResolveTreeEffects (rep :: *) (d :: *) (effs :: [*]) (t :: *) | rep d -> effs t
 
 instance (
     ResolveRep (Rep '[]) ('D d) ('Effs effs) ('T t)
-  ) => ResolveColumnEffects Auto d effs t
+  ) => ResolveTreeEffects Auto d effs t
 
 instance {-# overlappable #-} (
     ResolveRep (Rep rep) ('D d) ('Effs effs) ('T t)
-  ) => ResolveColumnEffects (Rep rep) d effs t
+  ) => ResolveTreeEffects (Rep rep) d effs t
 
 instance {-# overlappable #-} (
     ResolveRep (Rep '[rep]) ('D d) ('Effs effs) ('T t)
-  ) => ResolveColumnEffects rep d effs t
+  ) => ResolveTreeEffects rep d effs t

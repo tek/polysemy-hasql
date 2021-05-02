@@ -17,6 +17,9 @@ data PartialFields (d :: *) =
 deriving instance All (Eq `Compose` PartialField) (FieldTypes d) => Eq (PartialFields d)
 deriving instance All (Show `Compose` PartialField) (FieldTypes d) => Show (PartialFields d)
 
+data FieldSelectors (d :: *) =
+  FieldSelectors (NP (K Bool) (FieldTypes d))
+
 encodeField ::
   ToJSON a =>
   PartialField a ->

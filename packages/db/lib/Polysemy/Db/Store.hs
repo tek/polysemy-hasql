@@ -42,6 +42,8 @@ interpretStoreAtomicState getId =
       atomicGets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
       atomicGets @(StrictStore d) (nonEmpty . view records)
+    Update _ _ ->
+      undefined
 
 -- |This is a blackbox interpreter that takes an initial list of records and stores them in an 'AtomicState'.
 -- The @getId@ parameter is used to extract the query id from the record type.
@@ -95,6 +97,8 @@ interpretStoreStrictState getId =
       gets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
       gets @(StrictStore d) $ nonEmpty . view records
+    Update _ _ ->
+      undefined
 
 interpretStoreTVar ::
   Eq i =>
@@ -144,6 +148,8 @@ interpretStoreNull =
       pure Nothing
     FetchAll ->
       pure Nothing
+    Update _ _ ->
+      unit
 
 elem ::
   ∀ i d r .

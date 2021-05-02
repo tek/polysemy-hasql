@@ -17,11 +17,11 @@ import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import qualified Polysemy.Hasql.Column.Class as Class
-import Polysemy.Hasql.Column.Data.Effect (ADT, Newtype)
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Hasql.Column.Meta (ADTMeta', ColumnMeta(ColumnMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta', ColumnMeta(ColumnMeta))
 import qualified Polysemy.Hasql.Data.DbType as Data
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
 newtype Id =
   Id { unId :: Int }
@@ -53,12 +53,12 @@ table =
   queryTable
 
 type RecType =
-  'Kind.Column ('NamedField "Rec") '[ADT (ADTMeta' (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) (Product (UidRep PrimaryKey Auto))] ('Kind.Prod (Uid Id Rec) '[
-    'Kind.Column ('NamedField "id") '[Newtype Id Int, PrimaryKey, Prim] ('Kind.Prim Id),
-    'Kind.Column ('NamedField "payload") '[ADT (ADTMeta' (Flatten Auto) Rec) (Flatten Auto)] (
+  'Kind.Tree ('NamedField "Rec") '[ADT (ADTMeta' (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) (Product (UidRep PrimaryKey Auto))] ('Kind.Prod (Uid Id Rec) '[
+    'Kind.Tree ('NamedField "id") '[Newtype Id Int, PrimaryKey, Prim] ('Kind.Prim Id),
+    'Kind.Tree ('NamedField "payload") '[ADT (ADTMeta' (Flatten Auto) Rec) (Flatten Auto)] (
       'Kind.Prod Rec '[
-        'Kind.Column ('NamedField "a") '[Prim] ('Kind.Prim Int),
-        'Kind.Column ('NamedField "b") '[Prim] ('Kind.Prim Text)
+        'Kind.Tree ('NamedField "a") '[Prim] ('Kind.Prim Int),
+        'Kind.Tree ('NamedField "b") '[Prim] ('Kind.Prim Text)
       ]
     )
   ])

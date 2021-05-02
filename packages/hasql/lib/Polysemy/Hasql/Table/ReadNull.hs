@@ -2,13 +2,13 @@ module Polysemy.Hasql.Table.ReadNull where
 
 import Hasql.Decoders (Row, column, custom, nullable)
 
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
 ignoreDecoder :: Row (Maybe a)
 ignoreDecoder =
   join <$> column (nullable (custom \ _ _ -> pure Nothing))
 
-class NullColumns (cs :: [Kind.Column]) where
+class NullColumns (cs :: [Kind.Tree [*]]) where
   nullColumns :: Row ()
 
 instance NullColumns '[] where
@@ -17,7 +17,7 @@ instance NullColumns '[] where
 
 instance (
     NullColumns cs
-  ) => NullColumns ('Kind.Column n eff ('Kind.Prim d) : cs) where
+  ) => NullColumns ('Kind.Tree n eff ('Kind.Prim d) : cs) where
   nullColumns =
     ignoreDecoder *> nullColumns @cs
 
@@ -26,7 +26,7 @@ instance (
     -- QueryRow (maybeEff : eff) rep (Maybe d),
     ReadNullCons c,
     NullColumns cs
-  ) => NullColumns ('Kind.Column n eff ('Kind.Prod d c) : cs) where
+  ) => NullColumns ('Kind.Tree n eff ('Kind.Prod d c) : cs) where
   nullColumns =
     readNullCons @c *> nullColumns @cs
 
@@ -34,20 +34,20 @@ instance (
 -- instance (
 --     QueryRow eff rep (Maybe d),
 --     NullColumns ds cs
---   ) => NullColumns (d : ds) ('Kind.Column n eff ('Kind.Prim (Maybe d) t s) : cs) where
+--   ) => NullColumns (d : ds) ('Kind.Tree n eff ('Kind.Prim (Maybe d) t s) : cs) where
 --   nullColumns =
 --     void (queryRow @eff @rep @(Maybe d)) *> nullColumns @ds @cs
 
-class ReadNullCon (c :: Kind.Column) where
+class ReadNullCon (c :: Kind.Tree [*]) where
   readNullCon :: Row ()
 
-instance ReadNullCon ('Kind.Column n eff ('Kind.Prim d)) where
+instance ReadNullCon ('Kind.Tree n eff ('Kind.Prim d)) where
   readNullCon =
-    nullColumns @'[ 'Kind.Column n eff ('Kind.Prim d)]
+    nullColumns @'[ 'Kind.Tree n eff ('Kind.Prim d)]
 
 instance (
     NullColumns cs
-  ) => ReadNullCon ('Kind.Column n eff ('Kind.Prod d cs)) where
+  ) => ReadNullCon ('Kind.Tree n eff ('Kind.Prod d cs)) where
   readNullCon =
     nullColumns @cs
 
@@ -59,7 +59,7 @@ instance (
 --   readNullCon =
 --     readNullCon @rSub @dSub *> readNullCon @reps @ds
 
-class ReadNullCons (cs :: [Kind.Column]) where
+class ReadNullCons (cs :: [Kind.Tree [*]]) where
   readNullCons :: Row ()
 
 instance ReadNullCons '[] where

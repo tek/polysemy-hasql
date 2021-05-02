@@ -1,7 +1,7 @@
 {-# language CPP #-}
 #define sop5 MIN_VERSION_generics_sop(0,5,0)
 
-module Polysemy.Hasql.Column.Meta where
+module Polysemy.Db.Tree.Meta where
 
 import Fcf (Eval, FromMaybe, type (@@))
 import GHC.TypeLits (AppendSymbol)
@@ -24,6 +24,9 @@ data ColumnMeta =
     rep :: *,
     tpe :: *
   }
+
+type family ColumnMetaType (meta :: ColumnMeta) :: Type where
+  ColumnMetaType ('ColumnMeta _ _ tpe) = tpe
 
 data ConMeta =
   ConMeta {
@@ -69,7 +72,7 @@ type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [Fiel
   ZipFields (rep : reps) ('NamedField rn : rns) (d : ds) ('NamedField dn : dns) =
     'ColumnMeta ('NamedField (MatchName d rn dn (AppendSymbol "_" rn))) rep d : ZipFields reps rns ds dns
   ZipFields _ (rn : _) (d : _) (dn : _) =
-    FieldNameMismatch d (FieldIdSymbol @@ rn) (FieldIdSymbol @@ dn) 
+    FieldNameMismatch d (FieldIdSymbol @@ rn) (FieldIdSymbol @@ dn)
   ZipFields (rep : _) (rn : _) '[] '[] =
     TypeError ("Extra field '" <> rn <> " :: " <> 'ShowType rep <> "' in rep")
   ZipFields '[] '[] (d : _) (dn : _) =

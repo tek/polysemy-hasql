@@ -1,7 +1,8 @@
-module Polysemy.Hasql.Column.Data.Effect where
+module Polysemy.Db.Tree.Data.Effect where
 
 import Fcf (Eval, Exp)
 import Fcf.Class.Foldable (Any)
+
 import Polysemy.Db.Data.Column (Flatten)
 import Polysemy.Db.Tree.Meta (ADTMetadata)
 

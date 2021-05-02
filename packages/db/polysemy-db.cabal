@@ -44,8 +44,10 @@ library
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Data.TableStructure
       Polysemy.Db.Debug
+      Polysemy.Db.Kind.Data.Tree
       Polysemy.Db.Partial
       Polysemy.Db.Partial.Store
+      Polysemy.Db.Partial.Tree
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.Reader
@@ -61,6 +63,13 @@ library
       Polysemy.Db.Text.Case
       Polysemy.Db.Text.DbIdentifier
       Polysemy.Db.Text.Quote
+      Polysemy.Db.Tree
+      Polysemy.Db.Tree.Data
+      Polysemy.Db.Tree.Data.Effect
+      Polysemy.Db.Tree.Effect
+      Polysemy.Db.Tree.Meta
+      Polysemy.Db.Tree.Partial
+      Polysemy.Db.Type.Data.Tree
   other-modules:
       Prelude
       Paths_polysemy_db

@@ -4,7 +4,7 @@ import Data.Vector (Vector)
 import Hasql.Encoders (Params, Value, array, dimension, element, nonNullable, nullable, param)
 
 import Polysemy.Hasql.Table.EncoderValue (EncoderValue, encoderValue)
-import Polysemy.Hasql.Column.Data.Effect (Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (Newtype, Tc)
 
 value :: Value a -> Params a
 value =

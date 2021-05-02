@@ -8,10 +8,10 @@ import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Test (UnitTest, runTestAuto)
 
 import Polysemy.Hasql.Column.Class (tableColumn)
-import Polysemy.Hasql.Column.Data.Effect (ADT, Newtype, Tc)
-import Polysemy.Hasql.Column.Meta
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tc)
+import Polysemy.Db.Tree.Meta
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Hasql.QueryParams (queryParams)
 import Polysemy.Hasql.QueryRows (queryRows)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
@@ -77,10 +77,10 @@ data Simple =
   deriving (Eq, Show, Generic)
 
 type PrimInt name =
-  'Kind.Column ('NamedField name) '[Prim] ('Kind.Prim Int)
+  'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Int)
 
 type PrimDouble name =
-  'Kind.Column ('NamedField name) '[Prim] ('Kind.Prim Double)
+  'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Double)
 
 type PrimMaybeDouble =
   'Kind.Prim (Maybe Double)
@@ -91,8 +91,8 @@ type ProddoType =
 type SummerConssType =
   [
     PrimInt "sum_index",
-    'Kind.Column ('NamedField "Summer1") '[Prim] ('Kind.Prim Text),
-    'Kind.Column ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
+    'Kind.Tree ('NamedField "Summer1") '[Prim] ('Kind.Prim Text),
+    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
       PrimInt "int",
       PrimDouble "dubble"
     ])
@@ -108,11 +108,11 @@ type SummerMeta =
   ADTMeta' (Sum SummerRep) Summer
 
 type DatType =
-  'Kind.Column ('NamedField "Dat") '[ADT (ADTMeta' (Product DatRep) Dat) (Product DatRep)] ('Kind.Prod Dat [
-    'Kind.Column ('NamedField "double") [Tc Maybe Double, Prim] PrimMaybeDouble,
-    'Kind.Column ('NamedField "newt") [Tc [] Newt, Newtype Newt Text, Prim] ('Kind.Prim [Newt]),
-    'Kind.Column ('NamedField "proddo") '[ADT ProddoMeta (Product ProddoRep)] ProddoType,
-    'Kind.Column ('NamedField "summer") '[ADT SummerMeta (Sum SummerRep)] SummerType
+  'Kind.Tree ('NamedField "Dat") '[ADT (ADTMeta' (Product DatRep) Dat) (Product DatRep)] ('Kind.Prod Dat [
+    'Kind.Tree ('NamedField "double") [Tc Maybe Double, Prim] PrimMaybeDouble,
+    'Kind.Tree ('NamedField "newt") [Tc [] Newt, Newtype Newt Text, Prim] ('Kind.Prim [Newt]),
+    'Kind.Tree ('NamedField "proddo") '[ADT ProddoMeta (Product ProddoRep)] ProddoType,
+    'Kind.Tree ('NamedField "summer") '[ADT SummerMeta (Sum SummerRep)] SummerType
   ])
 
 columns_Dat_explicit ::
@@ -126,7 +126,7 @@ queryParams_Dat =
 
 queryParams_Summer :: Params Summer
 queryParams_Summer =
-  queryParams @('Kind.Column ('NamedField "Summer") '[] SummerType) @Summer
+  queryParams @('Kind.Tree ('NamedField "Summer") '[] SummerType) @Summer
 
 queryRows_Dat :: Row Dat
 queryRows_Dat =

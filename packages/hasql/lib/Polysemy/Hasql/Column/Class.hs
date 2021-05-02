@@ -4,41 +4,42 @@ import Generics.SOP (NP(Nil, (:*)))
 import Polysemy.Db.Data.Column (Con, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField), FieldIdText, fieldIdText)
 import Polysemy.Db.Data.Uid (Uid)
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName, symbolText)
-
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
-import Polysemy.Hasql.Column.Data.Effect (ADT)
-import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
-import Polysemy.Hasql.Column.Meta (
+import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Meta (
   ADTMetadata(ADTSum, ADTProd),
   ColumnMeta(ColumnMeta),
   ConMeta(ConMeta),
   ProdDefaultRep,
   )
+import qualified Polysemy.Db.Type.Data.Tree as Type
+import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
+
+import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
 import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
 import Polysemy.Hasql.Table.ColumnOptions (
   ImplicitColumnOptions,
   RepOptions(repOptions),
   RepToList,
   implicitColumnOptions,
   )
-import qualified Polysemy.Hasql.Type.Data.DbType as Type
 
 class ColumnWithOptions (rep :: *) (d :: *) where
-  columnWithOptions :: Text -> Type.DbType col -> Type.Column ('Kind.Column name eff col)
+  columnWithOptions :: Text -> Type.DbType col -> Type.Column ('Kind.Tree name eff col)
 
 instance (
     ImplicitColumnOptions d,
     RepOptions (RepToList rep)
   ) => ColumnWithOptions rep d where
     columnWithOptions tpe =
-      Type.Column tpe options
+      Type.Tree (ColumnData tpe options)
       where
         options =
           repOptions @(RepToList rep) <> implicitColumnOptions @d
 
-class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Column]) | metas -> cs where
+class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Tree [*]]) | metas -> cs where
   prodColumns :: NP Type.Column cs
 
 instance ProdColumns '[] '[] where
@@ -52,16 +53,16 @@ instance (
     prodColumns =
       column @meta :* prodColumns @metas
 
-class ConColumn (meta :: ConMeta) (c :: Kind.Column) | meta -> c where
+class ConColumn (meta :: ConMeta) (c :: Kind.Tree [*]) | meta -> c where
   conColumn :: Type.Column c
 
 instance {-# overlappable #-} (
     FieldIdText name,
     ProdColumns cols cs,
-    c ~ 'Kind.Column name '[] ('Kind.Prod (Con name) cs)
+    c ~ 'Kind.Tree name '[] ('Kind.Prod (Con name) cs)
   ) => ConColumn ('ConMeta name cols) c where
     conColumn =
-      Type.Column (fieldIdText @name) def (Type.Prod (prodColumns @cols))
+      Type.Tree (ColumnData (fieldIdText @name) def) (Type.Prod (prodColumns @cols))
 
 instance (
     meta ~ 'ColumnMeta cname rep d,
@@ -70,7 +71,7 @@ instance (
     conColumn =
       column @meta
 
-class SumColumns (cons :: [ConMeta]) (cs :: [Kind.Column]) | cons -> cs where
+class SumColumns (cons :: [ConMeta]) (cs :: [Kind.Tree [*]]) | cons -> cs where
   sumColumns :: NP Type.Column cs
 
 instance SumColumns '[] '[] where
@@ -84,7 +85,7 @@ instance (
     sumColumns =
       conColumn @con :* sumColumns @cons
 
-class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.DbType) | d meta eff ct -> t where
+class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.Node [*]) | d meta eff ct -> t where
   adtColumn :: Type.DbType t
 
 instance (
@@ -94,11 +95,11 @@ instance (
     Type.Prod (prodColumns @cols)
 
 type SumIndexColumn =
-  'Kind.Column ('NamedField "sum_index") '[Prim] ('Kind.Prim Int)
+  'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int)
 
 indexColumn :: Type.Column SumIndexColumn
 indexColumn =
-  Type.Column "bigint" def Type.Prim
+  Type.Tree (ColumnData "bigint" def) (Type.Prim Proxy)
 
 instance (
     SumColumns cols cs
@@ -106,7 +107,7 @@ instance (
   adtColumn =
     Type.Sum (indexColumn :* sumColumns @cols)
 
-class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.DbType) | eff d ct -> t where
+class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.Node [*]) | eff d ct -> t where
   columnForKind :: Type.DbType t
 
 instance (
@@ -117,7 +118,7 @@ instance (
 
 instance ColumnForKind '[] d ct ('Kind.Prim d) where
   columnForKind =
-    Type.Prim
+    Type.Prim Proxy
 
 instance {-# overlappable #-} (
     ColumnForKind effs d ct t
@@ -125,7 +126,7 @@ instance {-# overlappable #-} (
     columnForKind =
       columnForKind @effs @d @ct
 
-class Column (meta :: ColumnMeta) (c :: Kind.Column) | meta -> c where
+class Column (meta :: ColumnMeta) (c :: Kind.Tree [*]) | meta -> c where
   column :: Type.Column c
 
 instance (
@@ -133,7 +134,7 @@ instance (
     ColumnForKind effs d t c,
     EffectfulColumnType effs d,
     ColumnWithOptions rep d
-  ) => Column ('ColumnMeta name rep d) ('Kind.Column name effs c) where
+  ) => Column ('ColumnMeta name rep d) ('Kind.Tree name effs c) where
     column =
       columnWithOptions @rep @d (effectfulColumnType @effs @d) (columnForKind @effs @d @t)
 
@@ -158,7 +159,7 @@ instance {-# overlappable #-} (
 
 instance TableMeta (PrimQuery name) d ('ColumnMeta ('NamedField name) (Rep '[Prim]) d)
 
-class TableColumn (rep :: *) (d :: *) (c :: Kind.Column) | rep d -> c where
+class TableColumn (rep :: *) (d :: *) (c :: Kind.Tree [*]) | rep d -> c where
   tableColumn :: Type.Column c
 
 instance (

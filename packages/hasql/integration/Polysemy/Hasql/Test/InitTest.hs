@@ -12,7 +12,7 @@ import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Prod, Prim), unName)
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
-import Polysemy.Hasql.Data.Table (tableName)
+import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Table (initTable, tableColumns)
 import Polysemy.Hasql.Test.Database (withTestTableGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
@@ -40,7 +40,7 @@ data Res =
 test_initTable :: UnitTest
 test_initTable =
   integrationTest do
-    withTestTableGen @InitRep @Init \ (view tableName -> name) -> do
+    withTestTableGen @InitRep @Init \ (view Table.name -> name) -> do
       restop @DbError @Database $ Database.connect \ connection -> do
         () <- Database.sql (Init "a") [qt|insert into "#{unName name}" (f1) values ($1)|]
         initTable connection (Column name [qt|"#{unName name}"|] "" def (Prod extra))

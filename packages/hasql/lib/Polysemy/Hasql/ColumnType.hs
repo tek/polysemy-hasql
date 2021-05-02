@@ -13,7 +13,7 @@ import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Text.DbIdentifier (dbSymbol)
-import Polysemy.Hasql.Column.Data.Effect (ADT, CustomType, Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (ADT, CustomType, Newtype, Tc)
 
 class ColumnType (d :: *) where
   columnType :: Text

@@ -6,13 +6,14 @@ import Hasql.Decoders (Row, int8, noResult, nullable)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement(Statement))
 import Polysemy.Db.Data.DbName (DbName(DbName))
+import Polysemy.Db.Data.PartialFields (PartialFields)
 import Polysemy.Db.Text.Quote (dquote)
 
 import qualified Polysemy.Hasql.Data.DbType as Column
 import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode, unSqlCode))
-import Polysemy.Hasql.Data.Table (Table(Table))
+import Polysemy.Hasql.Data.Table (Table(Table, _row, _structure, _params, _partialParams), _partialParams)
 import Polysemy.Hasql.Data.Where (Where(Where))
 import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName)
 import Polysemy.Hasql.Table.Query.Delete (deleteSql)
@@ -20,7 +21,9 @@ import Polysemy.Hasql.Table.Query.Fragment (addColumnFragment, alterFragment, co
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
 import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
+import qualified Polysemy.Hasql.Table.Query.SetPartial as Query (setPartial)
 import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated, commaSeparatedSql)
+import qualified Polysemy.Hasql.Table.Query.Update as Query (update)
 import Polysemy.Hasql.Table.ResultShape (ResultShape(resultShape))
 
 query ::
@@ -47,7 +50,7 @@ select table row =
 selectWhereSql ::
   QueryTable query d ->
   SqlCode
-selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _) _ (Where (SqlCode qw))) =
+selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _ _) _ (Where (SqlCode qw))) =
   SqlCode [qt|#{sel} where #{qw}|]
 
 -- |Construct a query of the shape "select ... from ... where ..."
@@ -57,13 +60,13 @@ selectWhere ::
   ResultShape d result =>
   QueryTable query d ->
   Statement query result
-selectWhere table@(QueryTable (Table _ row _) params _) =
+selectWhere table@(QueryTable (Table _ row _ _) params _) =
   query (selectWhereSql table) row params
 
 anyWhereSql ::
   QueryTable query d ->
   SqlCode
-anyWhereSql (QueryTable (Table (Column _ (fromFragment -> SqlCode from) _ _ _) _ _) _ (Where (SqlCode qw))) =
+anyWhereSql (QueryTable (Table (Column _ (fromFragment -> SqlCode from) _ _ _) _ _ _) _ (Where (SqlCode qw))) =
   SqlCode [qt|select 1 #{from} where #{qw} limit 1|]
 
 anyWhere ::
@@ -75,8 +78,8 @@ anyWhere table@(QueryTable _ params _) =
 insert ::
   Table d ->
   Statement d ()
-insert (Table structure _ params) =
-  query (Query.insert structure) unit params
+insert Table {_structure, _params} =
+  query (Query.insert _structure) unit _params
 
 upsertSql ::
   Column ->
@@ -94,14 +97,14 @@ upsertSql table =
 upsert ::
   Table d ->
   Statement d ()
-upsert (Table structure _ params) =
-  query (upsertSql structure) unit params
+upsert Table {_structure, _params} =
+  query (upsertSql _structure) unit _params
 
 deleteWhereSql ::
   Table d ->
   SqlCode ->
   SqlCode
-deleteWhereSql (Table structure _ _) (SqlCode qw) =
+deleteWhereSql Table {_structure} (SqlCode qw) =
   [qt|#{del}#{qwFragment} returning #{cols}|]
   where
     qwFragment =
@@ -109,22 +112,43 @@ deleteWhereSql (Table structure _ _) (SqlCode qw) =
       then "" :: Text
       else [qt| where #{qw}|]
     SqlCode del =
-      deleteSql structure
+      deleteSql _structure
     cols =
-      commaColumns (baseColumns structure)
+      commaColumns (baseColumns _structure)
 
 deleteWhere ::
   ResultShape d result =>
   QueryTable query d ->
   Statement query result
-deleteWhere (QueryTable table@(Table _ row _) params (Where qw)) =
-  query (deleteWhereSql table qw) row params
+deleteWhere (QueryTable table@Table {_row} params (Where qw)) =
+  query (deleteWhereSql table qw) _row params
 
 deleteAll ::
   Table d ->
   Statement () [d]
-deleteAll table@(Table _ row _) =
+deleteAll table@(Table _ row _ _) =
   query (deleteWhereSql table "") row noParams
+
+updateSql ::
+  QueryTable query d ->
+  SqlCode
+updateSql table@(QueryTable (Table structure _ _ _) _ (Where (SqlCode qw))) =
+  SqlCode [qt|#{upd} #{st}#{qwFragment}|]
+  where
+    qwFragment =
+      if Text.null qw
+      then "" :: Text
+      else [qt| where #{qw}|]
+    SqlCode upd =
+      Query.update table
+    SqlCode st =
+      Query.setPartial structure
+
+update ::
+  QueryTable query d ->
+  Statement (PartialFields d) ()
+update qtable@(QueryTable Table {_partialParams} _ _) =
+  query (updateSql qtable) unit _partialParams
 
 createTableSql ::
   Column ->

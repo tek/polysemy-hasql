@@ -4,7 +4,7 @@ import Generics.SOP (All, I(I), NP ((:*)), NS(Z), SOP(SOP), Top, hpure, hzipWith
 import Generics.SOP.GGP (gfrom, gto)
 
 import qualified Polysemy.Db.Data.PartialField as PartialField
-import Polysemy.Db.Data.PartialField (FieldUpdate(FieldUpdate), PartialField)
+import Polysemy.Db.Data.PartialField (FieldPath (FieldName, FieldPath), FieldUpdate(FieldUpdate), PartialField)
 import Polysemy.Db.Data.PartialFields (FieldTypes, PartialFields(PartialFields))
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ReifySOP, symbolText)
 import Polysemy.Db.SOP.FieldNames (FieldNames)
@@ -16,19 +16,25 @@ partial ::
 partial =
   PartialFields (hpure PartialField.Keep :: NP PartialField (FieldTypes d))
 
+type family MkFieldPath (path :: k) :: FieldPath where
+  MkFieldPath (p : ps) =
+    'FieldPath (p : ps)
+  MkFieldPath p =
+    'FieldName p
+
 field ::
-  ∀ (name :: Symbol) (a :: *) .
+  ∀ path (a :: *) .
   a ->
-  FieldUpdate name a
+  FieldUpdate (MkFieldPath path) a
 field =
   FieldUpdate
 
-class InsertField (ds :: [*]) (fs :: [Symbol]) (name :: Symbol) (a :: *) | ds -> a where
+class InsertField (ds :: [*]) (fs :: [Symbol]) (name :: FieldPath) (a :: *) | ds -> a where
   insertField :: NP PartialField ds -> FieldUpdate name a -> NP PartialField ds
 
 instance (
     KnownSymbol name
-  ) => InsertField (a : ds) (name : fs) name a where
+  ) => InsertField (a : ds) (name : fs) ('FieldName name) a where
   insertField (_ :* fs) (FieldUpdate a) =
     PartialField.Update (symbolText @name) a :* fs
 
@@ -38,7 +44,7 @@ instance {-# overlappable #-} (
   insertField (f :* fs) a =
     f :* insertField @ds @fs fs a
 
-class InsertField' (d :: *) (name :: Symbol) (a :: *) | d -> a where
+class InsertField' (d :: *) (name :: FieldPath) (a :: *) | d -> a where
   insertField' :: NP PartialField (FieldTypes d) -> FieldUpdate name a -> NP PartialField (FieldTypes d)
 
 (.>) ::

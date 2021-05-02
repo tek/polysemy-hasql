@@ -4,7 +4,7 @@ import Data.Vector (Vector)
 import Hasql.Decoders (Array, Row, Value, array, column, listArray, nonNullable, nullable, vectorArray)
 
 import Polysemy.Hasql.Table.DecoderValue (DecoderValue, decoderValue)
-import Polysemy.Hasql.Column.Data.Effect (Newtype, Tc)
+import Polysemy.Db.Tree.Data.Effect (Newtype, Tc)
 
 value :: Value a -> Row a
 value =

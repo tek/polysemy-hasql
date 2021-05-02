@@ -6,9 +6,9 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Test (Hedgehog, assertJust)
 
 import Polysemy.Hasql.Column.Class (SumIndexColumn, tableColumn)
-import Polysemy.Hasql.Column.Data.Effect (ADT)
-import Polysemy.Hasql.Column.Meta (ADTMeta')
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
+import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Meta (ADTMeta')
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
@@ -25,15 +25,15 @@ type SumTabMeta =
   ADTMeta' (Product Auto) SumTab
 
 type SumTabType =
-  'Kind.Column ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.Sum SumTab '[
+  'Kind.Tree ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.Sum SumTab '[
     SumIndexColumn,
-    'Kind.Column ('NamedField "SumTabOne") '[] ('Kind.Prod (Con ('NamedField "SumTabOne")) '[
-      'Kind.Column ('NamedField "id") '[Prim] ('Kind.Prim Int),
-      'Kind.Column ('NamedField "text") '[Prim] ('Kind.Prim Text)
+    'Kind.Tree ('NamedField "SumTabOne") '[] ('Kind.Prod (Con ('NamedField "SumTabOne")) '[
+      'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "text") '[Prim] ('Kind.Prim Text)
     ]),
-    'Kind.Column ('NamedField "SumTabTwo") '[] ('Kind.Prod (Con ('NamedField "SumTabTwo")) '[
-      'Kind.Column ('NamedField "id") '[Prim] ('Kind.Prim Int),
-      'Kind.Column ('NamedField "double") '[Prim] ('Kind.Prim Double)
+    'Kind.Tree ('NamedField "SumTabTwo") '[] ('Kind.Prod (Con ('NamedField "SumTabTwo")) '[
+      'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
     ])
   ])
 

@@ -1,11 +1,11 @@
 module Polysemy.Hasql.Table.WriteNull where
 
 import Hasql.Encoders (Params)
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ProductCoded)
+import Polysemy.Db.Tree.Data.Effect (Tc)
 
 import Polysemy.Hasql.Table.QueryParam (QueryParam, queryParam)
-import Polysemy.Hasql.Column.Data.Effect (Tc)
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
 
 type family NullParam a :: * where
   NullParam (Maybe a) = Maybe a
@@ -19,7 +19,7 @@ maybeParam ::
 maybeParam =
   queryParam @eff @(NullParam a)
 
-class NullColumns (ds :: [*]) (cs :: [Kind.Column]) where
+class NullColumns (ds :: [*]) (cs :: [Kind.Tree [*]]) where
   nullColumns :: Params d
 
 instance NullColumns '[] '[] where
@@ -37,7 +37,7 @@ instance {-# overlappable #-} (
     NullParam d ~ Maybe a,
     NullParam a ~ Maybe a,
     QueryParam maybeEff (NullParam d)
-  ) => NullColumns (d : ds) ('Kind.Column n eff ('Kind.Prim d) : cs) where
+  ) => NullColumns (d : ds) ('Kind.Tree n eff ('Kind.Prim d) : cs) where
   nullColumns =
     contramap (const Nothing) (maybeParam @maybeEff @a) <> nullColumns @ds @cs
 
@@ -46,26 +46,26 @@ instance (
     ProductCoded d dSub,
     NullColumns dSub c,
     NullColumns ds cs
-  ) => NullColumns (d : ds) ('Kind.Column n eff ('Kind.Prod d c) : cs) where
+  ) => NullColumns (d : ds) ('Kind.Tree n eff ('Kind.Prod d c) : cs) where
   nullColumns =
     nullColumns @dSub @c <> nullColumns @ds @cs
 
-class WriteNullCon (ds :: [*]) (c :: Kind.Column) where
+class WriteNullCon (ds :: [*]) (c :: Kind.Tree [*]) where
   writeNullCon :: Params d
 
 instance (
-    NullColumns '[d] '[ 'Kind.Column n eff ('Kind.Prim d)]
-  ) => WriteNullCon '[d] ('Kind.Column n eff ('Kind.Prim d)) where
+    NullColumns '[d] '[ 'Kind.Tree n eff ('Kind.Prim d)]
+  ) => WriteNullCon '[d] ('Kind.Tree n eff ('Kind.Prim d)) where
   writeNullCon =
-    nullColumns @'[d] @'[ 'Kind.Column n eff ('Kind.Prim d)]
+    nullColumns @'[d] @'[ 'Kind.Tree n eff ('Kind.Prim d)]
 
 instance (
   NullColumns ds cs
-  ) => WriteNullCon ds ('Kind.Column n eff ('Kind.Prod d cs)) where
+  ) => WriteNullCon ds ('Kind.Tree n eff ('Kind.Prod d cs)) where
   writeNullCon =
     nullColumns @ds @cs
 
-class WriteNullCons (dss :: [[*]]) (cs :: [Kind.Column]) where
+class WriteNullCons (dss :: [[*]]) (cs :: [Kind.Tree [*]]) where
   writeNullCons :: Params a
 
 instance WriteNullCons '[] '[] where

@@ -5,13 +5,20 @@ module Polysemy.Hasql.Test.RepTest where
 import Polysemy.Db.Data.Column (Auto, Con, Enum, Flatten, ForcePrim, Prim, PrimaryKey, Product, Rep, Sum)
 import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Hasql.Test.Error.Column.E1 ()
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tc)
+import Polysemy.Db.Tree.Meta (
+  ADTMeta,
+  ADTMeta',
+  ADTMetadata(ADTProd),
+  ADTRep,
+  ColumnMeta(ColumnMeta),
+  MaybeADT(MaybeADT),
+  )
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql.Column.Class (column, tableColumn)
-import Polysemy.Hasql.ColumnType (ColumnType(..))
-import Polysemy.Hasql.Column.Data.Effect (ADT, Newtype, Tc)
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (
   D(D),
@@ -23,16 +30,9 @@ import Polysemy.Hasql.Column.Effect (
   ResolveRep,
   T(T),
   )
-import Polysemy.Hasql.Column.Meta (
-  ADTMeta,
-  ADTMeta',
-  ADTMetadata(ADTProd),
-  ADTRep,
-  ColumnMeta(ColumnMeta),
-  MaybeADT(MaybeADT),
-  )
+import Polysemy.Hasql.ColumnType (ColumnType(..))
 import qualified Polysemy.Hasql.Data.DbType as Data
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
+import Polysemy.Hasql.Test.Error.Column.E1 ()
 import qualified Polysemy.Hasql.Type.Data.DbType as Type
 
 newtype Newt =
@@ -144,30 +144,30 @@ type FlattyMetaAuto =
   'ADTProd '[ 'ColumnMeta ('NamedField "flat1") Auto Int, 'ColumnMeta ('NamedField "flat2") Auto Text]
 
 type PrimDouble name =
-  'Kind.Column ('NamedField name) '[Prim] ('Kind.Prim Double)
+  'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Double)
 
 type PrimMaybeDouble name =
-  'Kind.Column ('NamedField name) '[ Tc Maybe Double, Prim] ('Kind.Prim (Maybe Double))
+  'Kind.Tree ('NamedField name) '[ Tc Maybe Double, Prim] ('Kind.Prim (Maybe Double))
 
 type PrimInt name =
-  'Kind.Column ('NamedField name) '[Prim] ('Kind.Prim Int)
+  'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Int)
 
 type PrimText name =
-  'Kind.Column ('NamedField name) '[Prim] ('Kind.Prim Text)
+  'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Text)
 
 type ProddoType name =
-  'Kind.Column ('NamedField name) '[ADT ProddoMeta (Product ProddoRep)] ('Kind.Prod Proddo '[PrimInt "prInt"])
+  'Kind.Tree ('NamedField name) '[ADT ProddoMeta (Product ProddoRep)] ('Kind.Prod Proddo '[PrimInt "prInt"])
 
 type NewtType =
-  'Kind.Column ('NamedField "newt") [Tc Maybe Newt, Newtype Newt Text, Prim] ('Kind.Prim (Maybe Newt))
+  'Kind.Tree ('NamedField "newt") [Tc Maybe Newt, Newtype Newt Text, Prim] ('Kind.Prim (Maybe Newt))
 
 type SummerConssType =
   [
-    'Kind.Column ('NamedField "sum_index") '[Prim] ('Kind.Prim Int),
-    'Kind.Column ('NamedField "Summer1") '[Prim] ('Kind.Prim Text),
-    'Kind.Column ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
-    'Kind.Column ('NamedField "int") '[Prim] ('Kind.Prim Int),
-    'Kind.Column ('NamedField "double") '[Prim] ('Kind.Prim Double)
+    'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "Summer1") '[Prim] ('Kind.Prim Text),
+    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
+    'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
     ])
   ]
 
@@ -175,21 +175,21 @@ type SummerMeta =
   ADTMeta' (Sum SummerRep) Summer
 
 type DatType =
-  'Kind.Column ('NamedField "Dat") '[ ADT (ADTMeta' (Rep '[Product DatRep]) Dat) (Product DatRep)] (
+  'Kind.Tree ('NamedField "Dat") '[ ADT (ADTMeta' (Rep '[Product DatRep]) Dat) (Product DatRep)] (
     'Kind.Prod Dat '[
       PrimMaybeDouble "double"
       ,
       ProddoType "proddo"
       ,
-      'Kind.Column ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.Sum Summer SummerConssType)
+      'Kind.Tree ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.Sum Summer SummerConssType)
       ,
-      'Kind.Column ('NamedField "custom") '[Prim] ('Kind.Prim Custom)
+      'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom)
       ,
       NewtType
       ,
-      'Kind.Column ('NamedField "nummo") '[Tc [] Nummo, Enum] ('Kind.Prim [Nummo])
+      'Kind.Tree ('NamedField "nummo") '[Tc [] Nummo, Enum] ('Kind.Prim [Nummo])
       ,
-      'Kind.Column ('NamedField "flatty") '[ADT FlattyMeta (Flatten FlattyRep)] ('Kind.Prod Flatty [
+      'Kind.Tree ('NamedField "flatty") '[ADT FlattyMeta (Flatten FlattyRep)] ('Kind.Prod Flatty [
         PrimInt "flat1",
         PrimText "flat2"
       ])
@@ -203,22 +203,22 @@ type SummerMetaAuto =
   ADTMeta' Auto Summer
 
 type DatTypeAuto =
-  'Kind.Column ('NamedField "Dat") '[ ADT (ADTMeta' Auto Dat) Auto] (
+  'Kind.Tree ('NamedField "Dat") '[ ADT (ADTMeta' Auto Dat) Auto] (
     'Kind.Prod Dat [
       PrimMaybeDouble "double",
-      'Kind.Column ('NamedField "proddo") '[ ADT ProddoMeta Auto] ProddoTypeAuto,
-      'Kind.Column ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.Sum Summer SummerConssType),
-      'Kind.Column ('NamedField "custom") '[Prim] ('Kind.Prim Custom),
+      'Kind.Tree ('NamedField "proddo") '[ ADT ProddoMeta Auto] ProddoTypeAuto,
+      'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.Sum Summer SummerConssType),
+      'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom),
       NewtType,
-      'Kind.Column ('NamedField "nummo") '[Tc [] Nummo, Enum] ('Kind.Prim [Nummo]),
-      'Kind.Column ('NamedField "flatty") '[ADT FlattyMetaAuto Auto] ('Kind.Prod Flatty [PrimInt "flat1", PrimText "flat2"])
+      'Kind.Tree ('NamedField "nummo") '[Tc [] Nummo, Enum] ('Kind.Prim [Nummo]),
+      'Kind.Tree ('NamedField "flatty") '[ADT FlattyMetaAuto Auto] ('Kind.Prod Flatty [PrimInt "flat1", PrimText "flat2"])
     ]
   )
 
 type PR =
   '[Product ProddoRep]
 
-column_Int :: Type.Column ('Kind.Column ('NamedField "int") '[Prim] ('Kind.Prim Int))
+column_Int :: Type.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
 column_Int =
   column @('ColumnMeta ('NamedField "int") (Rep '[Prim]) Int)
 
@@ -226,11 +226,11 @@ column_Double :: Type.Column (PrimDouble "double")
 column_Double =
   column @('ColumnMeta ('NamedField "double") Auto Double)
 
-column_Newt :: Type.Column ('Kind.Column ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
+column_Newt :: Type.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
 column_Newt =
   column @('ColumnMeta ('NamedField "newt") Auto Newt)
 
-column_Newt_Prim :: Type.Column ('Kind.Column ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
+column_Newt_Prim :: Type.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
 column_Newt_Prim =
   column @('ColumnMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim)
 

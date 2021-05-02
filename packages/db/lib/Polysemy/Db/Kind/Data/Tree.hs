@@ -1,30 +1,30 @@
-module Polysemy.Hasql.Kind.Data.DbType where
+module Polysemy.Db.Kind.Data.Tree where
 
 import Polysemy.Db.Data.FieldId (FieldId)
 
-data DbType =
+data Node a =
   Prim {
     tpe :: *
   }
   |
   Prod {
     tpe :: *,
-    columns :: [Column]
+    sub :: [Tree a]
   }
   |
   Sum {
     tpe :: *,
-    columns :: [Column]
+    sub :: [Tree a]
   }
 
-type family ColumnDataType (dt :: DbType) :: * where
+type family ColumnDataType (dt :: Node a) :: * where
   ColumnDataType ('Prim d) = d
   ColumnDataType ('Prod d _) = d
   ColumnDataType ('Sum d _) = d
 
-data Column =
-  Column {
+data Tree a =
+  Tree {
     name :: FieldId,
-    eff :: [*],
-    dbType :: DbType
+    eff :: a,
+    node :: Node a
   }

@@ -3,11 +3,13 @@
 module Polysemy.Hasql.Store.Statement where
 
 import Hasql.Statement (Statement)
+import Polysemy.Db.Data.PartialFields (PartialFields)
+-- import Polysemy.Db.Partial.Store (UpdateStorePartial)
 
-import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
-import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import qualified Polysemy.Hasql.Data.Crud as Crud
 import Polysemy.Hasql.Data.Crud (Crud(..))
+import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
+import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 
 class Members [Crud q d !! e, ManagedTable d !! e, Stop e] r => StatementEffects q e r d
 
@@ -64,3 +66,13 @@ fetchAll ::
   Sem r [d]
 fetchAll =
   runStatement (restop Crud.fetchAll) ()
+
+update ::
+  -- ∀ d q u e r .
+  -- StatementEffects q e r d =>
+  q ->
+  PartialFields u ->
+  Sem r ()
+update _ _ =
+  undefined
+  -- runStatement (restop Crud.update) (q, u)

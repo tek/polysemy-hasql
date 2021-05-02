@@ -33,13 +33,14 @@
     base = ./.;
     main = "polysemy-hasql";
     overrides = [compat main];
+    compat = false;
     compatOverrides = compat;
     packages = {
       polysemy-db = ./packages/db;
       polysemy-db-data = ./packages/data;
       polysemy-hasql = ./packages/hasql;
     };
-    ghci.extraArgs = ["-fplugin=Polysemy.Plugin"];
+    ghci.extraArgs = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
     versionFile = "ops/hpack/shared/meta.yaml";
     runConfig = project: { preStartCommand = preStartCommand project; };
   };

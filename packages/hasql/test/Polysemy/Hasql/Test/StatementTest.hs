@@ -1,24 +1,22 @@
 module Polysemy.Hasql.Test.StatementTest where
 
-import Polysemy.Db.Data.Column (PrimQuery, PrimaryKey)
-import Polysemy.Db.Data.IdQuery (IdQuery)
-import Polysemy.Test (unitTest)
-import Test.Tasty (TestTree, testGroup)
-
-import Polysemy.Db.Data.Column (Auto, Prim, Sum, UidRep, Unique)
+import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Cond (LessOrEq)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.IdQuery (IdQuery)
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
+import Test.Tasty (TestTree, testGroup)
+
+import Polysemy.Hasql.Column.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.Where (Where(Where))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
+import Polysemy.Hasql.Data.Where (Where(Where))
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
 import Polysemy.Hasql.Table.QueryTable (genQueryTable, queryTable)
-import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import qualified Polysemy.Hasql.Kind.Data.DbType as Kind
 import Polysemy.Hasql.Where (queryWhere)
-import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data WithMaybe =
   WithMaybe {
@@ -151,18 +149,18 @@ data QueryTestQ =
   deriving (Eq, Show, Generic)
 
 type QueryTestType =
-  'Kind.Column ('NamedField "QueryTest") '[] ('Kind.Prod QueryTest [
-    'Kind.Column ('NamedField "field1") '[] ('Kind.Prim Text),
-    'Kind.Column ('NamedField "field2") '[] ('Kind.Prim (Maybe Int)),
-    'Kind.Column ('NamedField "field3") '[] ('Kind.Prim Double),
-    'Kind.Column ('NamedField "field4") '[] ('Kind.Prim (Maybe Int))
+  'Kind.Tree ('NamedField "QueryTest") '[] ('Kind.Prod QueryTest [
+    'Kind.Tree ('NamedField "field1") '[] ('Kind.Prim Text),
+    'Kind.Tree ('NamedField "field2") '[] ('Kind.Prim (Maybe Int)),
+    'Kind.Tree ('NamedField "field3") '[] ('Kind.Prim Double),
+    'Kind.Tree ('NamedField "field4") '[] ('Kind.Prim (Maybe Int))
   ])
 
 type QueryTestQType =
-  'Kind.Column ('NamedField "QueryTest") '[] ('Kind.Prod QueryTest [
-    'Kind.Column ('NamedField "field2") '[] ('Kind.Prim (Maybe (LessOrEq Int))),
-    'Kind.Column ('NamedField "field3") '[] ('Kind.Prim (Maybe Double)),
-    'Kind.Column ('NamedField "field4") '[] ('Kind.Prim Int)
+  'Kind.Tree ('NamedField "QueryTest") '[] ('Kind.Prod QueryTest [
+    'Kind.Tree ('NamedField "field2") '[] ('Kind.Prim (Maybe (LessOrEq Int))),
+    'Kind.Tree ('NamedField "field3") '[] ('Kind.Prim (Maybe Double)),
+    'Kind.Tree ('NamedField "field4") '[] ('Kind.Prim Int)
   ])
 
 test_queryWhereStatement :: UnitTest
@@ -232,8 +230,8 @@ data IDQTest =
   deriving (Eq, Show, Generic)
 
 type IDQTestType =
-  'Kind.Column ('NamedField "IDQTest") '[] ('Kind.Prod IDQTest '[
-    'Kind.Column ('NamedField "number") '[] ('Kind.Prim Double)
+  'Kind.Tree ('NamedField "IDQTest") '[] ('Kind.Prod IDQTest '[
+    'Kind.Tree ('NamedField "number") '[] ('Kind.Prim Double)
   ])
 
 test_IdQuery ::
@@ -247,9 +245,18 @@ test_IdQuery =
     QueryTable _ _ (Where qw) =
       genQueryTable @Auto @(UidRep Auto Auto) @(IdQuery Int) @(Uid Int IDQTest)
 
+test_updateStatement :: UnitTest
+test_updateStatement =
+  runTestAuto do target === stmtText
+  where
+    target =
+      [qt|update "rec" where "id" = $1 set "a" = $2, "b" = $3, "c" = $4, "sum_field" = row($5, $6, row($7, $8))|]
+    SqlCode stmtText =
+      Statement.updateSql (genQueryTable @(PrimQuery "id") @(UidRep Auto RecRep) @Int @(Uid Int Rec))
+
 statementTests :: TestTree
 statementTests =
-  testGroup "table" [
+  testGroup "statements" [
     unitTest "derive a select statement" test_selectStatement,
     unitTest "derive an insert statement" test_insertStatement,
     unitTest "derive an upsert statement" test_upsertStatement,

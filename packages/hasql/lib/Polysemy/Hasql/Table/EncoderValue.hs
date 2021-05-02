@@ -11,7 +11,7 @@ import Prelude hiding (Enum, bool)
 import qualified Data.Aeson as Aeson
 import Polysemy.Db.Data.Column (Enum, Prim)
 import Polysemy.Hasql.Table.PrimEncoder (PrimEncoder, primEncoder)
-import Polysemy.Hasql.Column.Data.Effect (Newtype)
+import Polysemy.Db.Tree.Data.Effect (Newtype)
 
 class EncoderValue (effs :: [*]) (d :: *) where
   encoderValue :: Value d

@@ -4,7 +4,7 @@ import Control.Lens (Lens')
 import Hasql.Encoders (Params)
 import qualified Text.Show as Show
 
-import Polysemy.Hasql.Data.DbType (Column)
+import Polysemy.Hasql.Data.DbType (Column, Name, Selector)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Data.Where (Where)
@@ -34,6 +34,14 @@ makeClassy ''QueryTable
 structure :: Lens' (QueryTable q d) Column
 structure =
   table . Table.structure
+
+name :: Lens' (QueryTable q d) Name
+name =
+  table . Table.name
+
+selector :: Lens' (QueryTable q d) Selector
+selector =
+  table . Table.selector
 
 instance Show (QueryTable q a) where
   show (QueryTable tbl _ qw) =

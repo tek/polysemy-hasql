@@ -6,6 +6,11 @@ data PartialField (a :: Type) =
   Keep
   deriving (Eq, Show)
 
-data FieldUpdate (name :: Symbol) (a :: *) =
+data FieldPath =
+  FieldPath [Symbol]
+  |
+  FieldName Symbol
+
+data FieldUpdate (name :: FieldPath) (a :: *) =
   FieldUpdate a
   deriving (Eq, Show)

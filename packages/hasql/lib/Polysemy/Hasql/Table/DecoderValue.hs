@@ -9,7 +9,7 @@ import Polysemy.Db.Data.Column (Prim)
 import Polysemy.Hasql.SOP.Enum (EnumTable)
 import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 import Polysemy.Hasql.Table.PrimDecoder (PrimDecoder, primDecoder)
-import Polysemy.Hasql.Column.Data.Effect (Newtype)
+import Polysemy.Db.Tree.Data.Effect (Newtype)
 
 class DecoderValue (effs :: [*]) (a :: *) where
   decoderValue :: Value a

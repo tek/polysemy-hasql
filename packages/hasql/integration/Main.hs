@@ -4,6 +4,7 @@ import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
 import Polysemy.Hasql.Test.AtomicState (test_atomicStateDb)
 import Polysemy.Hasql.Test.InitTest (test_initTable)
 import Polysemy.Hasql.Test.PKTest (test_pk)
+import Polysemy.Hasql.Test.PartialTest (test_partialDbUpdate)
 import Polysemy.Hasql.Test.QueryTest (test_query)
 import Polysemy.Hasql.Test.QueueTest (test_queue)
 import Polysemy.Hasql.Test.SingletonTest (test_singletonDb)
@@ -25,7 +26,8 @@ tests =
     unitTest "primary key with PK" test_pk,
     unitTest "upsert" test_upsert,
     unitTest "queue with notifications" test_queue,
-    unitTest "atomic state as table" test_atomicStateDb
+    unitTest "atomic state as table" test_atomicStateDb,
+    unitTest "partial record update" test_partialDbUpdate
   ]
 
 main :: IO ()

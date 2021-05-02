@@ -33,7 +33,6 @@ library
       Polysemy.Hasql.Column.Data.Effect
       Polysemy.Hasql.Column.DataColumn
       Polysemy.Hasql.Column.Effect
-      Polysemy.Hasql.Column.Meta
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Crud
@@ -56,7 +55,6 @@ library
       Polysemy.Hasql.DbType
       Polysemy.Hasql.DeriveStatement
       Polysemy.Hasql.InitDbError
-      Polysemy.Hasql.Kind.Data.DbType
       Polysemy.Hasql.ManagedTable
       Polysemy.Hasql.Query
       Polysemy.Hasql.Query.Any
@@ -89,7 +87,9 @@ library
       Polysemy.Hasql.Table.Query.Prepared
       Polysemy.Hasql.Table.Query.Select
       Polysemy.Hasql.Table.Query.Set
+      Polysemy.Hasql.Table.Query.SetPartial
       Polysemy.Hasql.Table.Query.Text
+      Polysemy.Hasql.Table.Query.Update
       Polysemy.Hasql.Table.QueryParam
       Polysemy.Hasql.Table.QueryRow
       Polysemy.Hasql.Table.QueryTable

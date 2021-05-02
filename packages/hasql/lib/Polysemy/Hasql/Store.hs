@@ -20,7 +20,7 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
-import Polysemy.Hasql.Store.Statement (delete, deleteAll, fetch, fetchAll, insert, upsert)
+import qualified Polysemy.Hasql.Store.Statement as Statement
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
 
 type StoreStack qOut dOut qIn dIn =
@@ -38,17 +38,19 @@ interpretStoreDb ::
 interpretStoreDb =
   interpretResumable \case
     Store.Insert record ->
-      insert record
+      Statement.insert record
     Store.Upsert record ->
-      upsert record
+      Statement.upsert record
     Store.Delete id' ->
-      nonEmpty <$> delete id'
+      nonEmpty <$> Statement.delete id'
     Store.DeleteAll ->
-      nonEmpty <$> deleteAll
+      nonEmpty <$> Statement.deleteAll
     Store.Fetch id' ->
-      fetch id'
+      Statement.fetch id'
     Store.FetchAll ->
-      nonEmpty <$> fetchAll
+      nonEmpty <$> Statement.fetchAll
+    Store.Update id' values ->
+      Statement.update id' values
 
 interpretStoreDbUid ::
   Members [Crud i (Uid i d) !! e, ManagedTable (Uid i d) !! e] r =>

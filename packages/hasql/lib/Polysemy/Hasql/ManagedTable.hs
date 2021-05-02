@@ -25,10 +25,10 @@ interpretManagedTable ::
   Members [Database !! DbError, Log, Embed IO] r =>
   Table d ->
   InterpreterFor (ManagedTable d !! DbError) r
-interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
+interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _ _) =
   interpretResumable \case
     ManagedTable.Table ->
-      restop (mapMOf Table.tableName Database.name table)
+      restop (mapMOf Table.name Database.name table)
     ManagedTable.RunStatement q stmt ->
       restop (Database.withInit initDb (Database.runStatement q stmt))
     ManagedTable.RetryStatement interval q stmt ->
@@ -64,7 +64,7 @@ interpretManagedTableUnmanaged ::
 interpretManagedTableUnmanaged =
   interpretResumable \case
     ManagedTable.Table ->
-      restop (mapMOf Table.tableName Database.name table)
+      restop (mapMOf Table.name Database.name table)
     ManagedTable.RunStatement q stmt ->
       restop (Database.runStatement q stmt)
     ManagedTable.RetryStatement interval q stmt ->
