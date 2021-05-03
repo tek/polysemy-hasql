@@ -7,37 +7,38 @@ import Fcf (Eval, FromMaybe, type (@@))
 import GHC.TypeLits (AppendSymbol)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo(Newtype, ADT))
+import Type.Errors (ErrorMessage(ShowType, Text))
+import Type.Errors.Pretty (TypeError, type (%), type (<>))
+
 import Polysemy.Db.Data.Column (Auto, Flatten, Product, Rep, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.SOP.FieldNames (FieldIds)
-import Type.Errors (ErrorMessage(ShowType, Text))
-import Type.Errors.Pretty (TypeError, type (%), type (<>))
 
 type Ids =
   [[FieldId]]
 
-data ColumnMeta =
-  ColumnMeta {
+data TreeMeta =
+  TreeMeta {
     name :: FieldId,
     rep :: *,
     tpe :: *
   }
 
-type family ColumnMetaType (meta :: ColumnMeta) :: Type where
-  ColumnMetaType ('ColumnMeta _ _ tpe) = tpe
+type family TreeMetaType (meta :: TreeMeta) :: Type where
+  TreeMetaType ('TreeMeta _ _ tpe) = tpe
 
 data ConMeta =
   ConMeta {
     conName :: FieldId,
-    columns :: [ColumnMeta]
+    columns :: [TreeMeta]
   }
 
 data ADTMetadata =
   ADTSum { cons :: [ConMeta] }
   |
-  ADTProd { columns :: [ColumnMeta] }
+  ADTProd { columns :: [TreeMeta] }
   |
   ADTEnum
   |
@@ -65,12 +66,12 @@ type family MatchName (d :: *) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) :: 
   MatchName d rn dn _ =
     FieldNameMismatch d ('Text rn) ('Text dn)
 
-type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [FieldId]) :: [ColumnMeta] where
+type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [FieldId]) :: [TreeMeta] where
   ZipFields '[] '[] '[] '[] = '[]
   ZipFields (rep : reps) ('NumberedField _ n : rns) (d : ds) ('NumberedField name n : dns) =
-    'ColumnMeta ('NumberedField name n) rep d : ZipFields reps rns ds dns
+    'TreeMeta ('NumberedField name n) rep d : ZipFields reps rns ds dns
   ZipFields (rep : reps) ('NamedField rn : rns) (d : ds) ('NamedField dn : dns) =
-    'ColumnMeta ('NamedField (MatchName d rn dn (AppendSymbol "_" rn))) rep d : ZipFields reps rns ds dns
+    'TreeMeta ('NamedField (MatchName d rn dn (AppendSymbol "_" rn))) rep d : ZipFields reps rns ds dns
   ZipFields _ (rn : _) (d : _) (dn : _) =
     FieldNameMismatch d (FieldIdSymbol @@ rn) (FieldIdSymbol @@ dn)
   ZipFields (rep : _) (rn : _) '[] '[] =

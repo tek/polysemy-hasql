@@ -10,9 +10,9 @@ import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (
   ADTMetadata(ADTSum, ADTProd),
-  ColumnMeta(ColumnMeta),
   ConMeta(ConMeta),
   ProdDefaultRep,
+  TreeMeta(TreeMeta),
   )
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
@@ -39,7 +39,7 @@ instance (
         options =
           repOptions @(RepToList rep) <> implicitColumnOptions @d
 
-class ProdColumns (metas :: [ColumnMeta]) (cs :: [Kind.Tree]) | metas -> cs where
+class ProdColumns (metas :: [TreeMeta]) (cs :: [Kind.Tree]) | metas -> cs where
   prodColumns :: NP Type.Column cs
 
 instance ProdColumns '[] '[] where
@@ -65,9 +65,9 @@ instance {-# overlappable #-} (
       Type.Tree (ColumnData (fieldIdText @name) def) (Type.Prod (prodColumns @cols))
 
 instance (
-    meta ~ 'ColumnMeta cname rep d,
+    meta ~ 'TreeMeta cname rep d,
     Column meta c
-  ) => ConColumn ('ConMeta cname '[ 'ColumnMeta name rep d]) c where
+  ) => ConColumn ('ConMeta cname '[ 'TreeMeta name rep d]) c where
     conColumn =
       column @meta
 
@@ -85,12 +85,12 @@ instance (
     sumColumns =
       conColumn @con :* sumColumns @cons
 
-class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (ct :: *) (t :: Kind.Node) | d meta eff ct -> t where
+class ADTColumn (d :: *) (meta :: ADTMetadata) (eff :: [*]) (t :: Kind.Node) | d meta eff -> t where
   adtColumn :: Type.DbType t
 
 instance (
     ProdColumns cols cs
-  ) => ADTColumn d ('ADTProd cols) '[] ct ('Kind.Prod d cs) where
+  ) => ADTColumn d ('ADTProd cols) '[] ('Kind.Prod d cs) where
   adtColumn =
     Type.Prod (prodColumns @cols)
 
@@ -103,40 +103,40 @@ indexColumn =
 
 instance (
     SumColumns cols cs
-  ) => ADTColumn d ('ADTSum cols) '[] ct ('Kind.Sum d (SumIndexColumn : cs)) where
+  ) => ADTColumn d ('ADTSum cols) '[] ('Kind.Sum d (SumIndexColumn : cs)) where
   adtColumn =
     Type.Sum (indexColumn :* sumColumns @cols)
 
-class ColumnForKind (eff :: [*]) (d :: *) (ct :: *) (t :: Kind.Node) | eff d ct -> t where
+class ColumnForKind (eff :: [*]) (d :: *) (t :: Kind.Node) | eff d -> t where
   columnForKind :: Type.DbType t
 
 instance (
-    ADTColumn d meta effs ct t
-  ) => ColumnForKind (ADT meta rep : effs) d ct t where
+    ADTColumn d meta effs t
+  ) => ColumnForKind (ADT meta rep : effs) d t where
     columnForKind =
-      adtColumn @d @meta @effs @ct
+      adtColumn @d @meta @effs
 
-instance ColumnForKind '[] d ct ('Kind.Prim d) where
+instance ColumnForKind '[] d ('Kind.Prim d) where
   columnForKind =
     Type.Prim Proxy
 
 instance {-# overlappable #-} (
-    ColumnForKind effs d ct t
-  ) => ColumnForKind (eff : effs) d ct t where
+    ColumnForKind effs d t
+  ) => ColumnForKind (eff : effs) d t where
     columnForKind =
-      columnForKind @effs @d @ct
+      columnForKind @effs @d
 
-class Column (meta :: ColumnMeta) (c :: Kind.Tree) | meta -> c where
+class Column (meta :: TreeMeta) (c :: Kind.Tree) | meta -> c where
   column :: Type.Column c
 
 instance (
-    ResolveColumnEffects rep d effs t,
-    ColumnForKind effs d t c,
+    ResolveColumnEffects rep d effs,
+    ColumnForKind effs d c,
     EffectfulColumnType effs d,
     ColumnWithOptions rep d
-  ) => Column ('ColumnMeta name rep d) ('Kind.Tree name effs c) where
+  ) => Column ('TreeMeta name rep d) ('Kind.Tree name effs c) where
     column =
-      columnWithOptions @rep @d (effectfulColumnType @effs @d) (columnForKind @effs @d @t)
+      columnWithOptions @rep @d (effectfulColumnType @effs @d) (columnForKind @effs @d)
 
 class KnownSymbol name => TableName (d :: *) (name :: Symbol) | d -> name where
   tableName :: Text
@@ -150,14 +150,14 @@ instance {-# overlappable #-} (
 
 instance TableName d name => TableName (Uid i d) name where
 
-class TableMeta (rep :: *) (d :: *) (meta :: ColumnMeta) | rep d -> meta
+class TableMeta (rep :: *) (d :: *) (meta :: TreeMeta) | rep d -> meta
 
 instance {-# overlappable #-} (
     TableName d name,
-    meta ~ 'ColumnMeta ('NamedField name) (ProdDefaultRep rep) d
+    meta ~ 'TreeMeta ('NamedField name) (ProdDefaultRep rep) d
   ) => TableMeta rep d meta
 
-instance TableMeta (PrimQuery name) d ('ColumnMeta ('NamedField name) (Rep '[Prim]) d)
+instance TableMeta (PrimQuery name) d ('TreeMeta ('NamedField name) (Rep '[Prim]) d)
 
 class TableColumn (rep :: *) (d :: *) (c :: Kind.Tree) | rep d -> c where
   tableColumn :: Type.Column c

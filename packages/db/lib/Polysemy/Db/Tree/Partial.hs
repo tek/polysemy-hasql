@@ -8,46 +8,47 @@ import Polysemy.Db.Data.PartialField (FieldPath (FieldName), FieldUpdate(FieldUp
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Db.Tree (
+  Params(Params),
   Root,
   TreePayload(..),
   TreePrim(..),
   TreeProduct(..),
   TreeProductElem (treeProductElem),
-  tableTree,
+  root,
   )
-import Polysemy.Db.Tree.Data (DataTag(DataTag), DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
-import Polysemy.Db.Tree.Meta (ColumnMeta(ColumnMeta))
+import Polysemy.Db.Tree.Data (DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data PartialTag =
   PartialTag
   deriving (Eq, Show)
 
-type PartialTree = Type.Tree PartialTag PartialField
-type PartialNode = Type.Node PartialTag PartialField
+type PartialTree = Type.Tree () PartialField
+type PartialNode = Type.Node () PartialField
 
 instance TreePrim PartialTag PartialField a meta where
   treePrim _ =
     PartialField.Keep
 
-instance TreePayload PartialTag PartialField d meta where
+instance TreePayload PartialTag () d meta where
   treePayload _ =
-    PartialTag
+    ()
 
-instance TreeProduct PartialTag PartialField d () where
+instance TreeProduct PartialTag d () where
   treeProduct _ =
     ()
 
-instance TreeProductElem PartialTag PartialField () () ('ColumnMeta name rep d) () where
+instance TreeProductElem PartialTag () () ('TreeMeta name rep d) () where
   treeProductElem =
     undefined
 
 partialTree' ::
   ∀ d c .
-  Root PartialTag PartialField d c =>
+  Root ('Params PartialTag () PartialField) d c =>
   PartialTree c
 partialTree' =
-  tableTree @PartialTag @PartialField @d
+  root @('Params PartialTag () PartialField) @d
 
 treePure :: a -> Type.Tree t n sub -> Type.Tree t n sub
 treePure =
@@ -111,8 +112,8 @@ instance UpdatePartialTree ('Kind.Tree name eff ('Kind.Prim d)) where
 instance (
     All UpdatePartialTree sub
   ) => UpdatePartialTree ('Kind.Tree name eff ('Kind.Prod d sub)) where
-  updatePartialTree (Type.Tree DataTag (Type.Prod subData)) (Type.Tree PartialTag (Type.Prod subUpdate)) =
-    Type.Tree DataTag (Type.Prod (hczipWith (Proxy @UpdatePartialTree) updatePartialTree subData subUpdate))
+  updatePartialTree (Type.Tree () (Type.Prod subData)) (Type.Tree () (Type.Prod subUpdate)) =
+    Type.Tree () (Type.Prod (hczipWith (Proxy @UpdatePartialTree) updatePartialTree subData subUpdate))
 
 updatePartialTree' ::
   ∀ d (tree :: Kind.Tree) .

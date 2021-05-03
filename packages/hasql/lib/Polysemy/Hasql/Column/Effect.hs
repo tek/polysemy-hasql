@@ -12,9 +12,6 @@ import Polysemy.Hasql.ColumnType (ColumnTypeDefined)
 newtype D =
   D *
 
-newtype T =
-  T *
-
 newtype Effs =
   Effs [*]
 
@@ -99,11 +96,11 @@ type family MatchADT (meta :: Maybe ADTMetadata) (pre :: [*]) (reps :: [*]) :: M
   MatchADT meta pre (rep : reps) =
     MatchADT meta (pre ++ '[rep]) reps
 
-class ADTOrPrim (adt :: MatchedADT) (d :: D) (effs :: Effs) (t :: T) | adt d -> effs t
+class ADTOrPrim (adt :: MatchedADT) (d :: D) (effs :: Effs) | adt d -> effs
 
-instance ADTOrPrim ('Right reps) ('D d) ('Effs reps) ('T d)
+instance ADTOrPrim ('Right reps) ('D d) ('Effs reps)
 
-instance withPrim ~ WithEffect prim reps => ADTOrPrim ('Left '(prim, reps)) ('D d) ('Effs withPrim) ('T d)
+instance withPrim ~ WithEffect prim reps => ADTOrPrim ('Left '(prim, reps)) ('D d) ('Effs withPrim)
 
 ----------------------------------------------------------------------------------------------------
 
@@ -120,16 +117,16 @@ type family MatchNt (inferred :: Maybe *) (pre :: [*]) (reps :: [*]) :: MatchedN
   MatchNt 'Nothing pre '[] =
     'Left pre
 
-class NewtypeOrADT (nt :: MatchedNt) (d :: D) (effs :: Effs) (t :: T) | nt d -> effs t
+class NewtypeOrADT (nt :: MatchedNt) (d :: D) (effs :: Effs) | nt d -> effs
 
 instance (
-    ResolveRep (Rep reps) ('D wrapped) ('Effs effs) t
-  ) => NewtypeOrADT ('Right '(reps, wrapped)) ('D d) ('Effs (Newtype d wrapped : effs)) t
+    ResolveRep (Rep reps) ('D wrapped) ('Effs effs)
+  ) => NewtypeOrADT ('Right '(reps, wrapped)) ('D d) ('Effs (Newtype d wrapped : effs))
 
 instance (
     IsADT (Rep reps) d meta,
-    ADTOrPrim (MatchADT meta '[] reps) ('D d) effs t
-  ) => NewtypeOrADT ('Left reps) ('D d) effs t
+    ADTOrPrim (MatchADT meta '[] reps) ('D d) effs
+  ) => NewtypeOrADT ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
@@ -146,16 +143,16 @@ type family MatchTycon (inferred :: *) (inner :: *) (d :: *) (pre :: [*]) (reps 
   MatchTycon eff inner d pre (rep : reps) =
     MatchTycon eff inner d (pre ++ '[rep]) reps
 
-class TyconOrNewtype (eff :: MatchedTycon) (d :: D) (effs :: Effs) (t :: T) | eff d -> effs t
+class TyconOrNewtype (eff :: MatchedTycon) (d :: D) (effs :: Effs) | eff d -> effs
 
 instance (
-    ResolveRep (Rep reps) ('D d') ('Effs effs) t
-  ) => TyconOrNewtype ('Right '(reps, eff, d')) d ('Effs (eff : effs)) t
+    ResolveRep (Rep reps) ('D d') ('Effs effs)
+  ) => TyconOrNewtype ('Right '(reps, eff, d')) d ('Effs (eff : effs))
 
 instance (
     IsNewtype d nt,
-    NewtypeOrADT (MatchNt nt '[] reps) ('D d) effs t
-  ) => TyconOrNewtype ('Left reps) ('D d) effs t
+    NewtypeOrADT (MatchNt nt '[] reps) ('D d) effs
+  ) => TyconOrNewtype ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
@@ -165,38 +162,38 @@ type family MatchPrim (global :: Bool) (d :: *) (pre :: [*]) (reps :: [*]) :: Ei
   MatchPrim _ d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
   MatchPrim global d pre (rep : rest) = MatchPrim global d (pre ++ '[rep]) rest
 
-class PrimOrTycon (reps :: Either [*] [*]) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
+class PrimOrTycon (reps :: Either [*] [*]) (d :: D) (effs :: Effs) | reps d -> effs
 
-instance PrimOrTycon ('Right reps) ('D d) ('Effs reps) ('T d)
+instance PrimOrTycon ('Right reps) ('D d) ('Effs reps)
 
 instance (
     EffectfulColumn d eff d',
-    TyconOrNewtype (MatchTycon eff d' d '[] reps) ('D d) effs t
-  ) => PrimOrTycon ('Left reps) ('D d) effs t
+    TyconOrNewtype (MatchTycon eff d' d '[] reps) ('D d) effs
+  ) => PrimOrTycon ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
-class ResolveRep (reps :: *) (d :: D) (effs :: Effs) (t :: T) | reps d -> effs t
+class ResolveRep (reps :: *) (d :: D) (effs :: Effs) | reps d -> effs
 
 instance (
     PrimColumn d prim,
-    PrimOrTycon (MatchPrim prim d '[] reps) ('D d) effs t
-  ) => ResolveRep (Rep reps) ('D d) effs t
+    PrimOrTycon (MatchPrim prim d '[] reps) ('D d) effs
+  ) => ResolveRep (Rep reps) ('D d) effs
 
-instance ResolveRep (ForceRep reps) ('D d) ('Effs reps) ('T d)
+instance ResolveRep (ForceRep reps) ('D d) ('Effs reps)
 
 ----------------------------------------------------------------------------------------------------
 
-class ResolveColumnEffects (rep :: *) (d :: *) (effs :: [*]) (t :: *) | rep d -> effs t
+class ResolveColumnEffects (rep :: *) (d :: *) (effs :: [*]) | rep d -> effs
 
 instance (
-    ResolveRep (Rep '[]) ('D d) ('Effs effs) ('T t)
-  ) => ResolveColumnEffects Auto d effs t
+    ResolveRep (Rep '[]) ('D d) ('Effs effs)
+  ) => ResolveColumnEffects Auto d effs
 
 instance {-# overlappable #-} (
-    ResolveRep (Rep rep) ('D d) ('Effs effs) ('T t)
-  ) => ResolveColumnEffects (Rep rep) d effs t
+    ResolveRep (Rep rep) ('D d) ('Effs effs)
+  ) => ResolveColumnEffects (Rep rep) d effs
 
 instance {-# overlappable #-} (
-    ResolveRep (Rep '[rep]) ('D d) ('Effs effs) ('T t)
-  ) => ResolveColumnEffects rep d effs t
+    ResolveRep (Rep '[rep]) ('D d) ('Effs effs)
+  ) => ResolveColumnEffects rep d effs

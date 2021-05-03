@@ -18,7 +18,7 @@ import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
-import Polysemy.Db.Tree.Meta (ADTMeta', ADTMetadata(ADTSum, ADTProd), ColumnMeta(ColumnMeta), ConMeta(ConMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta', ADTMetadata(ADTSum, ADTProd), ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
@@ -110,8 +110,8 @@ data ContentNumber =
 
 type XXorMeta =
   'ADTSum '[
-    'ConMeta ('NamedField "Lef") '[ 'ColumnMeta ('NamedField "l") Auto Double],
-    'ConMeta ('NamedField "Righ") '[ 'ColumnMeta ('NamedField "r") Auto Bool]
+    'ConMeta ('NamedField "Lef") '[ 'TreeMeta ('NamedField "l") Auto Double],
+    'ConMeta ('NamedField "Righ") '[ 'TreeMeta ('NamedField "r") Auto Bool]
     ]
 
 type LefCol =
@@ -129,10 +129,10 @@ type XXorType rep =
 
 type ContentNumberMeta =
   'ADTProd '[
-    'ColumnMeta ('NamedField "content") Auto Content,
-    'ColumnMeta ('NamedField "otherNumber") Auto (Maybe Int),
-    'ColumnMeta ('NamedField "number") Auto (Maybe (LessOrEq Int)),
-    'ColumnMeta ('NamedField "xxor") Auto XXor
+    'TreeMeta ('NamedField "content") Auto Content,
+    'TreeMeta ('NamedField "otherNumber") Auto (Maybe Int),
+    'TreeMeta ('NamedField "number") Auto (Maybe (LessOrEq Int)),
+    'TreeMeta ('NamedField "xxor") Auto XXor
   ]
 
 type XXorCol =
@@ -180,7 +180,7 @@ type UidDatType =
   )
 
 column_ContentNumber ::
-  ResolveColumnEffects Auto ContentNumber '[ADT ContentNumberMeta Auto] ContentNumber =>
+  ResolveColumnEffects Auto ContentNumber '[ADT ContentNumberMeta Auto] =>
   Type.Column ContentNumberType
 column_ContentNumber =
   tableColumn @Auto @ContentNumber

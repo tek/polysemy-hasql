@@ -111,8 +111,8 @@ queryRows_SumField =
   queryRows @c
 
 testSumField ::
-  ResolveColumnEffects Auto (Path Abs File) '[Prim] (Path Abs File) =>
-  ResolveColumnEffects Auto Nume '[Enum] Nume =>
+  ResolveColumnEffects Auto (Path Abs File) '[Prim] =>
+  ResolveColumnEffects Auto Nume '[Enum] =>
   ()
 testSumField =
   ()

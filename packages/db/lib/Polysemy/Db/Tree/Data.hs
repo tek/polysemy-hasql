@@ -8,6 +8,7 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ReifySOP)
 import Polysemy.Db.Tree (
+  Params(Params),
   TableName,
   Tree(..),
   TreePayload(..),
@@ -15,62 +16,60 @@ import Polysemy.Db.Tree (
   TreeProduct(..),
   TreeProductElem(..),
   )
-import Polysemy.Db.Tree.Meta (ColumnMeta(ColumnMeta), ColumnMetaType)
+import Polysemy.Db.Tree.Meta (TreeMetaType, TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data DataTag =
   DataTag
   deriving (Eq, Show)
 
-type DataTree = Type.Tree DataTag Identity
-type DataNode = Type.Node DataTag Identity
+type DataTree = Type.Tree () Identity
+type DataNode = Type.Node () Identity
 
-type family DataTreeCols (meta :: ColumnMeta) :: [[*]] where
+type family DataTreeCols (meta :: TreeMeta) :: [[*]] where
   DataTreeCols meta =
-    GCode (ColumnMetaType meta)
+    GCode (TreeMetaType meta)
 
 newtype DataPrim meta =
-  DataPrim { unDataPrim :: ColumnMetaType meta }
+  DataPrim { unDataPrim :: TreeMetaType meta }
 
-class GenDataTree d (tree :: Kind.Tree) | d -> tree where
+class GenDataTree (d :: Type) (tree :: Kind.Tree) | d -> tree where
   genDataTree :: d -> DataTree tree
 
 instance (
     TableName d name,
-    meta ~ 'ColumnMeta ('NamedField name) (Rep '[Product Auto]) d,
-    -- ConstructSOP d (DataTreeCols meta),
-    Tree DataTag Identity d meta tree
+    meta ~ 'TreeMeta ('NamedField name) (Rep '[Product Auto]) d,
+    params ~ 'Params DataTag () Identity,
+    Tree params d meta tree
   ) => GenDataTree d tree where
     genDataTree d =
-      tree @DataTag @Identity @d @meta d
+      tree @params @d @meta d
 
 newtype ColMetaData meta =
-  ColMetaData { unColMetaData :: ColumnMetaType meta }
+  ColMetaData { unColMetaData :: TreeMetaType meta }
 
 instance (
-    a ~ ColumnMetaType meta
-    -- ReifySOP (ColumnMetaType meta) (DataTreeCols meta)
+    a ~ TreeMetaType meta
   ) => TreePrim DataTag Identity a meta where
-  treePrim :: a -> Identity (ColumnMetaType meta)
-  treePrim a =
-    pure a
+    treePrim =
+      pure
 
-instance TreePayload DataTag Identity a meta where
+instance TreePayload DataTag () a meta where
   treePayload _ =
-    DataTag
+    ()
 
 instance (
     ConstructSOP d '[ds]
-  ) => TreeProduct DataTag Identity d (NP I ds) where
+  ) => TreeProduct DataTag d (NP I ds) where
     treeProduct =
       unZ . unSOP . gfrom
 
-instance TreeProductElem DataTag Identity (NP I (d : ds)) (NP I ds) ('ColumnMeta x y d) d where
+instance TreeProductElem DataTag (NP I (d : ds)) (NP I ds) ('TreeMeta x y d) d where
   treeProductElem (I d :* ds) =
     (ds, d)
 
 dataTree ::
-  ∀ d (tree :: Kind.Tree) .
+  ∀ (d :: Type) (tree :: Kind.Tree) .
   GenDataTree d tree =>
   d ->
   DataTree tree

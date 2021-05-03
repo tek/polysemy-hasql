@@ -12,8 +12,8 @@ import Polysemy.Db.Tree.Meta (
   ADTMeta',
   ADTMetadata(ADTProd),
   ADTRep,
-  ColumnMeta(ColumnMeta),
   MaybeADT(MaybeADT),
+  TreeMeta(TreeMeta),
   )
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
@@ -28,7 +28,6 @@ import Polysemy.Hasql.Column.Effect (
   NewtypeOrADT,
   ResolveColumnEffects,
   ResolveRep,
-  T(T),
   )
 import Polysemy.Hasql.ColumnType (ColumnType(..))
 import qualified Polysemy.Hasql.Data.DbType as Data
@@ -135,13 +134,13 @@ data DatRep =
   deriving (Eq, Show, Generic)
 
 type ProddoMeta =
-  'ADTProd '[ 'ColumnMeta ('NamedField "prInt") Auto Int]
+  'ADTProd '[ 'TreeMeta ('NamedField "prInt") Auto Int]
 
 type FlattyMeta =
-  'ADTProd '[ 'ColumnMeta ('NamedField "flat1") Prim Int, 'ColumnMeta ('NamedField "flat2") Prim Text]
+  'ADTProd '[ 'TreeMeta ('NamedField "flat1") Prim Int, 'TreeMeta ('NamedField "flat2") Prim Text]
 
 type FlattyMetaAuto =
-  'ADTProd '[ 'ColumnMeta ('NamedField "flat1") Auto Int, 'ColumnMeta ('NamedField "flat2") Auto Text]
+  'ADTProd '[ 'TreeMeta ('NamedField "flat1") Auto Int, 'TreeMeta ('NamedField "flat2") Auto Text]
 
 type PrimDouble name =
   'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Double)
@@ -220,23 +219,23 @@ type PR =
 
 column_Int :: Type.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
 column_Int =
-  column @('ColumnMeta ('NamedField "int") (Rep '[Prim]) Int)
+  column @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int)
 
 column_Double :: Type.Column (PrimDouble "double")
 column_Double =
-  column @('ColumnMeta ('NamedField "double") Auto Double)
+  column @('TreeMeta ('NamedField "double") Auto Double)
 
 column_Newt :: Type.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
 column_Newt =
-  column @('ColumnMeta ('NamedField "newt") Auto Newt)
+  column @('TreeMeta ('NamedField "newt") Auto Newt)
 
 column_Newt_Prim :: Type.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
 column_Newt_Prim =
-  column @('ColumnMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim)
+  column @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim)
 
 column_Proddo :: Type.Column (ProddoType "proddo")
 column_Proddo =
-  column @('ColumnMeta ('NamedField "proddo") (Rep PR) Proddo)
+  column @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo)
 
 columns_Dat_explicit ::
   Type.Column DatType
@@ -253,17 +252,17 @@ effectfulTest ::
   ADTMeta (Rep PR) Proddo ~ 'MaybeADT ProddoMeta =>
   IsADT (Rep PR) Proddo ('Just ProddoMeta) =>
   MaybeADTResolves (ADTMeta (Rep '[]) Text) 'Nothing =>
-  ResolveColumnEffects (Rep '[ForcePrim Newt]) Newt '[Prim] Newt =>
-  ResolveColumnEffects Auto (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] Text =>
-  ResolveColumnEffects (Rep '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text]) (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] Text =>
-  ResolveColumnEffects Auto Proddo '[ADT ProddoMeta Auto] Proddo =>
-  ResolveColumnEffects (Rep '[Product Auto]) Proddo '[ADT ProddoMeta (Product Auto)] Proddo =>
-  ResolveColumnEffects (Rep '[Product ProddoRep]) Proddo '[ADT ProddoMeta (Product ProddoRep)] Proddo =>
-  ResolveColumnEffects (Rep '[Product ProddoRep]) (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta (Product ProddoRep)] Proddo =>
-  ResolveColumnEffects Auto (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta Auto] Proddo =>
-  ResolveColumnEffects Auto (Maybe [Proddo]) '[Tycon Maybe [Proddo], Tycon [] Proddo, ADT ProddoMeta Auto] Proddo =>
-  ResolveRep (Rep '[]) ('D Custom) ('Effs '[Prim]) ('T Custom) =>
-  NewtypeOrADT ('Left PR) ('D Proddo) ('Effs '[ADT ProddoMeta (Product ProddoRep)]) ('T Proddo) =>
+  ResolveColumnEffects (Rep '[ForcePrim Newt]) Newt '[Prim] =>
+  ResolveColumnEffects Auto (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] =>
+  ResolveColumnEffects (Rep '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text]) (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] =>
+  ResolveColumnEffects Auto Proddo '[ADT ProddoMeta Auto] =>
+  ResolveColumnEffects (Rep '[Product Auto]) Proddo '[ADT ProddoMeta (Product Auto)] =>
+  ResolveColumnEffects (Rep '[Product ProddoRep]) Proddo '[ADT ProddoMeta (Product ProddoRep)] =>
+  ResolveColumnEffects (Rep '[Product ProddoRep]) (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta (Product ProddoRep)] =>
+  ResolveColumnEffects Auto (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta Auto] =>
+  ResolveColumnEffects Auto (Maybe [Proddo]) '[Tycon Maybe [Proddo], Tycon [] Proddo, ADT ProddoMeta Auto] =>
+  ResolveRep (Rep '[]) ('D Custom) ('Effs '[Prim]) =>
+  NewtypeOrADT ('Left PR) ('D Proddo) ('Effs '[ADT ProddoMeta (Product ProddoRep)]) =>
   ()
 effectfulTest =
   ()
@@ -314,10 +313,10 @@ test_rep =
     intTarget =
       Data.Column "int" "\"int\"" "bigint" def Data.Prim
     intCol =
-      dataTable (column @('ColumnMeta ('NamedField "int") (Prim) Int))
+      dataTable (column @('TreeMeta ('NamedField "int") (Prim) Int))
     proddoTarget =
       Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
         Data.Column "pr_int" "\"pr_int\"" "bigint" def Data.Prim
       ])
     proddoCol =
-      dataTable (column @('ColumnMeta ('NamedField "proddo") (Product ProddoRep) Proddo))
+      dataTable (column @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo))

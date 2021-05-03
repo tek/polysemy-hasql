@@ -19,7 +19,7 @@ import Polysemy.Hasql.Test.Run (integrationTest)
 import qualified Polysemy.Hasql.Column.Class as Class
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Db.Tree.Meta (ADTMeta', ColumnMeta(ColumnMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta', TreeMeta(TreeMeta))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
@@ -64,7 +64,7 @@ type RecType =
   ])
 
 testDerivation ::
-  Class.Column ('ColumnMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
+  Class.Column ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
   ()
 testDerivation =
   ()

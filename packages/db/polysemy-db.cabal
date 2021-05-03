@@ -47,7 +47,6 @@ library
       Polysemy.Db.Kind.Data.Tree
       Polysemy.Db.Partial
       Polysemy.Db.Partial.Store
-      Polysemy.Db.Partial.Tree
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.Reader
