@@ -2,15 +2,19 @@
 
 module Polysemy.Hasql.Test.PartialTest where
 
+import Polysemy.Db.Data.Column (Auto, Product, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Data.PartialFields (PartialFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Partial (field, partial, updatePartial, (.>))
+import Polysemy.Db.Tree (Node, Params(Params), Root, TableMeta, Tree)
 import Polysemy.Db.Tree.Data (DataTag, DataTree, dataTree)
+import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Effect (ResolveTreeEffects)
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ADTMetadata(ADTProd))
 import Polysemy.Db.Tree.Partial (PartialTag, PartialTree, partialTree', updatePartialTree', (...>))
 import qualified Polysemy.Db.Type.Data.Tree as Type
-import Polysemy.Db.Type.Data.Tree (Tree)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Dat =
@@ -29,11 +33,19 @@ test_partialUpdate =
   runTestAuto do
     target === updatePartial partialUpdate record
 
-type TreeType =
-  'Kind.Tree ('NamedField "Dat") '[] ('Kind.Prod Dat '[
+type DatNode =
+  'Kind.Prod Dat '[
     'Kind.Tree ('NamedField "int") '[] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "double") '[] ('Kind.Prim Double)
-  ])
+  ]
+
+type TreeType =
+  'Kind.Tree ('NamedField "Dat") '[] DatNode
+
+type TreeEffs =
+  '[
+    ADT ('ADTProd '[ 'TreeMeta ('NamedField "int") Auto Int, 'TreeMeta ('NamedField "double") Auto Double ]) (Product Auto)
+  ]
 
 type DataType =
   'Kind.Tree ('NamedField "Dat") '[] ('Kind.Prod Dat '[

@@ -16,7 +16,7 @@ import Polysemy.Db.Tree (
   TreeProduct(..),
   TreeProductElem(..),
   )
-import Polysemy.Db.Tree.Meta (TreeMetaType, TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), TreeMetaType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data DataTag =
@@ -48,9 +48,7 @@ instance (
 newtype ColMetaData meta =
   ColMetaData { unColMetaData :: TreeMetaType meta }
 
-instance (
-    a ~ TreeMetaType meta
-  ) => TreePrim DataTag Identity a meta where
+instance TreePrim DataTag Identity d name d where
     treePrim =
       pure
 

@@ -27,7 +27,7 @@ data PartialTag =
 type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
 
-instance TreePrim PartialTag PartialField a meta where
+instance TreePrim PartialTag PartialField a name d where
   treePrim _ =
     PartialField.Keep
 
@@ -45,10 +45,10 @@ instance TreeProductElem PartialTag () () ('TreeMeta name rep d) () where
 
 partialTree' ::
   ∀ d c .
-  Root ('Params PartialTag () PartialField) d c =>
+  Root ('Params PartialTag () PartialField) d () c =>
   PartialTree c
 partialTree' =
-  root @('Params PartialTag () PartialField) @d
+  root @('Params PartialTag () PartialField) @d ()
 
 treePure :: a -> Type.Tree t n sub -> Type.Tree t n sub
 treePure =
