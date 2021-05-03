@@ -35,7 +35,7 @@ type family TTree (params :: Params) :: Kind.Tree -> Type where
 type family TNode (params :: Params) :: Kind.Node -> Type where
   TNode ('Params _ t n) = Type.Node t n
 
-class TreePrim (tag :: Type) (n :: Type -> Type) a (name :: FieldId) (d :: *) where
+class TreePrim (tag :: Type) (n :: Type -> Type) a (name :: FieldId) (d :: Type) where
   treePrim :: a -> n d
 
 class TreePayload (tag :: Type) (t :: Type) a (meta :: TreeMeta) where
@@ -55,6 +55,8 @@ class TreeCons (tag :: Type) d cons | tag d -> cons where
 
 class TreeConElem (tag :: Type) cons consTail con | tag cons -> consTail con where
   treeConElem :: cons -> (consTail, con)
+
+------------------------------------------------------------------------------------------------------------------------
 
 class ProdTrees (p :: Params) (prod :: Type) (metas :: [TreeMeta]) (trees :: [Kind.Tree]) | p prod metas -> trees where
   prodTrees :: prod -> NP (TTree p) trees
@@ -76,6 +78,8 @@ instance (
         (pt, a) =
           treeProductElem @(Tag p) @_ @_ @meta p
 
+------------------------------------------------------------------------------------------------------------------------
+
 class ConTree (p :: Params) (con :: Type) (meta :: ConMeta) (tree :: Kind.Tree) | p con meta -> tree where
   conTree :: con -> TTree p tree
 
@@ -95,6 +99,8 @@ instance (
     conTree =
       tree @p @_ @meta
 
+------------------------------------------------------------------------------------------------------------------------
+
 class SumTrees (p :: Params) (cons :: Type) (meta :: [ConMeta]) (trees :: [Kind.Tree]) | p cons meta -> trees where
   sumTrees :: cons -> NP (TTree p) trees
 
@@ -112,6 +118,8 @@ instance (
       where
         (conTail, con) =
           treeConElem @(Tag p) cons
+
+------------------------------------------------------------------------------------------------------------------------
 
 class AdtTree (p :: Params) (d :: Type) (a :: Type) (meta :: ADTMetadata) (eff :: [Type]) (node :: Kind.Node) | p d a meta eff -> node where
   adtTree :: a -> TNode p node
@@ -136,6 +144,8 @@ instance (
   adtTree a =
     Type.Sum (sumTrees @p @_ @trees (treeCons @tag a))
 
+------------------------------------------------------------------------------------------------------------------------
+
 class Node (p :: Params) (name :: FieldId) (d :: Type) (a :: Type) (eff :: [Type]) (node :: Kind.Node) | p name d a eff -> node where
   node :: a -> TNode p node
 
@@ -157,6 +167,8 @@ instance {-# overlappable #-} (
     node =
       node @p @name @d @_ @effs
 
+------------------------------------------------------------------------------------------------------------------------
+
 class Tree (p :: Params) (a :: Type) (meta :: TreeMeta) (tree :: Kind.Tree) | p a meta -> tree where
   tree :: a -> TTree p tree
 
@@ -166,9 +178,11 @@ instance (
     meta ~ 'TreeMeta name rep d,
     Node p name d a effs node,
     p ~ 'Params tag t n
-  ) => Tree p a meta ('Kind.Tree name '[] node) where
+  ) => Tree p a meta ('Kind.Tree name effs node) where
     tree a =
       Type.Tree (treePayload @tag @_ @_ @meta a) (node @p @name @d @_ @effs a)
+
+------------------------------------------------------------------------------------------------------------------------
 
 class KnownSymbol name => TableName (d :: Type) (name :: Symbol) | d -> name where
   tableName :: Text
@@ -182,11 +196,15 @@ instance {-# overlappable #-} (
 
 instance TableName d name => TableName (Uid i d) name where
 
+------------------------------------------------------------------------------------------------------------------------
+
 class TableMeta (d :: Type) (meta :: TreeMeta) | d -> meta
 
 instance {-# overlappable #-} (
     TableName d name
   ) => TableMeta d ('TreeMeta ('NamedField name) (Rep '[Product Auto]) d)
+
+------------------------------------------------------------------------------------------------------------------------
 
 class Root (p :: Params) (d :: Type) (a :: Type) (tree :: Kind.Tree) | p d a -> tree where
   root :: a -> TTree p tree

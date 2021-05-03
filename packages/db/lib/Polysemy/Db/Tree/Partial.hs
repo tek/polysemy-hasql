@@ -74,11 +74,11 @@ class InsertFieldTree (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
 
 instance (
     KnownSymbol name
-  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField name) '[] ('Kind.Prim a)) where
+  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField name) effs ('Kind.Prim a)) where
   insertFieldTree (FieldUpdate a) (Type.Tree t _) =
     Type.Tree t (Type.Prim (PartialField.Update (symbolText @name) a))
 
-instance {-# overlappable #-} InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) '[] _n) where
+instance {-# overlappable #-} InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) effs _n) where
   insertFieldTree _ =
     id
 
@@ -87,7 +87,7 @@ class InsertField (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
 
 instance (
     InsertFieldNode path a n
-  ) => InsertField path a ('Kind.Tree ('NamedField _name) '[] n) where
+  ) => InsertField path a ('Kind.Tree ('NamedField _name) effs n) where
   insertField update (Type.Tree t n) =
     Type.Tree t (insertFieldNode @path @a @n update n)
 

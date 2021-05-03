@@ -2,7 +2,7 @@
 
 module Polysemy.Hasql.Test.PartialTest where
 
-import Polysemy.Db.Data.Column (Auto, Product, Rep)
+import Polysemy.Db.Data.Column (Auto, Prim, Product, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Data.PartialFields (PartialFields)
@@ -12,7 +12,7 @@ import Polysemy.Db.Tree (Node, Params(Params), Root, TableMeta, Tree)
 import Polysemy.Db.Tree.Data (DataTag, DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Effect (ResolveTreeEffects)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ADTMetadata(ADTProd))
+import Polysemy.Db.Tree.Meta (ADTMetadata(ADTProd), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Partial (PartialTag, PartialTree, partialTree', updatePartialTree', (...>))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Polysemy.Test (UnitTest, runTestAuto, (===))
@@ -33,24 +33,27 @@ test_partialUpdate =
   runTestAuto do
     target === updatePartial partialUpdate record
 
+type TreeEffs =
+  '[
+    ADT ('ADTProd '[
+      'TreeMeta ('NamedField "int") Auto Int,
+      'TreeMeta ('NamedField "double") Auto Double
+    ]) (Product Auto)
+  ]
+
 type DatNode =
   'Kind.Prod Dat '[
-    'Kind.Tree ('NamedField "int") '[] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") '[] ('Kind.Prim Double)
+    'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
   ]
 
 type TreeType =
-  'Kind.Tree ('NamedField "Dat") '[] DatNode
-
-type TreeEffs =
-  '[
-    ADT ('ADTProd '[ 'TreeMeta ('NamedField "int") Auto Int, 'TreeMeta ('NamedField "double") Auto Double ]) (Product Auto)
-  ]
+  'Kind.Tree ('NamedField "Dat") TreeEffs DatNode
 
 type DataType =
-  'Kind.Tree ('NamedField "Dat") '[] ('Kind.Prod Dat '[
-    'Kind.Tree ('NamedField "int") '[] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") '[] ('Kind.Prim Double)
+  'Kind.Tree ('NamedField "Dat") TreeEffs ('Kind.Prod Dat '[
+    'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
   ])
 
 datTree :: DataTree DataType
