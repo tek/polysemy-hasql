@@ -2,7 +2,7 @@ module Polysemy.Hasql.Table.Table where
 
 import Polysemy.Db.Data.Column (Auto)
 
-import Polysemy.Hasql.Column.Class (TableColumn, tableColumn)
+import Polysemy.Hasql.Column.Tree (TableColumn, tableColumn)
 import Polysemy.Hasql.Column.DataColumn (DataTable, dataTable)
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.QueryParams (PartialQueryParams (partialQueryParams), QueryParams(queryParams))

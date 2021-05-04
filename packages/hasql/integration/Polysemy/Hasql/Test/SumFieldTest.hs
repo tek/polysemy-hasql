@@ -23,7 +23,7 @@ import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql (HasqlConnection)
-import Polysemy.Hasql.Column.Class (TableColumn)
+import Polysemy.Hasql.Column.Tree (TableColumn)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Database (interpretDatabase)

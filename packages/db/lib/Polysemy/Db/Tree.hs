@@ -2,15 +2,15 @@ module Polysemy.Db.Tree where
 
 import Generics.SOP (NP(Nil, (:*)))
 
-import Polysemy.Db.Data.Column (Auto, Con, Product, Rep)
+import Polysemy.Db.Data.Column (Con, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName, symbolText)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Effect (ResolveTreeEffects)
-import Polysemy.Db.Tree.Meta (ADTMetadata (ADTProd, ADTSum), ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Effect (TreeEffects)
+import Polysemy.Db.Tree.Meta (ADTMetadata (ADTProd, ADTSum), ConMeta(ConMeta), ProdDefaultRep, TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data Params =
@@ -38,7 +38,7 @@ type family TNode (params :: Params) :: Kind.Node -> Type where
 class TreePrim (tag :: Type) (n :: Type -> Type) a (name :: FieldId) (d :: Type) where
   treePrim :: a -> n d
 
-class TreePayload (tag :: Type) (t :: Type) a (meta :: TreeMeta) where
+class TreePayload (tag :: Type) (t :: Type) a (meta :: TreeMeta) (effs :: [Type]) where
   treePayload :: a -> t
 
 class TreeProduct (tag :: Type) d prod | tag d -> prod where
@@ -132,17 +132,26 @@ instance (
   adtTree a =
     Type.Prod (prodTrees @p @_ @trees (treeProduct @tag a))
 
-type SumIndexTree e =
-  'Kind.Tree ('NamedField "sum_index") e ('Kind.Prim Int)
+type SumIndexTree =
+  'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int)
 
 instance (
     TreeCons tag a cons,
+    indexName ~ 'NamedField "sum_index",
+    indexMeta ~ 'TreeMeta indexName Prim Int,
+    TreePrim tag n a indexName Int,
+    TreePayload tag t a indexMeta '[Prim],
     SumTrees p cons trees cs,
-    node ~ 'Kind.Sum d cs,
+    node ~ 'Kind.Sum d (SumIndexTree : cs),
     p ~ 'Params tag t n
   ) => AdtTree p d a ('ADTSum trees) '[] node where
   adtTree a =
-    Type.Sum (sumTrees @p @_ @trees (treeCons @tag a))
+    Type.Sum (indexTree :* sumTrees @p @_ @trees (treeCons @tag a))
+    where
+      indexTree =
+        Type.Tree indexPayload (Type.Prim (treePrim @tag @_ @_ @indexName @Int a))
+      indexPayload =
+        treePayload @tag @_ @_ @indexMeta @'[Prim] a
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -158,8 +167,8 @@ instance (
 instance (
     TreePrim tag n a name d
   ) => Node ('Params tag t n) name d a '[] ('Kind.Prim d) where
-  node fa =
-    Type.Prim (treePrim @tag @_ @_ @name @d fa)
+  node a =
+    Type.Prim (treePrim @tag @_ @_ @name @d a)
 
 instance {-# overlappable #-} (
     Node p name d a effs node
@@ -173,18 +182,18 @@ class Tree (p :: Params) (a :: Type) (meta :: TreeMeta) (tree :: Kind.Tree) | p 
   tree :: a -> TTree p tree
 
 instance (
-    TreePayload tag t a meta,
-    ResolveTreeEffects rep d effs,
+    TreePayload tag t a meta effs,
+    TreeEffects tag rep d effs,
     meta ~ 'TreeMeta name rep d,
     Node p name d a effs node,
     p ~ 'Params tag t n
   ) => Tree p a meta ('Kind.Tree name effs node) where
     tree a =
-      Type.Tree (treePayload @tag @_ @_ @meta a) (node @p @name @d @_ @effs a)
+      Type.Tree (treePayload @tag @_ @_ @meta @effs a) (node @p @name @d @_ @effs a)
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class KnownSymbol name => TableName (d :: Type) (name :: Symbol) | d -> name where
+class KnownSymbol name => RootName (d :: Type) (name :: Symbol) | d -> name where
   tableName :: Text
   tableName =
     quotedDbId (symbolText @name)
@@ -192,26 +201,29 @@ class KnownSymbol name => TableName (d :: Type) (name :: Symbol) | d -> name whe
 instance {-# overlappable #-} (
     KnownSymbol name,
     DataName d name
-  ) => TableName d name
+  ) => RootName d name
 
-instance TableName d name => TableName (Uid i d) name where
+instance RootName d name => RootName (Uid i d) name where
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class TableMeta (d :: Type) (meta :: TreeMeta) | d -> meta
+class RootMeta (rep :: Type) (d :: Type) (meta :: TreeMeta) | rep d -> meta
 
 instance {-# overlappable #-} (
-    TableName d name
-  ) => TableMeta d ('TreeMeta ('NamedField name) (Rep '[Product Auto]) d)
+    RootName d name,
+    meta ~ 'TreeMeta ('NamedField name) (ProdDefaultRep rep) d
+  ) => RootMeta rep d meta
+
+instance RootMeta (PrimQuery name) d ('TreeMeta ('NamedField name) (Rep '[Prim]) d)
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class Root (p :: Params) (d :: Type) (a :: Type) (tree :: Kind.Tree) | p d a -> tree where
+class Root (rep :: Type) (p :: Params) (d :: Type) (a :: Type) (tree :: Kind.Tree) | rep p d a -> tree where
   root :: a -> TTree p tree
 
 instance (
-    TableMeta d meta,
+    RootMeta rep d meta,
     Tree p a meta c
-  ) => Root p d a c where
+  ) => Root rep p d a c where
   root =
     tree @p @a @meta

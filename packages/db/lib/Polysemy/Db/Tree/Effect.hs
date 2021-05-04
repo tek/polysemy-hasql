@@ -8,13 +8,12 @@ import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
 import Polysemy.Db.Tree.Meta (ADTMeta, ADTMetadata(ADTEnum), MaybeADT(MaybeADT))
 
 newtype D =
-  D *
-
-newtype T =
-  T *
+  D Type
 
 newtype Effs =
-  Effs [*]
+  Effs [Type]
+
+data DefaultEffects
 
 ----------------------------------------------------------------------------------------------------
 
@@ -26,7 +25,7 @@ instance prim ~ 'True => TreeTypeResolves 'True prim
 
 ----------------------------------------------------------------------------------------------------
 
-class EffectfulTree (d :: *) (eff :: *) (d' :: *) | d -> eff d'
+class EffectfulTree (d :: Type) (eff :: Type) (d' :: Type) | d -> eff d'
 
 instance {-# overlappable #-} (eff ~ NoEffect, d' ~ d) => EffectfulTree d eff d'
 
@@ -44,13 +43,13 @@ instance meta ~ 'Just m => MaybeADTResolves ('MaybeADT m) meta
 
 ----------------------------------------------------------------------------------------------------
 
-class IsADT (rep :: *) (d :: *) (meta :: Maybe ADTMetadata) | rep d -> meta
+class IsADT (rep :: Type) (d :: Type) (meta :: Maybe ADTMetadata) | rep d -> meta
 
 instance MaybeADTResolves (ADTMeta rep d) meta => IsADT rep d meta
 
 ----------------------------------------------------------------------------------------------------
 
-type family WithEffect (e :: *) (reps :: [*]) :: [*] where
+type family WithEffect (e :: Type) (reps :: [Type]) :: [Type] where
   WithEffect e '[] = '[e]
   WithEffect e (e : reps) = WithEffect e reps
   WithEffect e (rep : reps) = rep : WithEffect e reps
@@ -62,13 +61,13 @@ type WithEnum reps =
   WithEffect Enum reps
 
 type MatchedADT =
-  Either (*, [*]) [*]
+  Either (*, [Type]) [Type]
 
-type family RegularADT (meta :: ADTMetadata) (pre :: [*]) (reps :: [*]) (rep :: *) :: Either a [*] where
+type family RegularADT (meta :: ADTMetadata) (pre :: [Type]) (reps :: [Type]) (rep :: Type) :: Either a [Type] where
   RegularADT meta pre reps rep =
     'Right (pre ++ reps ++ '[ADT meta rep])
 
-type family MatchADT (meta :: Maybe ADTMetadata) (pre :: [*]) (reps :: [*]) :: MatchedADT where
+type family MatchADT (meta :: Maybe ADTMetadata) (pre :: [Type]) (reps :: [Type]) :: MatchedADT where
   MatchADT ('Just 'ADTEnum) '[] reps =
     'Right (Enum : reps)
   MatchADT ('Just meta) pre '[] =
@@ -99,9 +98,9 @@ instance withPrim ~ WithEffect prim reps => ADTOrPrim ('Left '(prim, reps)) ('D 
 ----------------------------------------------------------------------------------------------------
 
 type MatchedNt =
-  Either [*] ([*], *)
+  Either [Type] ([Type], Type)
 
-type family MatchNt (inferred :: Maybe *) (pre :: [*]) (reps :: [*]) :: MatchedNt where
+type family MatchNt (inferred :: Maybe Type) (pre :: [Type]) (reps :: [Type]) :: MatchedNt where
   MatchNt _ pre (Newtype _ wrapped : reps) =
     'Right '(pre ++ reps, wrapped)
   MatchNt inferred pre (rep : reps) =
@@ -111,23 +110,23 @@ type family MatchNt (inferred :: Maybe *) (pre :: [*]) (reps :: [*]) :: MatchedN
   MatchNt 'Nothing pre '[] =
     'Left pre
 
-class NewtypeOrADT (nt :: MatchedNt) (d :: D) (effs :: Effs) | nt d -> effs
+class NewtypeOrADT (tag :: Type) (nt :: MatchedNt) (d :: D) (effs :: Effs) | nt d -> effs
 
 instance (
-    ResolveRep (Rep reps) ('D wrapped) ('Effs effs)
-  ) => NewtypeOrADT ('Right '(reps, wrapped)) ('D d) ('Effs (Newtype d wrapped : effs))
+    ResolveRep tag (Rep reps) ('D wrapped) ('Effs effs)
+  ) => NewtypeOrADT tag ('Right '(reps, wrapped)) ('D d) ('Effs (Newtype d wrapped : effs))
 
 instance (
     IsADT (Rep reps) d meta,
     ADTOrPrim (MatchADT meta '[] reps) ('D d) effs
-  ) => NewtypeOrADT ('Left reps) ('D d) effs
+  ) => NewtypeOrADT tag ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
 type MatchedTycon =
-  Either [*] ([*], *, *)
+  Either [Type] ([Type], Type, Type)
 
-type family MatchTycon (inferred :: *) (inner :: *) (d :: *) (pre :: [*]) (reps :: [*]) :: MatchedTycon where
+type family MatchTycon (inferred :: Type) (inner :: Type) (d :: Type) (pre :: [Type]) (reps :: [Type]) :: MatchedTycon where
   MatchTycon _ _ (f d') pre (Tycon f d' : rest) =
     'Right '(pre ++ rest, Tycon f d', d')
   MatchTycon NoEffect _ _ pre '[] =
@@ -137,55 +136,59 @@ type family MatchTycon (inferred :: *) (inner :: *) (d :: *) (pre :: [*]) (reps 
   MatchTycon eff inner d pre (rep : reps) =
     MatchTycon eff inner d (pre ++ '[rep]) reps
 
-class TyconOrNewtype (eff :: MatchedTycon) (d :: D) (effs :: Effs) | eff d -> effs
+class TyconOrNewtype (tag :: Type) (eff :: MatchedTycon) (d :: D) (effs :: Effs) | eff d -> effs
 
 instance (
-    ResolveRep (Rep reps) ('D d') ('Effs effs)
-  ) => TyconOrNewtype ('Right '(reps, eff, d')) d ('Effs (eff : effs))
+    ResolveRep tag (Rep reps) ('D d') ('Effs effs)
+  ) => TyconOrNewtype tag ('Right '(reps, eff, d')) d ('Effs (eff : effs))
 
 instance (
     IsNewtype d nt,
-    NewtypeOrADT (MatchNt nt '[] reps) ('D d) effs
-  ) => TyconOrNewtype ('Left reps) ('D d) effs
+    NewtypeOrADT tag (MatchNt nt '[] reps) ('D d) effs
+  ) => TyconOrNewtype tag ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
-type family MatchPrim (d :: *) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
+type family MatchPrim (d :: Type) (pre :: [Type]) (reps :: [Type]) :: Either [Type] [Type] where
   MatchPrim _ pre '[] = 'Left pre
   MatchPrim d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
   MatchPrim d pre (rep : rest) = MatchPrim d (pre ++ '[rep]) rest
 
-class PrimOrTycon (reps :: Either [*] [*]) (d :: D) (effs :: Effs) | reps d -> effs
+class PrimOrTycon (tag :: Type) (reps :: Either [Type] [Type]) (d :: D) (effs :: Effs) | reps d -> effs
 
-instance PrimOrTycon ('Right reps) ('D d) ('Effs reps)
+instance PrimOrTycon tag ('Right reps) ('D d) ('Effs reps)
 
 instance (
     EffectfulTree d eff d',
-    TyconOrNewtype (MatchTycon eff d' d '[] reps) ('D d) effs
-  ) => PrimOrTycon ('Left reps) ('D d) effs
+    TyconOrNewtype tag (MatchTycon eff d' d '[] reps) ('D d) effs
+  ) => PrimOrTycon tag ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
-class ResolveRep (reps :: *) (d :: D) (effs :: Effs) | reps d -> effs
+class ResolveRep (tag :: Type) (reps :: Type) (d :: D) (effs :: Effs) | reps d -> effs
 
 instance (
-    PrimOrTycon (MatchPrim d '[] reps) ('D d) effs
-  ) => ResolveRep (Rep reps) ('D d) effs
+    PrimOrTycon tag (MatchPrim d '[] reps) ('D d) effs
+  ) => ResolveRep DefaultEffects (Rep reps) ('D d) effs
 
-instance ResolveRep (ForceRep reps) ('D d) ('Effs reps)
+instance ResolveRep tag (ForceRep reps) ('D d) ('Effs reps)
 
 ----------------------------------------------------------------------------------------------------
 
-class ResolveTreeEffects (rep :: *) (d :: *) (effs :: [*]) | rep d -> effs
+class TreeEffectsFor (tag :: Type) (rep :: Type) (d :: Type) (effs :: [Type]) | tag rep d -> effs
 
 instance (
-    ResolveRep (Rep '[]) ('D d) ('Effs effs)
-  ) => ResolveTreeEffects Auto d effs
+    ResolveRep tag (Rep '[]) ('D d) ('Effs effs)
+  ) => TreeEffectsFor tag Auto d effs
 
 instance {-# overlappable #-} (
-    ResolveRep (Rep rep) ('D d) ('Effs effs)
-  ) => ResolveTreeEffects (Rep rep) d effs
+    ResolveRep tag (Rep rep) ('D d) ('Effs effs)
+  ) => TreeEffectsFor tag (Rep rep) d effs
 
 instance {-# overlappable #-} (
-    ResolveRep (Rep '[rep]) ('D d) ('Effs effs)
-  ) => ResolveTreeEffects rep d effs
+    ResolveRep tag (Rep '[rep]) ('D d) ('Effs effs)
+  ) => TreeEffectsFor tag rep d effs
+
+class TreeEffects (tag :: Type) (rep :: Type) (d :: Type) (effs :: [Type]) | rep d -> effs
+
+instance TreeEffectsFor DefaultEffects rep d effs => TreeEffects DefaultEffects rep d effs

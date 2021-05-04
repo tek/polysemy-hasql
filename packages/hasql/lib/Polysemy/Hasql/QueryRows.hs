@@ -7,7 +7,7 @@ import Polysemy.Db.Data.Column (Prim)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ProductCoded, ReifySOP)
 
-import Polysemy.Hasql.Column.Class (SumIndexColumn)
+import Polysemy.Db.Tree (SumIndexTree)
 import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
 import Polysemy.Hasql.Table.ReadNull (ReadNullCon(readNullCon), ReadNullCons(readNullCons))
 
@@ -82,6 +82,6 @@ instance (
 instance (
     ReifySOP d dss,
     SumRows dss cs
-  ) => QueryRows ('Kind.Tree n eff ('Kind.Sum d (SumIndexColumn : cs))) d where
+  ) => QueryRows ('Kind.Tree n eff ('Kind.Sum d (SumIndexTree : cs))) d where
   queryRows =
     gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])

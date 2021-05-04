@@ -3,7 +3,7 @@ module Polysemy.Hasql.DeriveStatement where
 import Hasql.Statement (Statement(Statement))
 import Polysemy.Db.Data.Column (Auto)
 
-import Polysemy.Hasql.Column.Class (TableColumn)
+import Polysemy.Hasql.Column.Tree (TableColumn)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
 import Polysemy.Hasql.QueryRows (QueryRows, queryRows)

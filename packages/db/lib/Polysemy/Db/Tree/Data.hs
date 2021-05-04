@@ -9,13 +9,14 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ReifySOP)
 import Polysemy.Db.Tree (
   Params(Params),
-  TableName,
+  RootName,
   Tree(..),
   TreePayload(..),
   TreePrim(..),
   TreeProduct(..),
   TreeProductElem(..),
   )
+import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), TreeMetaType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
@@ -26,7 +27,7 @@ data DataTag =
 type DataTree = Type.Tree () Identity
 type DataNode = Type.Node () Identity
 
-type family DataTreeCols (meta :: TreeMeta) :: [[*]] where
+type family DataTreeCols (meta :: TreeMeta) :: [[Type]] where
   DataTreeCols meta =
     GCode (TreeMetaType meta)
 
@@ -37,7 +38,7 @@ class GenDataTree (d :: Type) (tree :: Kind.Tree) | d -> tree where
   genDataTree :: d -> DataTree tree
 
 instance (
-    TableName d name,
+    RootName d name,
     meta ~ 'TreeMeta ('NamedField name) (Rep '[Product Auto]) d,
     params ~ 'Params DataTag () Identity,
     Tree params d meta tree
@@ -45,14 +46,11 @@ instance (
     genDataTree d =
       tree @params @d @meta d
 
-newtype ColMetaData meta =
-  ColMetaData { unColMetaData :: TreeMetaType meta }
-
 instance TreePrim DataTag Identity d name d where
-    treePrim =
-      pure
+  treePrim =
+    pure
 
-instance TreePayload DataTag () a meta where
+instance TreePayload DataTag () a meta effs where
   treePayload _ =
     ()
 
@@ -65,6 +63,8 @@ instance (
 instance TreeProductElem DataTag (NP I (d : ds)) (NP I ds) ('TreeMeta x y d) d where
   treeProductElem (I d :* ds) =
     (ds, d)
+
+instance TreeEffects DefaultEffects rep d effs => TreeEffects DataTag rep d effs where
 
 dataTree ::
   ∀ (d :: Type) (tree :: Kind.Tree) .

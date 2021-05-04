@@ -6,6 +6,7 @@ import Polysemy.Db.Data.Column (Auto, Con, Enum, Flatten, ForcePrim, Prim, Prima
 import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Tree (tree)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta (
   ADTMeta,
@@ -18,7 +19,6 @@ import Polysemy.Db.Tree.Meta (
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
 
-import Polysemy.Hasql.Column.Class (column, tableColumn)
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (
   D(D),
@@ -29,6 +29,7 @@ import Polysemy.Hasql.Column.Effect (
   ResolveColumnEffects,
   ResolveRep,
   )
+import Polysemy.Hasql.Column.Tree (DbParams, tableColumn)
 import Polysemy.Hasql.ColumnType (ColumnType(..))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Test.Error.Column.E1 ()
@@ -219,23 +220,23 @@ type PR =
 
 column_Int :: Type.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
 column_Int =
-  column @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int)
+  tree @DbParams @() @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) ()
 
 column_Double :: Type.Column (PrimDouble "double")
 column_Double =
-  column @('TreeMeta ('NamedField "double") Auto Double)
+  tree @DbParams @() @('TreeMeta ('NamedField "double") Auto Double) ()
 
 column_Newt :: Type.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
 column_Newt =
-  column @('TreeMeta ('NamedField "newt") Auto Newt)
+  tree @DbParams @() @('TreeMeta ('NamedField "newt") Auto Newt) ()
 
 column_Newt_Prim :: Type.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
 column_Newt_Prim =
-  column @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim)
+  tree @DbParams @() @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) ()
 
 column_Proddo :: Type.Column (ProddoType "proddo")
 column_Proddo =
-  column @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo)
+  tree @DbParams @() @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) ()
 
 columns_Dat_explicit ::
   Type.Column DatType
@@ -313,10 +314,10 @@ test_rep =
     intTarget =
       Data.Column "int" "\"int\"" "bigint" def Data.Prim
     intCol =
-      dataTable (column @('TreeMeta ('NamedField "int") (Prim) Int))
+      dataTable (tree @DbParams @() @('TreeMeta ('NamedField "int") (Prim) Int) ())
     proddoTarget =
       Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
         Data.Column "pr_int" "\"pr_int\"" "bigint" def Data.Prim
       ])
     proddoCol =
-      dataTable (column @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo))
+      dataTable (tree @DbParams @() @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo) ())

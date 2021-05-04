@@ -5,23 +5,24 @@ module Polysemy.Hasql.Test.PKTest where
 import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, UidRep)
 import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid(Uid))
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import qualified Polysemy.Db.Tree as Tree
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
+import Polysemy.Db.Tree.Meta (ADTMeta', TreeMeta(TreeMeta))
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Column.Tree (DbParams)
+import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import qualified Polysemy.Hasql.Column.Class as Class
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
-import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Db.Tree.Meta (ADTMeta', TreeMeta(TreeMeta))
-import qualified Polysemy.Hasql.Data.DbType as Data
-import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
 newtype Id =
   Id { unId :: Int }
@@ -64,7 +65,7 @@ type RecType =
   ])
 
 testDerivation ::
-  Class.Column ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
+  Tree.Tree DbParams () ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
   ()
 testDerivation =
   ()

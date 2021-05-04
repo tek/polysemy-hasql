@@ -2,7 +2,8 @@ module Polysemy.Hasql.Table.QueryTable where
 
 import Polysemy.Db.Data.Column (Auto)
 
-import Polysemy.Hasql.Column.Class (TableColumn)
+import Polysemy.Db.Tree ()
+import Polysemy.Hasql.Column.Tree (TableColumn)
 import Polysemy.Hasql.Data.QueryTable (QueryTable, QueryTable(QueryTable))
 import qualified Polysemy.Hasql.Data.Where as Data
 import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
@@ -20,7 +21,6 @@ instance (
   GenQuery qrep rep q d where
     genQuery =
       queryWhere @qc @q @c @d
-
 
 -- |Derives a full 'QueryTable' using a represenation type.
 -- Given a record type:

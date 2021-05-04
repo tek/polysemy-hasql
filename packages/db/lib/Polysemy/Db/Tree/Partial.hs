@@ -2,6 +2,7 @@ module Polysemy.Db.Tree.Partial where
 
 import Generics.SOP (All, hcmap, hczipWith)
 
+import Polysemy.Db.Data.Column (Auto, Product)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (FieldPath (FieldName), FieldUpdate(FieldUpdate), PartialField)
@@ -17,6 +18,7 @@ import Polysemy.Db.Tree (
   root,
   )
 import Polysemy.Db.Tree.Data (DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
+import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
@@ -31,7 +33,7 @@ instance TreePrim PartialTag PartialField a name d where
   treePrim _ =
     PartialField.Keep
 
-instance TreePayload PartialTag () d meta where
+instance TreePayload PartialTag () d meta effs where
   treePayload _ =
     ()
 
@@ -40,15 +42,17 @@ instance TreeProduct PartialTag d () where
     ()
 
 instance TreeProductElem PartialTag () () ('TreeMeta name rep d) () where
-  treeProductElem =
-    undefined
+  treeProductElem _ =
+    ((), ())
+
+instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
 
 partialTree' ::
   ∀ d c .
-  Root ('Params PartialTag () PartialField) d () c =>
+  Root (Product Auto) ('Params PartialTag () PartialField) d () c =>
   PartialTree c
 partialTree' =
-  root @('Params PartialTag () PartialField) @d ()
+  root @(Product Auto) @('Params PartialTag () PartialField) @d ()
 
 treePure :: a -> Type.Tree t n sub -> Type.Tree t n sub
 treePure =

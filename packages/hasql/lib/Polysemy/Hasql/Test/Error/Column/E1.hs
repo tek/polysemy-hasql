@@ -5,7 +5,7 @@ module Polysemy.Hasql.Test.Error.Column.E1 where
 -- import Generics.SOP (NP)
 -- import Polysemy.Db.Data.Column (Auto, Prim)
 
--- import Polysemy.Hasql.Column.Class (columns)
+-- import Polysemy.Db.Tree (columns)
 -- import Polysemy.Hasql.Type.Data.DbType (DbType, PrimType, ProdType)
 
 -- data Sub =

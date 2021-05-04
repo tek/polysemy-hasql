@@ -4,17 +4,17 @@ import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
 import Polysemy.Db.Data.Column (Auto, Con, Prim, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Hasql.Test.Error.Column.E1 ()
-import Polysemy.Test (UnitTest, runTestAuto)
-
-import Polysemy.Hasql.Column.Class (tableColumn)
+import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta
+import Polysemy.Test (UnitTest, runTestAuto)
+
+import Polysemy.Hasql.Column.Tree (tableColumn)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Hasql.QueryParams (queryParams)
 import Polysemy.Hasql.QueryRows (queryRows)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
+import Polysemy.Hasql.Test.Error.Column.E1 ()
 import qualified Polysemy.Hasql.Type.Data.DbType as Type
 
 data Summer =

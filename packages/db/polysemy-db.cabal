@@ -42,7 +42,6 @@ library
       Polysemy.Db.Data.PartialFields
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
-      Polysemy.Db.Data.TableStructure
       Polysemy.Db.Debug
       Polysemy.Db.Kind.Data.Tree
       Polysemy.Db.Partial

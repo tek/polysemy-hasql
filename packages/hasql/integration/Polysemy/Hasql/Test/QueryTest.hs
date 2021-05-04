@@ -17,6 +17,7 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Tree (SumIndexTree)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta (ADTMeta', ADTMetadata(ADTSum, ADTProd), ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Log (Log)
@@ -24,9 +25,9 @@ import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
 import Polysemy.Time (GhcTime, mkDatetime)
 
-import Polysemy.Hasql.Column.Class (SumIndexColumn, TableColumn, tableColumn)
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
+import Polysemy.Hasql.Column.Tree (TableColumn, tableColumn)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.Query (interpretQuery)
@@ -119,7 +120,7 @@ type LefCol =
 
 type XXorCols =
   [
-    SumIndexColumn,
+    SumIndexTree,
     LefCol,
     'Kind.Tree ('NamedField "Righ") '[Prim] ('Kind.Prim Bool)
   ]

@@ -29,10 +29,10 @@ library
   exposed-modules:
       Polysemy.Hasql
       Polysemy.Hasql.AtomicState
-      Polysemy.Hasql.Column.Class
       Polysemy.Hasql.Column.Data.Effect
       Polysemy.Hasql.Column.DataColumn
       Polysemy.Hasql.Column.Effect
+      Polysemy.Hasql.Column.Tree
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Crud
