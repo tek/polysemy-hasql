@@ -55,6 +55,7 @@ library
       Polysemy.Db.SOP.Error
       Polysemy.Db.SOP.FieldNames
       Polysemy.Db.SOP.HasGeneric
+      Polysemy.Db.SOP.List
       Polysemy.Db.SOP.Text
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery

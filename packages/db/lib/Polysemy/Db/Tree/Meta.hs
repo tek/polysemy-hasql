@@ -32,13 +32,13 @@ type family TreeMetaType (meta :: TreeMeta) :: Type where
 data ConMeta =
   ConMeta {
     conName :: FieldId,
-    columns :: [TreeMeta]
+    nodeMetas :: [TreeMeta]
   }
 
 data ADTMetadata =
   ADTSum { cons :: [ConMeta] }
   |
-  ADTProd { columns :: [TreeMeta] }
+  ADTProd { nodeMetas :: [TreeMeta] }
   |
   ADTEnum
   |

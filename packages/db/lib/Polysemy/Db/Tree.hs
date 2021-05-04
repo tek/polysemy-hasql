@@ -1,16 +1,17 @@
 module Polysemy.Db.Tree where
 
-import Generics.SOP (NP(Nil, (:*)))
+import Generics.SOP (I(I), NP(Nil, (:*)))
 
 import Polysemy.Db.Data.Column (Con, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName, symbolText)
+import Polysemy.Db.SOP.List (NPAsUnit (npAsUnit))
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Effect (TreeEffects)
-import Polysemy.Db.Tree.Meta (ADTMetadata (ADTProd, ADTSum), ConMeta(ConMeta), ProdDefaultRep, TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMetadata (ADTProd, ADTSum), ConMeta, ConMeta(ConMeta), ProdDefaultRep, TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data Params =
@@ -45,15 +46,14 @@ instance TreePayload tag () () meta effs where
   treePayload _ =
     ()
 
-class TreeProduct (tag :: Type) (d :: Type) (prod :: Type) | tag d -> prod where
-  treeProduct :: d -> prod
+class TreeProduct (tag :: Type) (metas :: [TreeMeta]) (d :: Type) (prod :: [Type]) | tag metas d -> prod where
+  treeProduct :: d -> NP I prod
 
-class TreeProductElem (tag :: Type) (prod :: Type) (prodTail :: Type) (meta :: TreeMeta) (a :: Type) | tag prod meta -> prodTail a where
-  treeProductElem :: prod -> (prodTail, a)
-
-instance TreeProductElem tag () () ('TreeMeta name rep d) () where
-  treeProductElem () =
-    ((), ())
+instance (
+    NPAsUnit metas ds
+  ) => TreeProduct tag metas () ds where
+  treeProduct _ =
+    npAsUnit @_ @metas
 
 class TreeConPayload (tag :: Type) (field :: FieldId) (t :: Type) where
   treeConPayload :: t
@@ -66,25 +66,26 @@ class TreeConElem (tag :: Type) (cons :: Type) (consTail :: Type) (con :: Type) 
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class ProdTrees (p :: Params) (prod :: Type) (metas :: [TreeMeta]) (trees :: [Kind.Tree]) | p prod metas -> trees where
-  prodTrees :: prod -> NP (TTree p) trees
+data ProdMeta =
+  ProdMeta {
+    pmMeta :: TreeMeta,
+    pmProd :: Type
+  }
+
+class ProdTrees (p :: Params) (prod :: [Type]) (metas :: [TreeMeta]) (trees :: [Kind.Tree]) | p prod metas -> trees where
+  prodTrees :: NP I prod -> NP (TTree p) trees
 
 instance ProdTrees p prod '[] '[] where
   prodTrees _ =
     Nil
 
--- TODO replace with hcmap or so
 instance (
     meta ~ 'TreeMeta name rep d,
-    TreeProductElem (Tag p) prod prodTail meta a,
-    Tree p a meta tree,
+    Tree p prodH meta tree,
     ProdTrees p prodTail metas trees
-  ) => ProdTrees p prod (meta : metas) (tree : trees) where
-    prodTrees p =
-      tree @p @_ @meta a :* prodTrees @p @_ @metas pt
-      where
-        (pt, a) =
-          treeProductElem @(Tag p) @_ @_ @meta p
+  ) => ProdTrees p (prodH : prodTail) (meta : metas) (tree : trees) where
+    prodTrees (I prodH :* prodTail) =
+      tree @p @_ @meta prodH :* prodTrees @p @_ @metas prodTail
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -94,22 +95,23 @@ class ConTree (p :: Params) (con :: Type) (meta :: ConMeta) (tree :: Kind.Tree) 
 instance {-# overlappable #-} (
     p ~ 'Params tag t n,
     TreeConPayload tag field t,
-    ProdTrees p con trees cs,
-    c ~ 'Kind.Tree field '[] ('Kind.Prod (Con field) cs)
-  ) => ConTree p con ('ConMeta field trees) c where
+    TreeProduct tag metas con prod,
+    ProdTrees p prod metas node,
+    tree ~ 'Kind.Tree field '[] ('Kind.Prod (Con field) node)
+  ) => ConTree p con ('ConMeta field metas) tree where
     conTree con =
-      Type.Tree (treeConPayload @tag @field) (Type.Prod (prodTrees @p @_ @trees con))
+      Type.Tree (treeConPayload @tag @field) (Type.Prod (prodTrees @p @prod @metas (treeProduct @tag @metas @con con)))
 
 instance (
     meta ~ 'TreeMeta cname rep d,
-    Tree p con meta c
-  ) => ConTree p con ('ConMeta cname '[ 'TreeMeta name rep d]) c where
+    Tree p con meta tree
+  ) => ConTree p con ('ConMeta cname '[ 'TreeMeta name rep d]) tree where
     conTree =
       tree @p @_ @meta
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class SumTrees (p :: Params) (cons :: Type) (meta :: [ConMeta]) (trees :: [Kind.Tree]) | p cons meta -> trees where
+class SumTrees (p :: Params) (cons :: Type) (metas :: [ConMeta]) (trees :: [Kind.Tree]) | p cons metas -> trees where
   sumTrees :: cons -> NP (TTree p) trees
 
 instance SumTrees p cons '[] '[] where
@@ -118,11 +120,11 @@ instance SumTrees p cons '[] '[] where
 
 instance (
     TreeConElem (Tag p) consData consTail conData,
-    ConTree p conData conMeta c,
-    SumTrees p consTail conMetas cs
-  ) => SumTrees p consData (conMeta : conMetas) (c : cs) where
+    ConTree p conData meta tree,
+    SumTrees p consTail metas trees
+  ) => SumTrees p consData (meta : metas) (tree : trees) where
     sumTrees cons =
-      conTree @p @_ @conMeta con :* sumTrees @p @_ @conMetas conTail
+      conTree @p @_ @meta con :* sumTrees @p @_ @metas conTail
       where
         (conTail, con) =
           treeConElem @(Tag p) cons
@@ -133,12 +135,12 @@ class AdtTree (p :: Params) (d :: Type) (a :: Type) (meta :: ADTMetadata) (eff :
   adtTree :: a -> TNode p node
 
 instance (
-    TreeProduct tag a prod,
-    ProdTrees p prod trees cs,
+    TreeProduct tag metas a prod,
+    ProdTrees p prod metas trees,
     p ~ 'Params tag t n
-  ) => AdtTree p d a ('ADTProd trees) '[] ('Kind.Prod d cs) where
+  ) => AdtTree p d a ('ADTProd metas) '[] ('Kind.Prod d trees) where
   adtTree a =
-    Type.Prod (prodTrees @p @prod @trees (treeProduct @tag a))
+    Type.Prod (prodTrees @p @prod @metas (treeProduct @tag @metas a))
 
 type SumIndexTree =
   'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int)
@@ -149,12 +151,12 @@ instance (
     indexMeta ~ 'TreeMeta indexName Prim Int,
     TreePrim tag n a indexName Int,
     TreePayload tag t a indexMeta '[Prim],
-    SumTrees p cons trees cs,
-    node ~ 'Kind.Sum d (SumIndexTree : cs),
+    SumTrees p cons metas trees,
+    node ~ 'Kind.Sum d (SumIndexTree : trees),
     p ~ 'Params tag t n
-  ) => AdtTree p d a ('ADTSum trees) '[] node where
+  ) => AdtTree p d a ('ADTSum metas) '[] node where
   adtTree a =
-    Type.Sum (indexTree :* sumTrees @p @_ @trees (treeCons @tag a))
+    Type.Sum (indexTree :* sumTrees @p @_ @metas (treeCons @tag a))
     where
       indexTree =
         Type.Tree indexPayload (Type.Prim (treePrim @tag @_ @_ @indexName @Int a))

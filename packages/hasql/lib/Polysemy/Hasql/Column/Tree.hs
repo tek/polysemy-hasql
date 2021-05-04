@@ -11,8 +11,6 @@ import Polysemy.Db.Tree (
   TreeCons(..),
   TreePayload(..),
   TreePrim(..),
-  TreeProduct(..),
-  TreeProductElem(..),
   )
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
@@ -40,14 +38,6 @@ type DbParams = 'Params DbTag ColumnData Proxy
 instance TreePrim DbTag Proxy a name d where
   treePrim _ =
     Proxy
-
-instance TreeProduct DbTag d () where
-  treeProduct _ =
-    ()
-
-instance TreeProductElem DbTag () () ('TreeMeta name rep d) () where
-  treeProductElem () =
-    ((), ())
 
 type family MatchPrim (global :: Bool) (d :: Type) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
   MatchPrim 'True _ pre '[] = 'Right (WithPrim pre)

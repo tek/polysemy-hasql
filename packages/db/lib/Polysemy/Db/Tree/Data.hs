@@ -1,6 +1,6 @@
 module Polysemy.Db.Tree.Data where
 
-import Generics.SOP (AllZipN, I(I), NP ((:*)), NS (Z), SOP(SOP), htrans, unSOP, unZ)
+import Generics.SOP (AllZipN, I(I), NP, NS (Z), SOP(SOP), htrans, unSOP, unZ)
 import Generics.SOP.GGP (GCode, gfrom, gto)
 
 import Polysemy.Db.Data.Column (Auto, Product, Rep)
@@ -14,7 +14,6 @@ import Polysemy.Db.Tree (
   TreePayload(..),
   TreePrim(..),
   TreeProduct(..),
-  TreeProductElem(..),
   )
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), TreeMetaType)
@@ -56,13 +55,9 @@ instance TreePayload DataTag () a meta effs where
 
 instance (
     ConstructSOP d '[ds]
-  ) => TreeProduct DataTag d (NP I ds) where
+  ) => TreeProduct DataTag metas d ds where
     treeProduct =
       unZ . unSOP . gfrom
-
-instance TreeProductElem DataTag (NP I (d : ds)) (NP I ds) ('TreeMeta x y d) d where
-  treeProductElem (I d :* ds) =
-    (ds, d)
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects DataTag rep d effs where
 
