@@ -8,18 +8,9 @@ import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (FieldPath (FieldName), FieldUpdate(FieldUpdate), PartialField)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Db.Tree (
-  Params(Params),
-  Root,
-  TreePayload(..),
-  TreePrim(..),
-  TreeProduct(..),
-  TreeProductElem (treeProductElem),
-  root,
-  )
+import Polysemy.Db.Tree (Params(Params), Root, TreePrim(..), TreeProduct(..), root)
 import Polysemy.Db.Tree.Data (DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data PartialTag =
@@ -33,17 +24,9 @@ instance TreePrim PartialTag PartialField a name d where
   treePrim _ =
     PartialField.Keep
 
-instance TreePayload PartialTag () d meta effs where
-  treePayload _ =
-    ()
-
-instance TreeProduct PartialTag d () where
+instance TreeProduct PartialTag () () where
   treeProduct _ =
     ()
-
-instance TreeProductElem PartialTag () () ('TreeMeta name rep d) () where
-  treeProductElem _ =
-    ((), ())
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
 

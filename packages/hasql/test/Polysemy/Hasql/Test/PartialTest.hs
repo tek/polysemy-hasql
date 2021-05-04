@@ -1,19 +1,14 @@
-{-# options_ghc -Wno-all -Wno-redundant-constraints #-}
-
 module Polysemy.Hasql.Test.PartialTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim, Product, Rep)
+import Polysemy.Db.Data.Column (Auto, Prim, Product)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Data.PartialFields (PartialFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Partial (field, partial, updatePartial, (.>))
-import Polysemy.Db.Tree (Node, Params(Params), Root, RootMeta, Tree)
-import Polysemy.Db.Tree.Data (DataTag, DataTree, dataTree)
+import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMetadata(ADTProd), TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Partial (PartialTag, PartialTree, partialTree', updatePartialTree', (...>))
-import qualified Polysemy.Db.Type.Data.Tree as Type
+import Polysemy.Db.Tree.Partial (PartialTree, partialTree', updatePartialTree', (...>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Dat =

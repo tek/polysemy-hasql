@@ -16,8 +16,8 @@ import qualified Polysemy.Db.Type.Data.Tree as Type
 data Params =
   Params {
     tag :: Type,
-    treeP :: Type,
-    nodeP :: Type -> Type
+    treeParam :: Type,
+    nodeParam :: Type -> Type
   }
 
 type family Tag (params :: Params) :: Type where
@@ -35,25 +35,33 @@ type family TTree (params :: Params) :: Kind.Tree -> Type where
 type family TNode (params :: Params) :: Kind.Node -> Type where
   TNode ('Params _ t n) = Type.Node t n
 
-class TreePrim (tag :: Type) (n :: Type -> Type) a (name :: FieldId) (d :: Type) where
+class TreePrim (tag :: Type) (n :: Type -> Type) (a :: Type) (name :: FieldId) (d :: Type) where
   treePrim :: a -> n d
 
-class TreePayload (tag :: Type) (t :: Type) a (meta :: TreeMeta) (effs :: [Type]) where
+class TreePayload (tag :: Type) (t :: Type) (a :: Type) (meta :: TreeMeta) (effs :: [Type]) where
   treePayload :: a -> t
 
-class TreeProduct (tag :: Type) d prod | tag d -> prod where
+instance TreePayload tag () () meta effs where
+  treePayload _ =
+    ()
+
+class TreeProduct (tag :: Type) (d :: Type) (prod :: Type) | tag d -> prod where
   treeProduct :: d -> prod
 
-class TreeProductElem (tag :: Type) prod prodTail (meta :: TreeMeta) a | tag prod meta -> prodTail a where
+class TreeProductElem (tag :: Type) (prod :: Type) (prodTail :: Type) (meta :: TreeMeta) (a :: Type) | tag prod meta -> prodTail a where
   treeProductElem :: prod -> (prodTail, a)
+
+instance TreeProductElem tag () () ('TreeMeta name rep d) () where
+  treeProductElem () =
+    ((), ())
 
 class TreeConPayload (tag :: Type) (field :: FieldId) (t :: Type) where
   treeConPayload :: t
 
-class TreeCons (tag :: Type) d cons | tag d -> cons where
+class TreeCons (tag :: Type) (d :: Type) (cons :: Type) | tag d -> cons where
   treeCons :: d -> cons
 
-class TreeConElem (tag :: Type) cons consTail con | tag cons -> consTail con where
+class TreeConElem (tag :: Type) (cons :: Type) (consTail :: Type) (con :: Type) | tag cons -> consTail con where
   treeConElem :: cons -> (consTail, con)
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -67,9 +75,9 @@ instance ProdTrees p prod '[] '[] where
 
 -- TODO replace with hcmap or so
 instance (
-    meta ~ 'TreeMeta name rep a,
-    TreeProductElem (Tag p) prod prodTail meta d,
-    Tree p d meta tree,
+    meta ~ 'TreeMeta name rep d,
+    TreeProductElem (Tag p) prod prodTail meta a,
+    Tree p a meta tree,
     ProdTrees p prodTail metas trees
   ) => ProdTrees p prod (meta : metas) (tree : trees) where
     prodTrees p =
@@ -130,7 +138,7 @@ instance (
     p ~ 'Params tag t n
   ) => AdtTree p d a ('ADTProd trees) '[] ('Kind.Prod d cs) where
   adtTree a =
-    Type.Prod (prodTrees @p @_ @trees (treeProduct @tag a))
+    Type.Prod (prodTrees @p @prod @trees (treeProduct @tag a))
 
 type SumIndexTree =
   'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int)
