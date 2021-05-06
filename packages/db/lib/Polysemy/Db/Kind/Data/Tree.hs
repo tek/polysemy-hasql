@@ -16,6 +16,12 @@ data Node =
     tpe :: *,
     sub :: [Tree]
   }
+  |
+  SumProd {
+    tpe :: *,
+    sub :: [Tree]
+  }
+
 
 data Tree =
   Tree {

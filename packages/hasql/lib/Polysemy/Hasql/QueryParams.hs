@@ -152,13 +152,20 @@ instance (
   queryParams =
     queryParam @eff @d
 
-instance (
+instance {-# overlappable #-} (
     ProductCoded d ds,
     ConstructSOP d '[ds],
     ProductParams ds cs
   ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d cs)) d where
   queryParams =
     queryParamsNP @ds @cs @d
+
+instance (
+    ConstructSOP d dss,
+    SumParams dss cs
+  ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d (SumIndexTree : cs))) d where
+    queryParams =
+      unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
 
 instance (
     ConstructSOP d dss,

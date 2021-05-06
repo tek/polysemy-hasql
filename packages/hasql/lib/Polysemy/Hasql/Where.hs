@@ -1,9 +1,10 @@
+{-# options_ghc -Wno-all -Wno-redundant-constraints #-}
 module Polysemy.Hasql.Where where
 
 import Data.Foldable (foldl1)
 import qualified Data.Text as Text
 import Fcf (Eval, Exp, FromMaybe, If, IsJust, Pure, Pure1, type (@@))
-import Fcf.Class.Foldable (FoldMap)
+import Fcf.Class.Foldable (FoldMap, Concat)
 import Fcf.Class.Functor (FMap)
 import GHC.TypeLits (AppendSymbol)
 import Generics.SOP (All, K(K), NP, hcollapse, hcpure)
@@ -12,6 +13,7 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdSymbol, FieldIdTex
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 import Polysemy.Db.SOP.Error (ErrorWithType, ErrorWithType2)
+import Polysemy.Db.Tree (SumIndexTree)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
@@ -213,7 +215,7 @@ instance (
     All QueryCond simple
   ) => QueryCond ('SumPrimCond q d ns) where
   queryCond =
-    fromMaybe (const "") (foldl1 (\ z a -> \ i -> (z i) <> " or " <> (a i)) <$> nonEmpty cs)
+    fromMaybe (const "") (foldl1 (\ z a -> \ i -> z i <> " or " <> a i) <$> nonEmpty cs)
     where
       cs :: [Int -> Text]
       cs =
@@ -267,11 +269,11 @@ type family ForceMaybe (d :: *) :: * where
   ForceMaybe (Maybe d) = Maybe d
   ForceMaybe d = Maybe d
 
-type family ReplicateSum (qCol :: Kind.Tree) (dCols :: [Kind.Tree]) :: [Kind.Tree] where
+type family ReplicateSum (qTree :: Kind.Tree) (dTrees :: [Kind.Tree]) :: [Kind.Tree] where
   ReplicateSum _ '[] =
     '[]
-  ReplicateSum qCol (_ : dCols) =
-    qCol : ReplicateSum qCol dCols
+  ReplicateSum qTree (_ : dTrees) =
+    qTree : ReplicateSum qTree dTrees
 
 type family SumPrimNames (q :: *) (d :: *) (cs :: [QCond]) :: [[Segment]] where
   SumPrimNames _ _ '[] =
@@ -301,7 +303,7 @@ type family MatchPrim (prefix :: [Segment]) (name :: FieldId) (q :: *) (d :: *) 
   MatchPrim prefix name q d =
     'Just '[ 'SimpleCond q d (('FieldSegment name) : prefix)]
 
-type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: QConds where
+type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QConds where
   MatchCon meta prefix ('Kind.Tree _ _ ('Kind.Prod _ q)) ('Kind.Tree conName _ ('Kind.Prod _ d)) =
     FoldMap (MatchQueryColumnE meta ('ConSegment conName : prefix) d) @@ q
   MatchCon meta prefix ('Kind.Tree qname _ ('Kind.Prim q)) ('Kind.Tree conName _ ('Kind.Prod _ d)) =
@@ -312,40 +314,36 @@ type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Tre
   MatchCon _ _ _ _ =
     '[]
 
-type family MatchQCon (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Tree) (dCols :: [Kind.Tree]) :: QConds where
-  MatchQCon _ _ _ '[] =
-    '[]
-  MatchQCon meta prefix qCol (dCol : dCols) =
-    MatchCon meta prefix qCol dCol ++ MatchQCon meta prefix qCol dCols
-
-type family MatchCons (meta :: QueryMeta) (prefix :: [Segment]) (qCols :: [Kind.Tree]) (dCols :: [Kind.Tree]) :: QConds where
+type family MatchCons (meta :: QueryMeta) (prefix :: [Segment]) (qTrees :: [Kind.Tree]) (dTrees :: [Kind.Tree]) :: QConds where
   MatchCons _ _ '[] _ = '[]
-  MatchCons meta prefix (qCol : qCols) (dCol : dCols) =
-    MatchCon meta prefix qCol dCol ++ MatchCons meta prefix qCols dCols
+  MatchCons meta prefix (qTree : qTrees) (dTree : dTrees) =
+    MatchCon meta prefix qTree dTree ++ MatchCons meta prefix qTrees dTrees
 
-type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool) (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: Maybe QConds where
+type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: Maybe QConds where
   MatchProd meta prefix 'True q ('Kind.Tree _ _ ('Kind.Prod  _ cols)) =
     MatchCols meta prefix q cols
   MatchProd meta prefix 'False ('Kind.Tree qname eff ('Kind.Prim q)) ('Kind.Tree name _ ('Kind.Prod _ cols)) =
     MatchCols meta ('FieldSegment name : prefix) ('Kind.Tree qname eff ('Kind.Prim q)) cols
+  MatchProd meta prefix 'False ('Kind.Tree name _ ('Kind.Prod _ (SumIndexTree : qTrees))) ('Kind.Tree name _ ('Kind.Prod _ (SumIndexTree : dTrees))) =
+    'Just (MatchCons meta ('SumSegment name : prefix) (SumIndexTree : qTrees) (SumIndexTree : dTrees))
   MatchProd _ _ _ _ _ =
     'Nothing
 
-type family MatchDbType (meta :: QueryMeta) (prefix :: [Segment]) (name :: FieldId) (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: Maybe QConds where
+type family MatchDbType (meta :: QueryMeta) (prefix :: [Segment]) (name :: FieldId) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: Maybe QConds where
   MatchDbType _ prefix name ('Kind.Tree _ _ ('Kind.Prim q)) ('Kind.Tree _ _ ('Kind.Prim d)) =
     MatchPrim prefix name q d
-  MatchDbType meta prefix name ('Kind.Tree _ _ ('Kind.Sum _ qCols)) ('Kind.Tree _ _ ('Kind.Sum _ dCols)) =
-    'Just (MatchCons meta ('SumSegment name : prefix) qCols dCols)
+  MatchDbType meta prefix name ('Kind.Tree _ _ ('Kind.Sum _ qTrees)) ('Kind.Tree _ _ ('Kind.Sum _ dTrees)) =
+    'Just (MatchCons meta ('SumSegment name : prefix) qTrees dTrees)
   MatchDbType _ _ name ('Kind.Tree _ _ ('Kind.Sum _ _)) ('Kind.Tree _ _ _) =
     'Just (TypeError ("Query column " <> name <> " is a sum type, but the data column is not."))
   MatchDbType _ _ name _ _ =
     'Just (TypeError ("Incompatible column kinds for " <> name))
 
-type family MatchColWithUnderscore (meta :: QueryMeta) (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (dname_ :: Symbol) (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: Maybe QConds where
-  MatchColWithUnderscore meta prefix qname qname _ qCol dCol =
-    MatchDbType meta prefix qname qCol dCol
-  MatchColWithUnderscore meta prefix qname ('NamedField dname) dname qCol dCol =
-    MatchDbType meta prefix qname qCol dCol
+type family MatchColWithUnderscore (meta :: QueryMeta) (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (dname_ :: Symbol) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: Maybe QConds where
+  MatchColWithUnderscore meta prefix qname qname _ qTree dTree =
+    MatchDbType meta prefix qname qTree dTree
+  MatchColWithUnderscore meta prefix qname ('NamedField dname) dname qTree dTree =
+    MatchDbType meta prefix qname qTree dTree
   MatchColWithUnderscore _ _ _ _ _ _ _ =
     'Nothing
 
@@ -354,27 +352,27 @@ type family MatchColWithUnderscore (meta :: QueryMeta) (prefix :: [Segment]) (qn
 -- does by passing an additional argument to 'MatchDbType', the query field name prefixed with underscore.
 -- Since product types cannot directly match, the first equation delegates them directly to 'MatchProd', ignoreing the
 -- column names.
-type family MatchCol' (meta :: QueryMeta) (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: Maybe QConds where
+type family MatchCol' (meta :: QueryMeta) (prefix :: [Segment]) (qname :: FieldId) (dname :: FieldId) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: Maybe QConds where
   MatchCol' meta prefix _ _ q ('Kind.Tree name effs ('Kind.Prod d cols)) =
     MatchProd meta prefix (ContainsFlatten effs) q ('Kind.Tree name effs ('Kind.Prod d cols))
-  MatchCol' meta prefix qname qname qCol dCol =
-    MatchDbType meta prefix qname qCol dCol
-  MatchCol' meta prefix ('NamedField qname) ('NamedField dname) qCol dCol =
-    MatchColWithUnderscore meta prefix ('NamedField qname) ('NamedField dname) (AppendSymbol "_" qname) qCol dCol
+  MatchCol' meta prefix qname qname qTree dTree =
+    MatchDbType meta prefix qname qTree dTree
+  MatchCol' meta prefix ('NamedField qname) ('NamedField dname) qTree dTree =
+    MatchColWithUnderscore meta prefix ('NamedField qname) ('NamedField dname) (AppendSymbol "_" qname) qTree dTree
   MatchCol' _ _ _ _ _ _ =
     'Nothing
 
-data MatchCol (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Tree) :: Kind.Tree -> Exp (Maybe QConds)
-type instance Eval (MatchCol meta prefix ('Kind.Tree qname qEff qCols) ('Kind.Tree dname dEff dCols)) =
-  MatchCol' meta prefix qname dname ('Kind.Tree qname qEff qCols) ('Kind.Tree dname dEff dCols)
+data MatchCol (meta :: QueryMeta) (prefix :: [Segment]) (qTree :: Kind.Tree) :: Kind.Tree -> Exp (Maybe QConds)
+type instance Eval (MatchCol meta prefix ('Kind.Tree qname qEff qTrees) ('Kind.Tree dname dEff dTrees)) =
+  MatchCol' meta prefix qname dname ('Kind.Tree qname qEff qTrees) ('Kind.Tree dname dEff dTrees)
 
-type family MatchCols (meta :: QueryMeta) (prefix :: [Segment]) (qCol :: Kind.Tree) (dCols :: [Kind.Tree]) :: Maybe QConds where
-  MatchCols meta prefix qCol dCols =
-    FirstJust (MatchCol meta prefix qCol) @@ dCols
+type family MatchCols (meta :: QueryMeta) (prefix :: [Segment]) (qTree :: Kind.Tree) (dTrees :: [Kind.Tree]) :: Maybe QConds where
+  MatchCols meta prefix qTree dTrees =
+    FirstJust (MatchCol meta prefix qTree) @@ dTrees
 
 data MatchQueryColumnE (meta :: QueryMeta) (prefix :: [Segment]) :: [Kind.Tree] -> Kind.Tree -> Exp QConds
-type instance Eval (MatchQueryColumnE meta prefix dCols qCol) =
-  FromMaybe (MissingColumn meta qCol) @@ MatchCols meta prefix qCol dCols
+type instance Eval (MatchQueryColumnE meta prefix dTrees qTree) =
+  FromMaybe (MissingColumn meta qTree) @@ MatchCols meta prefix qTree dTrees
 
 data QueryMeta =
   QueryMeta {
@@ -383,39 +381,49 @@ data QueryMeta =
     fields :: [FieldId]
   }
 
+type family NameIfSumProd (name :: FieldId) (cols :: [Kind.Tree]) :: [FieldId] where
+  NameIfSumProd name (SumIndexTree : _) =
+    '[name]
+  NameIfSumProd _ _ =
+    '[]
+
 data DbTypeFieldNames :: Kind.Tree -> Exp [FieldId]
 
 type instance Eval (DbTypeFieldNames ('Kind.Tree name _ ('Kind.Prim _))) =
   '[name]
-type instance Eval (DbTypeFieldNames ('Kind.Tree _ _ ('Kind.Prod _ cols))) =
-  FoldMap DbTypeFieldNames @@ cols
+type instance Eval (DbTypeFieldNames ('Kind.Tree name _ ('Kind.Prod _ cols))) =
+  Concat @@ [(NameIfSumProd name cols), FoldMap DbTypeFieldNames @@ cols]
 type instance Eval (DbTypeFieldNames ('Kind.Tree name _ ('Kind.Sum _ cols))) =
   name : FoldMap DbTypeFieldNames @@ cols
 
-type family MkQueryMeta (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: QueryMeta where
-  MkQueryMeta ('Kind.Tree name _ _) dCol =
-    'QueryMeta dCol name (DbTypeFieldNames @@ dCol)
+type family MkQueryMeta (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QueryMeta where
+  MkQueryMeta ('Kind.Tree name _ _) dTree =
+    'QueryMeta dTree name (DbTypeFieldNames @@ dTree)
 
-type family MatchTable (meta :: QueryMeta) (qCol :: Kind.Tree) (dCol :: Kind.Tree) :: QConds where
-  MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ qCols)) ('Kind.Tree _ _ ('Kind.Prod _ dCols)) =
-    FoldMap (MatchQueryColumnE meta '[] dCols) @@ qCols
-  MatchTable meta ('Kind.Tree n e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ dCols)) =
-    MatchQueryColumnE meta '[] dCols @@ ('Kind.Tree n e ('Kind.Prim t))
-  MatchTable meta ('Kind.Tree _ _ ('Kind.Sum _ qCols)) ('Kind.Tree _ _ ('Kind.Sum _ dCols)) =
-    MatchCons meta '[] qCols dCols
-  MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Sum _ dCols)) =
-    GroupSumPrim (MatchCons meta '[] (ReplicateSum ('Kind.Tree qn e ('Kind.Prim t)) dCols) dCols)
-  MatchTable _ qCol dCol =
-    ErrorWithType "MatchTable" '(qCol, dCol)
+type family MatchTable (meta :: QueryMeta) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QConds where
+  MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ (SumIndexTree : qTrees))) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndexTree : dTrees))) =
+    MatchCons meta '[] (SumIndexTree : qTrees) (SumIndexTree : dTrees)
+  MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ qTrees)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
+    FoldMap (MatchQueryColumnE meta '[] dTrees) @@ qTrees
+  MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndexTree : dTrees))) =
+    GroupSumPrim (MatchCons meta '[] (ReplicateSum ('Kind.Tree qn e ('Kind.Prim t)) dTrees) dTrees)
+  MatchTable meta ('Kind.Tree n e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
+    MatchQueryColumnE meta '[] dTrees @@ ('Kind.Tree n e ('Kind.Prim t))
+  MatchTable meta ('Kind.Tree _ _ ('Kind.Sum _ qTrees)) ('Kind.Tree _ _ ('Kind.Sum _ dTrees)) =
+    MatchCons meta '[] qTrees dTrees
+  MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Sum _ dTrees)) =
+    GroupSumPrim (MatchCons meta '[] (ReplicateSum ('Kind.Tree qn e ('Kind.Prim t)) dTrees) dTrees)
+  MatchTable _ qTree dTree =
+    ErrorWithType "MatchTable" '(qTree, dTree)
 
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
 -- present and matching in the data record
-class Where (qCol :: Kind.Tree) (query :: *) (dCol :: Kind.Tree) (d :: *) where
+class Where (qTree :: Kind.Tree) (query :: *) (dTree :: Kind.Tree) (d :: *) where
   queryWhere :: Data.Where d query
 
 instance (
-    fields ~ MatchTable (MkQueryMeta qCol dCol) qCol dCol,
+    fields ~ MatchTable (MkQueryMeta qTree dTree) qTree dTree,
     QueryConds fields
-  ) => Where qCol query dCol d where
+  ) => Where qTree query dTree d where
     queryWhere =
       where' (queryConds @fields)

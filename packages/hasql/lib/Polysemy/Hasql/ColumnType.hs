@@ -5,15 +5,16 @@ module Polysemy.Hasql.ColumnType where
 import qualified Chronos as Chronos
 import Data.Time (Day, DiffTime, LocalTime, TimeOfDay, TimeZone, UTCTime)
 import Data.Vector (Vector)
+import Fcf (type (@@))
 import Path (Path)
 import Polysemy.Db.Data.Column (Enum, Json, JsonB, Prim)
+import Polysemy.Db.Data.FieldId (FieldId, FieldIdSymbol)
 import Polysemy.Db.SOP.Constraint (DataName)
+import Polysemy.Db.Text.DbIdentifier (dbSymbol)
+import Polysemy.Db.Tree.Data.Effect (ADT, CustomType, Newtype, Tycon)
 import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
-
-import Polysemy.Db.Text.DbIdentifier (dbSymbol)
-import Polysemy.Db.Tree.Data.Effect (ADT, CustomType, Newtype, Tycon)
 
 class ColumnType (d :: *) where
   columnType :: Text
@@ -68,82 +69,82 @@ instance ColumnTypeOrError (ColumnTypeDefined d) d => CheckedColumnType d where
   checkedColumnType =
     columnTypeOrError @(ColumnTypeDefined d) @d
 
-class EffectfulColumnType (effs :: [*]) (d :: *) where
+class EffectfulColumnType (field :: FieldId) (effs :: [*]) (d :: *) where
   effectfulColumnType :: Text
 
 instance (
     TypeError (
-    "Cannot use '" <> 'ShowType d <> "' as a database column." %
+    "Cannot use '" <> 'ShowType d <> "' for the database column '" <> (FieldIdSymbol @@ field) <> "'." %
     "Most likely it was not derived via `Column', as it has neither `Prim', " <>
     "`Enum', 'Json' nor `ADT' in its effect stack."
     )
-  ) => EffectfulColumnType '[] d where
+  ) => EffectfulColumnType field '[] d where
     effectfulColumnType =
       "error"
 
 instance {-# overlappable #-} (
-    EffectfulColumnType effs d
-  ) => EffectfulColumnType (eff : effs) (d :: *) where
+    EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (eff : effs) (d :: *) where
     effectfulColumnType =
-      effectfulColumnType @effs @d
+      effectfulColumnType @field @effs @d
 
 instance (
     KnownSymbol name,
     DataName d name
-  ) => EffectfulColumnType (ADT meta rep : effs) d where
+  ) => EffectfulColumnType field (ADT meta rep : effs) d where
     effectfulColumnType =
       dbSymbol @name
 
 instance (
-    EffectfulColumnType effs d
-  ) => EffectfulColumnType (Newtype nt d : effs) nt where
+    EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (Newtype nt d : effs) nt where
     effectfulColumnType =
-      effectfulColumnType @effs @d
+      effectfulColumnType @field @effs @d
 
 instance (
-    EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tycon [] d : effs) [d] where
+    EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (Tycon [] d : effs) [d] where
     effectfulColumnType =
-      effectfulColumnType @effs @d <> "[]"
+      effectfulColumnType @field @effs @d <> "[]"
 
 instance (
-    EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tycon Vector d : effs) (Vector d) where
+    EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (Tycon Vector d : effs) (Vector d) where
     effectfulColumnType =
-      effectfulColumnType @effs @d <> "[]"
+      effectfulColumnType @field @effs @d <> "[]"
 
 instance (
-    EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tycon NonEmpty d : effs) (NonEmpty d) where
+    EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (Tycon NonEmpty d : effs) (NonEmpty d) where
     effectfulColumnType =
-      effectfulColumnType @effs @d <> "[]"
+      effectfulColumnType @field @effs @d <> "[]"
 
 instance (
-    EffectfulColumnType effs d
-  ) => EffectfulColumnType (Tycon Maybe d : effs) (Maybe d) where
+    EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (Tycon Maybe d : effs) (Maybe d) where
     effectfulColumnType =
-      effectfulColumnType @effs @d
+      effectfulColumnType @field @effs @d
 
 instance (
     KnownSymbol tpe
-  ) => EffectfulColumnType (CustomType tpe : effs) d where
+  ) => EffectfulColumnType field (CustomType tpe : effs) d where
     effectfulColumnType =
       dbSymbol @tpe
 
 instance (
     CheckedColumnType d
-  ) => EffectfulColumnType '[Prim] d where
+  ) => EffectfulColumnType field '[Prim] d where
     effectfulColumnType =
       checkedColumnType @d
 
-instance EffectfulColumnType '[Enum] d where
+instance EffectfulColumnType field '[Enum] d where
     effectfulColumnType =
       "text"
 
-instance EffectfulColumnType '[Json] d where
+instance EffectfulColumnType field '[Json] d where
     effectfulColumnType =
       "json"
 
-instance EffectfulColumnType '[JsonB] d where
+instance EffectfulColumnType field '[JsonB] d where
     effectfulColumnType =
       "jsonb"

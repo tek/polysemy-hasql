@@ -1,12 +1,11 @@
 module Polysemy.Hasql.DbType where
 
 import Polysemy.Db.Text.Quote (dquote)
-import qualified Polysemy.Hasql.Data.DbType as Column
-import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Prod, Sum, Prim))
 
 import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions
+import qualified Polysemy.Hasql.Data.DbType as Column
+import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Prod, Sum, Prim), Name(Name), Selector)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Hasql.Data.DbType (Name(Name), Selector)
 
 quotedName :: Column -> Text
 quotedName (Column (Name name) _ _ _ _) =
@@ -17,7 +16,7 @@ baseColumns col@(Column _ _ _ _ dbType) =
   case dbType of
     Prim -> [col]
     Prod cols -> cols
-    Sum cols -> cols
+    Sum cols -> baseColumns cols
 
 baseColumnSelectors :: Column -> [Selector]
 baseColumnSelectors =
@@ -38,4 +37,4 @@ flatColumns col@(Column _ _ _ _ dbType) =
   case dbType of
     Prim -> [col]
     Prod cols -> cols <> (flatColumns =<< cols)
-    Sum cols -> cols <> (flatColumns =<< cols)
+    Sum c -> flatColumns c

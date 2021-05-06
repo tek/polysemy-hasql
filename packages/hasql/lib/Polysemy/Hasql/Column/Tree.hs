@@ -6,7 +6,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (
   Params(Params),
   Root(..),
-  TreeConElem(..),
+  SumOrProd,
   TreeConPayload(..),
   TreeCons(..),
   TreePayload(..),
@@ -34,6 +34,7 @@ data DbTag =
 
 type DbTree = Type.Tree ColumnData Proxy
 type DbParams = 'Params DbTag ColumnData Proxy
+instance SumOrProd DbTag 'False
 
 instance TreePrim DbTag Proxy a name d where
   treePrim _ =
@@ -53,12 +54,12 @@ instance (
 instance TreeEffectsFor DbTag rep d effs => TreeEffects DbTag rep d effs
 
 instance (
-    EffectfulColumnType effs d,
+    EffectfulColumnType name effs d,
     ImplicitColumnOptions d,
     RepOptions (RepToList rep)
-  ) => TreePayload DbTag ColumnData () ('TreeMeta name rep d) effs where
+  ) => TreePayload DbTag ColumnData a ('TreeMeta name rep d) effs where
     treePayload _ =
-      ColumnData (effectfulColumnType @effs @d) options
+      ColumnData (effectfulColumnType @name @effs @d) options
       where
         options =
           repOptions @(RepToList rep) <> implicitColumnOptions @d
@@ -72,10 +73,6 @@ instance (
 instance TreeCons DbTag d () where
   treeCons _ =
     ()
-
-instance TreeConElem DbTag () () () where
-  treeConElem _ =
-    ((), ())
 
 class TableColumn (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree where
   tableColumn :: DbTree tree

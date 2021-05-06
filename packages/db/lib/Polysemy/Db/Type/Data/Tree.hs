@@ -1,7 +1,7 @@
 module Polysemy.Db.Type.Data.Tree where
 
 import qualified Data.Text as Text
-import Generics.SOP (All, Compose, K(K), NP, hcmap, hcollapse)
+import Generics.SOP (All, Compose, K(K), NP, NS, hcmap, hcollapse)
 import qualified Text.Show as Show
 
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
@@ -12,7 +12,8 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 data Node (t :: Type) (n :: Type -> Type) :: Kind.Node -> Type where
   Prim :: n d -> Node t n ('Kind.Prim d)
   Prod :: NP (Tree t n) sub -> Node t n ('Kind.Prod d sub)
-  Sum :: NP (Tree t n) sub -> Node t n ('Kind.Sum d sub)
+  Sum :: NS (Tree t n) sub -> Node t n ('Kind.Sum d sub)
+  SumProd :: NP (Tree t n) sub -> Node t n ('Kind.SumProd d sub)
 
 instance Show (n d) => Show (Node t n ('Kind.Prim d)) where
   show (Prim n) =
@@ -28,7 +29,13 @@ instance (
     All (Compose Show (Tree t n)) sub
   ) => Show (Node t n ('Kind.Sum d sub)) where
   show (Sum sub) =
-    [qt|Prod [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+    [qt|Sum [#{hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub)}]|]
+
+instance (
+    All (Compose Show (Tree t n)) sub
+  ) => Show (Node t n ('Kind.SumProd d sub)) where
+  show (SumProd sub) =
+    [qt|SumProd [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
 
 data Tree (t :: Type) (n :: Type -> Type) :: Kind.Tree -> Type where
   Tree :: t -> Node t n node -> Tree t n ('Kind.Tree name eff node)
@@ -40,6 +47,7 @@ data ColumnData =
   }
   deriving (Eq, Show)
 
+-- TODO move to hasql
 type DbType = Node ColumnData Proxy
 type Column = Tree ColumnData Proxy
 

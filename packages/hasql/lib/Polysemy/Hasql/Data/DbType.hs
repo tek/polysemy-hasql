@@ -8,7 +8,7 @@ data DbType =
   |
   Prod { cols :: [Column] }
   |
-  Sum { cols :: [Column] }
+  Sum { sumCols :: Column }
   deriving (Eq, Show)
 
 newtype Name =

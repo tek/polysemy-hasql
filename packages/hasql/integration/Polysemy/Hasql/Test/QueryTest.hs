@@ -126,7 +126,7 @@ type XXorCols =
   ]
 
 type XXorType rep =
-  'Kind.Sum XXor XXorCols
+  'Kind.Prod XXor XXorCols
 
 type ContentNumberMeta =
   'ADTProd '[
@@ -165,7 +165,7 @@ type DatType name rep sumRep =
         )
       ]
     ),
-    'Kind.Tree ('NamedField "xxor") '[ADT (ADTMeta' sumRep XXor) sumRep] ('Kind.Sum XXor XXorCols),
+    'Kind.Tree ('NamedField "xxor") '[ADT (ADTMeta' sumRep XXor) sumRep] ('Kind.Prod XXor XXorCols),
     'Kind.Tree ('NamedField "created") '[Newtype CreationTime UTCTime, Prim] ('Kind.Prim CreationTime)
   ])
 

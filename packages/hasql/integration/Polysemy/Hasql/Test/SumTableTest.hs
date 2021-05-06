@@ -25,7 +25,7 @@ type SumTabMeta =
   ADTMeta' (Product Auto) SumTab
 
 type SumTabType =
-  'Kind.Tree ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.Sum SumTab '[
+  'Kind.Tree ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.Prod SumTab '[
     SumIndexTree,
     'Kind.Tree ('NamedField "SumTabOne") '[] ('Kind.Prod (Con ('NamedField "SumTabOne")) '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),

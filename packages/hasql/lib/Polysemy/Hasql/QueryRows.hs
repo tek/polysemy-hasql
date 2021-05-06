@@ -71,13 +71,27 @@ instance (
 class QueryRows (rep :: Kind.Tree) (d :: *) where
   queryRows :: Row d
 
-instance (
+instance {-# overlappable #-} (
     ReifySOP d '[ds],
     ProductCoded d ds,
     ProductRows ds cs
   ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d cs)) d where
     queryRows =
       gto . SOP . Z <$> hsequence (productRows @ds @cs)
+
+instance (
+    ReifySOP d dss,
+    SumRows dss cs
+  ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d (SumIndexTree : cs))) d where
+    queryRows =
+      gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
+
+instance (
+    ReifySOP d dss,
+    SumRows dss cs
+  ) => QueryRows ('Kind.Tree n eff ('Kind.SumProd d (SumIndexTree : cs))) d where
+    queryRows =
+      gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
 
 instance (
     ReifySOP d dss,

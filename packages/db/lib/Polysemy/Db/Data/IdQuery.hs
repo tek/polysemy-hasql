@@ -6,8 +6,12 @@ data IdQuery i =
   IdQuery { id :: i }
   deriving (Eq, Show, Generic)
 
-data IdQueryRep =
-  IdQueryRep { id :: Prim }
+data IdQueryRep i =
+  IdQueryRep { id :: i }
+  deriving (Eq, Show, Generic)
+
+data IdQueryPrimRep =
+  IdQueryPrimRep { id :: Prim }
   deriving (Eq, Show, Generic)
 
 type UuidQuery =

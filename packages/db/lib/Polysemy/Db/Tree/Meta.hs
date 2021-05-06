@@ -3,7 +3,7 @@
 
 module Polysemy.Db.Tree.Meta where
 
-import Fcf (Eval, FromMaybe, type (@@))
+import Fcf (Eval, FromMaybe, type (@@), Exp)
 import GHC.TypeLits (AppendSymbol)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo(Newtype, ADT))
@@ -15,6 +15,7 @@ import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField), FieldIdSymb
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.SOP.FieldNames (FieldIds)
+import Fcf.Class.Functor (FMap)
 
 type Ids =
   [[FieldId]]
@@ -29,11 +30,20 @@ data TreeMeta =
 type family TreeMetaType (meta :: TreeMeta) :: Type where
   TreeMetaType ('TreeMeta _ _ tpe) = tpe
 
+data TreeMetaTypeF :: TreeMeta -> Exp Type
+type instance Eval (TreeMetaTypeF meta) = TreeMetaType meta
+
+type family TreeMetaTypes (metas :: [TreeMeta]) :: [Type] where
+  TreeMetaTypes metas = FMap TreeMetaTypeF @@ metas
+
 data ConMeta =
   ConMeta {
     conName :: FieldId,
     nodeMetas :: [TreeMeta]
   }
+
+type family ConMetaTypes (meta :: ConMeta) :: [Type] where
+  ConMetaTypes ('ConMeta _ nodes) = TreeMetaTypes nodes
 
 data ADTMetadata =
   ADTSum { cons :: [ConMeta] }

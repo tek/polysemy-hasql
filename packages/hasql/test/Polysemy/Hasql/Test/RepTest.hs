@@ -181,7 +181,7 @@ type DatType =
       ,
       ProddoType "proddo"
       ,
-      'Kind.Tree ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.Sum Summer SummerConssType)
+      'Kind.Tree ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.Prod Summer SummerConssType)
       ,
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom)
       ,
@@ -207,7 +207,7 @@ type DatTypeAuto =
     'Kind.Prod Dat [
       PrimMaybeDouble "double",
       'Kind.Tree ('NamedField "proddo") '[ ADT ProddoMeta Auto] ProddoTypeAuto,
-      'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.Sum Summer SummerConssType),
+      'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.Prod Summer SummerConssType),
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom),
       NewtType,
       'Kind.Tree ('NamedField "nummo") '[Tycon [] Nummo, Enum] ('Kind.Prim [Nummo]),
@@ -275,7 +275,7 @@ datTargetWith flattyColumns =
     Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
       Data.Column "pr_int" "(\"proddo\").\"pr_int\"" "bigint" def Data.Prim
     ]),
-    Data.Column "summer" "\"summer\"" "summer" def (Data.Sum [
+    Data.Column "summer" "\"summer\"" "summer" def (Data.Prod [
       Data.Column "sum_index" "(\"summer\").\"sum_index\"" "bigint" def (Data.Prim),
       Data.Column "summer1" "(\"summer\").\"summer1\"" "text" def Data.Prim,
       Data.Column "summer2" "(\"summer\").\"summer2\"" "summer2" def (Data.Prod [

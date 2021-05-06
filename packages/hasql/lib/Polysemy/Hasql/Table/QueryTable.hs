@@ -14,13 +14,13 @@ class GenQuery (qrep :: *) (rep :: *) (q :: *) (d :: *) where
   genQuery :: Data.Where d q
 
 instance (
-    TableColumn rep d c,
-    TableColumn qrep q qc,
-    Where qc q c d
+    TableColumn rep d dTree,
+    TableColumn qrep q qTree,
+    Where qTree q dTree d
   ) =>
   GenQuery qrep rep q d where
     genQuery =
-      queryWhere @qc @q @c @d
+      queryWhere @qTree @q @dTree @d
 
 -- |Derives a full 'QueryTable' using a represenation type.
 -- Given a record type:
@@ -44,14 +44,14 @@ class (
     genQueryTable :: QueryTable q d
 
 instance (
-    TableColumn rep d c,
-    TableColumn qrep q qc,
+    TableColumn rep d dTree,
+    TableColumn qrep q qTree,
     GenTable rep d,
-    QueryParams qc q,
+    QueryParams qTree q,
     GenQuery qrep rep q d
   ) => GenQueryTable qrep rep q d where
     genQueryTable =
-      QueryTable (genTable @rep @d) (queryParams @qc @q) (genQuery @qrep @rep @q @d)
+      QueryTable (genTable @rep @d) (queryParams @qTree @q) (genQuery @qrep @rep @q @d)
 
 queryTable ::
   ∀ q d .

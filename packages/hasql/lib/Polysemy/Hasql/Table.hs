@@ -115,6 +115,7 @@ initProd connection name selector columns = do
       runStatement connection ()
 
 -- TODO use effects for running statements
+-- TODO fix undefined
 initType ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
@@ -126,8 +127,10 @@ initType connection (Column _ _ tpe _ dbType) =
       unit
     Data.Prod columns ->
       initProd connection (Name tpe) (nameSelector tpe) columns
-    Data.Sum columns ->
+    Data.Sum (Column _ _ _ _ (Data.Prod columns)) ->
       initProd connection (Name tpe) (nameSelector tpe) columns
+    _ ->
+      undefined
 
 createTable ::
   Members [Embed IO, Stop QueryError] r =>
