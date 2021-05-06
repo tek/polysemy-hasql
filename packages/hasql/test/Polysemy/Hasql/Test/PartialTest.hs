@@ -6,7 +6,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMetadata(ADTProd), TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Partial (PartialTree, partial, updatePartial, (...>))
+import Polysemy.Db.Tree.Partial (PartialTree, partial, updatePartial, (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Polysemy.Hasql.Test.Partial.Data.DatS (DatSPartialTree, DatS (DatS1), DatSDataTree)
 import Polysemy.Db.Partial (field)
@@ -49,7 +49,7 @@ target =
 
 partialUpdateTree :: PartialTree DatTree
 partialUpdateTree =
-  partial @Dat ...> field @"int" (5 :: Int) ...> field @"double" (17.5 :: Double)
+  partial @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
 
 test_partialTree :: UnitTest
 test_partialTree =
@@ -58,7 +58,7 @@ test_partialTree =
 
 partialUpdateTreeSum :: PartialTree DatSPartialTree
 partialUpdateTreeSum =
-  partial @DatS ...> field @"id" (5 :: Int) ...> field @"double1" (17.5 :: Double)
+  partial @DatS +> field @"id" (5 :: Int) +> field @"double1" (17.5 :: Double)
 
 recordS :: DatS
 recordS =

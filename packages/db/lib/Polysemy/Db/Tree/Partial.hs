@@ -71,9 +71,15 @@ instance (
   insertFieldTree (FieldUpdate a) (Type.Tree t _) =
     Type.Tree t (Type.Prim (PartialField.Update (symbolText @name) a))
 
-instance {-# overlappable #-} InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) effs _n) where
+instance {-# overlappable #-} InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) effs ('Kind.Prim _d)) where
   insertFieldTree _ =
     id
+
+instance (
+    All (InsertFieldTree ('FieldName name) a) trees
+  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) effs ('Kind.Prod d trees)) where
+  insertFieldTree update (Type.Tree t (Type.Prod trees)) =
+    Type.Tree t (Type.Prod (hcmap (Proxy @(InsertFieldTree ('FieldName name) a)) (insertFieldTree update) trees))
 
 class InsertField (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
   insertField :: FieldUpdate path a -> PartialTree t -> PartialTree t
@@ -84,12 +90,12 @@ instance (
   insertField update (Type.Tree t n) =
     Type.Tree t (insertFieldNode @path @a @n update n)
 
-(...>) ::
+(+>) ::
   InsertField path a t =>
   PartialTree t ->
   FieldUpdate path a ->
   PartialTree t
-(...>) =
+(+>) =
   flip insertField
 
 class UpdatePartialProd (ds :: [Kind.Tree]) (us :: [Kind.Tree]) where
