@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.Partial.Data.DatS where
 
-import Polysemy.Db.Tree.Meta (ConMeta(ConMeta), TreeMeta(TreeMeta), ADTMetadata (ADTSum))
+import Polysemy.Db.Tree.Meta (ConMeta(ConMeta), TreeMeta(TreeMeta), AdtMetadata (AdtSum))
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Column (Auto, Prim, Con)
 import Polysemy.Db.Tree.Data.Effect (ADT)
@@ -32,7 +32,7 @@ type DatSAdtMetas =
   ]
 
 type DatSAdtMeta =
-  'ADTSum DatSAdtMetas
+  'AdtSum DatSAdtMetas
 
 type DatSTreeEffs =
   '[ADT DatSAdtMeta Auto]

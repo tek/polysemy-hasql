@@ -89,13 +89,6 @@ instance (
 instance (
     ReifySOP d dss,
     SumRows dss cs
-  ) => QueryRows ('Kind.Tree n eff ('Kind.SumProd d (SumIndexTree : cs))) d where
-    queryRows =
-      gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
-
-instance (
-    ReifySOP d dss,
-    SumRows dss cs
   ) => QueryRows ('Kind.Tree n eff ('Kind.Sum d (SumIndexTree : cs))) d where
   queryRows =
     gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])

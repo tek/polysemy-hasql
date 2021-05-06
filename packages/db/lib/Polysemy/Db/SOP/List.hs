@@ -1,6 +1,6 @@
 module Polysemy.Db.SOP.List where
 
-import Fcf (Eval, Exp, Pure, type (@@))
+import Fcf (Eval, Exp, Pure, type (@@), If, IsJust)
 import Fcf.Class.Functor (FMap)
 import Generics.SOP (I(I), NP, K(K), htrans, hpure, All, Top, SameShapeAs)
 import Generics.SOP.Constraint (AllZipF)
@@ -34,3 +34,9 @@ instance (
   ) => NPAsUnit xs ys where
   npAsUnit =
     htrans (Proxy @(KToI ())) kToI (hpure (K ()) :: NP (K ()) xs)
+
+data FirstJust :: (a -> Exp (Maybe b)) -> [a] -> Exp (Maybe b)
+type instance Eval (FirstJust _ '[]) =
+  'Nothing
+type instance Eval (FirstJust p (a : as)) =
+  If (IsJust @@ (p @@ a)) (Pure (p @@ a)) @@ (FirstJust p as)

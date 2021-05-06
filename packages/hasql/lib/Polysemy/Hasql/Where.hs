@@ -4,7 +4,7 @@ module Polysemy.Hasql.Where where
 import Data.Foldable (foldl1)
 import qualified Data.Text as Text
 import Fcf (Eval, Exp, FromMaybe, If, IsJust, Pure, Pure1, type (@@))
-import Fcf.Class.Foldable (FoldMap, Concat)
+import Fcf.Class.Foldable (Concat, FoldMap)
 import Fcf.Class.Functor (FMap)
 import GHC.TypeLits (AppendSymbol)
 import Generics.SOP (All, K(K), NP, hcollapse, hcpure)
@@ -13,6 +13,7 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdSymbol, FieldIdTex
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 import Polysemy.Db.SOP.Error (ErrorWithType, ErrorWithType2)
+import Polysemy.Db.SOP.List (FirstJust)
 import Polysemy.Db.Tree (SumIndexTree)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
@@ -258,12 +259,6 @@ type family MissingColumn (meta :: QueryMeta) (q :: Kind.Tree) :: k where
       "The database type has these columns:" %
       JoinCommaFieldIds fieldNames
     ) % 'ShowType rep)
-
-data FirstJust :: (a -> Exp (Maybe b)) -> [a] -> Exp (Maybe b)
-type instance Eval (FirstJust _ '[]) =
-  'Nothing
-type instance Eval (FirstJust p (a : as)) =
-  If (IsJust @@ (p @@ a)) (Pure (p @@ a)) @@ (FirstJust p as)
 
 type family ForceMaybe (d :: *) :: * where
   ForceMaybe (Maybe d) = Maybe d

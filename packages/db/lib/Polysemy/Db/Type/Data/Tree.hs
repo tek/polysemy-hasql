@@ -11,31 +11,26 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 -- TODO generalize Prod/Sum or make the index column first class
 data Node (t :: Type) (n :: Type -> Type) :: Kind.Node -> Type where
   Prim :: n d -> Node t n ('Kind.Prim d)
-  Prod :: NP (Tree t n) sub -> Node t n ('Kind.Prod d sub)
-  Sum :: NS (Tree t n) sub -> Node t n ('Kind.Sum d sub)
-  SumProd :: NP (Tree t n) sub -> Node t n ('Kind.SumProd d sub)
+  Prod :: n d -> NP (Tree t n) sub -> Node t n ('Kind.Prod d sub)
+  Sum :: n d -> NS (Tree t n) sub -> Node t n ('Kind.Sum d sub)
 
 instance Show (n d) => Show (Node t n ('Kind.Prim d)) where
   show (Prim n) =
     "Prim (" <> show n <> ")"
 
 instance (
+    Show (n d),
     All (Compose Show (Tree t n)) sub
   ) => Show (Node t n ('Kind.Prod d sub)) where
-  show (Prod sub) =
-    [qt|Prod [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+  show (Prod n sub) =
+    [qt|Prod #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
 
 instance (
+    Show (n d),
     All (Compose Show (Tree t n)) sub
   ) => Show (Node t n ('Kind.Sum d sub)) where
-  show (Sum sub) =
-    [qt|Sum [#{hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub)}]|]
-
-instance (
-    All (Compose Show (Tree t n)) sub
-  ) => Show (Node t n ('Kind.SumProd d sub)) where
-  show (SumProd sub) =
-    [qt|SumProd [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+  show (Sum n sub) =
+    [qt|Sum #{show @Text n} [#{hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub)}]|]
 
 data Tree (t :: Type) (n :: Type -> Type) :: Kind.Tree -> Type where
   Tree :: t -> Node t n node -> Tree t n ('Kind.Tree name eff node)
@@ -56,16 +51,18 @@ instance (Eq (Node t n ('Kind.Prim d))) where
     True
 
 instance (
-  All (Compose Eq (Tree t n)) sub
+    Eq (n d),
+    All (Compose Eq (Tree t n)) sub
   ) => (Eq (Node t n ('Kind.Prod d sub))) where
-  Prod l == Prod r =
-    l == r
+  Prod nl l == Prod nr r =
+    nl == nr && l == r
 
 instance (
-  All (Compose Eq (Tree t n)) sub
+    Eq (n d),
+    All (Compose Eq (Tree t n)) sub
   ) => (Eq (Node t n ('Kind.Sum d sub))) where
-  Sum l == Sum r =
-    l == r
+  Sum nl l == Sum nr r =
+    nl == nr && l == r
 
 instance (
     Show t,

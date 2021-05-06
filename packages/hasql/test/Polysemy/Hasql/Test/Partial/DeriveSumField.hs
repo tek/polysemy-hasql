@@ -3,7 +3,7 @@
 module Polysemy.Hasql.Test.Partial.DeriveSumField where
 
 import Polysemy.Db.Tree.Data (DataParams)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConMeta(ConMeta), ADTMetadata (ADTSum, ADTProd), ADTMeta, MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConMeta(ConMeta), AdtMetadata (AdtSum, AdtProd), ADTMeta, MaybeADT(MaybeADT))
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Column (Auto, Prim, Con)
 import Polysemy.Db.Tree (SumConTree, SumTrees, AdtTree, Tree, Node, SumNode)
@@ -47,10 +47,10 @@ type DatSFAdtMetas =
   ]
 
 type SummyAdtMeta =
-  'ADTSum DatSFAdtMetas
+  'AdtSum DatSFAdtMetas
 
 type SummyMeta =
-  'ADTSum '[
+  'AdtSum '[
     'ConMeta ('NamedField "Lefty") '[
       'TreeMeta ('NamedField "intL") Auto Int,
       'TreeMeta ('NamedField "doubleL") Auto Double
@@ -82,7 +82,7 @@ type SummyTree =
   ]
 
 type DatSFMeta =
-  'ADTProd '[
+  'AdtProd '[
     'TreeMeta ('NamedField "id") Auto Int,
     'TreeMeta ('NamedField "summy") Auto Summy
   ]

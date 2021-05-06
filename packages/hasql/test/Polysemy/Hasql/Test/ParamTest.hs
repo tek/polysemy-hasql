@@ -102,7 +102,7 @@ type SummerType =
   'Kind.Prod Summer SummerConssType
 
 type ProddoMeta =
-  'ADTProd '[ 'TreeMeta ('NamedField "prInt") Prim Int]
+  'AdtProd '[ 'TreeMeta ('NamedField "prInt") Prim Int]
 
 type SummerMeta =
   ADTMeta' (Sum SummerRep) Summer

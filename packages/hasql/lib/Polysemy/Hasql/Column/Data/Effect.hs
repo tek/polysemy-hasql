@@ -3,11 +3,11 @@ module Polysemy.Hasql.Column.Data.Effect where
 import Fcf (Eval, Exp)
 import Fcf.Class.Foldable (Any)
 import Polysemy.Db.Data.Column (Flatten)
-import Polysemy.Db.Tree.Meta (ADTMetadata)
+import Polysemy.Db.Tree.Meta (AdtMetadata)
 
 data Tycon (f :: * -> *) (d :: *)
 data Newtype (nt :: *) (d :: *)
-data ADT (meta :: ADTMetadata) (rep :: *)
+data ADT (meta :: AdtMetadata) (rep :: *)
 data CustomType (t :: Symbol)
 data NoEffect
 

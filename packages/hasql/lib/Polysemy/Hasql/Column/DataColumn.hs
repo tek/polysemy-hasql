@@ -59,7 +59,7 @@ class DataProduct (flatten :: Bool) (c :: Kind.Tree) where
 instance (
     MapColumns NP [Data.Column] cols DataProductOrFlatten
   ) => DataProduct 'True ('Kind.Tree name effs ('Kind.Prod d cols)) where
-  dataProduct prefix (Type.Tree _ (Type.Prod cols)) =
+  dataProduct prefix (Type.Tree _ (Type.Prod _ cols)) =
     join (mapColumns @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols)
 
 instance (
@@ -85,13 +85,13 @@ class DataDbType (t :: Kind.Node) where
 instance (
     MapColumns NP [Data.Column] cols DataProductOrFlatten
   ) => DataDbType ('Kind.Prod d cols) where
-  dataDbType prefix (Type.Prod cols) =
+  dataDbType prefix (Type.Prod _ cols) =
     Data.Prod (join (mapColumns @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols))
 
 instance (
     MapColumns NS Data.Column cols DataColumn
   ) => DataDbType ('Kind.Sum d cols) where
-  dataDbType prefix (Type.Sum cols) =
+  dataDbType prefix (Type.Sum _ cols) =
     Data.Sum (mapColumns @NS @_ @cols @DataColumn (dataColumn prefix) cols)
 
 instance DataDbType ('Kind.Prim d) where

@@ -30,7 +30,10 @@ data Tree =
     node :: Node
   }
 
-type family ColumnDataType (dt :: Node) :: * where
-  ColumnDataType ('Prim d) = d
-  ColumnDataType ('Prod d _) = d
-  ColumnDataType ('Sum d _) = d
+type family NodeDataType (node :: Node) :: * where
+  NodeDataType ('Prim d) = d
+  NodeDataType ('Prod d _) = d
+  NodeDataType ('Sum d _) = d
+
+type family TreeDataType (tree :: Tree) :: * where
+  TreeDataType ('Tree _ _ node) = NodeDataType node

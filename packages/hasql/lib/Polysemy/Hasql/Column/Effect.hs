@@ -4,7 +4,7 @@ import Data.Vector (Vector)
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
-import Polysemy.Db.Tree.Meta (ADTMeta, ADTMetadata(ADTEnum), MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata(AdtEnum), MaybeADT(MaybeADT))
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql.ColumnType (ColumnTypeDefined)
@@ -42,7 +42,7 @@ instance EffectfulColumn (Vector d) (Tycon Vector d) d
 
 ----------------------------------------------------------------------------------------------------
 
-class MaybeADTResolves (adt :: MaybeADT) (meta :: Maybe ADTMetadata) | adt -> meta
+class MaybeADTResolves (adt :: MaybeADT) (meta :: Maybe AdtMetadata) | adt -> meta
 
 instance {-# incoherent #-} meta ~ 'Nothing => MaybeADTResolves adt meta
 
@@ -50,7 +50,7 @@ instance meta ~ 'Just m => MaybeADTResolves ('MaybeADT m) meta
 
 ----------------------------------------------------------------------------------------------------
 
-class IsADT (rep :: *) (d :: *) (meta :: Maybe ADTMetadata) | rep d -> meta
+class IsADT (rep :: *) (d :: *) (meta :: Maybe AdtMetadata) | rep d -> meta
 
 instance MaybeADTResolves (ADTMeta rep d) meta => IsADT rep d meta
 
@@ -70,12 +70,12 @@ type WithEnum reps =
 type MatchedADT =
   Either (*, [*]) [*]
 
-type family RegularADT (meta :: ADTMetadata) (pre :: [*]) (reps :: [*]) (rep :: *) :: Either a [*] where
+type family RegularADT (meta :: AdtMetadata) (pre :: [*]) (reps :: [*]) (rep :: *) :: Either a [*] where
   RegularADT meta pre reps rep =
     'Right (pre ++ reps ++ '[ADT meta rep])
 
-type family MatchADT (meta :: Maybe ADTMetadata) (pre :: [*]) (reps :: [*]) :: MatchedADT where
-  MatchADT ('Just 'ADTEnum) '[] reps =
+type family MatchADT (meta :: Maybe AdtMetadata) (pre :: [*]) (reps :: [*]) :: MatchedADT where
+  MatchADT ('Just 'AdtEnum) '[] reps =
     'Right (Enum : reps)
   MatchADT ('Just meta) pre '[] =
     'Right (ADT meta Auto : pre)

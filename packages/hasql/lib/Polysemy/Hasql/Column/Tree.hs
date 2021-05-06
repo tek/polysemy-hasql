@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Column.Tree where
 
-import Polysemy.Db.Data.Column (Auto, ForcePrim, Prim, Rep)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField), FieldIdText, fieldIdText)
+import Polysemy.Db.Data.Column (ForcePrim, Rep)
+import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (
   Params(Params),
@@ -12,9 +12,8 @@ import Polysemy.Db.Tree (
   TreePayload(..),
   TreePrim(..),
   )
-import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
-import Polysemy.Db.Tree.Meta (ADTMetadata(ADTProd), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
 
@@ -82,31 +81,3 @@ instance (
   ) => TableColumn rep d tree where
   tableColumn =
     root @rep @DbParams @d @() def
-
-data Dat =
-  Dat {
-    int :: Int,
-    double :: Double
-  }
-  deriving (Eq, Show, Generic)
-
-type TreeEffs =
-  '[
-    ADT ('ADTProd '[
-      'TreeMeta ('NamedField "int") Auto Int,
-      'TreeMeta ('NamedField "double") Auto Double
-    ]) Auto
-  ]
-
-type DatNode =
-  'Kind.Prod Dat '[
-    'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
-  ]
-
-type TreeType =
-  'Kind.Tree ('NamedField "Dat") TreeEffs DatNode
-
-datCol :: DbTree TreeType
-datCol =
-  tableColumn @Auto @Dat

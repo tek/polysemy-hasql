@@ -13,7 +13,7 @@ homepage:       https://github.com/tek/polysemy-hasql#readme
 bug-reports:    https://github.com/tek/polysemy-hasql/issues
 author:         Torsten Schmits
 maintainer:     tek@tryp.io
-copyright:      2020 Torsten Schmits
+copyright:      2021 Torsten Schmits
 license:        BSD-2-Clause-Patent
 license-file:   LICENSE
 build-type:     Simple
@@ -66,6 +66,7 @@ library
       Polysemy.Db.Tree.Data
       Polysemy.Db.Tree.Data.Effect
       Polysemy.Db.Tree.Effect
+      Polysemy.Db.Tree.Hoist
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial
       Polysemy.Db.Type.Data.Tree

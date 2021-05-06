@@ -22,3 +22,12 @@ type family JoinComma (ns :: [ErrorMessage]) :: ErrorMessage where
 type family JoinCommaSym (ns :: [Symbol]) :: ErrorMessage where
   JoinCommaSym (n : n1 : ns) = 'Text n <> ", " <> JoinCommaSym (n1 : ns)
   JoinCommaSym '[n] = 'Text n
+
+type family QuotedError (msg :: ErrorMessage) :: ErrorMessage where
+  QuotedError err = "'" <> err <> "'"
+
+type family Quoted (s :: Symbol) :: ErrorMessage where
+  Quoted s = QuotedError ('Text s)
+
+type family QuotedType (t :: Type) :: ErrorMessage where
+  QuotedType t = QuotedError ('ShowType t)

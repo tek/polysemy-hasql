@@ -9,7 +9,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndexTree, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta, ADTMetadata (ADTSum, ADTProd), ConMeta(ConMeta), MaybeADT(MaybeADT), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), ConMeta(ConMeta), MaybeADT(MaybeADT), TreeMeta(TreeMeta))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
@@ -39,7 +39,7 @@ type DatSFSum =
   ]
 
 type SummyMeta =
-  'ADTSum '[
+  'AdtSum '[
     'ConMeta ('NamedField "Lefty") '[
       'TreeMeta ('NamedField "intL") Auto Int,
       'TreeMeta ('NamedField "doubleL") Auto Double
@@ -72,7 +72,7 @@ type SummyTree =
   ]
 
 type DatSFMeta =
-  'ADTProd '[
+  'AdtProd '[
     'TreeMeta ('NamedField "id") Auto Int,
     'TreeMeta ('NamedField "summy") Auto Summy
   ]
@@ -96,13 +96,13 @@ data Q =
   deriving (Eq, Show, Generic)
 
 type QEffs =
-  ADT ('ADTProd '[ 'TreeMeta ('NamedField "id") Auto Int]) Auto
+  ADT ('AdtProd '[ 'TreeMeta ('NamedField "id") Auto Int]) Auto
 
 type QTree =
   'Kind.Tree ('NamedField "Q") '[QEffs] ('Kind.Prod Q '[ 'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int)])
 
 type IdQueryEffs =
-  ADT ('ADTProd '[ 'TreeMeta ('NamedField "id") Auto Int]) Auto
+  ADT ('AdtProd '[ 'TreeMeta ('NamedField "id") Auto Int]) Auto
 
 type IdQueryTree =
   'Kind.Tree ('NamedField "IdQuery") '[IdQueryEffs] ('Kind.Prod (IdQuery Int) '[

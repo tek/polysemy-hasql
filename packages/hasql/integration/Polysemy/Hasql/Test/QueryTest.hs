@@ -19,7 +19,7 @@ import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (SumIndexTree)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
-import Polysemy.Db.Tree.Meta (ADTMeta', ADTMetadata(ADTSum, ADTProd), ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata(AdtSum, AdtProd), ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
@@ -110,7 +110,7 @@ data ContentNumber =
   deriving (Eq, Show, Generic)
 
 type XXorMeta =
-  'ADTSum '[
+  'AdtSum '[
     'ConMeta ('NamedField "Lef") '[ 'TreeMeta ('NamedField "l") Auto Double],
     'ConMeta ('NamedField "Righ") '[ 'TreeMeta ('NamedField "r") Auto Bool]
     ]
@@ -129,7 +129,7 @@ type XXorType rep =
   'Kind.Prod XXor XXorCols
 
 type ContentNumberMeta =
-  'ADTProd '[
+  'AdtProd '[
     'TreeMeta ('NamedField "content") Auto Content,
     'TreeMeta ('NamedField "otherNumber") Auto (Maybe Int),
     'TreeMeta ('NamedField "number") Auto (Maybe (LessOrEq Int)),

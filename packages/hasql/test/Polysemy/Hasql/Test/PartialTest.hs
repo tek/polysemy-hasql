@@ -5,7 +5,7 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMetadata(ADTProd), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Partial (PartialTree, partial, updatePartial, (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Polysemy.Hasql.Test.Partial.Data.DatS (DatSPartialTree, DatS (DatS1), DatSDataTree)
@@ -20,7 +20,7 @@ data Dat =
 
 type TreeEffs =
   '[
-    ADT ('ADTProd '[
+    ADT ('AdtProd '[
       'TreeMeta ('NamedField "int") Auto Int,
       'TreeMeta ('NamedField "double") Auto Double
     ]) Auto
@@ -76,3 +76,47 @@ test_partialUpdateSum :: UnitTest
 test_partialUpdateSum =
   runTestAuto do
     targetS === updatePartial partialUpdateTreeSum recordS
+
+data DatN2 =
+  DatN2a {
+    int :: Int,
+    text :: Text
+  }
+  |
+  DatN2b {
+    int2 :: Int,
+    text :: Text
+  }
+  deriving (Eq, Show, Generic)
+
+data DatN1 =
+  DatN1a { n2 :: DatN2, text :: Text }
+  |
+  DatN1b { n2 :: DatN2, n2b :: DatN2, text :: Text }
+  deriving (Eq, Show, Generic)
+
+data DatN =
+  DatN {
+    int :: Int,
+    n1 :: DatN1
+  }
+  deriving (Eq, Show, Generic)
+
+recordN :: DatN
+recordN =
+  DatN 9 (DatN1b (DatN2a 12 "datn2a") (DatN2b 43 "datn2b") "datn1b")
+
+targetN :: DatN
+targetN =
+  DatN 5 (DatN1b (DatN2a 5 "updated") (DatN2a 101 "updated 101") "updated")
+
+test_partialUpdateNestedSum :: UnitTest
+test_partialUpdateNestedSum =
+  runTestAuto do
+    targetN === updatePartial updateTree recordN
+  where
+    updateTree =
+      partial @DatN
+        +> field @"int" (5 :: Int)
+        +> field @"text" ("updated" :: Text)
+        +> field @"n2b" (DatN2a 101 "updated 101")

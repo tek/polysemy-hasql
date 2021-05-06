@@ -10,7 +10,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndexTree, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta, ADTMetadata (ADTSum, ADTProd), ConMeta(ConMeta), MaybeADT(MaybeADT), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), ConMeta(ConMeta), MaybeADT(MaybeADT), TreeMeta(TreeMeta))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
@@ -53,7 +53,7 @@ type SumIdRec =
   Uid SumPK SumId
 
 type SumPKMeta =
-  'ADTSum '[
+  'AdtSum '[
     'ConMeta ('NamedField "SumPKL") '[
       'TreeMeta ('NamedField "l") Prim Int
     ],
@@ -75,7 +75,7 @@ type SumPKNode =
   'Kind.Prod SumPK SumPKTree
 
 type SumIdMeta =
-  'ADTProd '[
+  'AdtProd '[
     'TreeMeta ('NamedField "number") Prim Int
   ]
 
@@ -89,7 +89,7 @@ type SumIdTrees =
 
 type SumIdRecEffs =
   '[
-    ADT ('ADTProd '[
+    ADT ('AdtProd '[
       'TreeMeta ('NamedField "id") (Sum SumPKRep) SumPK,
       'TreeMeta ('NamedField "payload") (Flatten SumIdRep) SumId
     ]) (Product SumIdRecRep)
@@ -102,7 +102,7 @@ type SumIdRecTree =
   ])
 
 type IdQueryEffs =
-  ADT ('ADTProd '[ 'TreeMeta ('NamedField "id") (Sum SumPKRep) SumPK]) (Product (IdQueryRep (Sum SumPKRep)))
+  ADT ('AdtProd '[ 'TreeMeta ('NamedField "id") (Sum SumPKRep) SumPK]) (Product (IdQueryRep (Sum SumPKRep)))
 
 type IdQueryTree =
   'Kind.Tree ('NamedField "IdQuery") '[IdQueryEffs] ('Kind.Prod (IdQuery SumPK) '[

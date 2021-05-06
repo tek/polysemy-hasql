@@ -11,7 +11,7 @@ import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta (
   ADTMeta,
   ADTMeta',
-  ADTMetadata(ADTProd),
+  AdtMetadata(AdtProd),
   ADTRep,
   MaybeADT(MaybeADT),
   TreeMeta(TreeMeta),
@@ -135,13 +135,13 @@ data DatRep =
   deriving (Eq, Show, Generic)
 
 type ProddoMeta =
-  'ADTProd '[ 'TreeMeta ('NamedField "prInt") Auto Int]
+  'AdtProd '[ 'TreeMeta ('NamedField "prInt") Auto Int]
 
 type FlattyMeta =
-  'ADTProd '[ 'TreeMeta ('NamedField "flat1") Prim Int, 'TreeMeta ('NamedField "flat2") Prim Text]
+  'AdtProd '[ 'TreeMeta ('NamedField "flat1") Prim Int, 'TreeMeta ('NamedField "flat2") Prim Text]
 
 type FlattyMetaAuto =
-  'ADTProd '[ 'TreeMeta ('NamedField "flat1") Auto Int, 'TreeMeta ('NamedField "flat2") Auto Text]
+  'AdtProd '[ 'TreeMeta ('NamedField "flat1") Auto Int, 'TreeMeta ('NamedField "flat2") Auto Text]
 
 type PrimDouble name =
   'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Double)
