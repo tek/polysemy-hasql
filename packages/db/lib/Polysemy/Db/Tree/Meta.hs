@@ -23,8 +23,8 @@ type Ids =
 data TreeMeta =
   TreeMeta {
     name :: FieldId,
-    rep :: *,
-    tpe :: *
+    rep :: Type,
+    tpe :: Type
   }
 
 type family TreeMetaType (meta :: TreeMeta) :: Type where
@@ -35,6 +35,15 @@ type instance Eval (TreeMetaTypeF meta) = TreeMetaType meta
 
 type family TreeMetaTypes (metas :: [TreeMeta]) :: [Type] where
   TreeMetaTypes metas = FMap TreeMetaTypeF @@ metas
+
+data ConsTreeMeta =
+  ConsTreeMeta {
+    payload :: Type,
+    meta :: TreeMeta
+  }
+
+type family ConsTreePayload (meta :: ConsTreeMeta) :: Type where
+  ConsTreePayload ('ConsTreeMeta payload _) = payload
 
 data ConMeta =
   ConMeta {

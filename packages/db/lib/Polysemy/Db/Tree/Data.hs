@@ -36,7 +36,7 @@ import Polysemy.Db.Tree (
   TreeProduct(..),
   )
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), TreeMetaType)
+import Polysemy.Db.Tree.Meta (ConsTreeMeta(ConsTreeMeta), TreeMeta(TreeMeta), TreeMetaType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data DataTag =
@@ -65,10 +65,10 @@ class GenDataTree (d :: Type) (tree :: Kind.Tree) | d -> tree where
 instance (
     RootName d name,
     meta ~ 'TreeMeta ('NamedField name) Auto d,
-    Tree DataParams d meta tree
+    Tree DataParams ('ConsTreeMeta d meta) tree
   ) => GenDataTree d tree where
     genDataTree d =
-      tree @DataParams @d @meta d
+      tree @DataParams @('ConsTreeMeta d meta) d
 
 instance TreePrim DataTag Identity d name d where
   treePrim =

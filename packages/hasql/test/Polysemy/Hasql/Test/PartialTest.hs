@@ -6,10 +6,10 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd), TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Partial (PartialTree, partial, updatePartial, (+>))
+import Polysemy.Db.Tree.Partial (PartialTree, field, partial, updatePartial, (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
-import Polysemy.Hasql.Test.Partial.Data.DatS (DatSPartialTree, DatS (DatS1), DatSDataTree)
-import Polysemy.Db.Partial (field)
+
+import Polysemy.Hasql.Test.Partial.Data.DatS (DatS (DatS1), DatSDataTree, DatSPartialTree)
 
 data Dat =
   Dat {

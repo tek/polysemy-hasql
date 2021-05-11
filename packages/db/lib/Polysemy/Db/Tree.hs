@@ -1,6 +1,7 @@
 module Polysemy.Db.Tree where
 
-import Generics.SOP (I(I), NP(Nil, (:*)), NS (Z, S), unSOP)
+import Fcf (Eval, Pure2, ZipWith)
+import Generics.SOP (AllZip, HTrans (htrans), I, NP(Nil, (:*)), NS (Z, S), unSOP)
 import Generics.SOP.GGP (gfrom)
 
 import Polysemy.Db.Data.Column (Con(Con), Prim, PrimQuery, Rep)
@@ -8,12 +9,24 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, DataName, symbolText)
+import Polysemy.Db.SOP.Fundeps (Fundeps, Fundep)
 import Polysemy.Db.SOP.List (NPAsUnit (npAsUnit))
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Effect (TreeEffects)
-import Polysemy.Db.Tree.Meta (AdtMetadata (AdtProd, AdtSum), ConMeta, ConMeta(ConMeta), ConMetaTypes, ProdDefaultRep, TreeMeta(TreeMeta), TreeMetaTypes)
+import Polysemy.Db.Tree.Meta (
+  AdtMetadata (AdtProd, AdtSum),
+  ConMeta,
+  ConMeta(ConMeta),
+  ConMetaTypes,
+  ConsTreeMeta(ConsTreeMeta),
+  ConsTreePayload,
+  ProdDefaultRep,
+  TreeMeta(TreeMeta),
+  TreeMetaTypes,
+  )
 import qualified Polysemy.Db.Type.Data.Tree as Type
+import Generics.SOP.BasicFunctors (I(I))
 
 class A a b | a -> b where
 
@@ -95,6 +108,16 @@ instance TreeConElem tag () () () where
 
 ------------------------------------------------------------------------------------------------------------------------
 
+newtype CTM (meta :: ConsTreeMeta) =
+  CTM { unCTM :: ConsTreePayload meta }
+
+class LiftCTM (p :: Type) (ctm :: ConsTreeMeta) where
+  liftCTM :: I p -> CTM ctm
+
+instance LiftCTM p ('ConsTreeMeta p meta) where
+  liftCTM (I p) =
+    CTM p
+
 -- TODO parameterize the `I`, maybe the same as `n`?
 class ProdTrees (p :: Params) (prod :: [Type]) (metas :: [TreeMeta]) (trees :: [Kind.Tree]) | p prod metas -> trees where
   prodTrees :: NP I prod -> NP (TTree p) trees
@@ -103,13 +126,35 @@ instance ProdTrees p '[] '[] '[] where
   prodTrees _ =
     Nil
 
+-- class Uncurry3 (cls :: Type -> m -> n -> Constraint) (a :: (Type, m)) (b :: n) where
+--   uncurry3 :: ∀ (r :: Type) . (cls (Eval (Fst a)) (Eval (Snd a)) b => Eval (Fst a) -> r) -> Eval (Fst a) -> r
+
+-- instance (
+--     Fundeps (Fundep (Uncurry3 (Tree p))) tmeta trees,
+--     tmeta ~ Eval (Zip prod metas)
+--   ) => ProdTrees p prod metas trees where
+--     prodTrees prod =
+--       htrans (Proxy @(Uncurry3 (Tree p))) f prod
+--       where
+--       --   ctm :: NP CTM tmeta
+--       --   ctm =
+--       --     htrans (Proxy @LiftCTM) liftCTM prod
+--         f :: ∀ x tree . Uncurry3 (Tree p) x tree => I (Eval (Fst x)) -> TTree p tree
+--         f (CTM x) = (uncurry3 tree) x
+
 instance (
-    meta ~ 'TreeMeta name rep d,
-    Tree p prodH meta tree,
-    ProdTrees p prodTail metas trees
-  ) => ProdTrees p (prodH : prodTail) (meta : metas) (tree : trees) where
-    prodTrees (I prodH :* prodTail) =
-      tree @p @_ @meta prodH :* prodTrees @p @_ @metas prodTail
+    Fundeps (Fundep (Tree p)) tmeta trees,
+    AllZip LiftCTM prod tmeta,
+    tmeta ~ Eval (ZipWith (Pure2 'ConsTreeMeta) prod metas)
+  ) => ProdTrees p prod metas trees where
+    prodTrees prod =
+      htrans (Proxy @(Tree p)) f ctm
+      where
+        ctm :: NP CTM tmeta
+        ctm =
+          htrans (Proxy @LiftCTM) liftCTM prod
+        f :: ∀ x y . Tree p x y => CTM x -> TTree p y
+        f (CTM x) = tree @p @x @y x
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -129,10 +174,11 @@ instance {-# overlappable #-} (
 
 instance (
     meta ~ 'TreeMeta cname rep d,
-    Tree p con meta tree
+    ctm ~ 'ConsTreeMeta con meta,
+    Tree p ctm tree
   ) => ConTree p con ('ConMeta cname '[ 'TreeMeta name rep d]) tree where
     conTree =
-      tree @p @_ @meta
+      tree @p @ctm
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -277,8 +323,8 @@ instance {-# overlappable #-} (
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class Tree (p :: Params) (a :: Type) (meta :: TreeMeta) (tree :: Kind.Tree) | p a meta -> tree where
-  tree :: a -> TTree p tree
+class Tree (p :: Params) (meta :: ConsTreeMeta) (tree :: Kind.Tree) | p meta -> tree where
+  tree :: ConsTreePayload meta -> TTree p tree
 
 instance (
     TreeEffects tag rep d effs,
@@ -286,9 +332,11 @@ instance (
     meta ~ 'TreeMeta name rep d,
     Node p name d a effs node,
     p ~ 'Params tag t n
-  ) => Tree p a meta ('Kind.Tree name effs node) where
+  ) => Tree p ('ConsTreeMeta a meta) ('Kind.Tree name effs node) where
     tree a =
       Type.Tree (treePayload @tag @_ @_ @meta @effs a) (node @p @name @d @_ @effs a)
+
+instance Tree p meta tree => Fundep (Tree p) meta tree where
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -322,7 +370,7 @@ class Root (rep :: Type) (p :: Params) (d :: Type) (a :: Type) (tree :: Kind.Tre
 
 instance (
     RootMeta rep d meta,
-    Tree p a meta c
+    Tree p ('ConsTreeMeta a meta) c
   ) => Root rep p d a c where
   root =
-    tree @p @a @meta
+    tree @p @('ConsTreeMeta a meta)

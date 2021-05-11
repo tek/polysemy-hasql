@@ -10,7 +10,7 @@ import Type.Errors.Pretty (type (%), type (<>))
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Data.PartialField as PartialField
-import Polysemy.Db.Data.PartialField (FieldPath (FieldName), FieldUpdate(FieldUpdate), PartialField)
+import Polysemy.Db.Data.PartialField (FieldPath (FieldPath, FieldName), FieldUpdate(FieldUpdate), PartialField)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
 import Polysemy.Db.SOP.Constraint (symbolText)
@@ -20,15 +20,17 @@ import Polysemy.Db.Tree (
   Root,
   SumIndexTree,
   SumOrProd,
+  Tree,
   TreeConPayload(..),
   TreeCons(..),
   TreePrim(..),
-  root, Tree, tree
+  root,
+  tree,
   )
-import Polysemy.Db.Tree.Data (DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree), DataParams)
+import Polysemy.Db.Tree.Data (DataParams, DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConsTreeMeta(ConsTreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 
 data PartialTag =
   PartialTag
@@ -247,13 +249,13 @@ instance (
 
 instance (
     meta ~ 'TreeMeta name Auto d,
-    Tree DataParams d meta ('Kind.Tree name eff ('Kind.Sum d subData)),
+    Tree DataParams ('ConsTreeMeta d meta) ('Kind.Tree name eff ('Kind.Sum d subData)),
     UpdatePartialSumProd subData subUpdate
   ) => UpdatePartialTree ('Kind.Tree name eff ('Kind.Sum d subData)) ('Kind.Tree name eff ('Kind.Prod d (SumIndexTree : subUpdate))) where
   updatePartialTree (Type.Tree () (Type.Sum old subData)) (Type.Tree () (Type.Prod PartialField.Keep ( _ :* subUpdate))) =
     Type.Tree () (Type.Sum old (updatePartialSumProd subData subUpdate))
   updatePartialTree (Type.Tree () (Type.Sum _ _)) (Type.Tree () (Type.Prod (PartialField.Update _ new) _)) =
-    tree @DataParams @d @meta new
+    tree @DataParams @('ConsTreeMeta d meta) new
 
 updatePartial ::
   ∀ d (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .
@@ -265,3 +267,16 @@ updatePartial ::
   d
 updatePartial updates d =
   reifyDataTree (updatePartialTree (genDataTree d) updates)
+
+type family MkFieldPath (path :: k) :: FieldPath where
+  MkFieldPath (p : ps) =
+    'FieldPath (p : ps)
+  MkFieldPath p =
+    'FieldName p
+
+field ::
+  ∀ path (a :: *) .
+  a ->
+  FieldUpdate (MkFieldPath path) a
+field =
+  FieldUpdate

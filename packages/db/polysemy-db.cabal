@@ -44,7 +44,6 @@ library
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Debug
       Polysemy.Db.Kind.Data.Tree
-      Polysemy.Db.Partial
       Polysemy.Db.Partial.Store
       Polysemy.Db.Prelude
       Polysemy.Db.Random
@@ -54,6 +53,7 @@ library
       Polysemy.Db.SOP.Contravariant
       Polysemy.Db.SOP.Error
       Polysemy.Db.SOP.FieldNames
+      Polysemy.Db.SOP.Fundeps
       Polysemy.Db.SOP.HasGeneric
       Polysemy.Db.SOP.List
       Polysemy.Db.SOP.Text
