@@ -19,7 +19,8 @@ import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
-import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata(AdtSum, AdtProd), ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata(AdtSum, AdtProd))
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
@@ -116,13 +117,13 @@ type XXorMeta =
     ]
 
 type LefCol =
-  'Kind.Tree ('NamedField "Lef") '[Prim] ('Kind.Prim Double)
+  'Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Double)
 
 type XXorCols =
   [
     SumIndex,
     LefCol,
-    'Kind.Tree ('NamedField "Righ") '[Prim] ('Kind.Prim Bool)
+    'Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Bool)
   ]
 
 type XXorType rep =

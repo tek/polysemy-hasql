@@ -3,7 +3,7 @@
 module Polysemy.Hasql.Test.Tree.DeriveSumField where
 
 import Polysemy.Db.Tree.Data (DataParams)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConMeta(ConMeta), AdtMetadata (AdtSum, AdtProd), ADTMeta, MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum, AdtProd), ADTMeta, MaybeADT(MaybeADT))
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Column (Auto, Prim, Con)
 import Polysemy.Db.Tree (SumConTree, SumTrees, AdtTree, Tree, Node, SumNode)

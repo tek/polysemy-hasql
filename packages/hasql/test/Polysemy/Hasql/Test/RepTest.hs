@@ -8,13 +8,13 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (tree)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (
   ADTMeta,
   ADTMeta',
-  AdtMetadata(AdtProd),
   ADTRep,
+  AdtMetadata(AdtProd),
   MaybeADT(MaybeADT),
-  TreeMeta(TreeMeta),
   )
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)

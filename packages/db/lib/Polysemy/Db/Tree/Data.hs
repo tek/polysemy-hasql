@@ -8,14 +8,14 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ReifySOP)
 import Polysemy.Db.Tree (
-  Params(Params),
-  RootName,
   ProdForSumTree,
+  RootName,
   Tree(..),
-  TreeConPayload(..),
   )
+import Polysemy.Db.Tree.Api (TreeConPayload(..))
+import Polysemy.Db.Tree.Data.Params (Params(Params))
+import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta), TreeMetaType)
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), TreeMetaType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data DataTag =
@@ -31,8 +31,8 @@ type DataNode = Type.Node () I
 type DataParams = 'Params DataTag () I I
 type ExpandedDataParams = 'Params ExpandedDataTag () Maybe Maybe
 
-instance ProdForSumTree DataTag 'True
-instance ProdForSumTree ExpandedDataTag 'False
+instance ProdForSumTree DataTag 'False
+instance ProdForSumTree ExpandedDataTag 'True
 
 type family DataTreeCols (meta :: TreeMeta) :: [[Type]] where
   DataTreeCols meta =
@@ -47,7 +47,7 @@ instance (
     Tree DataParams meta tree
   ) => GenDataTree d tree where
     genDataTree d =
-      tree @DataParams @meta (pure d)
+      tree @DataParams @meta (TM (pure d))
 
 instance TreeConPayload DataTag name () where
   treeConPayload =

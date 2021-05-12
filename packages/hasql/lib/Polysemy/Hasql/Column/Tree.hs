@@ -4,16 +4,11 @@ import Generics.SOP (K(K))
 import Polysemy.Db.Data.Column (ForcePrim, Rep)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (
-  Params(Params),
-  Root(..),
-  ProdForSumTree,
-  TreeConPayload(..),
-  TreePayload(..),
-  TreePrim(..),
-  )
+import Polysemy.Db.Tree (ProdForSumTree, Root(..))
+import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..), TreePrim(..))
+import Polysemy.Db.Tree.Data.Params (Params(Params))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
 
@@ -33,7 +28,7 @@ data DbTag =
 
 type DbTree = Type.Tree ColumnData Proxy
 type DbParams = 'Params DbTag ColumnData Proxy (K ())
-instance ProdForSumTree DbTag 'False
+instance ProdForSumTree DbTag 'True
 
 instance TreePrim DbTag Proxy a name d where
   treePrim _ =

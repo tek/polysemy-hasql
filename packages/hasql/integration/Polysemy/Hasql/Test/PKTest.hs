@@ -13,7 +13,8 @@ import Polysemy.Db.Data.Uid (Uid(Uid))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Tree as Tree
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
-import Polysemy.Db.Tree.Meta (ADTMeta', TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
@@ -65,7 +66,7 @@ type RecType =
   ])
 
 testDerivation ::
-  Tree.Tree DbParams () ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
+  Tree.Tree DbParams ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
   ()
 testDerivation =
   ()

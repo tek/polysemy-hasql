@@ -1,11 +1,12 @@
 module Polysemy.Hasql.Test.Tree.Data.DatS where
 
-import Polysemy.Db.Tree.Meta (ConMeta(ConMeta), TreeMeta(TreeMeta), AdtMetadata (AdtSum))
+import Polysemy.Db.Data.Column (Auto, Con, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Data.Column (Auto, Prim, Con)
-import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree (SumIndex)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Tree (SumIndex)
+import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum))
 
 data DatS =
   DatS1 { id :: Int, double1 :: Double }

@@ -6,7 +6,6 @@ import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (AdtTree, Node, Tree)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)

@@ -6,10 +6,10 @@ import Generics.SOP (I(I))
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, ProdTrees, TM(TM), Tree, TreeProduct)
+import Polysemy.Db.Tree (AdtTree, Node, ProdTrees, Tree, TreeProduct)
 import Polysemy.Db.Tree.Data (DataParams, DataTag)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Where (Where)

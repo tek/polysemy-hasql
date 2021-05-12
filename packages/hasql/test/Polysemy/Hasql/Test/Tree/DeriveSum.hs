@@ -2,16 +2,16 @@
 
 module Polysemy.Hasql.Test.Tree.DeriveSum where
 
-import Generics.SOP (I(I), K)
+import Generics.SOP (K)
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Tree (AdtTree, Node, SumNode, SumTrees, TM(TM), Tree)
+import Polysemy.Db.Tree (AdtTree, Node, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Partial (PartialParams, PartialTag)
 import Polysemy.Test (UnitTest)
-import Polysemy.Hasql.Column.Tree ()
 
+import Polysemy.Hasql.Column.Tree ()
 import Polysemy.Hasql.Test.Tree.Data.DatS (
   DatS,
   DatSAdtMeta,
@@ -21,7 +21,6 @@ import Polysemy.Hasql.Test.Tree.Data.DatS (
   DatSDataTrees,
   DatSPartialNode,
   DatSPartialTree,
-  DatSSum,
   DatSTreeEffs,
   )
 import Polysemy.Hasql.Where (Where)
@@ -32,9 +31,8 @@ datSDerivation ::
   meta ~ 'TreeMeta ('NamedField "DatS") Auto DatS =>
   node ~ DatSDataNode =>
   effs ~ DatSTreeEffs =>
-  ns ~ DatSSum =>
-  SumTrees p ns DatSAdtMetas DatSDataTrees =>
-  SumNode p 'True DatS DatSAdtMetas node =>
+  SumTrees p DatSAdtMetas DatSDataTrees =>
+  SumNode p 'False DatS DatSAdtMetas node =>
   AdtTree p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSDataTree =>
@@ -52,7 +50,7 @@ datSPartialDerivation ::
   metas ~ DatSAdtMetas =>
   node ~ DatSPartialNode =>
   effs ~ DatSTreeEffs =>
-  SumNode p 'False DatS DatSAdtMetas node =>
+  SumNode p 'True DatS DatSAdtMetas node =>
   AdtTree p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSPartialTree =>

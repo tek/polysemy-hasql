@@ -63,13 +63,15 @@ library
       Polysemy.Db.Text.DbIdentifier
       Polysemy.Db.Text.Quote
       Polysemy.Db.Tree
+      Polysemy.Db.Tree.Api
       Polysemy.Db.Tree.Data
       Polysemy.Db.Tree.Data.Effect
+      Polysemy.Db.Tree.Data.Params
+      Polysemy.Db.Tree.Data.TreeMeta
       Polysemy.Db.Tree.Effect
       Polysemy.Db.Tree.Hoist
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial
-      Polysemy.Db.Tree.Unfold
       Polysemy.Db.Type.Data.Tree
   other-modules:
       Prelude
