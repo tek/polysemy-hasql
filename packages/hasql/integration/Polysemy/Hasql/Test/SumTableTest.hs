@@ -4,7 +4,7 @@ import Polysemy.Db.Data.Column (Auto, Con, Prim, PrimQuery, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Data.Store as Store
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (SumIndexTree)
+import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (Hedgehog, UnitTest, assertJust)
@@ -26,7 +26,7 @@ type SumTabMeta =
 
 type SumTabType =
   'Kind.Tree ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.Prod SumTab '[
-    SumIndexTree,
+    SumIndex,
     'Kind.Tree ('NamedField "SumTabOne") '[] ('Kind.Prod (Con ('NamedField "SumTabOne")) '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "text") '[Prim] ('Kind.Prim Text)

@@ -1,4 +1,4 @@
-module Polysemy.Db.Tree where
+module Polysemy.Db.Tree.Unfold where
 
 import Generics.SOP (AllZip, HTrans (htrans), I(I), K(K), LiftedCoercible, NP(Nil, (:*)), NS (Z, S), POP(POP), SListI, hcoerce, hindex, hpure, unI, unSOP, unZ)
 import Generics.SOP.GGP (gfrom)

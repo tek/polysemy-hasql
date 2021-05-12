@@ -1,39 +1,36 @@
 module Polysemy.Db.SOP.List where
 
-import Fcf (Eval, Exp, Pure, type (@@), If, IsJust)
+import Fcf (ConstFn, Eval, Exp, If, IsJust, Pure, type (@@))
 import Fcf.Class.Functor (FMap)
-import Generics.SOP (I(I), NP, K(K), htrans, hpure, All, Top, SameShapeAs)
+import Generics.SOP (All, K(K), NP, SameShapeAs, Top, hpure, htrans)
 import Generics.SOP.Constraint (AllZipF)
 
-data ConstF :: a -> b -> Exp a
-type instance Eval (ConstF a _) = Pure @@ a
-
 type family As (a :: Type) (xs :: [k]) :: [l] where
-  As a xs = FMap (ConstF a) @@ xs
+  As a xs = FMap (ConstFn a) @@ xs
 
-type family AsUnit (xs :: [k]) :: [*] where
+type family AsUnit (xs :: [k]) :: [Type] where
   AsUnit xs = As () xs
 
-class KToI a x y where
-  kToI :: K a x -> I y
+class KToI f a x y where
+  kToI :: K a x -> f y
 
-instance KToI a x () where
+instance Applicative f => KToI f a x () where
   kToI (K _) =
-    I ()
+    pure ()
 
-class NPAsUnit (xs :: [k]) (ys :: [*]) | xs -> ys where
-  npAsUnit :: NP I ys
+class NPAsUnit (f :: Type -> Type) (xs :: [k]) (ys :: [Type]) | xs -> ys where
+  npAsUnit :: NP f ys
 
 instance (
     All Top xs,
     All Top ys,
     SameShapeAs xs ys,
     SameShapeAs ys xs,
-    AllZipF (KToI ()) xs ys,
+    AllZipF (KToI f ()) xs ys,
     ys ~ AsUnit xs
-  ) => NPAsUnit xs ys where
+  ) => NPAsUnit f xs ys where
   npAsUnit =
-    htrans (Proxy @(KToI ())) kToI (hpure (K ()) :: NP (K ()) xs)
+    htrans (Proxy @(KToI f ())) kToI (hpure (K ()) :: NP (K ()) xs)
 
 data FirstJust :: (a -> Exp (Maybe b)) -> [a] -> Exp (Maybe b)
 type instance Eval (FirstJust _ '[]) =

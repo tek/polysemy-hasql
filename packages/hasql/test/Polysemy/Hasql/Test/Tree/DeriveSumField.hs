@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-all -Wno-redundant-constraints #-}
 
-module Polysemy.Hasql.Test.Partial.DeriveSumField where
+module Polysemy.Hasql.Test.Tree.DeriveSumField where
 
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConMeta(ConMeta), AdtMetadata (AdtSum, AdtProd), ADTMeta, MaybeADT(MaybeADT))

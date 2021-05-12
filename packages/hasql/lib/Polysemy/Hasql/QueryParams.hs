@@ -28,7 +28,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ProductCoded)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
 
-import Polysemy.Db.Tree (SumIndexTree)
+import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Hasql.Table.QueryParam (QueryParam(queryParam))
 import Polysemy.Hasql.Table.WriteNull (WriteNullCon(writeNullCon), WriteNullCons(writeNullCons))
 
@@ -163,14 +163,14 @@ instance {-# overlappable #-} (
 instance (
     ConstructSOP d dss,
     SumParams dss cs
-  ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d (SumIndexTree : cs))) d where
+  ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
     queryParams =
       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
 
 instance (
     ConstructSOP d dss,
     SumParams dss cs
-  ) => QueryParams ('Kind.Tree n eff ('Kind.Sum d (SumIndexTree : cs))) d where
+  ) => QueryParams ('Kind.Tree n eff ('Kind.Sum d (SumIndex : cs))) d where
     queryParams =
       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
 

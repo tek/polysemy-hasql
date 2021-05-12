@@ -164,3 +164,6 @@ instance
   ∀ a types name names .
   IsRecord a types name names =>
   RecordFields a names types where
+
+class Top2 x y
+instance Top2 x y

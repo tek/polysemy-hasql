@@ -54,6 +54,10 @@ data ConMeta =
 type family ConMetaTypes (meta :: ConMeta) :: [Type] where
   ConMetaTypes ('ConMeta _ nodes) = TreeMetaTypes nodes
 
+type family ConsMetaTypes (metas :: [ConMeta]) :: [[Type]] where
+  ConsMetaTypes '[] = '[]
+  ConsMetaTypes (meta : metas) = ConMetaTypes meta : ConsMetaTypes metas
+
 data AdtMetadata =
   AdtSum { cons :: [ConMeta] }
   |

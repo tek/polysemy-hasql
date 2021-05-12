@@ -337,16 +337,17 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.EnumTest
       Polysemy.Hasql.Test.HasGeneric
       Polysemy.Hasql.Test.ParamTest
-      Polysemy.Hasql.Test.Partial.Data.DatS
-      Polysemy.Hasql.Test.Partial.DeriveSum
-      Polysemy.Hasql.Test.Partial.DeriveSumDb
-      Polysemy.Hasql.Test.Partial.DeriveSumField
-      Polysemy.Hasql.Test.Partial.DeriveSumFieldDb
-      Polysemy.Hasql.Test.Partial.DeriveSumIdDb
       Polysemy.Hasql.Test.PartialTest
       Polysemy.Hasql.Test.RepTest
       Polysemy.Hasql.Test.StatementTest
       Polysemy.Hasql.Test.TableTest
+      Polysemy.Hasql.Test.Tree.Data.DatS
+      Polysemy.Hasql.Test.Tree.DeriveProd
+      Polysemy.Hasql.Test.Tree.DeriveSum
+      Polysemy.Hasql.Test.Tree.DeriveSumDb
+      Polysemy.Hasql.Test.Tree.DeriveSumField
+      Polysemy.Hasql.Test.Tree.DeriveSumFieldDb
+      Polysemy.Hasql.Test.Tree.DeriveSumIdDb
       Paths_polysemy_hasql
   hs-source-dirs:
       test

@@ -3,7 +3,8 @@ module Polysemy.Db.Tree.Partial where
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 import GHC.TypeLits (ErrorMessage)
-import Generics.SOP (All, NP ((:*)), NS (Z, S), hcmap)
+import Generics.SOP (All, I(I), K, NP ((:*)), NS (Z, S), hcmap, hpure, SListI2)
+import Generics.SOP.BasicFunctors (K(K))
 import Type.Errors (TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
@@ -18,18 +19,18 @@ import Polysemy.Db.SOP.Error (Quoted, QuotedType)
 import Polysemy.Db.Tree (
   Params(Params),
   Root,
-  SumIndexTree,
-  SumOrProd,
+  SumIndex,
+  ProdForSumTree,
   Tree,
   TreeConPayload(..),
-  TreeCons(..),
   TreePrim(..),
+  TreeSum(..),
   root,
   tree,
   )
 import Polysemy.Db.Tree.Data (DataParams, DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConsTreeMeta(ConsTreeMeta))
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), ConsMetaTypes)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data PartialTag =
@@ -38,34 +39,32 @@ data PartialTag =
 
 type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
-type PartialParams = 'Params PartialTag () PartialField
+type PartialParams = 'Params PartialTag () PartialField (K ())
 
-instance SumOrProd PartialTag 'False
+instance ProdForSumTree PartialTag 'False
 
-instance TreePrim PartialTag PartialField a name d where
+instance TreePrim PartialTag PartialField (K () a) name d where
   treePrim _ =
     PartialField.Keep
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
 
-instance TreeCons PartialTag () () where
-  treeCons _ =
-    ()
-
 instance TreeConPayload PartialTag name () where
   treeConPayload =
     ()
 
+instance (
+    SListI2 (ConsMetaTypes metas)
+  ) => TreeSum PartialTag (K ()) metas d where
+  treeSum _ =
+    hpure (K ())
+
 partial ::
   ∀ d c .
-  Root Auto PartialParams d () c =>
+  Root Auto PartialParams d c =>
   PartialTree c
 partial =
-  root @Auto @PartialParams @d ()
-
-treePure :: a -> Type.Tree t n sub -> Type.Tree t n sub
-treePure =
-  undefined
+  root @Auto @PartialParams @d (K ())
 
 class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node) where
   insertFieldNode :: FieldUpdate path a -> PartialNode n -> PartialNode n
@@ -224,7 +223,7 @@ instance (
 class UpdatePartialTree (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) where
   updatePartialTree :: DataTree dataTree -> PartialTree updateTree -> DataTree dataTree
 
-updateNode :: Identity d -> PartialField d -> Identity d
+updateNode :: I d -> PartialField d -> I d
 updateNode old = \case
   PartialField.Update _ new ->
     pure new
@@ -249,13 +248,13 @@ instance (
 
 instance (
     meta ~ 'TreeMeta name Auto d,
-    Tree DataParams ('ConsTreeMeta d meta) ('Kind.Tree name eff ('Kind.Sum d subData)),
+    Tree DataParams meta ('Kind.Tree name eff ('Kind.Sum d subData)),
     UpdatePartialSumProd subData subUpdate
-  ) => UpdatePartialTree ('Kind.Tree name eff ('Kind.Sum d subData)) ('Kind.Tree name eff ('Kind.Prod d (SumIndexTree : subUpdate))) where
+  ) => UpdatePartialTree ('Kind.Tree name eff ('Kind.Sum d subData)) ('Kind.Tree name eff ('Kind.Prod d (SumIndex : subUpdate))) where
   updatePartialTree (Type.Tree () (Type.Sum old subData)) (Type.Tree () (Type.Prod PartialField.Keep ( _ :* subUpdate))) =
     Type.Tree () (Type.Sum old (updatePartialSumProd subData subUpdate))
   updatePartialTree (Type.Tree () (Type.Sum _ _)) (Type.Tree () (Type.Prod (PartialField.Update _ new) _)) =
-    tree @DataParams @('ConsTreeMeta d meta) new
+    tree @DataParams @meta (I new)
 
 updatePartial ::
   ∀ d (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .

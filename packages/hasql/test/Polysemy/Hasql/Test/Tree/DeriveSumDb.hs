@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-redundant-constraints #-}
 
-module Polysemy.Hasql.Test.Partial.DeriveSumDb where
+module Polysemy.Hasql.Test.Tree.DeriveSumDb where
 
 import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
@@ -13,7 +13,7 @@ import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.Table.QueryTable (GenQuery, GenQueryTable)
 import Polysemy.Hasql.Table.Table (GenTable)
-import Polysemy.Hasql.Test.Partial.Data.DatS (
+import Polysemy.Hasql.Test.Tree.Data.DatS (
   DatS,
   DatSAdtMeta,
   DatSNode,

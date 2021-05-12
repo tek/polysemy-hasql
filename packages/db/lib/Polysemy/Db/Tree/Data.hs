@@ -1,42 +1,21 @@
 module Polysemy.Db.Tree.Data where
 
-import Generics.SOP (
-  All,
-  AllZip,
-  I(I),
-  NP ((:*)),
-  NS (Z),
-  POP(POP),
-  SOP(SOP),
-  Top,
-  hexpand,
-  hindex,
-  hmap,
-  htrans,
-  unI,
-  unSOP,
-  unZ,
-  )
-import Generics.SOP.GGP (GCode, gfrom, gto)
+import Generics.SOP (AllZip, I(I), NP, NS (Z), SListI, SOP(SOP), htrans)
+import Generics.SOP.GGP (GCode, gto)
 
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.SOP.Constraint (ConstructSOP, ReifySOP)
+import Polysemy.Db.SOP.Constraint (ReifySOP)
 import Polysemy.Db.Tree (
   Params(Params),
   RootName,
-  SumOrProd,
+  ProdForSumTree,
   Tree(..),
-  TreeConElem(..),
   TreeConPayload(..),
-  TreeConProduct(..),
-  TreeCons(..),
-  TreePrim(..),
-  TreeProduct(..),
   )
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Meta (ConsTreeMeta(ConsTreeMeta), TreeMeta(TreeMeta), TreeMetaType)
+import Polysemy.Db.Tree.Meta (TreeMeta(TreeMeta), TreeMetaType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data DataTag =
@@ -47,13 +26,13 @@ data ExpandedDataTag =
   ExpandedDataTag
   deriving (Eq, Show)
 
-type DataTree = Type.Tree () Identity
-type DataNode = Type.Node () Identity
-type DataParams = 'Params DataTag () Identity
-type ExpandedDataParams = 'Params ExpandedDataTag () Maybe
+type DataTree = Type.Tree () I
+type DataNode = Type.Node () I
+type DataParams = 'Params DataTag () I I
+type ExpandedDataParams = 'Params ExpandedDataTag () Maybe Maybe
 
-instance SumOrProd DataTag 'True
-instance SumOrProd ExpandedDataTag 'False
+instance ProdForSumTree DataTag 'True
+instance ProdForSumTree ExpandedDataTag 'False
 
 type family DataTreeCols (meta :: TreeMeta) :: [[Type]] where
   DataTreeCols meta =
@@ -65,58 +44,16 @@ class GenDataTree (d :: Type) (tree :: Kind.Tree) | d -> tree where
 instance (
     RootName d name,
     meta ~ 'TreeMeta ('NamedField name) Auto d,
-    Tree DataParams ('ConsTreeMeta d meta) tree
+    Tree DataParams meta tree
   ) => GenDataTree d tree where
     genDataTree d =
-      tree @DataParams @('ConsTreeMeta d meta) d
-
-instance TreePrim DataTag Identity d name d where
-  treePrim =
-    pure
-
-instance (
-    ConstructSOP a ass
-  ) => TreePrim DataTag Identity a ('NamedField "sum_index") Int where
-  treePrim =
-    Identity . hindex . gfrom
-
-instance TreePrim ExpandedDataTag Maybe (Maybe d) name d where
-  treePrim =
-    id
-
-instance TreePrim ExpandedDataTag Maybe d name d where
-  treePrim =
-    Just
-
-instance (
-    ConstructSOP a ass
-  ) => TreePrim ExpandedDataTag Maybe a ('NamedField "sum_index") Int where
-  treePrim =
-    Just . hindex . gfrom
-
-instance (
-    ConstructSOP d '[ds]
-  ) => TreeProduct DataTag metas d ds where
-    treeProduct =
-      unZ . unSOP . gfrom
-
-instance (
-    ConstructSOP d dss
-  ) => TreeCons ExpandedDataTag d (POP Maybe dss) where
-  treeCons =
-    hexpand Nothing . hmap (Just . unI) . gfrom
+      tree @DataParams @meta (pure d)
 
 instance TreeConPayload DataTag name () where
   treeConPayload =
     ()
 
-instance TreeConPayload ExpandedDataTag name () where
-  treeConPayload =
-    ()
-
-instance TreeConElem ExpandedDataTag (POP Maybe (ds : dss)) (POP Maybe dss) (NP Maybe ds) where
-  treeConElem (POP (ds :* dss)) =
-    (POP dss, ds)
+instance TreeEffects DefaultEffects rep d effs => TreeEffects DataTag rep d effs where
 
 type family NPMaybes (ds :: [*]) :: [*] where
   NPMaybes '[] = '[]
@@ -127,17 +64,6 @@ class AsMaybe x y where
 
 instance AsMaybe x (Maybe x) where
   asMaybe = I
-
-instance (
-    AllZip AsMaybe ds ms,
-    ms ~ NPMaybes ds
-  ) => TreeConProduct ExpandedDataTag metas (NP Maybe ds) ms where
-  treeConProduct =
-    htrans (Proxy @AsMaybe) asMaybe
-
-instance TreeEffects DefaultEffects rep d effs => TreeEffects DataTag rep d effs where
-
-instance TreeEffects DefaultEffects rep d effs => TreeEffects ExpandedDataTag rep d effs where
 
 dataTree ::
   ∀ (d :: Type) (tree :: Kind.Tree) .
@@ -169,7 +95,7 @@ class ReifyDataTree (tree :: Kind.Tree) d | tree -> d where
   reifyDataTree :: DataTree tree -> d
 
 instance ReifyDataTree ('Kind.Tree name eff ('Kind.Prim d)) d where
-  reifyDataTree (Type.Tree _ (Type.Prim (Identity d))) =
+  reifyDataTree (Type.Tree _ (Type.Prim (I d))) =
     d
 
 instance (
@@ -181,7 +107,7 @@ instance (
 
 instance (
     ReifySOP d dss,
-    All Top node,
+    SListI node,
     AllZip ReifyDataSum node dss
   ) => ReifyDataTree ('Kind.Tree name eff ('Kind.Sum d node)) d where
   reifyDataTree (Type.Tree _ (Type.Sum _ sub)) =

@@ -1,12 +1,12 @@
 {-# options_ghc -Wno-all -Wno-redundant-constraints #-}
 
-module Polysemy.Hasql.Test.Partial.DeriveSumFieldDb where
+module Polysemy.Hasql.Test.Tree.DeriveSumFieldDb where
 
 import Polysemy.Db.Data.Column (Auto, Con, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery, UuidQuery)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndexTree, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), ConMeta(ConMeta), MaybeADT(MaybeADT), TreeMeta(TreeMeta))
@@ -66,7 +66,7 @@ type RightyNode =
 
 type SummyTree =
   '[
-    SumIndexTree,
+    SumIndex,
     'Kind.Tree ('NamedField "Lefty") '[] LeftyNode,
     'Kind.Tree ('NamedField "Righty") '[] RightyNode
   ]

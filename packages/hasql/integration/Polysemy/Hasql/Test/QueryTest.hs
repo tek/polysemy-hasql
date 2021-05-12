@@ -17,7 +17,7 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (SumIndexTree)
+import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata(AdtSum, AdtProd), ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Log (Log)
@@ -120,7 +120,7 @@ type LefCol =
 
 type XXorCols =
   [
-    SumIndexTree,
+    SumIndex,
     LefCol,
     'Kind.Tree ('NamedField "Righ") '[Prim] ('Kind.Prim Bool)
   ]

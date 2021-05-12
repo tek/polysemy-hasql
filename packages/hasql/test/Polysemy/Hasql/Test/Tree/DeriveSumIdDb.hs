@@ -1,13 +1,13 @@
 {-# options_ghc -Wno-all -Wno-redundant-constraints #-}
 
-module Polysemy.Hasql.Test.Partial.DeriveSumIdDb where
+module Polysemy.Hasql.Test.Tree.DeriveSumIdDb where
 
 import Polysemy.Db.Data.Column (Auto, Con, Flatten, Prim, Product, Rep, Sum, UidRep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery, IdQueryRep, UuidQuery)
 import Polysemy.Db.Data.Uid
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndexTree, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), ConMeta(ConMeta), MaybeADT(MaybeADT), TreeMeta(TreeMeta))
@@ -66,7 +66,7 @@ type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 
 type SumPKTree =
   '[
-    SumIndexTree,
+    SumIndex,
     'Kind.Tree ('NamedField "SumPKL") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "SumPKR") '[Prim] ('Kind.Prim Int)
   ]

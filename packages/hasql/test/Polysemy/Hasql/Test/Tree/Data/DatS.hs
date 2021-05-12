@@ -1,10 +1,10 @@
-module Polysemy.Hasql.Test.Partial.Data.DatS where
+module Polysemy.Hasql.Test.Tree.Data.DatS where
 
 import Polysemy.Db.Tree.Meta (ConMeta(ConMeta), TreeMeta(TreeMeta), AdtMetadata (AdtSum))
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Column (Auto, Prim, Con)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree (SumIndexTree)
+import Polysemy.Db.Tree (SumIndex)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
 data DatS =
@@ -39,7 +39,7 @@ type DatSTreeEffs =
 
 type DatSTrees =
   '[
-    SumIndexTree,
+    SumIndex,
     'Kind.Tree ('NamedField "DatS1") '[] (
       'Kind.Prod (Con ('NamedField "DatS1")) '[
         'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),

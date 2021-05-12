@@ -14,7 +14,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 import Polysemy.Db.SOP.Error (ErrorWithType, ErrorWithType2)
 import Polysemy.Db.SOP.List (FirstJust)
-import Polysemy.Db.Tree (SumIndexTree)
+import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
@@ -319,8 +319,8 @@ type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool
     MatchCols meta prefix q cols
   MatchProd meta prefix 'False ('Kind.Tree qname eff ('Kind.Prim q)) ('Kind.Tree name _ ('Kind.Prod _ cols)) =
     MatchCols meta ('FieldSegment name : prefix) ('Kind.Tree qname eff ('Kind.Prim q)) cols
-  MatchProd meta prefix 'False ('Kind.Tree name _ ('Kind.Prod _ (SumIndexTree : qTrees))) ('Kind.Tree name _ ('Kind.Prod _ (SumIndexTree : dTrees))) =
-    'Just (MatchCons meta ('SumSegment name : prefix) (SumIndexTree : qTrees) (SumIndexTree : dTrees))
+  MatchProd meta prefix 'False ('Kind.Tree name _ ('Kind.Prod _ (SumIndex : qTrees))) ('Kind.Tree name _ ('Kind.Prod _ (SumIndex : dTrees))) =
+    'Just (MatchCons meta ('SumSegment name : prefix) (SumIndex : qTrees) (SumIndex : dTrees))
   MatchProd _ _ _ _ _ =
     'Nothing
 
@@ -377,7 +377,7 @@ data QueryMeta =
   }
 
 type family NameIfSumProd (name :: FieldId) (cols :: [Kind.Tree]) :: [FieldId] where
-  NameIfSumProd name (SumIndexTree : _) =
+  NameIfSumProd name (SumIndex : _) =
     '[name]
   NameIfSumProd _ _ =
     '[]
@@ -396,11 +396,11 @@ type family MkQueryMeta (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QueryMeta w
     'QueryMeta dTree name (DbTypeFieldNames @@ dTree)
 
 type family MatchTable (meta :: QueryMeta) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QConds where
-  MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ (SumIndexTree : qTrees))) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndexTree : dTrees))) =
-    MatchCons meta '[] (SumIndexTree : qTrees) (SumIndexTree : dTrees)
+  MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ (SumIndex : qTrees))) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndex : dTrees))) =
+    MatchCons meta '[] (SumIndex : qTrees) (SumIndex : dTrees)
   MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ qTrees)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
     FoldMap (MatchQueryColumnE meta '[] dTrees) @@ qTrees
-  MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndexTree : dTrees))) =
+  MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndex : dTrees))) =
     GroupSumPrim (MatchCons meta '[] (ReplicateSum ('Kind.Tree qn e ('Kind.Prim t)) dTrees) dTrees)
   MatchTable meta ('Kind.Tree n e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
     MatchQueryColumnE meta '[] dTrees @@ ('Kind.Tree n e ('Kind.Prim t))

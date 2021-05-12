@@ -1,14 +1,14 @@
 module Polysemy.Hasql.Column.Tree where
 
+import Generics.SOP (K(K))
 import Polysemy.Db.Data.Column (ForcePrim, Rep)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (
   Params(Params),
   Root(..),
-  SumOrProd,
+  ProdForSumTree,
   TreeConPayload(..),
-  TreeCons(..),
   TreePayload(..),
   TreePrim(..),
   )
@@ -32,8 +32,8 @@ data DbTag =
   deriving (Eq, Show)
 
 type DbTree = Type.Tree ColumnData Proxy
-type DbParams = 'Params DbTag ColumnData Proxy
-instance SumOrProd DbTag 'False
+type DbParams = 'Params DbTag ColumnData Proxy (K ())
+instance ProdForSumTree DbTag 'False
 
 instance TreePrim DbTag Proxy a name d where
   treePrim _ =
@@ -69,15 +69,11 @@ instance (
   treeConPayload =
     ColumnData (fieldIdText @name) def
 
-instance TreeCons DbTag d () where
-  treeCons _ =
-    ()
-
 class TableColumn (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree where
   tableColumn :: DbTree tree
 
 instance (
-    Root rep DbParams d () tree
+    Root rep DbParams d tree
   ) => TableColumn rep d tree where
   tableColumn =
-    root @rep @DbParams @d @() def
+    root @rep @DbParams @d (K ())

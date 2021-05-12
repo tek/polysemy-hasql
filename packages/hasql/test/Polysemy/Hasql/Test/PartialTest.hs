@@ -1,15 +1,17 @@
 module Polysemy.Hasql.Test.PartialTest where
 
+import Generics.SOP (K(K))
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Tree (TM(TM))
 import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Partial (PartialTree, field, partial, updatePartial, (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
-import Polysemy.Hasql.Test.Partial.Data.DatS (DatS (DatS1), DatSDataTree, DatSPartialTree)
+import Polysemy.Hasql.Test.Tree.Data.DatS (DatS (DatS1), DatSDataTree, DatSPartialTree)
 
 data Dat =
   Dat {

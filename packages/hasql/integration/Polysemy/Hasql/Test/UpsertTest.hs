@@ -1,10 +1,12 @@
 module Polysemy.Hasql.Test.UpsertTest where
 
+import Generics.SOP (K(K))
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UidStore)
 import Polysemy.Db.Data.Uid (Uid(Uid))
 import Polysemy.Db.Store (interpretStoreUidAtomic)
+import Polysemy.Db.Tree (TM(TM))
 import Polysemy.Test (UnitTest, assertJust, evalEither, runTestAuto)
 
 import Polysemy.Hasql.Test.Database (withTestStoreUid)
