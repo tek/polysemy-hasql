@@ -18,20 +18,9 @@ import Polysemy.Db.Tree.Data.TreeMeta (
 class TreePrim (tag :: Type) (n :: Type -> Type) (f :: Type -> Type) (name :: FieldId) (d :: Type) where
   treePrim :: f d -> n d
 
--- instance {-# overlappable #-} Applicative f => TreePrim tag n f name d where
---   treePrim =
---     pure
-
 instance {-# overlappable #-} TreePrim tag n n name d where
   treePrim =
     id
-
--- instance {-# incoherent #-} (
---     Applicative f,
---     ConstructSOP a ass
---   ) => TreePrim tag n f ('NamedField "sum_index") Int where
---     treePrim =
---       pure . hindex . gfrom
 
 class TreePayload (tag :: Type) (t :: Type) (a :: Type) (meta :: TreeMeta) (effs :: [Type]) where
   treePayload :: a -> t

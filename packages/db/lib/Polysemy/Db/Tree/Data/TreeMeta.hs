@@ -63,20 +63,21 @@ deriving newtype instance Semigroup (f (TreeMetaType meta)) => Semigroup (TM f m
 
 deriving newtype instance Monoid (f (TreeMetaType meta)) => Monoid (TM f meta)
 
+-- TODO this can probably be simplified by moving the connection via TreeMetaTypes to callsites
 class CoerceTM (f :: Type -> Type) (metas :: [TreeMeta]) where
   coerceTM :: NP f (TreeMetaTypes metas) -> NP (TM f) metas
 
 instance {-# overlappable #-} (
     AllZip (LiftedCoercible f (TM f)) (TreeMetaTypes metas) metas
   ) => CoerceTM f metas where
-  coerceTM =
-    hcoerce
+    coerceTM =
+      hcoerce
 
 instance (
     AllZip Top2 (TreeMetaTypes metas) metas
   ) => CoerceTM (K a) metas where
-  coerceTM =
-    htrans (Proxy @Top2) \ (K x) -> TM (K x)
+    coerceTM =
+      htrans (Proxy @Top2) \ (K x) -> TM (K x)
 
 instance (
     AllZip TMTWitness (TreeMetaTypes metas) metas
@@ -93,11 +94,11 @@ class CoerceTM2 (f :: Type -> Type) (metass :: [[TreeMeta]]) where
 instance (
     AllZip2 Top2 (TreesMetaTypes metass) metass
   ) => CoerceTM2 (K a) metass where
-  coerceTM2 =
-    htrans (Proxy @Top2) \ (K x) -> TM (K x)
+    coerceTM2 =
+      htrans (Proxy @Top2) \ (K x) -> TM (K x)
 
 instance (
     AllZip2 TMTWitness (TreesMetaTypes metass) metass
   ) => CoerceTM2 I metass where
-  coerceTM2 =
-    htrans (Proxy @TMTWitness) \ (I x) -> TM (I x)
+    coerceTM2 =
+      htrans (Proxy @TMTWitness) \ (I x) -> TM (I x)
