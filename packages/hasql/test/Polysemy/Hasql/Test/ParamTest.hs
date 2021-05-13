@@ -6,6 +6,7 @@ import Polysemy.Db.Data.Column (Auto, Con, Prim, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta
 import Polysemy.Test (UnitTest, runTestAuto)
 
@@ -91,7 +92,7 @@ type ProddoType =
 type SummerConssType =
   [
     PrimInt "sum_index",
-    'Kind.Tree ('NamedField "Summer1") '[Prim] ('Kind.Prim Text),
+    'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
     'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
       PrimInt "int",
       PrimDouble "dubble"

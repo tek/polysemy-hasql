@@ -34,7 +34,7 @@ type PartialParams = 'Params PartialTag () PartialField (K ())
 
 instance ProdForSumTree PartialTag 'True
 
-instance TreePrim PartialTag PartialField (K () a) name d where
+instance TreePrim PartialTag PartialField (K ()) name d where
   treePrim _ =
     PartialField.Keep
 

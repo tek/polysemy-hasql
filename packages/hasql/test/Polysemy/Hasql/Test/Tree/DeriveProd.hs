@@ -2,13 +2,15 @@
 
 module Polysemy.Hasql.Test.Tree.DeriveProd where
 
-import Generics.SOP (I(I))
+import Generics.SOP (I, NP)
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, ProdTrees, Tree, TreeProduct)
+import Polysemy.Db.Tree (AdtNode, Node, ProdTrees, Tree)
+import Polysemy.Db.Tree.Api (TreeSOP)
 import Polysemy.Db.Tree.Data (DataParams, DataTag)
 import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
 import Polysemy.Test (UnitTest)
 
@@ -54,9 +56,9 @@ datDerivation ::
   metas ~ DatAdtMetas =>
   node ~ DatNode =>
   effs ~ DatTreeEffs =>
-  TreeProduct tag f metas (f d) =>
+  TreeSOP tag metas NP f d =>
   ProdTrees p metas DatTrees =>
-  AdtTree p d DatAdtMeta '[] node =>
+  AdtNode p d DatAdtMeta '[] node =>
   Node p ('NamedField "Dat") d effs node =>
   Tree p meta DatTree =>
   Where DatTree d DatTree d =>

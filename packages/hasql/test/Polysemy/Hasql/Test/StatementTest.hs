@@ -72,7 +72,7 @@ test_selectStatement =
     target === stmtText
   where
     target =
-      [qt|select "a", "b", "c", ("sum_field")."sum_index", ("sum_field")."l", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
+      [qt|select "a", "b", "c", ("sum_field")."sum_index", ("sum_field")."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
     SqlCode stmtText =
       Statement.selectWhereSql (queryTable @Q1 @Rec)
 

@@ -164,7 +164,7 @@ type NewtType =
 type SummerConssType =
   [
     'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "Summer1") '[Prim] ('Kind.Prim Text),
+    'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
     'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
     'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
@@ -220,23 +220,23 @@ type PR =
 
 column_Int :: Type.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
 column_Int =
-  tree @DbParams @() @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) ()
+  tree @DbParams @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) mempty
 
 column_Double :: Type.Column (PrimDouble "double")
 column_Double =
-  tree @DbParams @() @('TreeMeta ('NamedField "double") Auto Double) ()
+  tree @DbParams @('TreeMeta ('NamedField "double") Auto Double) mempty
 
 column_Newt :: Type.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
 column_Newt =
-  tree @DbParams @() @('TreeMeta ('NamedField "newt") Auto Newt) ()
+  tree @DbParams @('TreeMeta ('NamedField "newt") Auto Newt) mempty
 
 column_Newt_Prim :: Type.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
 column_Newt_Prim =
-  tree @DbParams @() @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) ()
+  tree @DbParams @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) mempty
 
 column_Proddo :: Type.Column (ProddoType "proddo")
 column_Proddo =
-  tree @DbParams @() @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) ()
+  tree @DbParams @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) mempty
 
 columns_Dat_explicit ::
   Type.Column DatType
@@ -277,7 +277,7 @@ datTargetWith flattyColumns =
     ]),
     Data.Column "summer" "\"summer\"" "summer" def (Data.Prod [
       Data.Column "sum_index" "(\"summer\").\"sum_index\"" "bigint" def (Data.Prim),
-      Data.Column "summer1" "(\"summer\").\"summer1\"" "text" def Data.Prim,
+      Data.Column "txt" "(\"summer\").\"txt\"" "text" def Data.Prim,
       Data.Column "summer2" "(\"summer\").\"summer2\"" "summer2" def (Data.Prod [
         Data.Column "int" "(\"summer\").\"summer2\".\"int\"" "bigint" def Data.Prim,
         Data.Column "double" "(\"summer\").\"summer2\".\"double\"" "double precision" def Data.Prim
@@ -314,10 +314,10 @@ test_rep =
     intTarget =
       Data.Column "int" "\"int\"" "bigint" def Data.Prim
     intCol =
-      dataTable (tree @DbParams @() @('TreeMeta ('NamedField "int") (Prim) Int) ())
+      dataTable (tree @DbParams @('TreeMeta ('NamedField "int") (Prim) Int) mempty)
     proddoTarget =
       Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
         Data.Column "pr_int" "\"pr_int\"" "bigint" def Data.Prim
       ])
     proddoCol =
-      dataTable (tree @DbParams @() @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo) ())
+      dataTable (tree @DbParams @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo) mempty)

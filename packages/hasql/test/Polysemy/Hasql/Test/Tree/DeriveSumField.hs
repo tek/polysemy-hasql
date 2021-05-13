@@ -2,14 +2,15 @@
 
 module Polysemy.Hasql.Test.Tree.DeriveSumField where
 
-import Polysemy.Db.Tree.Data (DataParams)
-import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum, AdtProd), ADTMeta, MaybeADT(MaybeADT))
+import Polysemy.Db.Data.Column (Auto, Con, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Data.Column (Auto, Prim, Con)
-import Polysemy.Db.Tree (SumConTree, SumTrees, AdtTree, Tree, Node, SumNode)
-import Polysemy.Test (UnitTest)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Tree (AdtNode, Node, SumConTree, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
+import Polysemy.Test (UnitTest)
 
 data Summy =
   Lefty { intL :: Int, doubleL :: Double }
@@ -107,7 +108,7 @@ datSDerivation ::
   d ~ DatSF =>
   'MaybeADT DatSFMeta ~ ADTMeta Auto DatSF =>
   meta ~ 'TreeMeta ('NamedField "DatSF") Auto d =>
-  Tree p d meta DatSDataTree =>
+  Tree p meta DatSDataTree =>
   ()
 datSDerivation =
   ()

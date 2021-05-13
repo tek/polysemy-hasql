@@ -1,6 +1,6 @@
 module Polysemy.Db.Tree where
 
-import Generics.SOP (HTrans (htrans), I(I), K(K), NP(Nil, (:*)), NS (Z, S), POP(POP), unSOP)
+import Generics.SOP (HTrans (htrans), I(I), K(K), NP(Nil, (:*)), NS (Z, S), POP(POP), SOP, unSOP)
 
 import Polysemy.Db.Data.Column (Con(Con), Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
@@ -9,14 +9,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName, symbolText)
 import Polysemy.Db.SOP.Fundeps (Fundep, Fundeps)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
-import Polysemy.Db.Tree.Api (
-  TreeConPayload(..),
-  TreePayload(..),
-  TreePrim(..),
-  TreeProduct(..),
-  TreeSum(..),
-  TreeSumProd(..),
-  )
+import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..), TreePrim(..), TreeSOP(..))
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.Params (Params(Params), Payload, PayloadM, TNode, TTree)
 import Polysemy.Db.Tree.Data.TreeMeta (
@@ -86,6 +79,7 @@ instance (
 class SumConTree (p :: Params) (meta :: ConMeta) (tree :: Kind.Tree) | p meta -> tree where
   sumConTree :: NP (PayloadM p) (ConMetas meta) -> TTree p tree
 
+-- TODO generalize I
 instance (
     Applicative n,
     p ~ 'Params tag t n I,
@@ -127,52 +121,54 @@ type SumIndex =
 
 instance (
     p ~ 'Params tag t n f,
+    metas ~ ConsMetas conMetas,
     sumName ~ 'NamedField "sum",
     indexMeta ~ 'TreeMeta ('NamedField "sum_index") Prim Int,
     indexParams ~ 'Params tag t n (K ()),
-    TreeSumProd tag f metas d,
-    TreePrim tag n (f d) sumName d,
-    SumProdTrees p metas trees,
+    TreeSOP tag metas POP f d,
+    TreePrim tag n f sumName d,
+    SumProdTrees p conMetas trees,
     Tree indexParams indexMeta SumIndex
-  ) => SumNode p 'True d metas ('Kind.Prod d (SumIndex : trees)) where
+  ) => SumNode p 'True d conMetas ('Kind.Prod d (SumIndex : trees)) where
   sumNode fd =
-    Type.Prod (treePrim @tag @n @(f d) @sumName @d fd) trees
+    Type.Prod (treePrim @tag @n @f @sumName @d fd) trees
     where
       trees =
-        indexTree :* sumProdTrees @p @metas (treeSumProd @tag @f @metas fd)
+        indexTree :* sumProdTrees @p @conMetas (treeSOP @_ @tag @metas fd)
       indexTree =
         tree @indexParams @indexMeta (TM (K ()))
 
 instance (
     p ~ 'Params tag t n I,
+    metas ~ ConsMetas conMetas,
     sumName ~ 'NamedField "sum",
-    TreeSum tag I metas d,
-    TreePrim tag n (I d) sumName d,
-    SumTrees p metas trees
-  ) => SumNode p 'False d metas ('Kind.Sum d trees) where
+    TreeSOP tag metas SOP I d,
+    TreePrim tag n I sumName d,
+    SumTrees p conMetas trees
+  ) => SumNode p 'False d conMetas ('Kind.Sum d trees) where
     sumNode (I d) =
-      Type.Sum (treePrim @tag @n @(I d) @sumName @d (I d)) (sumTrees @p @metas (unSOP (treeSum @tag @I @metas @d (I d))))
+      Type.Sum (treePrim @tag @n @I @sumName @d (I d)) (sumTrees @p @conMetas (unSOP (treeSOP @_ @tag @metas (I d))))
 
 ------------------------------------------------------------------------------------------------------------------------
 
-class AdtTree (p :: Params) (d :: Type) (meta :: AdtMetadata) (eff :: [Type]) (node :: Kind.Node) | p d meta eff -> node where
+class AdtNode (p :: Params) (d :: Type) (meta :: AdtMetadata) (eff :: [Type]) (node :: Kind.Node) | p d meta eff -> node where
   adtTree :: Payload p d -> TNode p node
 
 instance (
-    TreeProduct tag f metas (f d),
+    TreeSOP tag metas NP f d,
     prodName ~ 'NamedField "prod",
-    TreePrim tag n (f d) prodName d,
+    TreePrim tag n f prodName d,
     ProdTrees p metas trees,
     p ~ 'Params tag t n f
-  ) => AdtTree p d ('AdtProd metas) '[] ('Kind.Prod d trees) where
+  ) => AdtNode p d ('AdtProd metas) '[] ('Kind.Prod d trees) where
   adtTree fd =
-    Type.Prod (treePrim @tag @n @(f d) @prodName @d fd) (prodTrees @p @metas (treeProduct @tag @f @metas fd))
+    Type.Prod (treePrim @tag @n @f @prodName @d fd) (prodTrees @p @metas (treeSOP @TreeMeta @tag @metas fd))
 
 instance (
     p ~ 'Params tag t n f,
     ProdForSumTree tag sum,
     SumNode p sum d metas node
-  ) => AdtTree p d ('AdtSum metas) '[] node where
+  ) => AdtNode p d ('AdtSum metas) '[] node where
   adtTree =
     sumNode @p @sum @d @metas
 
@@ -182,13 +178,13 @@ class Node (p :: Params) (name :: FieldId) (d :: Type) (eff :: [Type]) (node :: 
   node :: Payload p d -> TNode p node
 
 instance (
-    AdtTree p d meta effs node
+    AdtNode p d meta effs node
   ) => Node p name d (ADT meta rep : effs) node where
     node =
       adtTree @p @d @meta @effs
 
 instance (
-    TreePrim tag n (f d) name d
+    TreePrim tag n f name d
   ) => Node ('Params tag t n f) name d '[] ('Kind.Prim d) where
   node a =
     Type.Prim (treePrim @tag @_ @_ @name @d a)

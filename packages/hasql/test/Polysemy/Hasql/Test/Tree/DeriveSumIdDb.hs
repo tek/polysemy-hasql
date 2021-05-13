@@ -7,10 +7,11 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery, IdQueryRep, UuidQuery)
 import Polysemy.Db.Data.Uid
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree (AdtNode, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), ConMeta(ConMeta), MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
@@ -67,8 +68,8 @@ type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 type SumPKTree =
   '[
     SumIndex,
-    'Kind.Tree ('NamedField "SumPKL") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "SumPKR") '[Prim] ('Kind.Prim Int)
+    'Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Int),
+    'Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Int)
   ]
 
 type SumPKNode =
@@ -113,9 +114,9 @@ sumIdDerivation ::
   p ~ DbParams =>
   d ~ Uid SumPK SumId =>
   meta ~ 'TreeMeta ('NamedField "SumId") (Rep '[Product SumIdRecRep]) d =>
-  Tree p () meta SumIdRecTree =>
+  Tree p meta SumIdRecTree =>
   Where IdQueryTree (IdQuery SumPK) SumIdRecTree SumIdRec =>
-  Tree p () ('TreeMeta ('NamedField "IdQuery") (Rep '[Product (IdQueryRep (Sum SumPKRep))]) (IdQuery SumPK)) IdQueryTree =>
+  Tree p ('TreeMeta ('NamedField "IdQuery") (Rep '[Product (IdQueryRep (Sum SumPKRep))]) (IdQuery SumPK)) IdQueryTree =>
   TableColumn SumIdRecRep SumIdRec SumIdRecTree =>
   QueryRows SumIdRecTree SumIdRec =>
   QueryParams SumIdRecTree SumIdRec =>

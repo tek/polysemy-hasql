@@ -5,7 +5,8 @@ module Polysemy.Hasql.Test.Tree.DeriveSumDb where
 import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, Tree)
+import Polysemy.Db.Tree (AdtNode, Node, Tree)
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
@@ -32,11 +33,11 @@ datSDerivation ::
   node ~ DatSNode =>
   effs ~ DatSTreeEffs =>
   ns ~ DatSSum =>
-  AdtTree p d DatS DatSAdtMeta '[] node =>
-  Node p ('NamedField "DatS") DatS DatS effs node =>
-  Tree p DatS meta DatSTree =>
+  AdtNode p d DatSAdtMeta '[] node =>
+  Node p ('NamedField "DatS") DatS effs node =>
+  Tree p meta DatSTree =>
   Where DatSTree DatS DatSTree DatS =>
-  Tree p Int ('TreeMeta ('NamedField "id") (Rep '[Prim]) Int) IdQueryTree =>
+  Tree p ('TreeMeta ('NamedField "id") (Rep '[Prim]) Int) IdQueryTree =>
   Where IdQueryTree Int DatSTree DatS =>
   TableColumn Auto DatS DatSTree =>
   TableColumn (PrimQuery "id") Int IdQueryTree =>
@@ -49,6 +50,6 @@ datSDerivation ::
 datSDerivation =
   ()
 
-test_deriveSum :: UnitTest
-test_deriveSum =
+test_deriveSumDb :: UnitTest
+test_deriveSumDb =
   pure datSDerivation

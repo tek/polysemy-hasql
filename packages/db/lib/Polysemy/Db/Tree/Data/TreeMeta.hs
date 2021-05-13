@@ -59,6 +59,10 @@ type family ConsMetaTypes (metas :: [ConMeta]) :: [[Type]] where
 newtype TM (f :: Type -> Type) (meta :: TreeMeta) =
   TM { unTM :: f (TreeMetaType meta) }
 
+deriving newtype instance Semigroup (f (TreeMetaType meta)) => Semigroup (TM f meta)
+
+deriving newtype instance Monoid (f (TreeMetaType meta)) => Monoid (TM f meta)
+
 class CoerceTM (f :: Type -> Type) (metas :: [TreeMeta]) where
   coerceTM :: NP f (TreeMetaTypes metas) -> NP (TM f) metas
 
@@ -69,16 +73,28 @@ instance {-# overlappable #-} (
     hcoerce
 
 instance (
-  AllZip Top2 (TreeMetaTypes metas) metas
-  ) => CoerceTM (K ()) metas where
+    AllZip Top2 (TreeMetaTypes metas) metas
+  ) => CoerceTM (K a) metas where
   coerceTM =
     htrans (Proxy @Top2) \ (K x) -> TM (K x)
+
+instance (
+    AllZip TMTWitness (TreeMetaTypes metas) metas
+  ) => CoerceTM I metas where
+  coerceTM =
+    htrans (Proxy @TMTWitness) \ (I x) -> TM (I x)
 
 class TreeMetaType y ~ x => TMTWitness x y where
 instance TreeMetaType y ~ x => TMTWitness x y where
 
 class CoerceTM2 (f :: Type -> Type) (metass :: [[TreeMeta]]) where
   coerceTM2 :: SOP f (TreesMetaTypes metass) -> SOP (TM f) metass
+
+instance (
+    AllZip2 Top2 (TreesMetaTypes metass) metass
+  ) => CoerceTM2 (K a) metass where
+  coerceTM2 =
+    htrans (Proxy @Top2) \ (K x) -> TM (K x)
 
 instance (
     AllZip2 TMTWitness (TreesMetaTypes metass) metass

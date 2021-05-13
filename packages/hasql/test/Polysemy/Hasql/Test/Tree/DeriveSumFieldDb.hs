@@ -6,10 +6,11 @@ import Polysemy.Db.Data.Column (Auto, Con, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery, UuidQuery)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtTree, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree (AdtNode, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), ConMeta(ConMeta), MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
@@ -114,9 +115,9 @@ datSDerivation ::
   d ~ DatSF =>
   'MaybeADT DatSFMeta ~ ADTMeta Auto DatSF =>
   meta ~ 'TreeMeta ('NamedField "DatSF") Auto d =>
-  Tree p () meta DatSFTree =>
+  Tree p meta DatSFTree =>
   Where QTree Q DatSFTree DatSF =>
-  Tree p () ('TreeMeta ('NamedField "IdQuery") Auto (IdQuery Int)) IdQueryTree =>
+  Tree p ('TreeMeta ('NamedField "IdQuery") Auto (IdQuery Int)) IdQueryTree =>
   TableColumn Auto DatSF DatSFTree =>
   QueryRows DatSFTree DatSF =>
   QueryParams DatSFTree DatSF =>

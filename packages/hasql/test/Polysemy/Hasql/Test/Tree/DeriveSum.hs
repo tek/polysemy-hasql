@@ -5,7 +5,7 @@ module Polysemy.Hasql.Test.Tree.DeriveSum where
 import Generics.SOP (K)
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Tree (AdtTree, Node, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree (AdtNode, Node, SumNode, SumTrees, Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Partial (PartialParams, PartialTag)
@@ -33,7 +33,7 @@ datSDerivation ::
   effs ~ DatSTreeEffs =>
   SumTrees p DatSAdtMetas DatSDataTrees =>
   SumNode p 'False DatS DatSAdtMetas node =>
-  AdtTree p d DatSAdtMeta '[] node =>
+  AdtNode p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSDataTree =>
   Where DatSDataTree DatS DatSDataTree DatS =>
@@ -51,7 +51,7 @@ datSPartialDerivation ::
   node ~ DatSPartialNode =>
   effs ~ DatSTreeEffs =>
   SumNode p 'True DatS DatSAdtMetas node =>
-  AdtTree p d DatSAdtMeta '[] node =>
+  AdtNode p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSPartialTree =>
   ()
