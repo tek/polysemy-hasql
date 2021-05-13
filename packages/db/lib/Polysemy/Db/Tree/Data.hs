@@ -12,7 +12,6 @@ import Polysemy.Db.Tree (
   RootName,
   Tree(..),
   )
-import Polysemy.Db.Tree.Api (TreeConPayload(..))
 import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta), TreeMetaType)
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
@@ -28,8 +27,8 @@ data ExpandedDataTag =
 
 type DataTree = Type.Tree () I
 type DataNode = Type.Node () I
-type DataParams = 'Params DataTag () I I
-type ExpandedDataParams = 'Params ExpandedDataTag () Maybe Maybe
+type DataParams = 'Params DataTag () I
+type ExpandedDataParams = 'Params ExpandedDataTag () Maybe
 
 instance ProdForSumTree DataTag 'False
 instance ProdForSumTree ExpandedDataTag 'True
@@ -48,10 +47,6 @@ instance (
   ) => GenDataTree d tree where
     genDataTree d =
       tree @DataParams @meta (TM (pure d))
-
-instance TreeConPayload DataTag name () where
-  treeConPayload =
-    ()
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects DataTag rep d effs where
 

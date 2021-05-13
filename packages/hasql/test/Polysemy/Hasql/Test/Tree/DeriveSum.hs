@@ -11,7 +11,6 @@ import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Partial (PartialParams, PartialTag)
 import Polysemy.Test (UnitTest)
 
-import Polysemy.Hasql.Column.Tree ()
 import Polysemy.Hasql.Test.Tree.Data.DatS (
   DatS,
   DatSAdtMeta,

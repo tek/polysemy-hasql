@@ -3,8 +3,7 @@ module Polysemy.Db.Tree.Partial where
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 import GHC.TypeLits (ErrorMessage)
-import Generics.SOP (All, I(I), K, NP ((:*)), NS (Z, S), hcmap)
-import Generics.SOP.BasicFunctors (K(K))
+import Generics.SOP (All, I(I), NP ((:*)), NS (Z, S), hcmap)
 import Type.Errors (TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
@@ -17,7 +16,7 @@ import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Db.SOP.Error (Quoted, QuotedType)
 import Polysemy.Db.Tree (ProdForSumTree, Root(root), SumIndex, Tree(tree))
-import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePrim(..))
+import Polysemy.Db.Tree.Api (TreePrim(..))
 import Polysemy.Db.Tree.Data (DataParams, DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
 import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta))
@@ -30,26 +29,22 @@ data PartialTag =
 
 type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
-type PartialParams = 'Params PartialTag () PartialField (K ())
+type PartialParams = 'Params PartialTag () PartialField
 
 instance ProdForSumTree PartialTag 'True
 
-instance TreePrim PartialTag PartialField (K ()) name d where
+instance TreePrim PartialTag PartialField name d where
   treePrim _ =
     PartialField.Keep
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
-
-instance TreeConPayload PartialTag name () where
-  treeConPayload =
-    ()
 
 partial ::
   ∀ d c .
   Root Auto PartialParams d c =>
   PartialTree c
 partial =
-  root @Auto @PartialParams @d (K ())
+  root @Auto @PartialParams @d PartialField.Keep
 
 class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node) where
   insertFieldNode :: FieldUpdate path a -> PartialNode n -> PartialNode n

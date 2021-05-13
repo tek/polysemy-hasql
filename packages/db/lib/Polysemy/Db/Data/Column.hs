@@ -1,7 +1,5 @@
 module Polysemy.Db.Data.Column where
 
-import Polysemy.Db.Data.FieldId (FieldId)
-
 data Rep (r :: [*]) =
   Rep
   deriving (Eq, Show)
@@ -45,10 +43,6 @@ data Prim =
 
 data ForcePrim a =
   ForcePrim
-  deriving (Eq, Show)
-
-data Con (name :: FieldId) =
-  Con
   deriving (Eq, Show)
 
 data Sum adt =

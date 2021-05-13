@@ -2,7 +2,7 @@
 
 module Polysemy.Hasql.Test.RepTest where
 
-import Polysemy.Db.Data.Column (Auto, Con, Enum, Flatten, ForcePrim, Prim, PrimaryKey, Product, Rep, Sum)
+import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, Prim, PrimaryKey, Product, Rep, Sum)
 import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
@@ -165,7 +165,7 @@ type SummerConssType =
   [
     'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
-    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
+    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod () [
     'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
     ])

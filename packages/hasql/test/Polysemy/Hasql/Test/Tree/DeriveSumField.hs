@@ -1,11 +1,11 @@
-{-# options_ghc -Wno-all -Wno-redundant-constraints #-}
+{-# options_ghc -Wno-redundant-constraints #-}
 
 module Polysemy.Hasql.Test.Tree.DeriveSumField where
 
-import Polysemy.Db.Data.Column (Auto, Con, Prim)
+import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtNode, Node, SumConTree, SumNode, SumTrees, Tree)
+import Polysemy.Db.Tree (Tree)
 import Polysemy.Db.Tree.Data (DataParams)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
@@ -65,13 +65,13 @@ type SummyMeta =
 type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 
 type LeftyNode =
-  'Kind.Prod (Con ('NamedField "Lefty")) '[
+  'Kind.Prod () '[
     'Kind.Tree ('NamedField "intL") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "doubleL") '[Prim] ('Kind.Prim Double)
     ]
 
 type RightyNode =
-  'Kind.Prod (Con ('NamedField "Righty")) '[
+  'Kind.Prod () '[
     'Kind.Tree ('NamedField "intR") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "doubleR") '[Prim] ('Kind.Prim Double)
     ]

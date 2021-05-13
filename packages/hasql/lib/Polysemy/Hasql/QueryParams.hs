@@ -3,8 +3,6 @@ module Polysemy.Hasql.QueryParams where
 import Data.Functor.Contravariant.Divisible (choose)
 import Generics.SOP (
   All,
-  HCollapse(hcollapse),
-  HIndex(hindex),
   I,
   K(..),
   NP(..),
@@ -12,7 +10,9 @@ import Generics.SOP (
   Projection,
   SListI,
   Top,
+  hcollapse,
   hd,
+  hindex,
   hzipWith,
   projections,
   type (-.->)(Fn),
@@ -27,8 +27,8 @@ import Polysemy.Db.Data.PartialFields (FieldTypes, PartialFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ProductCoded)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
-
 import Polysemy.Db.Tree (SumIndex)
+
 import Polysemy.Hasql.Table.QueryParam (QueryParam(queryParam))
 import Polysemy.Hasql.Table.WriteNull (WriteNullCon(writeNullCon), WriteNullCons(writeNullCons))
 

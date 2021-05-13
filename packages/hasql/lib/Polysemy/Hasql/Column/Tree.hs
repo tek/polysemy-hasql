@@ -1,11 +1,10 @@
 module Polysemy.Hasql.Column.Tree where
 
-import Generics.SOP (K(K))
 import Polysemy.Db.Data.Column (ForcePrim, Rep)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (ProdForSumTree, Root(..))
-import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..), TreePrim(..))
+import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..))
 import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
@@ -27,12 +26,8 @@ data DbTag =
   deriving (Eq, Show)
 
 type DbTree = Type.Tree ColumnData Proxy
-type DbParams = 'Params DbTag ColumnData Proxy (K ())
+type DbParams = 'Params DbTag ColumnData Proxy
 instance ProdForSumTree DbTag 'True
-
-instance TreePrim DbTag Proxy a name d where
-  treePrim _ =
-    Proxy
 
 type family MatchPrim (global :: Bool) (d :: Type) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
   MatchPrim 'True _ pre '[] = 'Right (WithPrim pre)
@@ -51,8 +46,8 @@ instance (
     EffectfulColumnType name effs d,
     ImplicitColumnOptions d,
     RepOptions (RepToList rep)
-  ) => TreePayload DbTag ColumnData a ('TreeMeta name rep d) effs where
-    treePayload _ =
+  ) => TreePayload DbTag ('TreeMeta name rep d) effs ColumnData where
+    treePayload =
       ColumnData (effectfulColumnType @name @effs @d) options
       where
         options =
@@ -71,4 +66,4 @@ instance (
     Root rep DbParams d tree
   ) => TableColumn rep d tree where
   tableColumn =
-    root @rep @DbParams @d (K ())
+    root @rep @DbParams @d Proxy

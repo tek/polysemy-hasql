@@ -2,7 +2,7 @@ module Polysemy.Hasql.Test.ParamTest where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Column (Auto, Con, Prim, Product, Sum)
+import Polysemy.Db.Data.Column (Auto, Prim, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
@@ -93,7 +93,7 @@ type SummerConssType =
   [
     PrimInt "sum_index",
     'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
-    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod (Con ('NamedField "Summer2")) [
+    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod () [
       PrimInt "int",
       PrimDouble "dubble"
     ])

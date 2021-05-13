@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.SumTableTest where
 
-import Polysemy.Db.Data.Column (Auto, Con, Prim, PrimQuery, Product, Sum)
+import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Data.Store as Store
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
@@ -27,11 +27,11 @@ type SumTabMeta =
 type SumTabType =
   'Kind.Tree ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.Prod SumTab '[
     SumIndex,
-    'Kind.Tree ('NamedField "SumTabOne") '[] ('Kind.Prod (Con ('NamedField "SumTabOne")) '[
+    'Kind.Tree ('NamedField "SumTabOne") '[] ('Kind.Prod () '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "text") '[Prim] ('Kind.Prim Text)
     ]),
-    'Kind.Tree ('NamedField "SumTabTwo") '[] ('Kind.Prod (Con ('NamedField "SumTabTwo")) '[
+    'Kind.Tree ('NamedField "SumTabTwo") '[] ('Kind.Prod () '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
     ])

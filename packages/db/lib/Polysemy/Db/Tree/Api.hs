@@ -1,6 +1,7 @@
 module Polysemy.Db.Tree.Api where
 
-import Generics.SOP (I, K(K), NP, POP, SListI, SListI2, SOP, hpure, unI, unSOP, unZ)
+import Generics.SOP (HPure, I, NP, SOP, hpure, unI, unSOP, unZ)
+import Generics.SOP.Constraint (SListIN)
 import Generics.SOP.GGP (gfrom)
 
 import Polysemy.Db.Data.FieldId (FieldId)
@@ -15,18 +16,18 @@ import Polysemy.Db.Tree.Data.TreeMeta (
   TreesMetaTypes,
   )
 
-class TreePrim (tag :: Type) (n :: Type -> Type) (f :: Type -> Type) (name :: FieldId) (d :: Type) where
-  treePrim :: f d -> n d
+class TreePrim (tag :: Type) (n :: Type -> Type) (name :: FieldId) (d :: Type) where
+  treePrim :: n d -> n d
 
-instance {-# overlappable #-} TreePrim tag n n name d where
+instance {-# overlappable #-} TreePrim tag n name d where
   treePrim =
     id
 
-class TreePayload (tag :: Type) (t :: Type) (a :: Type) (meta :: TreeMeta) (effs :: [Type]) where
-  treePayload :: a -> t
+class TreePayload (tag :: Type) (meta :: TreeMeta) (effs :: [Type]) (t :: Type) where
+  treePayload :: t
 
-instance {-# overlappable #-} TreePayload tag () a meta effs where
-  treePayload _ =
+instance {-# overlappable #-} TreePayload tag meta effs () where
+  treePayload =
     ()
 
 type TreeSOPT k = (TreeMeta -> Type) -> [k] -> Type
@@ -35,10 +36,12 @@ class TreeSOP (tag :: Type) (metas :: [k]) (h :: TreeSOPT k) (f :: Type -> Type)
   treeSOP :: f d -> h (TM f) metas
 
 instance {-# overlappable #-} (
-    SListI metas
-  ) => TreeSOP tag metas NP (K ()) d where
+    SListIN h metas,
+    HPure h,
+    Alternative f
+  ) => TreeSOP tag metas h f d where
     treeSOP _ =
-      hpure (TM (K ()))
+      hpure (TM empty)
 
 instance {-# overlappable #-} (
     CoerceTM I metas,
@@ -46,12 +49,6 @@ instance {-# overlappable #-} (
   ) => TreeSOP tag metas NP I d where
     treeSOP =
       coerceTM . unZ . unSOP . gfrom . unI
-
-instance {-# overlappable #-} (
-    SListI2 metas
-  ) => TreeSOP tag metas POP (K ()) d where
-    treeSOP _ =
-      hpure (TM (K ()))
 
 instance {-# overlappable #-} (
     ConstructSOP d (TreesMetaTypes metas),
@@ -71,3 +68,7 @@ instance {-# overlappable #-} (
 
 class TreeConPayload (tag :: Type) (field :: FieldId) (t :: Type) where
   treeConPayload :: t
+
+instance TreeConPayload tag name () where
+  treeConPayload =
+    ()

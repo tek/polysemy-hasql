@@ -1,17 +1,16 @@
-{-# options_ghc -Wno-all -Wno-redundant-constraints #-}
+{-# options_ghc -Wno-redundant-constraints #-}
 
 module Polysemy.Hasql.Test.Tree.DeriveSumIdDb where
 
-import Polysemy.Db.Data.Column (Auto, Con, Flatten, Prim, Product, Rep, Sum, UidRep)
+import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Product, Rep, Sum, UidRep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Data.IdQuery (IdQuery, IdQueryRep, UuidQuery)
+import Polysemy.Db.Data.IdQuery (IdQuery, IdQueryRep)
 import Polysemy.Db.Data.Uid
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (AdtNode, Node, SumConTree, SumIndex, SumNode, SumTrees, Tree)
-import Polysemy.Db.Tree.Data (DataParams)
+import Polysemy.Db.Tree (SumIndex, Tree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum, AdtProd))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)

@@ -1,9 +1,8 @@
-{-# options_ghc -Wno-all -Wno-redundant-constraints #-}
 module Polysemy.Hasql.Where where
 
 import Data.Foldable (foldl1)
 import qualified Data.Text as Text
-import Fcf (Eval, Exp, FromMaybe, If, IsJust, Pure, Pure1, type (@@))
+import Fcf (Eval, Exp, FromMaybe, Pure1, type (@@))
 import Fcf.Class.Foldable (Concat, FoldMap)
 import Fcf.Class.Functor (FMap)
 import GHC.TypeLits (AppendSymbol)
