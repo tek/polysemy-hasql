@@ -31,7 +31,7 @@ import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
 import Polysemy.Hasql.Table.QueryParam (QueryParam(queryParam))
 import Polysemy.Hasql.Table.WriteNull (WriteNullCon(writeNullCon), WriteNullCons(writeNullCons))
 
-class ProductParams (ds :: [*]) (cs :: [Kind.Tree]) where
+class ProductParams (trees :: [Kind.Tree]) (ds :: [*]) | trees -> ds where
   productParams :: NP Params ds
 
 instance ProductParams '[] '[] where
@@ -39,18 +39,11 @@ instance ProductParams '[] '[] where
     Nil
 
 instance (
-    QueryParam eff d,
-    ProductParams ds cs
-  ) => ProductParams (d : ds) ('Kind.Tree n eff ('Kind.Prim d) : cs) where
+    QueryParams tree d,
+    ProductParams trees ds
+  ) => ProductParams (tree : trees) (d : ds) where
   productParams =
-    queryParam @eff @d :* productParams @ds @cs
-
-instance {-# overlappable #-} (
-    QueryParams c d,
-    ProductParams ds cs
-  ) => ProductParams (d : ds) (c : cs) where
-  productParams =
-    queryParams @c @d :* productParams @ds @cs
+    queryParams @tree :* productParams @trees
 
 unconsNS ::
   NS (NP I) (ds : dss) ->
@@ -59,23 +52,23 @@ unconsNS = \case
   Z x -> Left x
   S x -> Right x
 
-class ConParams (ds :: [*]) (c :: Kind.Con) where
+class ConParams (tree :: Kind.Con) (ds :: [*]) | tree -> ds where
   conParams :: Params (NP I ds)
 
 instance (
     SListI ds,
-    ProductParams ds c
-  ) => ConParams ds ('Kind.Con n c) where
+    ProductParams tree ds
+  ) => ConParams ('Kind.Con n tree) ds where
   conParams =
-    sequenceContravariantNP (productParams @ds @c)
+    sequenceContravariantNP (productParams @tree)
 
 instance (
     QueryParam eff d
-  ) => ConParams '[d] ('Kind.ConUna n ('Kind.Tree _n eff ('Kind.Prim d))) where
+  ) => ConParams ('Kind.ConUna n ('Kind.Tree _n eff ('Kind.Prim d))) '[d] where
   conParams =
-    unI . hd >$< queryParam @eff @d
+    unI . hd >$< queryParam @eff
 
-class SumParams (dss :: [[*]]) (cs :: [Kind.Con]) where
+class SumParams (trees :: [Kind.Con]) (dss :: [[*]]) | trees -> dss where
   sumParams :: Params (NS (NP I) dss)
 
 instance SumParams '[] '[] where
@@ -84,55 +77,30 @@ instance SumParams '[] '[] where
 
 instance (
     SListI ds,
-    WriteNullCon ds c,
-    WriteNullCons dss cs,
-    ConParams ds c,
-    SumParams dss cs
-  ) => SumParams (ds : dss) (c : cs) where
+    WriteNullCon tree,
+    WriteNullCons trees,
+    ConParams tree ds,
+    SumParams trees dss
+  ) => SumParams (tree : trees) (ds : dss) where
   sumParams =
     choose unconsNS inhabited uninhabited
     where
       inhabited =
-        conParams @ds @c <> writeNullCons @dss @cs
+        conParams @tree <> writeNullCons @trees
       uninhabited =
-        writeNullCon @ds @c <> sumParams @dss @cs
+        writeNullCon @tree <> sumParams @trees
 
-queryParamsNP' ::
-  ∀ ds cs .
+paramsNP ::
+  ∀ ds trees .
   All Top ds =>
-  ProductParams ds cs =>
+  ProductParams trees ds =>
   Params (NP I ds)
-queryParamsNP' =
-  res
+paramsNP =
+  mconcat (hcollapse qps)
   where
-    res =
-      mconcat clps
-    clps =
-      hcollapse qps
     qps :: NP (K (Params (NP I ds))) ds
     qps =
-      hzipWith qp (productParams @ds @cs :: NP Params ds) (projections :: NP (Projection I ds) ds)
-    qp :: ∀ a . Params a -> Projection I ds a -> K (Params (NP I ds)) a
-    qp par (Fn proj) =
-      K (contramap (unI . proj . K) par)
-
-queryParamsNP ::
-  ∀ ds cs d .
-  ProductParams ds cs =>
-  ConstructSOP d '[ds] =>
-  Params d
-queryParamsNP =
-  contramap unpackSOP res
-  where
-    res =
-      mconcat clps
-    clps =
-      hcollapse qps
-    unpackSOP =
-      unZ . unSOP . gfrom
-    qps :: NP (K (Params (NP I ds))) ds
-    qps =
-      hzipWith qp (productParams @ds @cs :: NP Params ds) (projections :: NP (Projection I ds) ds)
+      hzipWith qp (productParams @trees :: NP Params ds) (projections :: NP (Projection I ds) ds)
     qp :: ∀ a . Params a -> Projection I ds a -> K (Params (NP I ds)) a
     qp par (Fn proj) =
       K (contramap (unI . proj . K) par)
@@ -142,7 +110,7 @@ sumIndex ::
 sumIndex =
   contramap hindex (queryParam @'[Prim])
 
-class QueryParams (rep :: Kind.Tree) (d :: *) where
+class QueryParams (tree :: Kind.Tree) (d :: *) | tree -> d where
   queryParams :: Params d
 
 instance (
@@ -151,46 +119,32 @@ instance (
   queryParams =
     queryParam @eff @d
 
-instance {-# overlappable #-} (
+instance (
     ProductCoded d ds,
     ConstructSOP d '[ds],
-    ProductParams ds cs
-  ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d cs)) d where
+    ProductParams trees ds
+  ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d trees)) d where
   queryParams =
-    queryParamsNP @ds @cs @d
-
--- instance (
---     ConstructSOP d dss,
---     SumParams dss cs
---   ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
---     queryParams =
---       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
-
--- instance (
---     ConstructSOP d dss,
---     SumParams dss cs
---   ) => QueryParams ('Kind.Tree n eff ('Kind.Sum d (SumIndex : cs))) d where
---     queryParams =
---       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
+    contramap (unZ . unSOP . gfrom) (paramsNP @ds @trees)
 
 instance (
     ConstructSOP d dss,
-    SumParams dss cs
-  ) => QueryParams ('Kind.Tree n eff ('Kind.SumProd d cs)) d where
+    SumParams trees dss
+  ) => QueryParams ('Kind.Tree n eff ('Kind.SumProd d trees)) d where
     queryParams =
-      unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
+      unSOP . gfrom >$< (sumIndex <> sumParams @trees)
 
-class PartialQueryParams (rep :: Kind.Tree) (d :: *) where
+class PartialQueryParams (tree :: Kind.Tree) (d :: *) where
   partialQueryParams :: Params (PartialFields d)
 
 instance (
     ds ~ FieldTypes d,
     All Top ds,
-    ProductParams ds cs
-  ) => PartialQueryParams ('Kind.Tree n eff ('Kind.Prod d cs)) d where
+    ProductParams trees ds
+  ) => PartialQueryParams ('Kind.Tree n eff ('Kind.Prod d trees)) d where
   partialQueryParams =
-    undefined >$< queryParamsNP' @ds @cs
+    undefined >$< paramsNP @ds @trees
 
-instance PartialQueryParams ('Kind.Tree n eff ('Kind.Sum d cs)) d where
+instance PartialQueryParams ('Kind.Tree n eff ('Kind.Sum d trees)) d where
   partialQueryParams =
     mempty

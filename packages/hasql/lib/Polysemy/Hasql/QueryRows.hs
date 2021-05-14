@@ -10,7 +10,7 @@ import Polysemy.Db.SOP.Constraint (ProductCoded, ReifySOP)
 import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
 import Polysemy.Hasql.Table.ReadNull (ReadNullCon(readNullCon), ReadNullCons(readNullCons))
 
-class ProductRows (ds :: [*]) (cs :: [Kind.Tree]) where
+class ProductRows (trees :: [Kind.Tree]) (ds :: [*]) | trees -> ds where
   productRows :: NP Row ds
 
 instance ProductRows '[] '[] where
@@ -18,36 +18,28 @@ instance ProductRows '[] '[] where
     Nil
 
 instance (
-    QueryRow eff d,
-    ProductRows ds cs
-  ) => ProductRows (d : ds) ('Kind.Tree name eff ('Kind.Prim d) : cs) where
-  productRows =
-    queryRow @eff @d :* productRows @ds @cs
-
-instance {-# overlappable #-} (
-    QueryRows c d,
-    ProductRows ds cs
-  ) => ProductRows (d : ds) (c : cs) where
+    QueryRows tree d,
+    ProductRows trees ds
+  ) => ProductRows (tree : trees) (d : ds) where
     productRows =
-      queryRows @c @d :* productRows @ds @cs
+      queryRows @tree :* productRows @trees
 
-class ConRow (ds :: [*]) (c :: Kind.Con) where
+class ConRow (tree :: Kind.Con) (ds :: [*]) | tree -> ds where
   conRow :: NP Row ds
 
 instance (
-    ProductRows ds ts
-  ) => ConRow ds ('Kind.Con n ts) where
+    ProductRows trees ds
+  ) => ConRow ('Kind.Con n trees) ds where
   conRow =
-    productRows @ds @ts
+    productRows @trees
 
--- TODO does this really need to be Prim?
 instance (
-    QueryRow eff d
-  ) => ConRow '[d] ('Kind.ConUna n ('Kind.Tree _n eff ('Kind.Prim d))) where
+    QueryRows tree d
+  ) => ConRow ('Kind.ConUna n tree) '[d] where
   conRow =
-    queryRow @eff @d :* Nil
+    queryRows @tree @d :* Nil
 
-class SumRows (dss :: [[*]]) (cs :: [Kind.Con]) where
+class SumRows (trees :: [Kind.Con]) (dss :: [[*]]) | trees -> dss where
   sumRows :: Int -> Row (NS (NP I) dss)
 
 instance SumRows '[] '[] where
@@ -56,39 +48,38 @@ instance SumRows '[] '[] where
 
 instance (
     SListI ds,
-    ReadNullCon c,
-    ReadNullCons cs,
-    ConRow ds c,
-    SumRows dss cs
-  ) => SumRows (ds : dss) (c : cs) where
+    ReadNullCon tree,
+    ReadNullCons trees,
+    ConRow tree ds,
+    SumRows trees dss
+  ) => SumRows (tree : trees) (ds : dss) where
   sumRows = \case
     0 ->
-      Z <$> hsequence (conRow @ds @c) <* readNullCons @cs
+      Z <$> hsequence (conRow @tree) <* readNullCons @trees
     index -> do
-      readNullCon @c
-      S <$> sumRows @dss @cs (index - 1)
+      readNullCon @tree
+      S <$> sumRows @trees @dss (index - 1)
 
-class QueryRows (rep :: Kind.Tree) (d :: *) where
+class QueryRows (tree :: Kind.Tree) (d :: *) | tree -> d where
   queryRows :: Row d
 
-instance {-# overlappable #-} (
+instance (
     ReifySOP d '[ds],
     ProductCoded d ds,
-    ProductRows ds cs
-  ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d cs)) d where
+    ProductRows trees ds
+  ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d trees)) d where
     queryRows =
-      gto . SOP . Z <$> hsequence (productRows @ds @cs)
+      gto . SOP . Z <$> hsequence (productRows @trees @ds)
 
--- instance (
---     ReifySOP d dss,
---     SumRows dss cs
---   ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
---     queryRows =
---       gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
+instance (
+    QueryRow eff d
+  ) => QueryRows ('Kind.Tree n eff ('Kind.Prim d)) d where
+  queryRows =
+    queryRow @eff @d
 
 instance (
     ReifySOP d dss,
-    SumRows dss cs
-  ) => QueryRows ('Kind.Tree n eff ('Kind.SumProd d cs)) d where
+    SumRows trees dss
+  ) => QueryRows ('Kind.Tree n eff ('Kind.SumProd d trees)) d where
   queryRows =
-    gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
+    gto . SOP <$> (sumRows @trees @dss =<< queryRow @'[Prim])
