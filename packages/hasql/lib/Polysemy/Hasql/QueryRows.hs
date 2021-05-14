@@ -7,7 +7,6 @@ import Polysemy.Db.Data.Column (Prim)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ProductCoded, ReifySOP)
 
-import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
 import Polysemy.Hasql.Table.ReadNull (ReadNullCon(readNullCon), ReadNullCons(readNullCons))
 
@@ -32,27 +31,28 @@ instance {-# overlappable #-} (
     productRows =
       queryRows @c @d :* productRows @ds @cs
 
-class ConRow (ds :: [*]) (c :: Kind.Tree) where
+class ConRow (ds :: [*]) (c :: Kind.Con) where
   conRow :: NP Row ds
 
 instance (
-    ProductRows ds c
-  ) => ConRow ds ('Kind.Tree n eff ('Kind.Prod d c)) where
+    ProductRows ds ts
+  ) => ConRow ds ('Kind.Con n ts) where
   conRow =
-    productRows @ds @c
+    productRows @ds @ts
 
+-- TODO does this really need to be Prim?
 instance (
     QueryRow eff d
-  ) => ConRow '[d] ('Kind.Tree n eff ('Kind.Prim d)) where
+  ) => ConRow '[d] ('Kind.ConUna n ('Kind.Tree _n eff ('Kind.Prim d))) where
   conRow =
     queryRow @eff @d :* Nil
 
-class SumRows (dss :: [[*]]) (cs :: [Kind.Tree]) where
+class SumRows (dss :: [[*]]) (cs :: [Kind.Con]) where
   sumRows :: Int -> Row (NS (NP I) dss)
 
 instance SumRows '[] '[] where
   sumRows index =
-    fail [qt|invalid index into sum type in database: #{index}|]
+    fail [text|invalid index into sum type in database: #{index}|]
 
 instance (
     SListI ds,
@@ -79,16 +79,16 @@ instance {-# overlappable #-} (
     queryRows =
       gto . SOP . Z <$> hsequence (productRows @ds @cs)
 
-instance (
-    ReifySOP d dss,
-    SumRows dss cs
-  ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
-    queryRows =
-      gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
+-- instance (
+--     ReifySOP d dss,
+--     SumRows dss cs
+--   ) => QueryRows ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
+--     queryRows =
+--       gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])
 
 instance (
     ReifySOP d dss,
     SumRows dss cs
-  ) => QueryRows ('Kind.Tree n eff ('Kind.Sum d (SumIndex : cs))) d where
+  ) => QueryRows ('Kind.Tree n eff ('Kind.SumProd d cs)) d where
   queryRows =
     gto . SOP <$> (sumRows @dss @cs =<< queryRow @'[Prim])

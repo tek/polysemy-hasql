@@ -31,7 +31,7 @@ import Hasql.Encoders (
   uuid,
   )
 import Path (Path, toFilePath)
-import Prelude hiding (Enum, bool)
+import Prelude hiding (Enum, bool, text)
 
 class PrimEncoder d where
   primEncoder :: Value d

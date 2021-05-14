@@ -9,7 +9,7 @@ import Polysemy.Db.Data.PartialFields (PartialFields)
 
 conditionalColumn :: Column -> Int -> Int -> Text
 conditionalColumn Column {_selector = Selector s} c i =
-  [qt|when case #{dollar i} then #{dollar c} else old.#{s} end|]
+  [text|when case #{dollar i} then #{dollar c} else old.#{s} end|]
 
 conditional :: [Column] -> Int -> [Text]
 conditional cols flagStart =
@@ -19,7 +19,7 @@ setPartial ::
   Column ->
   SqlCode
 setPartial column =
-  SqlCode [qt|set (#{names}) = (#{values})|]
+  SqlCode [text|set (#{names}) = (#{values})|]
   where
     names =
       commaSeparated (unSelector <$> baseColumnSelectors column)

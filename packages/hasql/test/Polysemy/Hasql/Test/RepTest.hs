@@ -163,12 +163,11 @@ type NewtType =
 
 type SummerConssType =
   [
-    'Kind.Tree ('NamedField "sum_index") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
-    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod () [
-    'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
-    ])
+    'Kind.ConUna ('NamedField "Summer1") ('Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text)),
+    'Kind.Con ('NamedField "Summer2") [
+      'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
+    ]
   ]
 
 type SummerMeta =
@@ -181,7 +180,7 @@ type DatType =
       ,
       ProddoType "proddo"
       ,
-      'Kind.Tree ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.Prod Summer SummerConssType)
+      'Kind.Tree ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.SumProd Summer SummerConssType)
       ,
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom)
       ,
@@ -207,7 +206,7 @@ type DatTypeAuto =
     'Kind.Prod Dat [
       PrimMaybeDouble "double",
       'Kind.Tree ('NamedField "proddo") '[ ADT ProddoMeta Auto] ProddoTypeAuto,
-      'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.Prod Summer SummerConssType),
+      'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.SumProd Summer SummerConssType),
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom),
       NewtType,
       'Kind.Tree ('NamedField "nummo") '[Tycon [] Nummo, Enum] ('Kind.Prim [Nummo]),
@@ -276,7 +275,7 @@ datTargetWith flattyColumns =
       Data.Column "pr_int" "(\"proddo\").\"pr_int\"" "bigint" def Data.Prim
     ]),
     Data.Column "summer" "\"summer\"" "summer" def (Data.Prod [
-      Data.Column "sum_index" "(\"summer\").\"sum_index\"" "bigint" def (Data.Prim),
+      Data.Column "sum__index" "(\"summer\").\"sum__index\"" "bigint" def (Data.Prim),
       Data.Column "txt" "(\"summer\").\"txt\"" "text" def Data.Prim,
       Data.Column "summer2" "(\"summer\").\"summer2\"" "summer2" def (Data.Prod [
         Data.Column "int" "(\"summer\").\"summer2\".\"int\"" "bigint" def Data.Prim,

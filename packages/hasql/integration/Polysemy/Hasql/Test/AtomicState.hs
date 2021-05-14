@@ -18,6 +18,6 @@ test_atomicStateDb =
   integrationTest do
     r <- interpretAtomicStateDbAuto (Cat 5 "fuzzyboots") do
       restop @DbError do
-        atomicModify' \ (Cat _ nam) -> Cat 200 [qt|mr. #{nam}|]
+        atomicModify' \ (Cat _ nam) -> Cat 200 [text|mr. #{nam}|]
         atomicGet
     Cat 200 "mr. fuzzyboots" === r

@@ -1,6 +1,6 @@
 module Polysemy.Db.Tree.Data where
 
-import Generics.SOP (AllZip, I(I), NP, NS (Z), SListI, SOP(SOP), htrans)
+import Generics.SOP (AllZip, I(I), NP, NS (Z), SOP(SOP), htrans)
 import Generics.SOP.GGP (GCode, gto)
 
 import Polysemy.Db.Data.Column (Auto)
@@ -16,6 +16,7 @@ import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta), TreeMetaType)
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import qualified Polysemy.Db.Type.Data.Tree as Type
+import Generics.SOP.Constraint (SListI)
 
 data DataTag =
   DataTag
@@ -27,6 +28,7 @@ data ExpandedDataTag =
 
 type DataTree = Type.Tree () I
 type DataNode = Type.Node () I
+type DataCon = Type.Con () I
 type DataParams = 'Params DataTag () I
 type ExpandedDataParams = 'Params ExpandedDataTag () Maybe
 
@@ -77,14 +79,14 @@ instance (
   reifyDataProd t =
     I (reifyDataTree t)
 
-class ReifyDataSum (tree :: Kind.Tree) (ds :: [*]) where
-  reifyDataSum :: DataTree tree -> NP I ds
+class ReifyDataSum (tree :: Kind.Con) (ds :: [*]) where
+  reifyDataSum :: DataCon tree -> NP I ds
 
 instance (
-    AllZip ReifyDataProd node ds
-  ) => ReifyDataSum ('Kind.Tree name eff ('Kind.Prod d node)) ds where
-  reifyDataSum (Type.Tree _ (Type.Prod _ sub)) =
-    htrans (Proxy @ReifyDataProd) reifyDataProd sub
+    AllZip ReifyDataTree trees ds
+  ) => ReifyDataSum ('Kind.Con name trees) ds where
+  reifyDataSum (Type.Con sub) =
+    htrans (Proxy @ReifyDataTree) (I . reifyDataTree) sub
 
 class ReifyDataTree (tree :: Kind.Tree) d | tree -> d where
   reifyDataTree :: DataTree tree -> d

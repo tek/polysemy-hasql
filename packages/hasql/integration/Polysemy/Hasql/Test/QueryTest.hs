@@ -17,7 +17,6 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata(AdtSum, AdtProd))
@@ -114,20 +113,16 @@ type XXorMeta =
   'AdtSum '[
     'ConMeta ('NamedField "Lef") '[ 'TreeMeta ('NamedField "l") Auto Double],
     'ConMeta ('NamedField "Righ") '[ 'TreeMeta ('NamedField "r") Auto Bool]
-    ]
-
-type LefCol =
-  'Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Double)
+  ]
 
 type XXorCols =
   [
-    SumIndex,
-    LefCol,
-    'Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Bool)
+    'Kind.ConUna ('NamedField "Lef") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Double)),
+    'Kind.ConUna ('NamedField "Righ") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Bool))
   ]
 
 type XXorType rep =
-  'Kind.Prod XXor XXorCols
+  'Kind.SumProd XXor XXorCols
 
 type ContentNumberMeta =
   'AdtProd '[
@@ -166,7 +161,7 @@ type DatType name rep sumRep =
         )
       ]
     ),
-    'Kind.Tree ('NamedField "xxor") '[ADT (ADTMeta' sumRep XXor) sumRep] ('Kind.Prod XXor XXorCols),
+    'Kind.Tree ('NamedField "xxor") '[ADT (ADTMeta' sumRep XXor) sumRep] ('Kind.SumProd XXor XXorCols),
     'Kind.Tree ('NamedField "created") '[Newtype CreationTime UTCTime, Prim] ('Kind.Prim CreationTime)
   ])
 
@@ -198,14 +193,14 @@ type LefQuery =
 
 type CNColsQuery =
   '[
-    'SimpleCond Int Int ['FieldSegment ('NamedField "sum_index"), 'SumSegment ('NamedField "")],
+    'SimpleCond Int Int ['FieldSegment ('NamedField "sum__index"), 'SumSegment ('NamedField "")],
     'SimpleCond Double Double ['FieldSegment ('NamedField "Lef"), 'SumSegment ('NamedField "")],
     'SimpleCond Double Double ['FieldSegment ('NamedField "Righ"), 'SumSegment ('NamedField "")]
     ]
 
 type CNQuery =
   '[
-    'SimpleCond Int Int ['FieldSegment ('NamedField "sum_index"), 'SumSegment ('NamedField "xxor")],
+    'SimpleCond Int Int ['FieldSegment ('NamedField "sum__index"), 'SumSegment ('NamedField "xxor")],
     'SimpleCond Double Double ['FieldSegment ('NamedField "Lef"), 'SumSegment ('NamedField "xxor")],
     'SimpleCond Double Double ['FieldSegment ('NamedField "Righ"), 'SumSegment ('NamedField "xxor")]
     ]

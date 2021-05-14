@@ -3,7 +3,6 @@ module Polysemy.Hasql.Test.Tree.Data.DatS where
 import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (SumIndex)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum))
@@ -38,21 +37,16 @@ type DatSAdtMeta =
 type DatSTreeEffs =
   '[ADT DatSAdtMeta Auto]
 
-type DatSTrees =
+type DatSCons =
   '[
-    SumIndex,
-    'Kind.Tree ('NamedField "DatS1") '[] (
-      'Kind.Prod () '[
-        'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-        'Kind.Tree ('NamedField "double1") '[Prim] ('Kind.Prim Double)
-      ]
-    ),
-    'Kind.Tree ('NamedField "DatS2") '[] (
-      'Kind.Prod () '[
-        'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-        'Kind.Tree ('NamedField "text2") '[Prim] ('Kind.Prim Text)
-      ]
-    )
+    'Kind.Con ('NamedField "DatS1") '[
+      'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "double1") '[Prim] ('Kind.Prim Double)
+      ],
+    'Kind.Con ('NamedField "DatS2") '[
+      'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "text2") '[Prim] ('Kind.Prim Text)
+    ]
   ]
 
 type DataSDataTree1 =
@@ -65,25 +59,21 @@ type DataSDataTree1 =
 
 type DatSDataTrees =
   '[
-    'Kind.Tree ('NamedField "DatS1") '[] (
-      'Kind.Prod () '[
-        'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-        'Kind.Tree ('NamedField "double1") '[Prim] ('Kind.Prim Double)
-      ]
-    ),
-    'Kind.Tree ('NamedField "DatS2") '[] (
-      'Kind.Prod () '[
-        'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-        'Kind.Tree ('NamedField "text2") '[Prim] ('Kind.Prim Text)
-      ]
-    )
+    'Kind.Con ('NamedField "DatS1") '[
+      'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "double1") '[Prim] ('Kind.Prim Double)
+    ],
+    'Kind.Con ('NamedField "DatS2") '[
+      'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
+      'Kind.Tree ('NamedField "text2") '[Prim] ('Kind.Prim Text)
+    ]
   ]
 
 type DatSPartialNode =
-  'Kind.Prod DatS DatSTrees
+  'Kind.SumProd DatS DatSCons
 
 type DatSNode =
-  'Kind.Prod DatS DatSTrees
+  'Kind.SumProd DatS DatSCons
 
 type DatSDataNode =
   'Kind.Sum DatS DatSDataTrees

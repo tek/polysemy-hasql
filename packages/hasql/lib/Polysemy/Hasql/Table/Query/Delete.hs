@@ -8,4 +8,4 @@ deleteSql ::
   Column ->
   SqlCode
 deleteSql (Column _ (fromFragment -> SqlCode from) _ _ _) =
-  SqlCode [qt|delete #{from}|]
+  SqlCode [text|delete #{from}|]

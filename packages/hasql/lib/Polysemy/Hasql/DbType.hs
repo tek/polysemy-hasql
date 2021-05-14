@@ -30,7 +30,7 @@ columnSpec ::
   Column ->
   SqlCode
 columnSpec column@(Column _ _ _ (ColumnOptions.format -> params) _) =
-  SqlCode [qt|#{quotedName column} #{Column._tpe column}#{params}|]
+  SqlCode [text|#{quotedName column} #{Column._tpe column}#{params}|]
 
 flatColumns :: Column -> [Column]
 flatColumns col@(Column _ _ _ _ dbType) =

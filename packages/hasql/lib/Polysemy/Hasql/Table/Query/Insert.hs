@@ -9,7 +9,7 @@ import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated)
 
 row :: Text -> Text
 row a =
-  [qt|row(#{a})|]
+  [text|row(#{a})|]
 
 insertColumn :: Int -> Column -> (Int, Text)
 insertColumn index = \case
@@ -37,7 +37,7 @@ insert ::
   Column ->
   SqlCode
 insert table@(Column _ (intoFragment -> SqlCode into) _ _ _) =
-  SqlCode [qt|insert #{into} (#{cols}) values (#{values})|]
+  SqlCode [text|insert #{into} (#{cols}) values (#{values})|]
   where
     cols =
       commaColumns (baseColumns table)

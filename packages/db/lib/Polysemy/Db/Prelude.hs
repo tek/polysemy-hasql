@@ -103,7 +103,7 @@ import Relude hiding (
   )
 import System.IO.Error (userError)
 
-import Polysemy.Db.Debug (dbg, dbgs, dbgs_)
+import Polysemy.Db.Debug (dbg, dbgs, dbgs_, tr, trs, trs')
 
 unit ::
   Applicative f =>
@@ -252,10 +252,10 @@ as =
   (<$)
 {-# inline as #-}
 
-qt :: QuasiQuoter
-qt =
+text :: QuasiQuoter
+text =
   i
-{-# inline qt #-}
+{-# inline text #-}
 
 type Basic a =
   (Eq a, Show a)

@@ -11,7 +11,7 @@ set ::
   Column ->
   SqlCode
 set column =
-  SqlCode [qt|set #{assigns}|]
+  SqlCode [text|set #{assigns}|]
   where
     assigns =
       commaSeparated (zipWith assign (baseColumnSelectors column) (insertValues column))

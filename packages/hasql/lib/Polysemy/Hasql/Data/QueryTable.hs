@@ -45,4 +45,4 @@ selector =
 
 instance Show (QueryTable q a) where
   show (QueryTable tbl _ qw) =
-    [qt|QueryTable { table = #{tbl}, qparams = Params, qwhere = #{qw} }|]
+    [text|QueryTable { table = #{tbl}, qparams = Params, qwhere = #{qw} }|]

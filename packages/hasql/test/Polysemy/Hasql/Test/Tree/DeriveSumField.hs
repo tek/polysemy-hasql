@@ -64,22 +64,22 @@ type SummyMeta =
 
 type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 
-type LeftyNode =
-  'Kind.Prod () '[
+type LeftyTrees =
+  '[
     'Kind.Tree ('NamedField "intL") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "doubleL") '[Prim] ('Kind.Prim Double)
-    ]
+  ]
 
-type RightyNode =
-  'Kind.Prod () '[
+type RightyTrees =
+  '[
     'Kind.Tree ('NamedField "intR") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "doubleR") '[Prim] ('Kind.Prim Double)
-    ]
+  ]
 
-type SummyTree =
+type SummyCons =
   '[
-    'Kind.Tree ('NamedField "Lefty") '[] LeftyNode,
-    'Kind.Tree ('NamedField "Righty") '[] RightyNode
+    'Kind.Con ('NamedField "Lefty") LeftyTrees,
+    'Kind.Con ('NamedField "Righty") RightyTrees
   ]
 
 type DatSFMeta =
@@ -94,7 +94,7 @@ type DatSFEffs =
 type DatSFTrees =
   '[
     'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "summy") '[ADT SummyMeta Auto] ('Kind.Sum Summy SummyTree)
+    'Kind.Tree ('NamedField "summy") '[ADT SummyMeta Auto] ('Kind.Sum Summy SummyCons)
   ]
 
 type DatSFDataNode =

@@ -8,11 +8,39 @@ import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdTextRaw)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
--- TODO generalize Prod/Sum or make the index column first class
+data Con (t :: Type) (n :: Type -> Type) :: Kind.Con -> Type where
+  Con :: NP (Tree t n) sub -> Con t n ('Kind.Con name sub)
+  ConUna :: Tree t n tree -> Con t n ('Kind.ConUna name tree)
+
+instance (
+    All (Compose Show (Tree t n)) sub
+  ) => Show (Con t n ('Kind.Con name sub)) where
+  show (Con sub) =
+    [text|Con [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+
+instance (
+    Show (Tree t n tree)
+  ) => Show (Con t n ('Kind.ConUna name tree)) where
+  show (ConUna sub) =
+    [text|Con (#{sub})|]
+
+instance (
+    Eq (Tree t n tree)
+  ) => (Eq (Con t n ('Kind.ConUna name tree))) where
+  ConUna l == ConUna r =
+    l == r
+
+instance (
+    All (Compose Eq (Tree t n)) sub
+  ) => (Eq (Con t n ('Kind.Con name sub))) where
+  Con l == Con r =
+    l == r
+
 data Node (t :: Type) (n :: Type -> Type) :: Kind.Node -> Type where
   Prim :: n d -> Node t n ('Kind.Prim d)
   Prod :: n d -> NP (Tree t n) sub -> Node t n ('Kind.Prod d sub)
-  Sum :: n d -> NS (Tree t n) sub -> Node t n ('Kind.Sum d sub)
+  Sum :: n d -> NS (Con t n) cons -> Node t n ('Kind.Sum d cons)
+  SumProd :: n d -> NP (Con t n) cons -> Node t n ('Kind.SumProd d cons)
 
 instance Show (n d) => Show (Node t n ('Kind.Prim d)) where
   show (Prim n) =
@@ -23,28 +51,21 @@ instance (
     All (Compose Show (Tree t n)) sub
   ) => Show (Node t n ('Kind.Prod d sub)) where
   show (Prod n sub) =
-    [qt|Prod #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+    [text|Prod #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
 
 instance (
     Show (n d),
-    All (Compose Show (Tree t n)) sub
-  ) => Show (Node t n ('Kind.Sum d sub)) where
+    All (Compose Show (Con t n)) cons
+  ) => Show (Node t n ('Kind.Sum d cons)) where
   show (Sum n sub) =
-    [qt|Sum #{show @Text n} [#{hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub)}]|]
+    [text|Sum #{show @Text n} [#{hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @Text) sub)}]|]
 
-data Tree (t :: Type) (n :: Type -> Type) :: Kind.Tree -> Type where
-  Tree :: t -> Node t n node -> Tree t n ('Kind.Tree name eff node)
-
-data ColumnData =
-  ColumnData {
-    name :: Text,
-    options :: ColumnOptions
-  }
-  deriving (Eq, Show)
-
--- TODO move to hasql
-type DbType = Node ColumnData Proxy
-type Column = Tree ColumnData Proxy
+instance (
+    Show (n d),
+    All (Compose Show (Con t n)) sub
+  ) => Show (Node t n ('Kind.SumProd d sub)) where
+  show (SumProd n sub) =
+    [text|SumProd #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @Text) sub))}]|]
 
 instance (Eq (Node t n ('Kind.Prim d))) where
   _ == _ =
@@ -59,10 +80,32 @@ instance (
 
 instance (
     Eq (n d),
-    All (Compose Eq (Tree t n)) sub
-  ) => (Eq (Node t n ('Kind.Sum d sub))) where
+    All (Compose Eq (Con t n)) cons
+  ) => (Eq (Node t n ('Kind.Sum d cons))) where
   Sum nl l == Sum nr r =
     nl == nr && l == r
+
+instance (
+    Eq (n d),
+    All (Compose Eq (Con t n)) cons
+  ) => (Eq (Node t n ('Kind.SumProd d cons))) where
+  SumProd nl l == SumProd nr r =
+    nl == nr && l == r
+
+data Tree (t :: Type) (n :: Type -> Type) :: Kind.Tree -> Type where
+  Tree :: t -> Node t n node -> Tree t n ('Kind.Tree name eff node)
+
+data ColumnData =
+  ColumnData {
+    name :: Text,
+    options :: ColumnOptions
+  }
+  deriving (Eq, Show)
+
+-- TODO move to hasql
+type DbType = Node ColumnData Proxy
+type Column = Tree ColumnData Proxy
+type DbCon = Con ColumnData Proxy
 
 instance (
     Show t,
@@ -70,7 +113,7 @@ instance (
     Show (Node t n node)
   ) => Show (Tree t n ('Kind.Tree name eff node)) where
   show (Tree t dbType) =
-    [qt|Tree "#{fieldIdTextRaw @name}" #{t} (#{dbType})|]
+    [text|Tree "#{fieldIdTextRaw @name}" #{t} (#{dbType})|]
 
 deriving instance (
     Eq t,

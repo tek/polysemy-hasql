@@ -37,9 +37,9 @@ instance (
     KnownNat index
   ) => FieldIdText ('NumberedField name index) where
   fieldIdTextRaw =
-    [qt|#{symbolText @name}_#{natVal (Proxy @index)}|]
+    [text|#{symbolText @name}_#{natVal (Proxy @index)}|]
   fieldIdText =
-    dbIdentifier [qt|#{symbolString @name}_#{natVal (Proxy @index)}|]
+    dbIdentifier [text|#{symbolString @name}_#{natVal (Proxy @index)}|]
 
 data FieldIdSymbol :: FieldId -> Exp ErrorMessage
 

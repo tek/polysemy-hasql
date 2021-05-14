@@ -51,7 +51,7 @@ selectWhereSql ::
   QueryTable query d ->
   SqlCode
 selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _ _) _ (Where (SqlCode qw))) =
-  SqlCode [qt|#{sel} where #{qw}|]
+  SqlCode [text|#{sel} where #{qw}|]
 
 -- |Construct a query of the shape "select ... from ... where ..."
 -- The point of the 'ResultShape' constraint is to help with inferring the @d@ type from the @result@ type so no manual
@@ -67,7 +67,7 @@ anyWhereSql ::
   QueryTable query d ->
   SqlCode
 anyWhereSql (QueryTable (Table (Column _ (fromFragment -> SqlCode from) _ _ _) _ _ _) _ (Where (SqlCode qw))) =
-  SqlCode [qt|select 1 #{from} where #{qw} limit 1|]
+  SqlCode [text|select 1 #{from} where #{qw} limit 1|]
 
 anyWhere ::
   QueryTable query d ->
@@ -85,7 +85,7 @@ upsertSql ::
   Column ->
   SqlCode
 upsertSql table =
-  SqlCode [qt|#{ins} #{conflict}|]
+  SqlCode [text|#{ins} #{conflict}|]
   where
     SqlCode conflict =
       conflictFragment table st
@@ -105,12 +105,12 @@ deleteWhereSql ::
   SqlCode ->
   SqlCode
 deleteWhereSql Table {_structure} (SqlCode qw) =
-  [qt|#{del}#{qwFragment} returning #{cols}|]
+  [text|#{del}#{qwFragment} returning #{cols}|]
   where
     qwFragment =
       if Text.null qw
       then "" :: Text
-      else [qt| where #{qw}|]
+      else [text| where #{qw}|]
     SqlCode del =
       deleteSql _structure
     cols =
@@ -133,12 +133,12 @@ updateSql ::
   QueryTable query d ->
   SqlCode
 updateSql table@(QueryTable (Table structure _ _ _) _ (Where (SqlCode qw))) =
-  SqlCode [qt|#{upd} #{st}#{qwFragment}|]
+  SqlCode [text|#{upd} #{st}#{qwFragment}|]
   where
     qwFragment =
       if Text.null qw
       then "" :: Text
-      else [qt| where #{qw}|]
+      else [text| where #{qw}|]
     SqlCode upd =
       Query.update table
     SqlCode st =
@@ -154,7 +154,7 @@ createTableSql ::
   Column ->
   SqlCode
 createTableSql column@(Column _ (Selector selector) _ _ _) =
-  SqlCode [qt|create table #{selector} (#{formattedColumns})|]
+  SqlCode [text|create table #{selector} (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (toList (unSqlCode . columnSpec <$> baseColumns column))
@@ -167,12 +167,12 @@ createTable =
 
 createCtorTypeSql :: Column -> SqlCode
 createCtorTypeSql column =
-  [qt|create type #{quotedName column} as (#{formattedColumns})|]
+  [text|create type #{quotedName column} as (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (toList (formattedColumn <$> baseColumns column))
     formattedColumn col =
-      [qt|#{quotedName col} #{dquote (Column._tpe col)}|]
+      [text|#{quotedName col} #{dquote (Column._tpe col)}|]
 
 createCtorType ::
   Column ->
@@ -185,12 +185,12 @@ createProdTypeSql ::
   [Column] ->
   SqlCode
 createProdTypeSql (Selector prodName) columns =
-  [qt|create type #{prodName} as (#{formattedColumns})|]
+  [text|create type #{prodName} as (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (formattedColumn <$> columns)
     formattedColumn (Column (Name name) _ tpe _ _) =
-      [qt|#{name} #{tpe}|]
+      [text|#{name} #{tpe}|]
 
 createProdType ::
   Selector ->
@@ -202,12 +202,12 @@ createProdType =
 createSumTypeSql :: Column -> SqlCode
 -- createSumTypeSql (Column (quotedName -> name) (Column indexName indexType _ _) columns) =
 createSumTypeSql column =
-  [qt|create type #{quotedName column} as (#{formattedColumns})|]
+  [text|create type #{quotedName column} as (#{formattedColumns})|]
   where
     formattedColumns =
-      commaSeparated ([qt|#{dquote "sum_index"} bigint|] : toList (formattedColumn <$> baseColumns column))
+      commaSeparated ([text|#{dquote "sum__index"} bigint|] : toList (formattedColumn <$> baseColumns column))
     formattedColumn (quotedName -> n) =
-      [qt|#{n} #{n}|]
+      [text|#{n} #{n}|]
 
 createSumType ::
   Column ->
@@ -219,7 +219,7 @@ dropTypeSql ::
   Text ->
   SqlCode
 dropTypeSql (dquote -> name) =
-   SqlCode [qt|drop type if exists #{name} cascade|]
+   SqlCode [text|drop type if exists #{name} cascade|]
 
 dropType ::
   Text ->
@@ -231,7 +231,7 @@ dropTableSql ::
   Name ->
   SqlCode
 dropTableSql (Name (dquote -> name)) =
-   SqlCode [qt|drop table if exists #{name}|]
+   SqlCode [text|drop table if exists #{name}|]
 
 dropTable ::
   Name ->
@@ -244,7 +244,7 @@ alterSql ::
   NonEmpty Column ->
   SqlCode
 alterSql (alterFragment -> SqlCode alter') (toList -> columns) =
-  SqlCode [qt|#{alter'} #{colAdds}|]
+  SqlCode [text|#{alter'} #{colAdds}|]
   where
     SqlCode colAdds =
       commaSeparatedSql (addColumnFragment <$> columns)
@@ -260,7 +260,7 @@ createDbSql ::
   DbName ->
   SqlCode
 createDbSql (DbName (dquote -> name)) =
-  SqlCode [qt|create database #{name}|]
+  SqlCode [text|create database #{name}|]
 
 createDb ::
   DbName ->
@@ -272,7 +272,7 @@ dropDbSql ::
   DbName ->
   SqlCode
 dropDbSql (DbName (dquote -> name)) =
-  SqlCode [qt|drop database #{name}|]
+  SqlCode [text|drop database #{name}|]
 
 dropDb ::
   DbName ->

@@ -29,6 +29,9 @@ type family PayloadT (params :: Params) (meta :: TreeMeta) :: Type where
 type family PayloadM (params :: Params) :: TreeMeta -> Type where
   PayloadM params = TM (Payload params)
 
+type family TCon (params :: Params) :: Kind.Con -> Type where
+  TCon ('Params _ t n) = Type.Con t n
+
 type family TTree (params :: Params) :: Kind.Tree -> Type where
   TTree ('Params _ t n) = Type.Tree t n
 

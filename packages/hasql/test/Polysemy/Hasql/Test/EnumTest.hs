@@ -29,7 +29,7 @@ enumColTable =
 test_enumColTable :: UnitTest
 test_enumColTable =
   runTestAuto do
-    Column "enum_col" [qt|"enum_col"|] "enum_col" def (Prod [Column "e" [qt|"e"|] "text" def Prim]) === enumColTable
+    Column "enum_col" [text|"enum_col"|] "enum_col" def (Prod [Column "e" [text|"e"|] "text" def Prim]) === enumColTable
 
 enumsColTable :: Column
 enumsColTable =
@@ -38,4 +38,4 @@ enumsColTable =
 test_enumsColTable :: UnitTest
 test_enumsColTable =
   runTestAuto do
-    Column "enums_col" [qt|"enums_col"|] "enums_col" def (Prod [Column "e" [qt|"e"|] "text[]" def Prim]) === enumsColTable
+    Column "enums_col" [text|"enums_col"|] "enums_col" def (Prod [Column "e" [text|"e"|] "text[]" def Prim]) === enumsColTable

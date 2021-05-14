@@ -91,16 +91,15 @@ type ProddoType =
 
 type SummerConssType =
   [
-    PrimInt "sum_index",
-    'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
-    'Kind.Tree ('NamedField "Summer2") '[] ('Kind.Prod () [
+    'Kind.ConUna ('NamedField "Summer1") ('Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text)),
+    'Kind.Con ('NamedField "Summer2") [
       PrimInt "int",
       PrimDouble "dubble"
-    ])
+    ]
   ]
 
 type SummerType =
-  'Kind.Prod Summer SummerConssType
+  'Kind.SumProd Summer SummerConssType
 
 type ProddoMeta =
   'AdtProd '[ 'TreeMeta ('NamedField "prInt") Prim Int]

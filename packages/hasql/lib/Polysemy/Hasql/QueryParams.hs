@@ -27,7 +27,6 @@ import Polysemy.Db.Data.PartialFields (FieldTypes, PartialFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ProductCoded)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
-import Polysemy.Db.Tree (SumIndex)
 
 import Polysemy.Hasql.Table.QueryParam (QueryParam(queryParam))
 import Polysemy.Hasql.Table.WriteNull (WriteNullCon(writeNullCon), WriteNullCons(writeNullCons))
@@ -60,23 +59,23 @@ unconsNS = \case
   Z x -> Left x
   S x -> Right x
 
-class ConParams (ds :: [*]) (c :: Kind.Tree) where
+class ConParams (ds :: [*]) (c :: Kind.Con) where
   conParams :: Params (NP I ds)
 
 instance (
     SListI ds,
     ProductParams ds c
-  ) => ConParams ds ('Kind.Tree n eff ('Kind.Prod d c)) where
+  ) => ConParams ds ('Kind.Con n c) where
   conParams =
     sequenceContravariantNP (productParams @ds @c)
 
 instance (
     QueryParam eff d
-  ) => ConParams '[d] ('Kind.Tree n eff ('Kind.Prim d)) where
+  ) => ConParams '[d] ('Kind.ConUna n ('Kind.Tree _n eff ('Kind.Prim d))) where
   conParams =
     unI . hd >$< queryParam @eff @d
 
-class SumParams (dss :: [[*]]) (cs :: [Kind.Tree]) where
+class SumParams (dss :: [[*]]) (cs :: [Kind.Con]) where
   sumParams :: Params (NS (NP I) dss)
 
 instance SumParams '[] '[] where
@@ -160,17 +159,24 @@ instance {-# overlappable #-} (
   queryParams =
     queryParamsNP @ds @cs @d
 
-instance (
-    ConstructSOP d dss,
-    SumParams dss cs
-  ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
-    queryParams =
-      unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
+-- instance (
+--     ConstructSOP d dss,
+--     SumParams dss cs
+--   ) => QueryParams ('Kind.Tree n eff ('Kind.Prod d (SumIndex : cs))) d where
+--     queryParams =
+--       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
+
+-- instance (
+--     ConstructSOP d dss,
+--     SumParams dss cs
+--   ) => QueryParams ('Kind.Tree n eff ('Kind.Sum d (SumIndex : cs))) d where
+--     queryParams =
+--       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
 
 instance (
     ConstructSOP d dss,
     SumParams dss cs
-  ) => QueryParams ('Kind.Tree n eff ('Kind.Sum d (SumIndex : cs))) d where
+  ) => QueryParams ('Kind.Tree n eff ('Kind.SumProd d cs)) d where
     queryParams =
       unSOP . gfrom >$< (sumIndex <> sumParams @dss @cs)
 

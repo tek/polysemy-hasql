@@ -69,7 +69,6 @@ library
       Polysemy.Db.Tree.Data.Params
       Polysemy.Db.Tree.Data.TreeMeta
       Polysemy.Db.Tree.Effect
-      Polysemy.Db.Tree.Hoist
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial
       Polysemy.Db.Type.Data.Tree

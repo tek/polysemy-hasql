@@ -42,15 +42,15 @@ test_initTable =
   integrationTest do
     withTestTableGen @InitRep @Init \ (view Table.name -> name) -> do
       restop @DbError @Database $ Database.connect \ connection -> do
-        () <- Database.sql (Init "a") [qt|insert into "#{unName name}" (f1) values ($1)|]
-        initTable connection (Column name [qt|"#{unName name}"|] "" def (Prod extra))
+        () <- Database.sql (Init "a") [text|insert into "#{unName name}" (f1) values ($1)|]
+        initTable connection (Column name [text|"#{unName name}"|] "" def (Prod extra))
         assertJust (Set.fromList existing) . fmap (Set.fromList . toList) =<< tableColumns connection name
-        assertJust (Res "a" Nothing Nothing) =<< Database.sql () [qt|select * from "#{unName name}"|]
+        assertJust (Res "a" Nothing Nothing) =<< Database.sql () [text|select * from "#{unName name}"|]
   where
     extra =
       [
-        Column "f2" [qt|"f2"|] "bigint" def { notNull = False } Prim,
-        Column "f3" [qt|"f3"|] "uuid" def { notNull = False } Prim
+        Column "f2" [text|"f2"|] "bigint" def { notNull = False } Prim,
+        Column "f3" [text|"f3"|] "uuid" def { notNull = False } Prim
       ]
     existing =
       [

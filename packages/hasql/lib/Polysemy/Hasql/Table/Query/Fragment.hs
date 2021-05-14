@@ -18,19 +18,19 @@ fromFragment ::
   Selector ->
   SqlCode
 fromFragment (Selector name) =
-  SqlCode [qt|from #{name}|]
+  SqlCode [text|from #{name}|]
 
 intoFragment ::
   Selector ->
   SqlCode
 intoFragment (Selector name) =
-  SqlCode [qt|into #{name}|]
+  SqlCode [text|into #{name}|]
 
 alterFragment ::
   Selector ->
   SqlCode
 alterFragment (Selector name) =
-  SqlCode [qt|alter table #{name}|]
+  SqlCode [text|alter table #{name}|]
 
 addColumnFragment ::
   Column ->
@@ -48,6 +48,6 @@ conflictFragment (baseColumns -> columns) (SqlCode setters) =
     format Nothing =
       ""
     format (Just (commaSeparated -> cols)) =
-      [qt|on conflict (#{cols}) do update #{setters}|]
+      [text|on conflict (#{cols}) do update #{setters}|]
     uniques =
       nonEmpty [n | UniqueName n <- columns]

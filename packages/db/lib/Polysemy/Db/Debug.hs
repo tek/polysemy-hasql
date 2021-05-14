@@ -1,8 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# language NoImplicitPrelude #-}
 
 module Polysemy.Db.Debug where
 
 import Data.String.Interpolate (i)
+import qualified Data.Text as Text
 import GHC.Stack (SrcLoc(..))
 import Relude
 import System.IO.Unsafe (unsafePerformIO)
@@ -12,13 +13,23 @@ srcLoc = \case
   (getCallStack -> (_, loc) : _) -> loc
   _ -> error "Debug.srcLoc: empty CallStack"
 
+debugPrint ::
+  SrcLoc ->
+  Text ->
+  IO ()
+debugPrint SrcLoc{ srcLocModule = (toText -> slm), ..} msg =
+  putStrLn [i|#{moduleName}:#{srcLocStartLine} #{msg}|]
+  where
+    moduleName =
+      fromMaybe slm $ listToMaybe $ reverse $ Text.splitOn "." slm
+
 debugPrintWithLoc ::
   Monad m =>
   SrcLoc ->
   Text ->
   m ()
-debugPrintWithLoc SrcLoc{..} msg = do
-  () <- return $ unsafePerformIO (putStrLn [i|#{srcLocModule}:#{srcLocStartLine}:#{srcLocStartCol} #{msg}|])
+debugPrintWithLoc loc msg = do
+  () <- return (unsafePerformIO (debugPrint loc msg))
   pure ()
 
 dbg ::
@@ -30,6 +41,17 @@ dbg =
   debugPrintWithLoc (srcLoc callStack)
 {-# inline dbg #-}
 
+dbgsWith ::
+  HasCallStack =>
+  Monad m =>
+  Show a =>
+  Text ->
+  a ->
+  m ()
+dbgsWith prefix a =
+  debugPrintWithLoc (srcLoc callStack) [i|#{prefix}: #{show @Text a}|]
+{-# inline dbgsWith #-}
+
 dbgs ::
   HasCallStack =>
   Monad m =>
@@ -38,7 +60,7 @@ dbgs ::
   m ()
 dbgs a =
   debugPrintWithLoc (srcLoc callStack) (show a)
-{-# inline dbgs #-}
+{-# inline dbgs_ #-}
 
 dbgs_ ::
   HasCallStack =>
@@ -48,4 +70,32 @@ dbgs_ ::
   m a
 dbgs_ a =
   a <$ debugPrintWithLoc (srcLoc callStack) (show a)
-{-# inline dbgs_ #-}
+{-# inline dbgs #-}
+
+tr ::
+  HasCallStack =>
+  Text ->
+  a ->
+  a
+tr msg a =
+  unsafePerformIO (a <$ debugPrint (srcLoc callStack) msg)
+{-# INLINE tr #-}
+
+trs ::
+  Show a =>
+  HasCallStack =>
+  a ->
+  a
+trs a =
+  unsafePerformIO (a <$ debugPrint (srcLoc callStack) (show a))
+{-# INLINE trs #-}
+
+trs' ::
+  Show b =>
+  HasCallStack =>
+  b ->
+  a ->
+  a
+trs' b a =
+  unsafePerformIO (a <$ debugPrint (srcLoc callStack) (show b))
+{-# inline trs' #-}

@@ -44,7 +44,7 @@ tryDequeue connection =
         Just d ->
           pure (Right (Just d))
         Nothing ->
-          pure (Left [qt|invalid UUID payload: #{payload}|])
+          pure (Left [text|invalid UUID payload: #{payload}|])
     Nothing ->
       LibPQ.socket connection >>= \case
         Just fd -> do
@@ -59,8 +59,8 @@ listen ::
   Members [Database !! e, Stop e, Log, Embed IO] r =>
   Sem r ()
 listen = do
-  Log.debug [qt|executing `listen` for queue #{symbolText @queue}|]
-  restop (Database.retryingSqlDef [qt|listen "#{symbolText @queue}"|])
+  Log.debug [text|executing `listen` for queue #{symbolText @queue}|]
+  restop (Database.retryingSqlDef [text|listen "#{symbolText @queue}"|])
 
 processMessages ::
   Ord t =>
@@ -89,7 +89,7 @@ dequeue ::
   TBMQueue d ->
   Sem (Stop DbError : r) ()
 dequeue queue =
-  restop @_ @Database $ Database.withInit (InitDb [qt|dequeue-#{symbolText @queue}|] (\ _ -> initQueue @queue write)) do
+  restop @_ @Database $ Database.withInit (InitDb [text|dequeue-#{symbolText @queue}|] (\ _ -> initQueue @queue write)) do
     Database.connect \ connection -> do
       result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
       void $ runMaybeT do
@@ -152,9 +152,9 @@ releaseInputQueue ::
   TBMQueue d ->
   Sem r ()
 releaseInputQueue handle _ = do
-  Log.debug [qt|executing `unlisten` for queue `#{symbolText @queue}`|]
+  Log.debug [text|executing `unlisten` for queue `#{symbolText @queue}`|]
   Async.cancel handle
-  resume_ (Database.retryingSqlDef [qt|unlisten "#{symbolText @queue}"|])
+  resume_ (Database.retryingSqlDef [text|unlisten "#{symbolText @queue}"|])
 
 interpretInputDbQueueListen ::
   ∀ (queue :: Symbol) d t dt u r .

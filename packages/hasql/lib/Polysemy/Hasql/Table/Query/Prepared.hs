@@ -4,8 +4,8 @@ import Polysemy.Hasql.Data.DbType (Selector(Selector))
 
 dollar :: Int -> Text
 dollar i =
-  [qt|$#{i}|]
+  [text|$#{i}|]
 
 assign :: Selector -> Text -> Text
 assign (Selector name) value =
-  [qt|#{name} = #{value}|]
+  [text|#{name} = #{value}|]

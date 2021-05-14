@@ -29,4 +29,4 @@ selector =
 
 instance Show Column => Show (Table a) where
   show (Table struct _ _ _) =
-    [qt|Table { structure = #{struct} }|]
+    [text|Table { structure = #{struct} }|]

@@ -48,7 +48,7 @@ suffixedTable lens suffix =
       Column (Name suffixed) (Selector (dquote suffixed)) tpe opt dbTpe
       where
         suffixed =
-          [qt|#{name}-#{suffix}|]
+          [text|#{name}-#{suffix}|]
 
 bracketTestTable ::
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
@@ -120,7 +120,7 @@ createTestDb ::
 createTestDb dbConfig@(DbConfig _ _ (DbName name) _ _) connection = do
   suffix <- UUID.toText <$> random
   let
-    suffixedName = [qt|#{name}-#{suffix}|]
+    suffixedName = [text|#{name}-#{suffix}|]
     suffixed = dbConfig & DbConfig.name .~ suffixedName
   mapStop convertQueryError (runStatement connection () (Statement.createDb suffixedName))
   pure suffixed

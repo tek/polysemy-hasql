@@ -6,7 +6,7 @@ import Polysemy.Db.Data.Column (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (SumIndex, Tree)
+import Polysemy.Db.Tree (Tree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
@@ -52,23 +52,22 @@ type SummyMeta =
 
 type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 
-type LeftyNode =
-  'Kind.Prod () '[
+type LeftyTrees =
+  '[
     'Kind.Tree ('NamedField "intL") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "doubleL") '[Prim] ('Kind.Prim Double)
     ]
 
-type RightyNode =
-  'Kind.Prod () '[
+type RightyTrees =
+  '[
     'Kind.Tree ('NamedField "intR") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "doubleR") '[Prim] ('Kind.Prim Double)
     ]
 
-type SummyTree =
+type SummyCons =
   '[
-    SumIndex,
-    'Kind.Tree ('NamedField "Lefty") '[] LeftyNode,
-    'Kind.Tree ('NamedField "Righty") '[] RightyNode
+    'Kind.Con ('NamedField "Lefty") LeftyTrees,
+    'Kind.Con ('NamedField "Righty") RightyTrees
   ]
 
 type DatSFMeta =
@@ -83,7 +82,7 @@ type DatSFEffs =
 type DatSFTrees =
   '[
     'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "summy") '[ADT SummyMeta Auto] ('Kind.Prod Summy SummyTree)
+    'Kind.Tree ('NamedField "summy") '[ADT SummyMeta Auto] ('Kind.SumProd Summy SummyCons)
   ]
 
 type DatSFTree =

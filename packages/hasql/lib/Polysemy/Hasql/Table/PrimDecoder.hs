@@ -33,7 +33,7 @@ import Hasql.Decoders (
   uuid,
   )
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
-import Prelude hiding (Enum, bool)
+import Prelude hiding (Enum, bool, text)
 
 class PrimDecoder a where
   primDecoder :: Value a

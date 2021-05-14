@@ -35,12 +35,12 @@ interpretOutputDbQueue =
       created <- Time.now
       resumeHoist QueueOutputError.Insert do
         Store.insert (Queued id' created d)
-      Log.debug [qt|executing `notify` for queue #{symbolText @queue}|]
+      Log.debug [text|executing `notify` for queue #{symbolText @queue}|]
       resumeHoist QueueOutputError.Notify do
         Database.retryingSql (Seconds 3) (sql id')
         where
           sql id' =
-            [qt|notify "#{symbolText @queue}", '#{id'}'|]
+            [text|notify "#{symbolText @queue}", '#{id'}'|]
 
 interpretOutputDbQueueFull ::
   ∀ (queue :: Symbol) d t dt r .

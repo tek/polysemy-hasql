@@ -42,27 +42,29 @@ type TestEffects =
   ]
 
 integrationTestWith ::
+  HasCallStack =>
   (DbConfig -> Sem TestEffects ()) ->
   TestT IO ()
 integrationTestWith run =
-  dbConfig >>= \case
-    Just conf -> do
-      runTestAuto do
-        r <-
-          runError @Text $
-          mapError @DbError @Text show $
-          mapError @InitDbError @Text show $
-          stopToError @Text $
-          mapStop @QueryError @Text show $
-          mapStop @DbError @Text show $
-          mapStop @DbConnectionError @Text show $
-          interpretLogNull $
-          runRandomIO $
-          interpretTimeGhc $
-          run conf
-        Hedgehog.evalEither r
-    Nothing ->
-      unit
+  withFrozenCallStack do
+    dbConfig >>= \case
+      Just conf -> do
+        runTestAuto do
+          r <-
+            runError @Text $
+            mapError @DbError @Text show $
+            mapError @InitDbError @Text show $
+            stopToError @Text $
+            mapStop @QueryError @Text show $
+            mapStop @DbError @Text show $
+            mapStop @DbConnectionError @Text show $
+            interpretLogNull $
+            runRandomIO $
+            interpretTimeGhc $
+            run conf
+          Hedgehog.evalEither r
+      Nothing ->
+        unit
 
 integrationTest ::
   HasCallStack =>

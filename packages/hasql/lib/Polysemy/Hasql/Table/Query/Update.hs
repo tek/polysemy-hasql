@@ -10,4 +10,4 @@ update ::
   QueryTable query d ->
   SqlCode
 update (view selector -> Selector name) =
-  SqlCode [qt|update #{name}|]
+  SqlCode [text|update #{name}|]

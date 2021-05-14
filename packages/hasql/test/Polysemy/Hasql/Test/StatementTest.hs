@@ -72,7 +72,7 @@ test_selectStatement =
     target === stmtText
   where
     target =
-      [qt|select "a", "b", "c", ("sum_field")."sum_index", ("sum_field")."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
+      [text|select "a", "b", "c", ("sum_field")."sum__index", ("sum_field")."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
     SqlCode stmtText =
       Statement.selectWhereSql (queryTable @Q1 @Rec)
 
@@ -82,7 +82,7 @@ test_insertStatement =
     target === unSqlCode stmtText
   where
     target =
-      [qt|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, $5, row($6, $7)))|]
+      [text|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, $5, row($6, $7)))|]
     stmtText :: SqlCode
     stmtText =
       Query.insert (tableStructure @Auto @Rec)
@@ -93,7 +93,7 @@ test_upsertStatement =
     target === unSqlCode stmtText
   where
     target =
-      [qt|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, $5, row($6, $7))) on conflict ("a") do update set "a" = $1, "b" = $2, "c" = $3, "sum_field" = row($4, $5, row($6, $7))|]
+      [text|insert into "rec" ("a", "b", "c", "sum_field") values ($1, $2, $3, row($4, $5, row($6, $7))) on conflict ("a") do update set "a" = $1, "b" = $2, "c" = $3, "sum_field" = row($4, $5, row($6, $7))|]
     stmtText :: SqlCode
     stmtText =
       Statement.upsertSql (tableStructure @RecRep @Rec)
@@ -104,7 +104,7 @@ test_createStatement =
     target === unSqlCode stmtText
   where
     target =
-      [qt|create table "rec" ("a" text unique not null, "b" bigint not null, "c" double precision, "sum_field" sum_rec not null)|]
+      [text|create table "rec" ("a" text unique not null, "b" bigint not null, "c" double precision, "sum_field" sum_rec not null)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (tableStructure @RecRep @Rec)
@@ -126,7 +126,7 @@ test_createPKStatement =
     target === unSqlCode stmtText
   where
     target =
-      [qt|create table "user" ("id" bigint primary key, "name" text not null, "number" double precision not null)|]
+      [text|create table "user" ("id" bigint primary key, "name" text not null, "number" double precision not null)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (tableStructure @(UidRep PrimaryKey Auto) @(Uid UserId User))
@@ -169,20 +169,20 @@ test_queryWhereStatement =
     target === unSqlCode qw
   where
     target =
-      [qt|($1 is null or "field2" <= $1) and ($2 is null or "field3" = $2) and "field4" = $3|]
+      [text|($1 is null or "field2" <= $1) and ($2 is null or "field3" = $2) and "field4" = $3|]
     Where qw =
       queryWhere @QueryTestQType @QueryTestQ @QueryTestType @QueryTest
 
 data SumData =
   SumData1 { int :: Int, double :: Double }
   |
-  SumData2 { int :: Int, text :: Text, tixxt :: Text }
+  SumData2 { int :: Int, txt :: Text, tixxt :: Text }
   deriving (Eq, Show, Generic)
 
 data SumQ =
   SumQ1 { int :: Int, double :: Double }
   |
-  SumQ2 { text :: Text, tixxt :: Text }
+  SumQ2 { txt :: Text, tixxt :: Text }
   deriving (Eq, Show, Generic)
 
 data SumTable =
@@ -193,13 +193,36 @@ data SumTableQ =
   SumTableQ { sum :: SumQ }
   deriving (Eq, Show, Generic)
 
+data SumUna =
+  SumUnaL { unaL :: Int }
+  |
+  SumUnaR { unaR :: Double }
+  deriving (Eq, Show, Generic)
+
+data SumUnaExt =
+  SumUnaExtL { unaL :: Int, unaL2 :: Int }
+  |
+  SumUnaExtR { unaR :: Double }
+  deriving (Eq, Show, Generic)
+
+test_createStatement_Sum :: UnitTest
+test_createStatement_Sum =
+  runTestAuto do
+    target === unSqlCode stmtText
+  where
+    target =
+      [text|create table "sum_data" ("sum__index" bigint not null, "sum_data1" sum_data1 not null, "sum_data2" sum_data2 not null)|]
+    stmtText :: SqlCode
+    stmtText =
+      Statement.createTableSql (tableStructure @Auto @SumData)
+
 test_queryWhere_Sum :: UnitTest
 test_queryWhere_Sum =
   runTestAuto do
     target === unSqlCode qw
   where
     target =
-      [qt|($1 is null or ("sum")."sum_index" = $1) and ($2 is null or ("sum")."sum_data1"."int" = $2) and ($3 is null or ("sum")."sum_data1"."double" = $3) and ($4 is null or ("sum")."sum_data2"."text" = $4) and ($5 is null or ("sum")."sum_data2"."tixxt" = $5)|]
+      [text|($1 is null or ("sum")."sum__index" = $1) and ($2 is null or ("sum")."sum_data1"."int" = $2) and ($3 is null or ("sum")."sum_data1"."double" = $3) and ($4 is null or ("sum")."sum_data2"."txt" = $4) and ($5 is null or ("sum")."sum_data2"."tixxt" = $5)|]
     QueryTable _ _ (Where qw) =
       queryTable @SumTableQ @SumTable
 
@@ -209,7 +232,7 @@ test_queryWhere_Sum_Table =
     target === unSqlCode qw
   where
     target =
-      [qt|"sum_index" = $1 and ($2 is null or ("sum_data1")."int" = $2) and ($3 is null or ("sum_data1")."double" = $3) and ($4 is null or ("sum_data2")."text" = $4) and ($5 is null or ("sum_data2")."tixxt" = $5)|]
+      [text|"sum__index" = $1 and ($2 is null or ("sum_data1")."int" = $2) and ($3 is null or ("sum_data1")."double" = $3) and ($4 is null or ("sum_data2")."txt" = $4) and ($5 is null or ("sum_data2")."tixxt" = $5)|]
     QueryTable _ _ (Where qw) =
       queryTable @SumQ @SumData
 
@@ -219,9 +242,29 @@ test_queryWhere_Sum_Prim =
     target === unSqlCode qw
   where
     target =
-      [qt|($1 is null or ("sum_data1")."int" = $1) or ($1 is null or ("sum_data2")."int" = $1)|]
+      [text|($1 is null or ("sum_data1")."int" = $1) or ($1 is null or ("sum_data2")."int" = $1)|]
     QueryTable _ _ (Where qw) =
       genQueryTable @(PrimQuery "int") @Auto @Int @SumData
+
+test_queryWhere_Sum_Unary :: UnitTest
+test_queryWhere_Sum_Unary =
+  runTestAuto do
+    target === unSqlCode qw
+  where
+    target =
+      [text|"sum__index" = $1 and ($2 is null or "una_l" = $2) and ($3 is null or "una_r" = $3)|]
+    QueryTable _ _ (Where qw) =
+      queryTable @SumUna @SumUna
+
+test_queryWhere_Sum_UnaryQ :: UnitTest
+test_queryWhere_Sum_UnaryQ =
+  runTestAuto do
+    target === unSqlCode qw
+  where
+    target =
+      [text|"sum__index" = $1 and ($2 is null or ("sum_una_ext_l")."una_l" = $2) and ($3 is null or "una_r" = $3)|]
+    QueryTable _ _ (Where qw) =
+      queryTable @SumUna @SumUnaExt
 
 data IDQTest =
   IDQTest {
@@ -241,7 +284,7 @@ test_IdQuery =
     target === unSqlCode qw
   where
     target =
-      [qt|"id" = $1|]
+      [text|"id" = $1|]
     QueryTable _ _ (Where qw) =
       genQueryTable @Auto @(UidRep Auto Auto) @(IdQuery Int) @(Uid Int IDQTest)
 
@@ -250,7 +293,7 @@ test_IdQuery =
 --   runTestAuto do target === stmtText
 --   where
 --     target =
---       [qt|update "rec" where "id" = $1 set "a" = $2, "b" = $3, "c" = $4, "sum_field" = row($5, $6, row($7, $8))|]
+--       [text|update "rec" where "id" = $1 set "a" = $2, "b" = $3, "c" = $4, "sum_field" = row($5, $6, row($7, $8))|]
 --     SqlCode stmtText =
 --       Statement.updateSql (genQueryTable @(PrimQuery "id") @(UidRep Auto RecRep) @Int @(Uid Int Rec))
 
@@ -263,8 +306,11 @@ statementTests =
     unitTest "derive a create table statement" test_createStatement,
     unitTest "derive a create table statement with primary key" test_createPKStatement,
     unitTest "derive a where fragment" test_queryWhereStatement,
+    unitTest "derive a create table statement for a sum" test_createStatement_Sum,
     unitTest "derive a where fragment for a sum with identical field names" test_queryWhere_Sum,
     unitTest "derive a where fragment for a sum as the table type" test_queryWhere_Sum_Table,
     unitTest "derive a where fragment for a sum with a prim query" test_queryWhere_Sum_Prim,
+    unitTest "derive a where fragment for a sum with a unary constructors" test_queryWhere_Sum_Unary,
+    unitTest "derive a where fragment for a sum with a query with a unary constructors" test_queryWhere_Sum_UnaryQ,
     unitTest "derive an IdQuery assignment" test_IdQuery
   ]

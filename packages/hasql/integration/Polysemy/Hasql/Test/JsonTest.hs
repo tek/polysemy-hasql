@@ -49,7 +49,7 @@ test_json =
     assertRight f3 (Aeson.eitherDecodeStrict' result)
   where
     query =
-      [qt|select field3 from dat where id = $1|]
+      [text|select field3 from dat where id = $1|]
     enc =
       column (Decoders.nonNullable (jsonBytes pure))
     dec =

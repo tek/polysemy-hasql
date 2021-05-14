@@ -73,10 +73,10 @@ testDerivation =
 
 targetStructure :: Data.Column
 targetStructure =
-  Data.Column "rec" [qt|"rec"|] "uid" def $ Data.Prod [
-    Data.Column "id" [qt|"id"|] "bigint" def { primaryKey = True } Data.Prim,
-    Data.Column "a" [qt|"a"|] "bigint" def Data.Prim,
-    Data.Column "b" [qt|"b"|] "text" def Data.Prim
+  Data.Column "rec" [text|"rec"|] "uid" def $ Data.Prod [
+    Data.Column "id" [text|"id"|] "bigint" def { primaryKey = True } Data.Prim,
+    Data.Column "a" [text|"a"|] "bigint" def Data.Prim,
+    Data.Column "b" [text|"b"|] "text" def Data.Prim
   ]
 
 test_pk :: UnitTest

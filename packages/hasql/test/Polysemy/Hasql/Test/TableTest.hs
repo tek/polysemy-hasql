@@ -27,9 +27,9 @@ test_recColumns =
     target === recTable
   where
     target =
-      Column "rec" [qt|"rec"|] "rec" def (Prod [
-        Column "field1" [qt|"field1"|] "text" def Prim,
-        Column "field2" [qt|"field2"|] "bigint" def Prim
+      Column "rec" [text|"rec"|] "rec" def (Prod [
+        Column "field1" [text|"field1"|] "text" def Prim,
+        Column "field2" [text|"field2"|] "bigint" def Prim
       ])
 
 data UuidCol =
@@ -46,7 +46,7 @@ test_uuidColTable =
     target === uuidColTable
   where
     target =
-      Column "uuid_col" [qt|"uuid_col"|] "uuid_col" def (Prod [Column "uuid" [qt|"uuid"|] "uuid" def Prim])
+      Column "uuid_col" [text|"uuid_col"|] "uuid_col" def (Prod [Column "uuid" [text|"uuid"|] "uuid" def Prim])
 
 test_tableName :: UnitTest
 test_tableName =
@@ -56,7 +56,7 @@ test_tableName =
 
 targetMissing :: [Column]
 targetMissing =
-  [Column "f4" [qt|"f4"|] "text" def Prim]
+  [Column "f4" [text|"f4"|] "text" def Prim]
 
 updateColumnsExisting :: [ExistingColumn]
 updateColumnsExisting =
@@ -69,9 +69,9 @@ updateColumnsExisting =
 updateColumnsTarget :: [Column]
 updateColumnsTarget =
   [
-    Column "f1" [qt|"f1"|] "bigint" def Prim,
-    Column "f2" [qt|"f2"|] "text" def Prim,
-    Column "f4" [qt|"f4"|] "text" def Prim
+    Column "f1" [text|"f1"|] "bigint" def Prim,
+    Column "f2" [text|"f2"|] "text" def Prim,
+    Column "f4" [text|"f4"|] "text" def Prim
   ]
 
 test_updateTasks :: UnitTest

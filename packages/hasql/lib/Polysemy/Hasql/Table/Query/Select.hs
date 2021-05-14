@@ -25,4 +25,4 @@ selectColumns ::
   Column ->
   SqlCode
 selectColumns column@(Column _ (fromFragment -> SqlCode from) _ _ _) =
-  SqlCode [qt|select #{commaSeparated @[] (foldPrims pure column)} #{from}|]
+  SqlCode [text|select #{commaSeparated @[] (foldPrims pure column)} #{from}|]

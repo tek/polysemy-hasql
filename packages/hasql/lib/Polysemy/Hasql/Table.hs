@@ -38,8 +38,8 @@ dbColumnsStatement sql =
   Statement.query sql decoder encoder
   where
     decoder =
-      tuple text text
-    text =
+      tuple text' text'
+    text' =
       Decoders.column (Decoders.nonNullable Decoders.text)
     encoder =
       Encoders.param (Encoders.nonNullable Encoders.text)
@@ -65,7 +65,7 @@ tableColumns =
   dbColumnsFor code
   where
     code =
-      SqlCode [qt|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
+      SqlCode [text|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
 
 typeColumns ::
   Members [Embed IO, Stop QueryError] r =>
@@ -76,7 +76,7 @@ typeColumns =
   dbColumnsFor code
   where
     code =
-      SqlCode [qt|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
+      SqlCode [text|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
 
 -- TODO
 updateType ::
@@ -210,12 +210,12 @@ reportMismatchedColumns ::
   NonEmpty (Name, Column) ->
   Sem r ()
 reportMismatchedColumns (Name name) columns =
-  stop (DbError.Table [qt|mismatched columns in table `#{name}`: #{columnsDescription}|])
+  stop (DbError.Table [text|mismatched columns in table `#{name}`: #{columnsDescription}|])
   where
     columnsDescription =
       Text.intercalate ";" (toList (columnDescription <$> columns))
     columnDescription (dbType, Column colName _ tpe _ _) =
-      [qt|db: #{colName} :: #{dbType}, app: #{colName} :: #{tpe}|]
+      [text|db: #{colName} :: #{dbType}, app: #{colName} :: #{tpe}|]
 
 updateTable ::
   Members [Embed IO, Stop DbError] r =>
@@ -240,7 +240,7 @@ initTable ::
   Column ->
   Sem r ()
 initTable connection t@(Column name _ _ _ _) = do
-  Log.debug [qt|initializing table #{name}|]
+  Log.debug [text|initializing table #{name}|]
   process =<< liftError (tableColumns connection name)
   where
     process (Just existing) =

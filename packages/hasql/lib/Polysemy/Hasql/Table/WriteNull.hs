@@ -50,22 +50,22 @@ instance (
   nullColumns =
     nullColumns @dSub @c <> nullColumns @ds @cs
 
-class WriteNullCon (ds :: [*]) (c :: Kind.Tree) where
+class WriteNullCon (ds :: [*]) (c :: Kind.Con) where
   writeNullCon :: Params d
 
 instance (
     NullColumns '[d] '[ 'Kind.Tree n eff ('Kind.Prim d)]
-  ) => WriteNullCon '[d] ('Kind.Tree n eff ('Kind.Prim d)) where
+  ) => WriteNullCon '[d] ('Kind.ConUna _n ('Kind.Tree n eff ('Kind.Prim d))) where
   writeNullCon =
     nullColumns @'[d] @'[ 'Kind.Tree n eff ('Kind.Prim d)]
 
-instance (
+instance {-# overlappable #-} (
   NullColumns ds cs
-  ) => WriteNullCon ds ('Kind.Tree n eff ('Kind.Prod d cs)) where
+  ) => WriteNullCon ds ('Kind.Con n cs) where
   writeNullCon =
     nullColumns @ds @cs
 
-class WriteNullCons (dss :: [[*]]) (cs :: [Kind.Tree]) where
+class WriteNullCons (dss :: [[*]]) (cs :: [Kind.Con]) where
   writeNullCons :: Params a
 
 instance WriteNullCons '[] '[] where

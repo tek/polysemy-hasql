@@ -7,7 +7,7 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery, IdQueryRep)
 import Polysemy.Db.Data.Uid
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (SumIndex, Tree)
+import Polysemy.Db.Tree (Tree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum, AdtProd))
@@ -66,13 +66,12 @@ type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 
 type SumPKTree =
   '[
-    SumIndex,
-    'Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Int)
+    'Kind.ConUna ('NamedField "SumPKL") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Int)),
+    'Kind.ConUna ('NamedField "SumPKR") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Int))
   ]
 
 type SumPKNode =
-  'Kind.Prod SumPK SumPKTree
+  'Kind.SumProd SumPK SumPKTree
 
 type SumIdMeta =
   'AdtProd '[
