@@ -27,15 +27,6 @@ type family TreesMetaTypes (metas :: [[TreeMeta]]) :: [[Type]] where
   TreesMetaTypes '[] = '[]
   TreesMetaTypes (meta : metas) = TreeMetaTypes meta : TreesMetaTypes metas
 
-data ConsTreeMeta =
-  ConsTreeMeta {
-    payload :: Type,
-    meta :: TreeMeta
-  }
-
-type family ConsTreePayload (meta :: ConsTreeMeta) :: Type where
-  ConsTreePayload ('ConsTreeMeta payload _) = payload
-
 data ConMeta =
   ConMeta {
     conName :: FieldId,

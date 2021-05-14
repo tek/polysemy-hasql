@@ -29,11 +29,11 @@ import Polysemy.Hasql.Column.Effect (
   ResolveColumnEffects,
   ResolveRep,
   )
+import qualified Polysemy.Hasql.Column.Tree as Tree
 import Polysemy.Hasql.Column.Tree (DbParams, tableColumn)
 import Polysemy.Hasql.ColumnType (ColumnType(..))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Test.Error.Column.E1 ()
-import qualified Polysemy.Hasql.Type.Data.DbType as Type
 
 newtype Newt =
   Newt { unNewt :: Text }
@@ -217,33 +217,33 @@ type DatTypeAuto =
 type PR =
   '[Product ProddoRep]
 
-column_Int :: Type.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
+column_Int :: Tree.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
 column_Int =
   tree @DbParams @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) mempty
 
-column_Double :: Type.Column (PrimDouble "double")
+column_Double :: Tree.Column (PrimDouble "double")
 column_Double =
   tree @DbParams @('TreeMeta ('NamedField "double") Auto Double) mempty
 
-column_Newt :: Type.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
+column_Newt :: Tree.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
 column_Newt =
   tree @DbParams @('TreeMeta ('NamedField "newt") Auto Newt) mempty
 
-column_Newt_Prim :: Type.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
+column_Newt_Prim :: Tree.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
 column_Newt_Prim =
   tree @DbParams @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) mempty
 
-column_Proddo :: Type.Column (ProddoType "proddo")
+column_Proddo :: Tree.Column (ProddoType "proddo")
 column_Proddo =
   tree @DbParams @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) mempty
 
 columns_Dat_explicit ::
-  Type.Column DatType
+  Tree.Column DatType
 columns_Dat_explicit =
   tableColumn @(Product DatRep) @Dat
 
 columns_Dat_Auto ::
-  Type.Column DatTypeAuto
+  Tree.Column DatTypeAuto
 columns_Dat_Auto =
   tableColumn @Auto @Dat
 

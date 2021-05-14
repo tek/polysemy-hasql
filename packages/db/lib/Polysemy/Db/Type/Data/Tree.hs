@@ -102,11 +102,6 @@ data ColumnData =
   }
   deriving (Eq, Show)
 
--- TODO move to hasql
-type DbType = Node ColumnData Proxy
-type Column = Tree ColumnData Proxy
-type DbCon = Con ColumnData Proxy
-
 instance (
     Show t,
     FieldIdText name,

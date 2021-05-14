@@ -9,6 +9,7 @@ import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
 
+import qualified Polysemy.Hasql.Column.Tree as Tree
 import Polysemy.Hasql.Column.Tree (TableColumn, tableColumn)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Name(Name), Selector(Selector))
@@ -53,7 +54,7 @@ mapColumns f cols =
   hcollapse @_ @_ @f @_ @a (hcmap (Proxy @cls) (K . f) cols)
 
 class DataProduct (flatten :: Bool) (c :: Kind.Tree) where
-  dataProduct :: ColumnPrefix -> Type.Column c -> [Data.Column]
+  dataProduct :: ColumnPrefix -> Tree.Column c -> [Data.Column]
 
 instance (
     All DataProductOrFlatten cols
@@ -68,7 +69,7 @@ instance (
     pure .: dataColumn
 
 class DataProductOrFlatten (c :: Kind.Tree) where
-  dataProductOrFlatten :: ColumnPrefix -> Type.Column c -> [Data.Column]
+  dataProductOrFlatten :: ColumnPrefix -> Tree.Column c -> [Data.Column]
 
 instance (
     c ~ 'Kind.Tree name effs tpe,
@@ -79,7 +80,7 @@ instance (
       dataProduct @flatten @c
 
 class DataDbCon (con :: Kind.Con) where
-  dataDbCon :: ColumnPrefix -> Type.DbCon con -> Data.Column
+  dataDbCon :: ColumnPrefix -> Tree.DbCon con -> Data.Column
 
 instance (
     All (DataProduct 'False) cols,
@@ -102,7 +103,7 @@ instance (
       dataColumn prefix tree
 
 class DataDbType (t :: Kind.Node) where
-  dataDbType :: ColumnPrefix -> Type.DbType t -> Data.DbType
+  dataDbType :: ColumnPrefix -> Tree.DbType t -> Data.DbType
 
 instance (
     All DataProductOrFlatten cols
@@ -132,7 +133,7 @@ instance DataDbType ('Kind.Prim d) where
       Data.Prim
 
 class DataColumn (c :: Kind.Tree) where
-  dataColumn :: ColumnPrefix -> Type.Column c -> Data.Column
+  dataColumn :: ColumnPrefix -> Tree.Column c -> Data.Column
 
 instance (
     DataDbType t,
@@ -147,7 +148,7 @@ instance (
           fieldIdText @name
 
 class DataTable (c :: Kind.Tree) where
-  dataTable :: Type.Column c -> Data.Column
+  dataTable :: Tree.Column c -> Data.Column
 
 instance (
     DataColumn c

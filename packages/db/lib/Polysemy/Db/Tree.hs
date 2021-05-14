@@ -54,7 +54,6 @@ instance SumProdTrees p '[] '[] where
   sumProdTrees _ =
     Nil
 
--- TODO map
 instance (
     ConTree p meta tree,
     SumProdTrees p metas trees

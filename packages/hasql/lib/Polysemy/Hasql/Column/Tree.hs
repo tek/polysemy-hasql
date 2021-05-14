@@ -25,7 +25,10 @@ data DbTag =
   DbTag
   deriving (Eq, Show)
 
-type DbTree = Type.Tree ColumnData Proxy
+type DbType = Type.Node ColumnData Proxy
+type Column = Type.Tree ColumnData Proxy
+type DbCon = Type.Con ColumnData Proxy
+
 type DbParams = 'Params DbTag ColumnData Proxy
 instance ProdForSumTree DbTag 'True
 
@@ -60,7 +63,7 @@ instance (
     ColumnData (fieldIdText @name) def
 
 class TableColumn (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree where
-  tableColumn :: DbTree tree
+  tableColumn :: Column tree
 
 instance (
     Root rep DbParams d tree

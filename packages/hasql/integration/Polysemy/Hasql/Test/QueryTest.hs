@@ -27,6 +27,7 @@ import Polysemy.Time (GhcTime, mkDatetime)
 
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
+import qualified Polysemy.Hasql.Column.Tree as Tree
 import Polysemy.Hasql.Column.Tree (TableColumn, tableColumn)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
@@ -36,7 +37,6 @@ import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import qualified Polysemy.Hasql.Type.Data.DbType as Type
 import Polysemy.Hasql.Where (QCond(SimpleCond), Segment(SumSegment, FieldSegment), queryWhere)
 
 newtype Content =
@@ -178,7 +178,7 @@ type UidDatType =
 
 column_ContentNumber ::
   ResolveColumnEffects Auto ContentNumber '[ADT ContentNumberMeta Auto] =>
-  Type.Column ContentNumberType
+  Tree.Column ContentNumberType
 column_ContentNumber =
   tableColumn @Auto @ContentNumber
 
