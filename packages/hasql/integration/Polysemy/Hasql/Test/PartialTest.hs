@@ -3,7 +3,6 @@
 module Polysemy.Hasql.Test.PartialTest where
 
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.PartialFields (PartialFields)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UidStore)
 import Polysemy.Db.Data.Uid (Uid(Uid))
@@ -37,8 +36,8 @@ prog = do
   -- Store.update 1 partialUpdate
   Store.fetchAll
   where
-    partialUpdate =
-      partial @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
+    -- partialUpdate =
+    --   partial @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
 
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =

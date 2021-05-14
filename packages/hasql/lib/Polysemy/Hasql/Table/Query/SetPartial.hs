@@ -3,9 +3,8 @@ module Polysemy.Hasql.Table.Query.SetPartial where
 import Polysemy.Hasql.Data.DbType (Column(Column, _selector), Selector (Selector, unSelector))
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.DbType (baseColumnSelectors, flatColumns)
-import Polysemy.Hasql.Table.Query.Text (commaSeparated)
 import Polysemy.Hasql.Table.Query.Prepared (dollar)
-import Polysemy.Db.Data.PartialFields (PartialFields)
+import Polysemy.Hasql.Table.Query.Text (commaSeparated)
 
 conditionalColumn :: Column -> Int -> Int -> Text
 conditionalColumn Column {_selector = Selector s} c i =
@@ -30,7 +29,6 @@ setPartial column =
 
 setPartialDynamic ::
   Column ->
-  PartialFields d ->
   SqlCode
 setPartialDynamic =
   undefined

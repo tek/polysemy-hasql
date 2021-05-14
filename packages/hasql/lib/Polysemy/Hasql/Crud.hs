@@ -12,7 +12,7 @@ import qualified Polysemy.Hasql.Statement as Statement
 interpretCrudWith ::
   QueryTable q d ->
   InterpreterFor (Crud q d !! e) r
-interpretCrudWith qTable@(QueryTable table@(Table structure row _ _) _ _) =
+interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) =
   interpretResumable $ pure . \case
     Fetch ->
       Statement.selectWhere qTable
@@ -26,8 +26,8 @@ interpretCrudWith qTable@(QueryTable table@(Table structure row _ _) _ _) =
       Statement.deleteWhere qTable
     DeleteAll ->
       Statement.deleteAll table
-    Update ->
-      undefined
+    -- Update ->
+    --   undefined
       -- Statement.update table
 {-# INLINE interpretCrudWith #-}
 
@@ -44,7 +44,7 @@ interpretCrud sem = do
 interpretCrudSingletonWith ::
   Table d ->
   InterpreterFor (Crud () d !! e) r
-interpretCrudSingletonWith table@(Table structure row _ _) =
+interpretCrudSingletonWith table@(Table structure row _) =
   interpretResumable $ pure . \case
     Fetch ->
       listToMaybe <$> Statement.select structure row
@@ -58,8 +58,8 @@ interpretCrudSingletonWith table@(Table structure row _ _) =
       Statement.deleteAll table
     DeleteAll ->
       Statement.deleteAll table
-    Update ->
-      undefined
+    -- Update ->
+    --   undefined
       -- Statement.update table
 {-# INLINE interpretCrudSingletonWith #-}
 

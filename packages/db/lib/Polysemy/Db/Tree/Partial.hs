@@ -40,12 +40,12 @@ instance TreePrim PartialTag PartialField name d where
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
 
-partial ::
-  ∀ d c .
-  Root Auto PartialParams d c =>
-  PartialTree c
-partial =
-  root @Auto @PartialParams @d PartialField.Keep
+class Partial d tree | d -> tree where
+  partial ::
+    Root Auto PartialParams d tree =>
+    PartialTree tree
+  partial =
+    root @Auto @PartialParams @d PartialField.Keep
 
 class InsertFieldCon (path :: FieldPath) (a :: *) (con :: Kind.Con) where
   insertFieldCon :: FieldUpdate path a -> PartialCon con -> PartialCon con

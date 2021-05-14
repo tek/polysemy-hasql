@@ -39,7 +39,6 @@ library
       Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.IdQuery
       Polysemy.Db.Data.PartialField
-      Polysemy.Db.Data.PartialFields
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Debug

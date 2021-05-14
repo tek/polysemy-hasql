@@ -3,7 +3,6 @@ module Polysemy.Hasql.Data.Table where
 import Control.Lens (Lens')
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.PartialFields (PartialFields)
 import qualified Text.Show as Show
 
 import qualified Polysemy.Hasql.Data.DbType as Column
@@ -13,8 +12,7 @@ data Table a =
   Table {
     _structure :: Column,
     _row :: Row a,
-    _params :: Params a,
-    _partialParams :: Params (PartialFields a)
+    _params :: Params a
   }
 
 makeClassy ''Table
@@ -28,5 +26,5 @@ selector =
   structure . Column.selector
 
 instance Show Column => Show (Table a) where
-  show (Table struct _ _ _) =
+  show (Table struct _ _) =
     [text|Table { structure = #{struct} }|]

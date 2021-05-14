@@ -23,7 +23,6 @@ import Generics.SOP (
 import Generics.SOP.GGP (gfrom)
 import Hasql.Encoders (Params)
 import Polysemy.Db.Data.Column (Prim)
-import Polysemy.Db.Data.PartialFields (FieldTypes, PartialFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ProductCoded)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
@@ -133,18 +132,3 @@ instance (
   ) => QueryParams ('Kind.Tree n eff ('Kind.SumProd d trees)) d where
     queryParams =
       unSOP . gfrom >$< (sumIndex <> sumParams @trees)
-
-class PartialQueryParams (tree :: Kind.Tree) (d :: *) where
-  partialQueryParams :: Params (PartialFields d)
-
-instance (
-    ds ~ FieldTypes d,
-    All Top ds,
-    ProductParams trees ds
-  ) => PartialQueryParams ('Kind.Tree n eff ('Kind.Prod d trees)) d where
-  partialQueryParams =
-    undefined >$< paramsNP @ds @trees
-
-instance PartialQueryParams ('Kind.Tree n eff ('Kind.Sum d trees)) d where
-  partialQueryParams =
-    mempty

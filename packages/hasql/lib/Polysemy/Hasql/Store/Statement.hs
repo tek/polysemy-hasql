@@ -3,8 +3,6 @@
 module Polysemy.Hasql.Store.Statement where
 
 import Hasql.Statement (Statement)
-import Polysemy.Db.Data.PartialFields (PartialFields)
--- import Polysemy.Db.Partial.Store (UpdateStorePartial)
 
 import qualified Polysemy.Hasql.Data.Crud as Crud
 import Polysemy.Hasql.Data.Crud (Crud(..))
@@ -71,8 +69,7 @@ update ::
   -- ∀ d q u e r .
   -- StatementEffects q e r d =>
   q ->
-  PartialFields u ->
   Sem r ()
-update _ _ =
+update _ =
   undefined
   -- runStatement (restop Crud.update) (q, u)

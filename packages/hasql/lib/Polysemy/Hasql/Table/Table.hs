@@ -15,12 +15,10 @@ instance (
     TableColumn rep d tree,
     QueryRows tree d,
     QueryParams tree d,
-    -- PartialQueryParams tree d,
     DataTable tree
   ) => GenTable rep d where
     genTable =
-      -- Table (dataTable (tableColumn @rep @d)) (queryRows @tree @d) (queryParams @tree @d) (partialQueryParams @tree @d)
-      Table (dataTable (tableColumn @rep @d)) (queryRows @tree @d) (queryParams @tree @d) mempty
+      Table (dataTable (tableColumn @rep @d)) (queryRows @tree @d) (queryParams @tree @d)
 
 table ::
   ∀ (d :: *) .
