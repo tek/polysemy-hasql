@@ -22,7 +22,7 @@ import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.DeriveStatement (deriveQuery)
 import Polysemy.Hasql.Session (runSession)
-import Polysemy.Hasql.Statement (plain, query)
+import Polysemy.Hasql.Statement (plain, prepared)
 import Polysemy.Hasql.Table.ResultShape (ResultShape)
 
 type HasqlConnection =
@@ -55,7 +55,7 @@ retryingQuerySql ::
   param ->
   Sem r result
 retryingQuerySql interval sql row params q =
-  restop (Database.runStatementRetrying interval q (query sql row params))
+  restop (Database.runStatementRetrying interval q (prepared sql row params))
 
 retryingQuerySqlDef ::
   ∀ e d param result r .

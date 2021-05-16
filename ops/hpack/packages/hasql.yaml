@@ -25,6 +25,8 @@ dependencies:
   - first-class-families
   - fcf-containers ^>= 0.6
   - hasql ^>= 1.4.3
+  - hasql-dynamic-statements
+  - hasql-implicits
   - path
   - polysemy-db-data
   - polysemy-log

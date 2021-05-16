@@ -10,6 +10,5 @@ data Crud q d :: Effect where
   Upsert :: Crud q d m (Statement d ())
   Delete :: Crud q d m (Statement q [d])
   DeleteAll :: Crud q d m (Statement () [d])
-  -- Update :: Crud q d m (Statement (q, PartialFields d, FieldSelectors d) ())
 
 makeSem ''Crud

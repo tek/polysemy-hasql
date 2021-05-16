@@ -18,7 +18,7 @@ import Polysemy.Hasql.Test.Run (integrationTest)
 data Field3 =
   Field3 {
     int :: Int,
-    text :: Text
+    txt :: Text
   }
   deriving (Eq, Show, Generic)
 

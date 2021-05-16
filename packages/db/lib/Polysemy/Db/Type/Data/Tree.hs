@@ -4,7 +4,6 @@ import qualified Data.Text as Text
 import Generics.SOP (All, Compose, K(K), NP, NS, hcmap, hcollapse)
 import qualified Text.Show as Show
 
-import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdTextRaw)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
@@ -94,13 +93,6 @@ instance (
 
 data Tree (t :: Type) (n :: Type -> Type) :: Kind.Tree -> Type where
   Tree :: t -> Node t n node -> Tree t n ('Kind.Tree name eff node)
-
-data ColumnData =
-  ColumnData {
-    name :: Text,
-    options :: ColumnOptions
-  }
-  deriving (Eq, Show)
 
 instance (
     Show t,

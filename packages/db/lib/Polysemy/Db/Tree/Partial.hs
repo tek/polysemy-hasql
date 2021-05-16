@@ -3,8 +3,7 @@ module Polysemy.Db.Tree.Partial where
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 import GHC.TypeLits (ErrorMessage)
-import Generics.SOP (All, I(I), NP ((:*)), NS (Z, S), hcmap)
-import Type.Errors (TypeError)
+import Generics.SOP (I(I), NP ((:*)), NS (Z, S))
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Data.Column (Auto)
@@ -13,7 +12,6 @@ import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (FieldPath (FieldPath, FieldName), FieldUpdate(FieldUpdate), PartialField)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
-import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Db.SOP.Error (Quoted, QuotedType)
 import Polysemy.Db.Tree (ProdForSumTree, Root(root), Tree(tree))
 import Polysemy.Db.Tree.Api (TreePrim(..))
@@ -21,6 +19,8 @@ import Polysemy.Db.Tree.Data (DataCon, DataParams, DataTree, GenDataTree (genDat
 import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
+import Polysemy.Db.Tree.Fold (FoldTree)
+import Polysemy.Db.Tree.Partial.Insert (InsertFieldOrError(..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data PartialTag =
@@ -31,6 +31,7 @@ type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
 type PartialCon = Type.Con () PartialField
 type PartialParams = 'Params PartialTag () PartialField
+type FoldPartialTree = FoldTree () PartialField
 
 instance ProdForSumTree PartialTag 'True
 
@@ -40,117 +41,17 @@ instance TreePrim PartialTag PartialField name d where
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
 
+data PTree (d :: Type) where
+  PTree :: PartialTree tree -> PTree d
+
 class Partial d tree | d -> tree where
-  partial ::
-    Root Auto PartialParams d tree =>
-    PartialTree tree
+  partial :: PartialTree tree
+
+instance (
+    Root Auto PartialParams d tree
+  ) => Partial d tree where
   partial =
     root @Auto @PartialParams @d PartialField.Keep
-
-class InsertFieldCon (path :: FieldPath) (a :: *) (con :: Kind.Con) where
-  insertFieldCon :: FieldUpdate path a -> PartialCon con -> PartialCon con
-
-instance (
-    All (InsertFieldTree path a) ts
-  ) => InsertFieldCon path a ('Kind.Con n ts) where
-    insertFieldCon update (Type.Con sub) =
-      Type.Con (hcmap (Proxy @(InsertFieldTree path a)) (insertFieldTree update) sub)
-
-class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node) where
-  insertFieldNode :: FieldUpdate path a -> PartialNode n -> PartialNode n
-
-instance (
-    All (InsertFieldTree path a) ts
-  ) => InsertFieldNode path a ('Kind.Prod t ts) where
-    insertFieldNode update (Type.Prod n sub) =
-      Type.Prod n (hcmap (Proxy @(InsertFieldTree path a)) (insertFieldTree update) sub)
-
-instance (
-    All (InsertFieldCon path a) cs
-  ) => InsertFieldNode path a ('Kind.Sum t cs) where
-    insertFieldNode update (Type.Sum n sub) =
-      Type.Sum n (hcmap (Proxy @(InsertFieldCon path a)) (insertFieldCon update) sub)
-
-instance (
-    All (InsertFieldCon path a) cs
-  ) => InsertFieldNode path a ('Kind.SumProd t cs) where
-    insertFieldNode update (Type.SumProd n sub) =
-      Type.SumProd n (hcmap (Proxy @(InsertFieldCon path a)) (insertFieldCon update) sub)
-
-class InsertMatchingName (path :: FieldPath) (a :: *) (effs :: [*]) (node :: Kind.Node) where
-  insertMatchingName :: FieldUpdate path a -> PartialNode node -> PartialNode node
-
-instance (
-    KnownSymbol name
-  ) => InsertMatchingName ('FieldName name) d effs ('Kind.Prod d trees) where
-    insertMatchingName (FieldUpdate d) (Type.Prod _ sub) =
-      Type.Prod (PartialField.Update (symbolText @name) d) sub
-
-instance (
-    KnownSymbol name
-  ) => InsertMatchingName ('FieldName name) d effs ('Kind.SumProd d trees) where
-    insertMatchingName (FieldUpdate d) (Type.SumProd _ sub) =
-      Type.SumProd (PartialField.Update (symbolText @name) d) sub
-
-instance (
-    KnownSymbol name
-  ) => InsertMatchingName ('FieldName name) d effs ('Kind.Prim d) where
-  insertMatchingName (FieldUpdate d) (Type.Prim _) =
-    Type.Prim (PartialField.Update (symbolText @name) d)
-
-class InsertNonmatchingName (path :: FieldPath) (a :: *) (effs :: [*]) (node :: Kind.Node) where
-  insertNonmatchingName :: FieldUpdate path a -> PartialNode node -> PartialNode node
-
-instance InsertNonmatchingName path a effs ('Kind.Prim d) where
-  insertNonmatchingName _ =
-    id
-
-instance (
-    All (InsertFieldTree path a) trees
-  ) => InsertNonmatchingName path a effs ('Kind.Prod d trees) where
-  insertNonmatchingName update (Type.Prod n trees) =
-    Type.Prod n (hcmap (Proxy @(InsertFieldTree path a)) (insertFieldTree update) trees)
-
-instance (
-    All (InsertFieldCon path a) trees
-  ) => InsertNonmatchingName path a effs ('Kind.SumProd d trees) where
-  insertNonmatchingName update (Type.SumProd n trees) =
-    Type.SumProd n (hcmap (Proxy @(InsertFieldCon path a)) (insertFieldCon update) trees)
-
-class InsertFieldTree (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
-  insertFieldTree :: FieldUpdate path a -> PartialTree t -> PartialTree t
-
-instance (
-    InsertMatchingName ('FieldName name) a effs node
-  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField name) effs node) where
-  insertFieldTree update (Type.Tree t nd) =
-    Type.Tree t (insertMatchingName @('FieldName name) @a @effs @node update nd)
-
-instance {-# overlappable #-} (
-    InsertNonmatchingName ('FieldName name) a effs node
-  ) => InsertFieldTree ('FieldName name) a ('Kind.Tree ('NamedField _name) effs node) where
-  insertFieldTree update (Type.Tree t nd) =
-    Type.Tree t (insertNonmatchingName @('FieldName name) @a @effs @node update nd)
-
-class InsertField (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
-  insertField :: FieldUpdate path a -> PartialTree t -> PartialTree t
-
-instance (
-    InsertFieldNode path a n
-  ) => InsertField path a ('Kind.Tree ('NamedField _name) effs n) where
-  insertField update (Type.Tree t n) =
-    Type.Tree t (insertFieldNode @path @a @n update n)
-
-class InsertFieldOrError (err :: Maybe ErrorMessage) (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
-  insertFieldOrError :: FieldUpdate path a -> PartialTree t -> PartialTree t
-
-instance TypeError err => InsertFieldOrError ('Just err) path a t where
-  insertFieldOrError _ =
-    id
-
-instance InsertField path a t => InsertFieldOrError 'Nothing path a t where
-  insertFieldOrError =
-    insertField
 
 type family MatchNodeType (a :: Type) (node :: Type) :: Bool where
   MatchNodeType a a =
@@ -196,14 +97,46 @@ type family Insertable (a :: Type) (path :: FieldPath) (tree :: Kind.Tree) :: Ma
   Insertable a ('FieldName name) tree =
     InsertableResult (TreeDataType tree) a ('FieldName name) (InsertableName a name tree)
 
+class Insert (path :: FieldPath) (a :: Type) (tree :: Kind.Tree) where
+  insert :: FieldUpdate path a -> PartialTree tree -> PartialTree tree
+
+instance (
+    insertable ~ Insertable a path tree,
+    InsertFieldOrError insertable path a tree
+  ) => Insert path a tree where
+  insert =
+    insertFieldOrError @insertable
+
+type InsertName (name :: Symbol) (a :: Type) (tree :: Kind.Tree) = Insert ('FieldName name) a tree
+
+type family InsertAllProd (root :: Kind.Tree) (name :: Symbol) (prefix :: [Symbol]) (trees :: [Kind.Tree]) :: Constraint where
+  InsertAllProd root name prefix '[tree] = InsertAllPre root (name : prefix) tree
+  InsertAllProd root name prefix (tree : trees) =
+    (InsertAllPre root (name : prefix) tree, InsertAllProd root name prefix trees)
+
+type family InsertAllNode (root :: Kind.Tree) (name :: Symbol) (prefix :: [Symbol]) (node :: Kind.Node) :: Constraint where
+  InsertAllNode root name _ ('Kind.Prim d) =
+    -- (Insert ('FieldPath (name : prefix)) d root, Insert ('FieldName name) d root)
+    (Insert ('FieldName name) d root)
+  InsertAllNode root name prefix ('Kind.Prod _ node) =
+    InsertAllProd root name prefix node
+
+type family InsertAllPre (root :: Kind.Tree) (prefix :: [Symbol]) (tree :: Kind.Tree) :: Constraint where
+  InsertAllPre root prefix ('Kind.Tree ('NamedField name) _ node) =
+    InsertAllNode root name prefix node
+
+type family InsertAll (tree :: Kind.Tree) :: Constraint where
+  InsertAll ('Kind.Tree name effs ('Kind.Prod d node)) =
+    InsertAllNode ('Kind.Tree name effs ('Kind.Prod d node)) "" '[] ('Kind.Prod d node)
+
 (+>) ::
-  ∀ path a t .
-  InsertFieldOrError (Insertable a path t) path a t =>
-  PartialTree t ->
+  ∀ (path :: FieldPath) (a :: Type) (tree :: Kind.Tree) .
+  Insert path a tree =>
+  PartialTree tree ->
   FieldUpdate path a ->
-  PartialTree t
+  PartialTree tree
 (+>) =
-  flip (insertFieldOrError @(Insertable a path t))
+  flip insert
 
 class UpdatePartialProd (ds :: [Kind.Tree]) (us :: [Kind.Tree]) where
   updatePartialProd :: NP DataTree ds -> NP PartialTree us -> NP DataTree ds

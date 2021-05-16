@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Column.Tree where
 
 import Polysemy.Db.Data.Column (ForcePrim, Rep)
+import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (ProdForSumTree, Root(..))
@@ -9,7 +10,6 @@ import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
 import qualified Polysemy.Db.Type.Data.Tree as Type
-import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
 
 import Polysemy.Hasql.Column.Effect (PrimColumn)
 import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
@@ -23,6 +23,13 @@ import Polysemy.Hasql.Table.ColumnOptions (
 
 data DbTag =
   DbTag
+  deriving (Eq, Show)
+
+data ColumnData =
+  ColumnData {
+    name :: Text,
+    options :: ColumnOptions
+  }
   deriving (Eq, Show)
 
 type DbType = Type.Node ColumnData Proxy

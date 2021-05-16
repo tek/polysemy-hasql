@@ -1,13 +1,45 @@
 module Polysemy.Hasql.Table.Query.Update where
 
-import Control.Lens (view)
+import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, param, sql)
+import Hasql.Implicits.Encoders (DefaultParamEncoder)
+import qualified Polysemy.Db.Data.PartialField as PartialField
+import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim(..), foldTree)
+import Polysemy.Db.Tree.Partial (PartialTree)
 
 import Polysemy.Hasql.Data.DbType (Selector(Selector))
 import Polysemy.Hasql.Data.QueryTable (QueryTable, selector)
-import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
+import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
+
+newtype PartialSql =
+  PartialSql { unPartialSql :: Snippet }
+  deriving newtype (Semigroup, Monoid)
+
+instance (
+    QueryValueNoN effs d
+  ) => FoldTreePrim () PartialField PartialSql effs d where
+  foldTreePrim = \case
+    PartialField.Keep -> mempty
+    PartialField.Update name value ->
+      PartialSql (sql (encodeUtf8 name) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)
+
+updateAssign ::
+  DefaultParamEncoder a =>
+  PartialField a ->
+  Snippet
+updateAssign = \case
+  PartialField.Keep -> mempty
+  PartialField.Update name value ->
+    sql (encodeUtf8 name) <> " = " <> param value
 
 update ::
+  FoldTree () PartialField PartialSql tree =>
   QueryTable query d ->
-  SqlCode
-update (view selector -> Selector name) =
-  SqlCode [text|update #{name}|]
+  q ->
+  PartialTree tree ->
+  Snippet
+update table _ tree =
+  sql [text|update #{sel} set |] <> unPartialSql (foldTree tree)
+  where
+    Selector sel =
+      table ^. selector

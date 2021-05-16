@@ -1,17 +1,12 @@
 module Polysemy.Hasql.Table.EncoderValue where
 
-import Hasql.Encoders (
-  Value,
-  enum,
-  jsonBytes,
-  )
-import Polysemy.Db.Data.Column (Json)
+import qualified Data.Aeson as Aeson
+import Hasql.Encoders (Value, enum, jsonBytes)
+import Polysemy.Db.Data.Column (Enum, Json, Prim)
+import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Prelude hiding (Enum, bool)
 
-import qualified Data.Aeson as Aeson
-import Polysemy.Db.Data.Column (Enum, Prim)
 import Polysemy.Hasql.Table.PrimEncoder (PrimEncoder, primEncoder)
-import Polysemy.Db.Tree.Data.Effect (Newtype)
 
 class EncoderValue (effs :: [*]) (d :: *) where
   encoderValue :: Value d
@@ -23,10 +18,6 @@ instance {-# overlappable #-} EncoderValue effs d => EncoderValue (eff : effs) d
 instance {-# overlappable #-} PrimEncoder d => EncoderValue '[Prim] d where
   encoderValue =
     primEncoder
-
--- instance Show d => EncoderValue '[ADT meta Enum] d where
---   encoderValue =
---     enum show
 
 instance Show d => EncoderValue '[Enum] d where
   encoderValue =

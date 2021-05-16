@@ -74,6 +74,7 @@ library
       Polysemy.Hasql.Statement
       Polysemy.Hasql.Store
       Polysemy.Hasql.Store.Statement
+      Polysemy.Hasql.StoreUpdate
       Polysemy.Hasql.Table
       Polysemy.Hasql.Table.ColumnOptions
       Polysemy.Hasql.Table.DecoderValue
@@ -87,7 +88,6 @@ library
       Polysemy.Hasql.Table.Query.Prepared
       Polysemy.Hasql.Table.Query.Select
       Polysemy.Hasql.Table.Query.Set
-      Polysemy.Hasql.Table.Query.SetPartial
       Polysemy.Hasql.Table.Query.Text
       Polysemy.Hasql.Table.Query.Update
       Polysemy.Hasql.Table.QueryParam
@@ -177,6 +177,8 @@ library
     , generics-sop
     , ghc-prim
     , hasql >=1.4.3 && <1.5
+    , hasql-dynamic-statements
+    , hasql-implicits
     , lens
     , path
     , polysemy
@@ -297,6 +299,8 @@ test-suite polysemy-hasql-integration
     , generics-sop
     , ghc-prim
     , hasql >=1.4.3 && <1.5
+    , hasql-dynamic-statements
+    , hasql-implicits
     , hedgehog
     , lens
     , path
@@ -421,6 +425,8 @@ test-suite polysemy-hasql-unit
     , generics-sop
     , ghc-prim
     , hasql >=1.4.3 && <1.5
+    , hasql-dynamic-statements
+    , hasql-implicits
     , hedgehog
     , lens
     , path

@@ -3,14 +3,20 @@ module Polysemy.Hasql.Statement where
 import qualified Data.Text as Text
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, int8, noResult, nullable)
+import Hasql.DynamicStatements.Snippet (Snippet)
+import Hasql.DynamicStatements.Statement (dynamicallyParameterized)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement(Statement))
 import Polysemy.Db.Data.DbName (DbName(DbName))
+import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Text.Quote (dquote)
+import Polysemy.Db.Tree.Fold (FoldTree)
+import Polysemy.Db.Tree.Partial (PartialTree)
 
 import qualified Polysemy.Hasql.Data.DbType as Column
 import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
+import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
+import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable), qwhere)
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode, unSqlCode))
 import Polysemy.Hasql.Data.Table (Table(Table, _row, _structure, _params))
 import Polysemy.Hasql.Data.Where (Where(Where))
@@ -21,16 +27,37 @@ import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
 import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
 import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated, commaSeparatedSql)
+import qualified Polysemy.Hasql.Table.Query.Update as Query
+import Polysemy.Hasql.Table.Query.Update (PartialSql)
 import Polysemy.Hasql.Table.ResultShape (ResultShape(resultShape))
 
-query ::
+statement ::
+  ResultShape d result =>
+  Bool ->
+  SqlCode ->
+  Row d ->
+  Params p ->
+  Statement p result
+statement prep (SqlCode sql) row params =
+  Statement (encodeUtf8 sql) params (resultShape row) prep
+
+unprepared ::
   ResultShape d result =>
   SqlCode ->
   Row d ->
   Params p ->
   Statement p result
-query (SqlCode sql) row params =
-  Statement (encodeUtf8 sql) params (resultShape row) True
+unprepared =
+  statement False
+
+prepared ::
+  ResultShape d result =>
+  SqlCode ->
+  Row d ->
+  Params p ->
+  Statement p result
+prepared =
+  statement True
 
 plain :: SqlCode -> Statement () ()
 plain (SqlCode sql) =
@@ -42,7 +69,7 @@ select ::
   Row d ->
   Statement () [d]
 select table row =
-  query (selectColumns table) row noParams
+  prepared (selectColumns table) row noParams
 
 selectWhereSql ::
   QueryTable query d ->
@@ -58,25 +85,30 @@ selectWhere ::
   QueryTable query d ->
   Statement query result
 selectWhere table@(QueryTable (Table _ row _) params _) =
-  query (selectWhereSql table) row params
+  prepared (selectWhereSql table) row params
 
 anyWhereSql ::
   QueryTable query d ->
   SqlCode
-anyWhereSql (QueryTable (Table (Column _ (fromFragment -> SqlCode from) _ _ _) _ _) _ (Where (SqlCode qw))) =
+anyWhereSql table =
   SqlCode [text|select 1 #{from} where #{qw} limit 1|]
+  where
+    Where (SqlCode qw) =
+      table ^. qwhere
+    SqlCode from =
+      fromFragment (table ^. QueryTable.structure . Column.selector)
 
 anyWhere ::
   QueryTable query d ->
   Statement query Bool
-anyWhere table@(QueryTable _ params _) =
-  isJust <$> query (anyWhereSql table) (Decoders.column (nullable int8)) params
+anyWhere table@(QueryTable {_qparams}) =
+  isJust <$> prepared (anyWhereSql table) (Decoders.column (nullable int8)) _qparams
 
 insert ::
   Table d ->
   Statement d ()
 insert Table {_structure, _params} =
-  query (Query.insert _structure) unit _params
+  prepared (Query.insert _structure) unit _params
 
 upsertSql ::
   Column ->
@@ -95,7 +127,7 @@ upsert ::
   Table d ->
   Statement d ()
 upsert Table {_structure, _params} =
-  query (upsertSql _structure) unit _params
+  prepared (upsertSql _structure) unit _params
 
 deleteWhereSql ::
   Table d ->
@@ -117,35 +149,32 @@ deleteWhere ::
   ResultShape d result =>
   QueryTable query d ->
   Statement query result
-deleteWhere (QueryTable table@Table {_row} params (Where qw)) =
-  query (deleteWhereSql table qw) _row params
+deleteWhere QueryTable {_table = table@Table {_row}, _qparams, _qwhere = Where qw} =
+  prepared (deleteWhereSql table qw) _row _qparams
 
 deleteAll ::
   Table d ->
   Statement () [d]
 deleteAll table@(Table _ row _) =
-  query (deleteWhereSql table "") row noParams
+  prepared (deleteWhereSql table "") row noParams
 
--- updateSql ::
---   QueryTable query d ->
---   SqlCode
--- updateSql table@(QueryTable (Table structure _ _ _) _ (Where (SqlCode qw))) =
---   SqlCode [text|#{upd} #{st}#{qwFragment}|]
---   where
---     qwFragment =
---       if Text.null qw
---       then "" :: Text
---       else [text| where #{qw}|]
---     SqlCode upd =
---       Query.update table
---     SqlCode st =
---       Query.setPartial structure
+updateSql ::
+  FoldTree () PartialField PartialSql tree =>
+  QueryTable query d ->
+  query ->
+  PartialTree tree ->
+  Snippet
+updateSql table q tree =
+  Query.update table q tree
 
--- update ::
---   QueryTable query d ->
---   Statement (PartialFields d) ()
--- update qtable@(QueryTable Table {_partialParams} _ _) =
---   query (updateSql qtable) unit _partialParams
+update ::
+  FoldTree () PartialField PartialSql tree =>
+  QueryTable query d ->
+  query ->
+  PartialTree tree ->
+  Statement () ()
+update qtable q t =
+  dynamicallyParameterized (updateSql qtable q t) noResult False
 
 createTableSql ::
   Column ->

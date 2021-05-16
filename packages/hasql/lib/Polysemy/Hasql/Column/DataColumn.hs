@@ -7,10 +7,9 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Text.DbIdentifier (dbIdentifierT, quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import qualified Polysemy.Db.Type.Data.Tree as Type
-import Polysemy.Db.Type.Data.Tree (ColumnData(ColumnData))
 
 import qualified Polysemy.Hasql.Column.Tree as Tree
-import Polysemy.Hasql.Column.Tree (TableColumn, tableColumn)
+import Polysemy.Hasql.Column.Tree (ColumnData(ColumnData), TableColumn, tableColumn)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Name(Name), Selector(Selector))
 

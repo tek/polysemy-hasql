@@ -3,6 +3,7 @@ module Main where
 import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
 import Polysemy.Hasql.Test.AtomicState (test_atomicStateDb)
 import Polysemy.Hasql.Test.InitTest (test_initTable)
+import Polysemy.Hasql.Test.JsonTest (test_json)
 import Polysemy.Hasql.Test.PKTest (test_pk)
 import Polysemy.Hasql.Test.PartialTest (test_partialDbUpdate)
 import Polysemy.Hasql.Test.QueryTest (test_query)
@@ -29,7 +30,8 @@ tests =
     unitTest "queue with notifications" test_queue,
     unitTest "atomic state as table" test_atomicStateDb,
     unitTest "partial record update" test_partialDbUpdate,
-    unitTest "unary sum variants" test_unaryVariants
+    unitTest "unary sum variants" test_unaryVariants,
+    unitTest "json field" test_json
   ]
 
 main :: IO ()

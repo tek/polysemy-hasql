@@ -19,7 +19,7 @@ import Polysemy.Hasql.Data.Where (Where)
 --              (Column "user" "\"user\"" "bigint" def Prim)
 --              (User <$> Hasql.Decoders.int8)
 --              (User.id >$< Hasql.Encoders.int8))
---            (Hasql.Encoders.int8)
+--            Hasql.Encoders.int8
 --            (Where "id = $1")
 -- @
 data QueryTable q d =

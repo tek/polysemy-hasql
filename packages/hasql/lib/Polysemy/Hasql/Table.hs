@@ -35,7 +35,7 @@ dbColumnsStatement ::
   SqlCode ->
   Statement Text [(Text, Text)]
 dbColumnsStatement sql =
-  Statement.query sql decoder encoder
+  Statement.prepared sql decoder encoder
   where
     decoder =
       tuple text' text'

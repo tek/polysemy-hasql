@@ -49,9 +49,6 @@ interpretStoreDb =
       Statement.fetch id'
     Store.FetchAll ->
       nonEmpty <$> Statement.fetchAll
-    Store.Update _ _ ->
-      undefined
-      -- Statement.update id' values
 
 interpretStoreDbUid ::
   Members [Crud i (Uid i d) !! e, ManagedTable (Uid i d) !! e] r =>

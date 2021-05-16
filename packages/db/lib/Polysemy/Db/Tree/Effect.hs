@@ -1,5 +1,6 @@
 module Polysemy.Db.Tree.Effect where
 
+import Data.Vector (Vector)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
@@ -24,6 +25,7 @@ instance {-# overlappable #-} (eff ~ NoEffect, d' ~ d) => EffectfulTree d eff d'
 instance EffectfulTree (Maybe d) (Tycon Maybe d) d
 instance EffectfulTree [d] (Tycon [] d) d
 instance EffectfulTree (NonEmpty d) (Tycon NonEmpty d) d
+instance EffectfulTree (Vector d) (Tycon Vector d) d
 
 ----------------------------------------------------------------------------------------------------
 

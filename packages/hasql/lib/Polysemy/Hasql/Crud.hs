@@ -26,9 +26,6 @@ interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) =
       Statement.deleteWhere qTable
     DeleteAll ->
       Statement.deleteAll table
-    -- Update ->
-    --   undefined
-      -- Statement.update table
 {-# INLINE interpretCrudWith #-}
 
 interpretCrud ::
@@ -58,9 +55,6 @@ interpretCrudSingletonWith table@(Table structure row _) =
       Statement.deleteAll table
     DeleteAll ->
       Statement.deleteAll table
-    -- Update ->
-    --   undefined
-      -- Statement.update table
 {-# INLINE interpretCrudSingletonWith #-}
 
 interpretCrudSingleton ::

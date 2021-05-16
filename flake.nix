@@ -8,6 +8,7 @@
   let
     compat = { hackage, jailbreak, ... }: {
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
+      hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
       polysemy = hackage "1.5.0.0" "1xl472xqdxnp4ysyqnackpfn6wbx03rlgwmy9907bklrh557il6d";
       polysemy-conc = hackage "0.1.0.2" "0ijz5l8q53d1s7i100gvjdhzv80dpd140m7a9hyam113ybglc8lg";
       polysemy-log = hackage "0.2.2.1" "1c8kn28a5j9k52jfg5n6nb4ywd76mgrgaqwmf1q0km2kgdi9y40s";
@@ -40,7 +41,7 @@
       polysemy-db-data = ./packages/data;
       polysemy-hasql = ./packages/hasql;
     };
-    ghci.extraArgs = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
+    ghci.extraArgs = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances" "-fconstraint-solver-iterations=20"];
     versionFile = "ops/hpack/shared/meta.yaml";
     runConfig = project: { preStartCommand = preStartCommand project; };
   };

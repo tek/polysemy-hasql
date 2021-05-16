@@ -41,9 +41,9 @@ library
       Polysemy.Db.Data.PartialField
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
+      Polysemy.Db.Data.StoreUpdate
       Polysemy.Db.Debug
       Polysemy.Db.Kind.Data.Tree
-      Polysemy.Db.Partial.Store
       Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.Reader
@@ -58,6 +58,7 @@ library
       Polysemy.Db.SOP.Text
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery
+      Polysemy.Db.StoreUpdate
       Polysemy.Db.Text.Case
       Polysemy.Db.Text.DbIdentifier
       Polysemy.Db.Text.Quote
@@ -68,8 +69,10 @@ library
       Polysemy.Db.Tree.Data.Params
       Polysemy.Db.Tree.Data.TreeMeta
       Polysemy.Db.Tree.Effect
+      Polysemy.Db.Tree.Fold
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial
+      Polysemy.Db.Tree.Partial.Insert
       Polysemy.Db.Type.Data.Tree
   other-modules:
       Prelude
@@ -162,6 +165,7 @@ library
     , type-errors-pretty
     , unordered-containers
     , uuid
+    , vector
   mixins:
       base hiding (Prelude)
   default-language: Haskell2010

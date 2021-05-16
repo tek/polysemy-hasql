@@ -64,12 +64,3 @@ fetchAll ::
   Sem r [d]
 fetchAll =
   runStatement (restop Crud.fetchAll) ()
-
-update ::
-  -- ∀ d q u e r .
-  -- StatementEffects q e r d =>
-  q ->
-  Sem r ()
-update _ =
-  undefined
-  -- runStatement (restop Crud.update) (q, u)
