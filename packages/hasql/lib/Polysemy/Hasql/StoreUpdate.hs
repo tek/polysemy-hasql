@@ -18,7 +18,7 @@ import Polysemy.Hasql.Table.Query.Update (PartialSql)
 interpretStoreUpdateDbWith ::
   ∀ i d e tree r .
   Partial d tree =>
-  FoldTree () PartialField PartialSql tree =>
+  FoldTree () PartialField [PartialSql] tree =>
   Member (ManagedTable d !! e) r =>
   QueryTable i d ->
   InterpreterFor (StoreUpdate i d tree !! e) r
@@ -34,7 +34,7 @@ interpretStoreUpdateDb ::
   ∀ i d e tree r .
   Show e =>
   Partial d tree =>
-  FoldTree () PartialField PartialSql tree =>
+  FoldTree () PartialField [PartialSql] tree =>
   Members [Query i d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (StoreUpdate i d tree !! e) r
 interpretStoreUpdateDb sem = do

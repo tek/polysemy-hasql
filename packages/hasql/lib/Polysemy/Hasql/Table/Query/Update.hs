@@ -1,7 +1,6 @@
 module Polysemy.Hasql.Table.Query.Update where
 
-import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, param, sql)
-import Hasql.Implicits.Encoders (DefaultParamEncoder)
+import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim(..), foldTree)
@@ -15,31 +14,28 @@ newtype PartialSql =
   PartialSql { unPartialSql :: Snippet }
   deriving newtype (Semigroup, Monoid)
 
+commaSeparatedSnippet ::
+  [Snippet] ->
+  Snippet
+commaSeparatedSnippet =
+  mconcat . intersperse ", "
+
 instance (
     QueryValueNoN effs d
-  ) => FoldTreePrim () PartialField PartialSql effs d where
+  ) => FoldTreePrim () PartialField [PartialSql] effs d where
   foldTreePrim = \case
     PartialField.Keep -> mempty
     PartialField.Update name value ->
-      PartialSql (sql (encodeUtf8 name) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)
-
-updateAssign ::
-  DefaultParamEncoder a =>
-  PartialField a ->
-  Snippet
-updateAssign = \case
-  PartialField.Keep -> mempty
-  PartialField.Update name value ->
-    sql (encodeUtf8 name) <> " = " <> param value
+      [PartialSql (sql (encodeUtf8 name) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
 
 update ::
-  FoldTree () PartialField PartialSql tree =>
+  FoldTree () PartialField [PartialSql] tree =>
   QueryTable query d ->
   q ->
   PartialTree tree ->
   Snippet
 update table _ tree =
-  sql [text|update #{sel} set |] <> unPartialSql (foldTree tree)
+  sql [text|update #{sel} set |] <> (commaSeparatedSnippet (unPartialSql <$> (foldTree tree)))
   where
     Selector sel =
       table ^. selector

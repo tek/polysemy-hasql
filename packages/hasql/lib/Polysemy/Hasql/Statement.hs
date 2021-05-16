@@ -159,7 +159,7 @@ deleteAll table@(Table _ row _) =
   prepared (deleteWhereSql table "") row noParams
 
 updateSql ::
-  FoldTree () PartialField PartialSql tree =>
+  FoldTree () PartialField [PartialSql] tree =>
   QueryTable query d ->
   query ->
   PartialTree tree ->
@@ -168,7 +168,7 @@ updateSql table q tree =
   Query.update table q tree
 
 update ::
-  FoldTree () PartialField PartialSql tree =>
+  FoldTree () PartialField [PartialSql] tree =>
   QueryTable query d ->
   query ->
   PartialTree tree ->

@@ -7,8 +7,7 @@ import Polysemy.Db.Data.Store (UidStore)
 import qualified Polysemy.Db.Data.StoreUpdate as StoreUpdate
 import Polysemy.Db.Data.StoreUpdate (StoreUpdate)
 import Polysemy.Db.Data.Uid (Uid(Uid))
-import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Partial (InsertName, Partial, PartialTree, field, partial, (+>))
+import Polysemy.Db.Tree.Partial (InsertName, field, (+>))
 import Polysemy.Test (UnitTest, assertJust)
 
 import Polysemy.Hasql.Query (interpretQuery)
@@ -17,64 +16,30 @@ import Polysemy.Hasql.Test.Database (withTestStoreUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Dat =
-  Dat { int :: Int }
+  Dat {
+    int :: Int,
+    double :: Double,
+    txt :: Text
+  }
   deriving (Eq, Show, Generic)
-
-class FooTree tree where
-  fooTree :: PartialTree tree -> Text
-
-instance FooTree ('Kind.Tree name eff node) where
-  fooTree _ = "hello"
-
-class UsePTree (tree :: Kind.Tree) where
-  usePTree :: PartialTree tree -> Text
-
-instance FooTree tree => UsePTree tree where
-  usePTree tree =
-    fooTree tree
-
-data PStore (d :: Type) (tree :: Kind.Tree) :: Effect where
-  Update :: (PartialTree tree -> PartialTree tree) -> PStore d tree m ()
-
-makeSem ''PStore
-
-interpretPStore ::
-  ∀ d tree r .
-  Partial d tree =>
-  UsePTree tree =>
-  InterpreterFor (PStore d tree) r
-interpretPStore =
-  interpret \case
-    Update tree ->
-      dbgs (usePTree (tree ptree))
-  where
-    ptree =
-      partial @d
-
-prog0 ::
-  ∀ tree r .
-  Member (PStore Dat tree) r =>
-  InsertName "int" Int tree =>
-  Sem r ()
-prog0 = do
-  update \ ptree -> ptree +> field @"int" (5 :: Int)
 
 record :: Uid Int Dat
 record =
-  Uid 1 (Dat 9)
+  Uid 1 (Dat 9 12.7 "text")
 
 target :: Uid Int Dat
 target =
-  Uid 1 (Dat 5)
+  Uid 1 (Dat 5 73.18 "text")
 
 prog ::
   ∀ e tree r .
   InsertName "int" Int tree =>
+  InsertName "double" Double tree =>
   Members [UidStore Int Dat !! e, StoreUpdate Int (Uid Int Dat) tree !! e, Stop e] r =>
   Sem r (Maybe (NonEmpty (Uid Int Dat)))
 prog = do
   restop (Store.insert record)
-  resuming (\ _ -> unit) (StoreUpdate.update 1 \ ptree -> ptree +> field @"int" (5 :: Int))
+  restop (StoreUpdate.update 1 \ ptree -> ptree +> field @"int" (5 :: Int) +> field @"double" (73.18 :: Double))
   restop (Store.fetchAll)
 
 test_partialDbUpdate :: UnitTest
