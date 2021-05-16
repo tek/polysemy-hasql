@@ -3,6 +3,7 @@ module Polysemy.Hasql.Table.Query.Update where
 import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Text.Quote (dquote)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim(..), foldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
@@ -26,7 +27,7 @@ instance (
   foldTreePrim = \case
     PartialField.Keep -> mempty
     PartialField.Update name value ->
-      [PartialSql (sql (encodeUtf8 name) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
+      [PartialSql (sql (encodeUtf8 (dquote name)) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
 
 update ::
   FoldTree () PartialField [PartialSql] tree =>
