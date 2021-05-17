@@ -31,7 +31,7 @@ prog = do
 test_upsert :: UnitTest
 test_upsert = do
   integrationTest do
-    withTestStoreUid @Int @Dat do
+    withTestStoreUid do
       assertJust [specimen] =<< restop @DbError prog
 
 test_upsert_strict :: UnitTest

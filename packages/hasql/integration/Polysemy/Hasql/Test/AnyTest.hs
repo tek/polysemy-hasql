@@ -35,7 +35,7 @@ prog = do
 test_any :: UnitTest
 test_any =
   integrationTest do
-    withTestStoreUid @Int @Dat $
+    withTestStoreUid $
       interpretQuery @Auto @(UidRep PrimaryKey Auto) $
       interpretStoreQueryAny @Dat @(Uid Int Dat) $
       restop @DbError @(StoreQuery Dat Bool) $ restop @DbError @(UidStore Int Dat) prog

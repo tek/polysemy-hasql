@@ -18,7 +18,4 @@ interpretStoreUpdateStore ::
 interpretStoreUpdateStore =
   interpretResumable \case
     StoreUpdate.Update i f ->
-      restop @e @(Store i d) (Store.alter i (updatePartial @d @dataTree @tree (f ptree)))
-  where
-    ptree =
-      partial @d
+      restop @e @(Store i d) (Store.alter i (updatePartial @d (f (partial @d))))

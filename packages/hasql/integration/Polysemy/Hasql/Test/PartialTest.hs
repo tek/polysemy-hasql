@@ -52,6 +52,6 @@ prog = do
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =
   integrationTest do
-    withTestStoreUid @Int @Dat do
+    withTestStoreUid do
       result <- interpretQuery @(PrimQuery "id") @(UidRep Prim Auto) (interpretStoreUpdateDb (prog @DbError))
       assertJust target (NonEmpty.sortWith Uid._id <$> result)

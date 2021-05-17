@@ -1,14 +1,19 @@
 module Polysemy.Db.Tree.Partial.Insert where
 
+import Fcf (Eval, Exp, type (@@))
+import Fcf.Class.Foldable (Any)
 import GHC.TypeLits (ErrorMessage)
 import Generics.SOP (All, hcmap)
 import Type.Errors (TypeError)
+import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Data.PartialField as PartialField
-import Polysemy.Db.Data.PartialField (FieldUpdate(FieldUpdate), PartialField, FieldPath (FieldName))
+import Polysemy.Db.Data.PartialField (FieldPath (FieldName), FieldUpdate(FieldUpdate), PartialField)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
 import Polysemy.Db.SOP.Constraint (symbolText)
+import Polysemy.Db.SOP.Error (Quoted, QuotedType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 type PartialTree = Type.Tree () PartialField
@@ -119,3 +124,57 @@ instance TypeError err => InsertFieldOrError ('Just err) path a t where
 instance InsertField path a t => InsertFieldOrError 'Nothing path a t where
   insertFieldOrError =
     insertField
+
+type family MatchNodeType (a :: Type) (node :: Type) :: Bool where
+  MatchNodeType a a =
+    'True
+  MatchNodeType _ _ =
+    'False
+
+type family InsertableConName (a :: Type) (name :: Symbol) (con :: Kind.Con) :: Bool where
+  InsertableConName a name ('Kind.Con _ sub) =
+    Any (InsertableNameExp a name) @@ sub
+
+data InsertableConNameExp (a :: Type) (name :: Symbol) :: Kind.Con -> Exp Bool
+type instance Eval (InsertableConNameExp a name con) =
+  InsertableConName a name con
+
+type family InsertableName (a :: Type) (name :: Symbol) (tree :: Kind.Tree) :: Bool where
+  InsertableName a name ('Kind.Tree ('NamedField name) _ node) =
+    MatchNodeType a (NodeDataType node)
+  InsertableName a name ('Kind.Tree _ _ ('Kind.Prod _ sub)) =
+    Any (InsertableNameExp a name) @@ sub
+  InsertableName a name ('Kind.Tree _ _ ('Kind.Sum _ sub)) =
+    Any (InsertableConNameExp a name) @@ sub
+  InsertableName a name ('Kind.Tree _ _ ('Kind.SumProd _ sub)) =
+    Any (InsertableConNameExp a name) @@ sub
+  InsertableName _ _ ('Kind.Tree _ _ ('Kind.Prim _)) =
+    'False
+
+data InsertableNameExp (a :: Type) (name :: Symbol) :: Kind.Tree -> Exp Bool
+type instance Eval (InsertableNameExp a name tree) =
+  InsertableName a name tree
+
+type family InsertableResult (d :: Type) (a :: Type) (path :: FieldPath) (found :: Bool) :: Maybe ErrorMessage where
+  InsertableResult _ _ _ 'True =
+    'Nothing
+  InsertableResult d a ('FieldName name) 'False =
+    'Just (
+      "Could not find a field of type " <> QuotedType a <> " named " <> Quoted name <> " in the type " <> QuotedType d %
+      "While attempting to construct a partial update"
+      )
+
+-- TODO also check field type
+type family Insertable (a :: Type) (path :: FieldPath) (tree :: Kind.Tree) :: Maybe ErrorMessage where
+  Insertable a ('FieldName name) tree =
+    InsertableResult (TreeDataType tree) a ('FieldName name) (InsertableName a name tree)
+
+class Insert (path :: FieldPath) (a :: Type) (tree :: Kind.Tree) where
+  insert :: FieldUpdate path a -> PartialTree tree -> PartialTree tree
+
+instance (
+    insertable ~ Insertable a path tree,
+    InsertFieldOrError insertable path a tree
+  ) => Insert path a tree where
+  insert =
+    insertFieldOrError @insertable
