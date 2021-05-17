@@ -13,7 +13,7 @@ import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum, AdtProd))
 import Polysemy.Test (UnitTest)
 
-import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
+import Polysemy.Hasql.Tree.Table (TableParams, TableRoot)
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.QueryRows (QueryRows)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
@@ -109,13 +109,13 @@ type IdQueryTree =
   ])
 
 sumIdDerivation ::
-  p ~ DbParams =>
+  p ~ TableParams =>
   d ~ Uid SumPK SumId =>
   meta ~ 'TreeMeta ('NamedField "SumId") (Rep '[Product SumIdRecRep]) d =>
   Tree p meta SumIdRecTree =>
-  Where IdQueryTree (IdQuery SumPK) SumIdRecTree SumIdRec =>
+  Where Auto IdQueryTree (IdQuery SumPK) SumIdRecTree SumIdRec =>
   Tree p ('TreeMeta ('NamedField "IdQuery") (Rep '[Product (IdQueryRep (Sum SumPKRep))]) (IdQuery SumPK)) IdQueryTree =>
-  TableColumn SumIdRecRep SumIdRec SumIdRecTree =>
+  TableRoot SumIdRecRep SumIdRec SumIdRecTree =>
   QueryRows SumIdRecTree SumIdRec =>
   QueryParams SumIdRecTree SumIdRec =>
   GenTable Auto SumIdRec =>

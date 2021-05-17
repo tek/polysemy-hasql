@@ -136,11 +136,6 @@ type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qTree :: Kind.Co
     MatchQueryColumnE meta prefix '[d] @@ (ForceMaybePrim q)
   MatchCon meta prefix ('Kind.ConUna _ q) ('Kind.Con conName d) =
     MatchQueryColumnE meta ('ConSegment conName : prefix) d @@ (ForceMaybePrim q)
-  -- MatchCon meta prefix ('Kind.Tree qname _ ('Kind.Prim q)) ('Kind.Tree conName _ ('Kind.Prod _ d)) =
-  --   MatchQueryColumnE meta ('ConSegment conName : prefix) d @@ ('Kind.Tree qname '[] ('Kind.Prim q))
-  -- TODO
-  -- MatchCon _ prefix ('Kind.Tree qname _ ('Kind.Prim q)) ('Kind.Tree qname _ ('Kind.Prim d)) =
-  --   '[MatchPrim prefix qname q d]
   MatchCon _ _ _ _ =
     '[]
 
@@ -158,8 +153,6 @@ type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool
     MatchCols meta prefix q cols
   MatchProd meta prefix 'False ('Kind.Tree qname eff ('Kind.Prim q)) ('Kind.Tree name _ ('Kind.Prod _ cols)) =
     MatchCols meta ('FieldSegment name : prefix) ('Kind.Tree qname eff ('Kind.Prim q)) cols
-  -- MatchProd meta prefix 'False ('Kind.Tree name _ ('Kind.Prod _ (SumIndex : qTrees))) ('Kind.Tree name _ ('Kind.Prod _ (SumIndex : dTrees))) =
-  --   'Just (MatchSum meta ('SumSegment name : prefix) (SumIndex : qTrees) (SumIndex : dTrees))
   MatchProd _ _ _ _ _ =
     'Nothing
 
@@ -234,18 +227,12 @@ type family MkQueryMeta (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QueryMeta w
     'QueryMeta dTree name (NodeFieldNames @@ dTree)
 
 type family MatchTable (meta :: QueryMeta) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QConds where
-  -- MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ (SumIndex : qTrees))) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndex : dTrees))) =
-  --   MatchSum meta '[] (SumIndex : qTrees) (SumIndex : dTrees)
   MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ qTrees)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
     FoldMap (MatchQueryColumnE meta '[] dTrees) @@ qTrees
-  -- MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ (SumIndex : dTrees))) =
-  --   GroupSumPrim (MatchSum meta '[] (ReplicateSum ('Kind.Tree qn e ('Kind.Prim t)) dTrees) dTrees)
   MatchTable meta ('Kind.Tree n e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
     MatchQueryColumnE meta '[] dTrees @@ ('Kind.Tree n e ('Kind.Prim t))
   MatchTable meta ('Kind.Tree _ _ ('Kind.Sum _ qTrees)) ('Kind.Tree _ _ ('Kind.Sum _ dTrees)) =
     MatchSum meta '[] qTrees dTrees
-  -- MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.Sum _ dTrees)) =
-  --   GroupSumPrim (MatchSum meta '[] (ReplicateSum ('Kind.Tree qn e ('Kind.Prim t)) dTrees) dTrees)
   MatchTable meta ('Kind.Tree _ _ ('Kind.SumProd _ qCons)) ('Kind.Tree _ _ ('Kind.SumProd _ dCons)) =
     MatchSum meta '[] qCons dCons
   MatchTable meta ('Kind.Tree qn e ('Kind.Prim t)) ('Kind.Tree _ _ ('Kind.SumProd _ dCons)) =

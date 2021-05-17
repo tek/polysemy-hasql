@@ -18,7 +18,7 @@ import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Hasql.Column.Tree (DbParams)
+import Polysemy.Hasql.Tree.Table (TableParams)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
@@ -66,7 +66,7 @@ type RecType =
   ])
 
 testDerivation ::
-  Tree.Tree DbParams ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
+  Tree.Tree TableParams ('TreeMeta ('NamedField "Rec") (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) RecType =>
   ()
 testDerivation =
   ()

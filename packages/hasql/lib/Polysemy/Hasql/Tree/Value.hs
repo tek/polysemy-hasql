@@ -12,7 +12,7 @@ import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
 
 import Polysemy.Hasql.Column.Effect (PrimColumn)
-import Polysemy.Hasql.Column.Tree (DbTag)
+import Polysemy.Hasql.Tree.Table (DbTag)
 import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
 import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions(..), RepOptions(..), RepToList)
 

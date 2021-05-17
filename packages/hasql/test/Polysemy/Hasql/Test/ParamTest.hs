@@ -10,13 +10,12 @@ import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta
 import Polysemy.Test (UnitTest, runTestAuto)
 
-import qualified Polysemy.Hasql.Column.Tree as Tree
-import Polysemy.Hasql.Column.Tree (tableColumn)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.QueryParams (queryParams)
 import Polysemy.Hasql.QueryRows (queryRows)
 import Polysemy.Hasql.Table.QueryTable (queryTable)
 import Polysemy.Hasql.Test.Error.Column.E1 ()
+import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
 data Summer =
   Summer1 { txt :: Text }
@@ -116,9 +115,9 @@ type DatType =
   ])
 
 columns_Dat_explicit ::
-  Tree.Column DatType
+  TableTree DatType
 columns_Dat_explicit =
-  tableColumn @DatRep @Dat
+  tableRoot @DatRep @Dat
 
 queryParams_Dat :: Params Dat
 queryParams_Dat =

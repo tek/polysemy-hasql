@@ -3,7 +3,7 @@ module Polysemy.Hasql.Table.QueryTable where
 import Polysemy.Db.Data.Column (Auto)
 
 import Polysemy.Db.Tree ()
-import Polysemy.Hasql.Column.Tree (TableColumn)
+import Polysemy.Hasql.Tree.Table (TableRoot)
 import Polysemy.Hasql.Data.QueryTable (QueryTable, QueryTable(QueryTable))
 import qualified Polysemy.Hasql.Data.Where as Data
 import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
@@ -14,8 +14,8 @@ class GenQuery (qrep :: *) (rep :: *) (q :: *) (d :: *) where
   genQuery :: Data.Where d q
 
 instance (
-    TableColumn rep d dTree,
-    TableColumn qrep q qTree,
+    TableRoot rep d dTree,
+    TableRoot qrep q qTree,
     Where qrep qTree q dTree d
   ) =>
   GenQuery qrep rep q d where
@@ -44,8 +44,8 @@ class (
     genQueryTable :: QueryTable q d
 
 instance (
-    TableColumn rep d dTree,
-    TableColumn qrep q qTree,
+    TableRoot rep d dTree,
+    TableRoot qrep q qTree,
     GenTable rep d,
     QueryParams qTree q,
     GenQuery qrep rep q d

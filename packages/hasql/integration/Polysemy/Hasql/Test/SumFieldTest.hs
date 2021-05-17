@@ -24,7 +24,6 @@ import Prelude hiding (Enum)
 
 import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
-import Polysemy.Hasql.Column.Tree (TableColumn)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
@@ -36,6 +35,7 @@ import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGenAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Tree.Table (TableRoot)
 
 data Nume =
   One
@@ -96,7 +96,7 @@ data SumFieldRep =
 
 row_queryRows_Sinister ::
   ∀ c .
-  TableColumn SinisterRep Sinister c =>
+  TableRoot SinisterRep Sinister c =>
   QueryRows c Sinister =>
   Row Sinister
 row_queryRows_Sinister =
@@ -104,7 +104,7 @@ row_queryRows_Sinister =
 
 queryRows_SumField ::
   ∀ c .
-  TableColumn SumFieldRep SumField c =>
+  TableRoot SumFieldRep SumField c =>
   QueryRows c SumField =>
   Row SumField
 queryRows_SumField =

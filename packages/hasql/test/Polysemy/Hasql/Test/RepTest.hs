@@ -29,11 +29,10 @@ import Polysemy.Hasql.Column.Effect (
   ResolveColumnEffects,
   ResolveRep,
   )
-import qualified Polysemy.Hasql.Column.Tree as Tree
-import Polysemy.Hasql.Column.Tree (DbParams, tableColumn)
 import Polysemy.Hasql.ColumnType (ColumnType(..))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Test.Error.Column.E1 ()
+import Polysemy.Hasql.Tree.Table (TableParams, TableTree, tableRoot)
 
 newtype Newt =
   Newt { unNewt :: Text }
@@ -217,35 +216,35 @@ type DatTypeAuto =
 type PR =
   '[Product ProddoRep]
 
-column_Int :: Tree.Column ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
+column_Int :: TableTree ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
 column_Int =
-  tree @DbParams @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) mempty
+  tree @TableParams @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) mempty
 
-column_Double :: Tree.Column (PrimDouble "double")
+column_Double :: TableTree (PrimDouble "double")
 column_Double =
-  tree @DbParams @('TreeMeta ('NamedField "double") Auto Double) mempty
+  tree @TableParams @('TreeMeta ('NamedField "double") Auto Double) mempty
 
-column_Newt :: Tree.Column ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
+column_Newt :: TableTree ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
 column_Newt =
-  tree @DbParams @('TreeMeta ('NamedField "newt") Auto Newt) mempty
+  tree @TableParams @('TreeMeta ('NamedField "newt") Auto Newt) mempty
 
-column_Newt_Prim :: Tree.Column ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
+column_Newt_Prim :: TableTree ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
 column_Newt_Prim =
-  tree @DbParams @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) mempty
+  tree @TableParams @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) mempty
 
-column_Proddo :: Tree.Column (ProddoType "proddo")
+column_Proddo :: TableTree (ProddoType "proddo")
 column_Proddo =
-  tree @DbParams @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) mempty
+  tree @TableParams @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) mempty
 
 columns_Dat_explicit ::
-  Tree.Column DatType
+  TableTree DatType
 columns_Dat_explicit =
-  tableColumn @(Product DatRep) @Dat
+  tableRoot @(Product DatRep) @Dat
 
 columns_Dat_Auto ::
-  Tree.Column DatTypeAuto
+  TableTree DatTypeAuto
 columns_Dat_Auto =
-  tableColumn @Auto @Dat
+  tableRoot @Auto @Dat
 
 effectfulTest ::
   ADTRep (Rep PR) ~ ProddoRep =>
@@ -292,7 +291,7 @@ test_rep =
   runTestAuto do
     void (pure effectfulTest)
     datTarget === dataTable datCols
-    datTargetAuto === dataTable (tableColumn @Auto @Dat)
+    datTargetAuto === dataTable (tableRoot @Auto @Dat)
     intTarget === intCol
     proddoTarget === proddoCol
   where
@@ -309,14 +308,14 @@ test_rep =
         ])
       ]
     datCols =
-      tableColumn @(Product DatRep) @Dat
+      tableRoot @(Product DatRep) @Dat
     intTarget =
       Data.Column "int" "\"int\"" "bigint" def Data.Prim
     intCol =
-      dataTable (tree @DbParams @('TreeMeta ('NamedField "int") (Prim) Int) mempty)
+      dataTable (tree @TableParams @('TreeMeta ('NamedField "int") (Prim) Int) mempty)
     proddoTarget =
       Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
         Data.Column "pr_int" "\"pr_int\"" "bigint" def Data.Prim
       ])
     proddoCol =
-      dataTable (tree @DbParams @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo) mempty)
+      dataTable (tree @TableParams @('TreeMeta ('NamedField "proddo") (Product ProddoRep) Proddo) mempty)

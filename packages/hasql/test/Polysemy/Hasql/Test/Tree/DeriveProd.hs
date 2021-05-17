@@ -61,7 +61,7 @@ datDerivation ::
   AdtNode p d DatAdtMeta '[] node =>
   Node p ('NamedField "Dat") d effs node =>
   Tree p meta DatTree =>
-  Where DatTree d DatTree d =>
+  Where Auto DatTree d DatTree d =>
   ()
 datDerivation =
   ()

@@ -39,7 +39,7 @@ instance {-# overlappable #-} (
     FoldTree () I [DynQuerySql] tree
   ) => DynamicQuery rep q where
     dynamicQuery =
-      commaSeparatedSnippet . fmap unDynQuerySql . foldTree . dbValueTree @rep @q
+      commaSeparatedSnippet . fmap unDynQuerySql . foldTree . dbValueTree @rep
 
 instance (
     KnownSymbol name,

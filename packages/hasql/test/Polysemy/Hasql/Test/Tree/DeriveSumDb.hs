@@ -9,7 +9,7 @@ import Polysemy.Db.Tree (AdtNode, Node, Tree)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Test (UnitTest)
 
-import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
+import Polysemy.Hasql.Tree.Table (TableParams, TableRoot)
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.Table.QueryTable (GenQuery, GenQueryTable)
 import Polysemy.Hasql.Table.Table (GenTable)
@@ -28,7 +28,7 @@ type IdQueryTree =
 
 datSDerivation ::
   d ~ DatS =>
-  p ~ DbParams =>
+  p ~ TableParams =>
   meta ~ 'TreeMeta ('NamedField "DatS") Auto DatS =>
   node ~ DatSNode =>
   effs ~ DatSTreeEffs =>
@@ -36,11 +36,11 @@ datSDerivation ::
   AdtNode p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSTree =>
-  Where DatSTree DatS DatSTree DatS =>
+  Where Auto DatSTree DatS DatSTree DatS =>
   Tree p ('TreeMeta ('NamedField "id") (Rep '[Prim]) Int) IdQueryTree =>
-  Where IdQueryTree Int DatSTree DatS =>
-  TableColumn Auto DatS DatSTree =>
-  TableColumn (PrimQuery "id") Int IdQueryTree =>
+  Where (PrimQuery "int") IdQueryTree Int DatSTree DatS =>
+  TableRoot Auto DatS DatSTree =>
+  TableRoot (PrimQuery "id") Int IdQueryTree =>
   QueryParams DatSTree DatS =>
   QueryParams IdQueryTree Int =>
   GenQuery (PrimQuery "id") Auto Int DatS =>

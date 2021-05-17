@@ -12,11 +12,11 @@ import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
 import Polysemy.Test (UnitTest)
 
-import Polysemy.Hasql.Column.Tree (DbParams, TableColumn)
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.QueryRows (QueryRows)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Hasql.Table.Table (GenTable)
+import Polysemy.Hasql.Tree.Table (TableParams, TableRoot)
 import Polysemy.Hasql.Where (Where)
 
 data Summy =
@@ -109,14 +109,14 @@ type IdQueryTree =
   ])
 
 datSDerivation ::
-  p ~ DbParams =>
+  p ~ TableParams =>
   d ~ DatSF =>
   'MaybeADT DatSFMeta ~ ADTMeta Auto DatSF =>
   meta ~ 'TreeMeta ('NamedField "DatSF") Auto d =>
   Tree p meta DatSFTree =>
-  Where QTree Q DatSFTree DatSF =>
+  Where Auto QTree Q DatSFTree DatSF =>
   Tree p ('TreeMeta ('NamedField "IdQuery") Auto (IdQuery Int)) IdQueryTree =>
-  TableColumn Auto DatSF DatSFTree =>
+  TableRoot Auto DatSF DatSFTree =>
   QueryRows DatSFTree DatSF =>
   QueryParams DatSFTree DatSF =>
   GenTable Auto DatSF =>

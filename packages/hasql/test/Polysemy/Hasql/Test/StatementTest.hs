@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.StatementTest where
 
 import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
-import Polysemy.Db.Data.Cond (LessOrEq)
+import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery)
 import Polysemy.Db.Data.Uid (Uid)
@@ -170,8 +170,8 @@ test_queryWhereStatement =
   where
     target =
       [text|($1 is null or "field2" <= $1) and ($2 is null or "field3" = $2) and "field4" = $3|]
-    Where qw =
-      queryWhere @QueryTestQType @QueryTestQ @QueryTestType @QueryTest
+    Where qw _ =
+      queryWhere @Auto @QueryTestQType @QueryTestQ @QueryTestType @QueryTest
 
 data SumData =
   SumData1 { int :: Int, double :: Double }
@@ -223,7 +223,7 @@ test_queryWhere_Sum =
   where
     target =
       [text|($1 is null or ("sum")."sum__index" = $1) and ($2 is null or ("sum")."sum_data1"."int" = $2) and ($3 is null or ("sum")."sum_data1"."double" = $3) and ($4 is null or ("sum")."sum_data2"."txt" = $4) and ($5 is null or ("sum")."sum_data2"."tixxt" = $5)|]
-    QueryTable _ _ (Where qw) =
+    QueryTable _ _ (Where qw _) =
       queryTable @SumTableQ @SumTable
 
 test_queryWhere_Sum_Table :: UnitTest
@@ -233,7 +233,7 @@ test_queryWhere_Sum_Table =
   where
     target =
       [text|"sum__index" = $1 and ($2 is null or ("sum_data1")."int" = $2) and ($3 is null or ("sum_data1")."double" = $3) and ($4 is null or ("sum_data2")."txt" = $4) and ($5 is null or ("sum_data2")."tixxt" = $5)|]
-    QueryTable _ _ (Where qw) =
+    QueryTable _ _ (Where qw _) =
       queryTable @SumQ @SumData
 
 test_queryWhere_Sum_Prim :: UnitTest
@@ -243,7 +243,7 @@ test_queryWhere_Sum_Prim =
   where
     target =
       [text|($1 is null or ("sum_data1")."int" = $1) or ($1 is null or ("sum_data2")."int" = $1)|]
-    QueryTable _ _ (Where qw) =
+    QueryTable _ _ (Where qw _) =
       genQueryTable @(PrimQuery "int") @Auto @Int @SumData
 
 test_queryWhere_Sum_Unary :: UnitTest
@@ -253,7 +253,7 @@ test_queryWhere_Sum_Unary =
   where
     target =
       [text|"sum__index" = $1 and ($2 is null or "una_l" = $2) and ($3 is null or "una_r" = $3)|]
-    QueryTable _ _ (Where qw) =
+    QueryTable _ _ (Where qw _) =
       queryTable @SumUna @SumUna
 
 test_queryWhere_Sum_UnaryQ :: UnitTest
@@ -263,7 +263,7 @@ test_queryWhere_Sum_UnaryQ =
   where
     target =
       [text|"sum__index" = $1 and ($2 is null or ("sum_una_ext_l")."una_l" = $2) and ($3 is null or "una_r" = $3)|]
-    QueryTable _ _ (Where qw) =
+    QueryTable _ _ (Where qw _) =
       queryTable @SumUna @SumUnaExt
 
 data IDQTest =
@@ -285,7 +285,7 @@ test_IdQuery =
   where
     target =
       [text|"id" = $1|]
-    QueryTable _ _ (Where qw) =
+    QueryTable _ _ (Where qw _) =
       genQueryTable @Auto @(UidRep Auto Auto) @(IdQuery Int) @(Uid Int IDQTest)
 
 -- test_updateStatement :: UnitTest

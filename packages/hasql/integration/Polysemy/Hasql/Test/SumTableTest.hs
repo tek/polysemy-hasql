@@ -8,11 +8,10 @@ import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (Hedgehog, UnitTest, assertJust)
 
-import qualified Polysemy.Hasql.Column.Tree as Tree
-import Polysemy.Hasql.Column.Tree (tableColumn)
 import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
 data SumTab =
   SumTabOne { id :: Int, text :: Text }
@@ -36,9 +35,9 @@ type SumTabType =
   ])
 
 columns_SumTab_explicit ::
-  Tree.Column SumTabType
+  TableTree SumTabType
 columns_SumTab_explicit =
-  tableColumn @(Sum Auto) @SumTab
+  tableRoot @(Sum Auto) @SumTab
 
 id' :: Int
 id' =

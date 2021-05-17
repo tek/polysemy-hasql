@@ -31,11 +31,11 @@ datSDerivation ::
   node ~ DatSDataNode =>
   effs ~ DatSTreeEffs =>
   SumTrees p DatSAdtMetas DatSDataTrees =>
-  SumNode p 'False DatS DatSAdtMetas node =>
+  SumNode p DatS DatSAdtMetas node =>
   AdtNode p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSDataTree =>
-  Where DatSDataTree DatS DatSDataTree DatS =>
+  Where Auto DatSDataTree DatS DatSDataTree DatS =>
   ()
 datSDerivation =
   ()
@@ -49,7 +49,7 @@ datSPartialDerivation ::
   metas ~ DatSAdtMetas =>
   node ~ DatSPartialNode =>
   effs ~ DatSTreeEffs =>
-  SumNode p 'True DatS DatSAdtMetas node =>
+  SumNode p DatS DatSAdtMetas node =>
   AdtNode p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSPartialTree =>

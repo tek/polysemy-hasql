@@ -27,8 +27,6 @@ import Polysemy.Time (GhcTime, mkDatetime)
 
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
-import qualified Polysemy.Hasql.Column.Tree as Tree
-import Polysemy.Hasql.Column.Tree (TableColumn, tableColumn)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.Query (interpretQuery)
@@ -37,7 +35,9 @@ import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Hasql.Where (QCond(SimpleCond), Segment(SumSegment, FieldSegment), queryWhere)
+import Polysemy.Hasql.Tree.Table (TableRoot, TableTree, tableRoot)
+import Polysemy.Hasql.Where (queryWhere)
+import Polysemy.Hasql.Where.Type (QCond(SimpleCond), Segment (FieldSegment, SumSegment))
 
 newtype Content =
   Content { unContent :: Text }
@@ -178,9 +178,9 @@ type UidDatType =
 
 column_ContentNumber ::
   ResolveColumnEffects Auto ContentNumber '[ADT ContentNumberMeta Auto] =>
-  Tree.Column ContentNumberType
+  TableTree ContentNumberType
 column_ContentNumber =
-  tableColumn @Auto @ContentNumber
+  tableRoot @Auto @ContentNumber
 
 queryParams_ContentNumber ::
   QueryParams ContentNumberType ContentNumber =>
@@ -206,20 +206,20 @@ type CNQuery =
     ]
 
 queryWhere_ContentNumber ::
-  TableColumn DatRep Dat DatTable =>
+  TableRoot DatRep Dat DatTable =>
   Where Dat ContentNumber
 queryWhere_ContentNumber =
-  queryWhere @ContentNumberType @ContentNumber @DatTable @Dat
+  queryWhere @Auto @ContentNumberType @ContentNumber @DatTable @Dat
 
 queryWhere_ContentNumber_Uid ::
-  TableColumn (UidRep PrimaryKey DatRep) (Uuid Dat) (UidDatType) =>
+  TableRoot (UidRep PrimaryKey DatRep) (Uuid Dat) (UidDatType) =>
   Where (Uuid Dat) ContentNumber
 queryWhere_ContentNumber_Uid =
-  queryWhere @ContentNumberType @ContentNumber @UidDatType @(Uuid Dat)
+  queryWhere @Auto @ContentNumberType @ContentNumber @UidDatType @(Uuid Dat)
 
 test_derivation :: IO ()
 test_derivation = do
-  void (pure (dataTable (tableColumn @(UidRep Auto DatRep) @(Uuid Dat))))
+  void (pure (dataTable (tableRoot @(UidRep Auto DatRep) @(Uuid Dat))))
   void (pure column_ContentNumber)
   void (pure queryParams_ContentNumber)
   void (pure queryWhere_ContentNumber)

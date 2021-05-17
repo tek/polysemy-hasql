@@ -32,7 +32,6 @@ library
       Polysemy.Hasql.Column.Data.Effect
       Polysemy.Hasql.Column.DataColumn
       Polysemy.Hasql.Column.Effect
-      Polysemy.Hasql.Column.Tree
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Crud
@@ -101,7 +100,6 @@ library
       Polysemy.Hasql.Test.Error.Column.E1
       Polysemy.Hasql.Tree.Table
       Polysemy.Hasql.Tree.Value
-      Polysemy.Hasql.Type.Data.DbType
       Polysemy.Hasql.Where
       Polysemy.Hasql.Where.Dynamic
       Polysemy.Hasql.Where.Prepared
