@@ -8,32 +8,33 @@ data Params =
   Params {
     tag :: Type,
     treeParam :: Type,
-    nodeParam :: Type -> Type
+    nodeParam :: Type -> Type,
+    prodForSum :: Bool
   }
 
 type family Tag (params :: Params) :: Type where
-  Tag ('Params tag _ _) = tag
+  Tag ('Params tag _ _ _) = tag
 
 type family TreeParam (params :: Params) :: Type where
-  TreeParam ('Params _ tree _) = tree
+  TreeParam ('Params _ tree _ _) = tree
 
 type family NodeParam (params :: Params) :: Type -> Type where
-  NodeParam ('Params _ _ node) = node
+  NodeParam ('Params _ _ node _) = node
 
-type family Payload (params :: Params) :: Type -> Type where
-  Payload ('Params _ _ pf) = pf
+type family ProdForSum (params :: Params) :: Bool where
+  ProdForSum ('Params _ _ _ pfs) = pfs
 
 type family PayloadT (params :: Params) (meta :: TreeMeta) :: Type where
-  PayloadT p meta = Payload p (TreeMetaType meta)
+  PayloadT p meta = NodeParam p (TreeMetaType meta)
 
 type family PayloadM (params :: Params) :: TreeMeta -> Type where
-  PayloadM params = TM (Payload params)
+  PayloadM params = TM (NodeParam params)
 
 type family TCon (params :: Params) :: Kind.Con -> Type where
-  TCon ('Params _ t n) = Type.Con t n
+  TCon ('Params _ t n _) = Type.Con t n
 
 type family TTree (params :: Params) :: Kind.Tree -> Type where
-  TTree ('Params _ t n) = Type.Tree t n
+  TTree ('Params _ t n _) = Type.Tree t n
 
 type family TNode (params :: Params) :: Kind.Node -> Type where
-  TNode ('Params _ t n) = Type.Node t n
+  TNode ('Params _ t n _) = Type.Node t n

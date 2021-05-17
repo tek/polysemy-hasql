@@ -1,22 +1,18 @@
 module Polysemy.Db.Tree.Data where
 
 import Generics.SOP (AllZip, I(I), NP, NS (Z), SOP(SOP), htrans)
+import Generics.SOP.Constraint (SListI)
 import Generics.SOP.GGP (GCode, gto)
 
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ReifySOP)
-import Polysemy.Db.Tree (
-  ProdForSumTree,
-  RootName,
-  Tree(..),
-  )
+import Polysemy.Db.Tree (RootName, Tree(..))
 import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta), TreeMetaType)
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import qualified Polysemy.Db.Type.Data.Tree as Type
-import Generics.SOP.Constraint (SListI)
 
 data DataTag =
   DataTag
@@ -29,11 +25,8 @@ data ExpandedDataTag =
 type DataTree = Type.Tree () I
 type DataNode = Type.Node () I
 type DataCon = Type.Con () I
-type DataParams = 'Params DataTag () I
-type ExpandedDataParams = 'Params ExpandedDataTag () Maybe
-
-instance ProdForSumTree DataTag 'False
-instance ProdForSumTree ExpandedDataTag 'True
+type DataParams = 'Params DataTag () I 'False
+type ExpandedDataParams = 'Params ExpandedDataTag () Maybe 'True
 
 type family DataTreeCols (meta :: TreeMeta) :: [[Type]] where
   DataTreeCols meta =

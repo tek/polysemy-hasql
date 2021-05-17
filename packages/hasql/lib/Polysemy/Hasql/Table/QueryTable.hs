@@ -16,11 +16,11 @@ class GenQuery (qrep :: *) (rep :: *) (q :: *) (d :: *) where
 instance (
     TableColumn rep d dTree,
     TableColumn qrep q qTree,
-    Where qTree q dTree d
+    Where qrep qTree q dTree d
   ) =>
   GenQuery qrep rep q d where
     genQuery =
-      queryWhere @qTree @q @dTree @d
+      queryWhere @qrep @qTree @_ @dTree
 
 -- |Derives a full 'QueryTable' using a represenation type.
 -- Given a record type:

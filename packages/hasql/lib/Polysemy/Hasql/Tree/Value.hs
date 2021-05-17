@@ -1,22 +1,23 @@
-module Polysemy.Hasql.Column.Tree where
+module Polysemy.Hasql.Tree.Value where
 
+import Generics.SOP (I(I))
 import Polysemy.Db.Data.Column (ForcePrim, Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (Root(..))
 import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..))
-import Polysemy.Db.Tree.Data.Params (Params(Params))
+import Polysemy.Db.Tree.Data.Params (Params(Params), TTree)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
-import qualified Polysemy.Db.Type.Data.Tree as Type
 
 import Polysemy.Hasql.Column.Effect (PrimColumn)
+import Polysemy.Hasql.Column.Tree (DbTag)
 import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
 import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions(..), RepOptions(..), RepToList)
 
-data DbTag =
-  DbTag
+data DbValueTag =
+  DbValueTag
   deriving (Eq, Show)
 
 data ColumnData =
@@ -26,11 +27,7 @@ data ColumnData =
   }
   deriving (Eq, Show)
 
-type DbType = Type.Node ColumnData Proxy
-type Column = Type.Tree ColumnData Proxy
-type DbCon = Type.Con ColumnData Proxy
-
-type DbParams = 'Params DbTag ColumnData Proxy 'True
+type DbValueParams = 'Params DbValueTag () I 'False
 
 type family MatchPrim (global :: Bool) (d :: Type) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
   MatchPrim 'True _ pre '[] = 'Right (WithPrim pre)
@@ -40,16 +37,16 @@ type family MatchPrim (global :: Bool) (d :: Type) (pre :: [*]) (reps :: [*]) ::
 
 instance (
     PrimColumn d prim,
-    PrimOrTycon DbTag (MatchPrim prim d '[] reps) ('D d) effs
-  ) => ResolveRep DbTag (Rep reps) ('D d) effs
+    PrimOrTycon DbValueTag (MatchPrim prim d '[] reps) ('D d) effs
+  ) => ResolveRep DbValueTag (Rep reps) ('D d) effs
 
-instance TreeEffectsFor DbTag rep d effs => TreeEffects DbTag rep d effs
+instance TreeEffectsFor DbTag rep d effs => TreeEffects DbValueTag rep d effs
 
 instance (
     EffectfulColumnType name effs d,
     ImplicitColumnOptions d,
     RepOptions (RepToList rep)
-  ) => TreePayload DbTag ('TreeMeta name rep d) effs ColumnData where
+  ) => TreePayload DbValueTag ('TreeMeta name rep d) effs ColumnData where
     treePayload =
       ColumnData (effectfulColumnType @name @effs @d) options
       where
@@ -58,15 +55,15 @@ instance (
 
 instance (
     FieldIdText name
-  ) => TreeConPayload DbTag name ColumnData where
+  ) => TreeConPayload DbValueTag name ColumnData where
   treeConPayload =
     ColumnData (fieldIdText @name) def
 
-class TableColumn (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree where
-  tableColumn :: Column tree
+class DbValueTree (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree where
+  dbValueTree :: d -> TTree DbValueParams tree
 
 instance (
-    Root rep DbParams d tree
-  ) => TableColumn rep d tree where
-  tableColumn =
-    root @rep @DbParams @d Proxy
+    Root rep DbValueParams d tree
+  ) => DbValueTree rep d tree where
+  dbValueTree =
+    root @rep @DbValueParams @d . I

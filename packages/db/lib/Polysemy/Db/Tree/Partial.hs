@@ -13,7 +13,7 @@ import Polysemy.Db.Data.PartialField (FieldPath (FieldPath, FieldName), FieldUpd
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
 import Polysemy.Db.SOP.Error (Quoted, QuotedType)
-import Polysemy.Db.Tree (ProdForSumTree, Root(root), Tree(tree))
+import Polysemy.Db.Tree (Root(root), Tree(tree))
 import Polysemy.Db.Tree.Api (TreePrim(..))
 import Polysemy.Db.Tree.Data (DataCon, DataParams, DataTree, GenDataTree (genDataTree), ReifyDataTree (reifyDataTree))
 import Polysemy.Db.Tree.Data.Params (Params(Params))
@@ -30,10 +30,8 @@ data PartialTag =
 type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
 type PartialCon = Type.Con () PartialField
-type PartialParams = 'Params PartialTag () PartialField
+type PartialParams = 'Params PartialTag () PartialField 'True
 type FoldPartialTree = FoldTree () PartialField
-
-instance ProdForSumTree PartialTag 'True
 
 instance TreePrim PartialTag PartialField name d where
   treePrim _ =

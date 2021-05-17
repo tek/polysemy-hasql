@@ -74,7 +74,7 @@ select table row =
 selectWhereSql ::
   QueryTable query d ->
   SqlCode
-selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _) _ (Where (SqlCode qw))) =
+selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _) _ (Where (SqlCode qw) _)) =
   SqlCode [text|#{sel} where #{qw}|]
 
 -- |Construct a query of the shape "select ... from ... where ..."
@@ -93,7 +93,7 @@ anyWhereSql ::
 anyWhereSql table =
   SqlCode [text|select 1 #{from} where #{qw} limit 1|]
   where
-    Where (SqlCode qw) =
+    Where (SqlCode qw) _ =
       table ^. qwhere
     SqlCode from =
       fromFragment (table ^. QueryTable.structure . Column.selector)
@@ -149,7 +149,7 @@ deleteWhere ::
   ResultShape d result =>
   QueryTable query d ->
   Statement query result
-deleteWhere QueryTable {_table = table@Table {_row}, _qparams, _qwhere = Where qw} =
+deleteWhere QueryTable {_table = table@Table {_row}, _qparams, _qwhere = Where qw _} =
   prepared (deleteWhereSql table qw) _row _qparams
 
 deleteAll ::

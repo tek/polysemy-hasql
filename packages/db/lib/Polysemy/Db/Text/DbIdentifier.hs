@@ -22,3 +22,10 @@ dbSymbol ::
   Text
 dbSymbol =
   dbIdentifier (symbolString @name)
+
+dbSymbolBS ::
+  ∀ name .
+  KnownSymbol name =>
+  ByteString
+dbSymbolBS =
+  encodeUtf8 (dbSymbol @name)

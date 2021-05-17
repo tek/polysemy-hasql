@@ -99,8 +99,13 @@ library
       Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
       Polysemy.Hasql.Test.Error.Column.E1
+      Polysemy.Hasql.Tree.Table
+      Polysemy.Hasql.Tree.Value
       Polysemy.Hasql.Type.Data.DbType
       Polysemy.Hasql.Where
+      Polysemy.Hasql.Where.Dynamic
+      Polysemy.Hasql.Where.Prepared
+      Polysemy.Hasql.Where.Type
   other-modules:
       Paths_polysemy_hasql
   autogen-modules:

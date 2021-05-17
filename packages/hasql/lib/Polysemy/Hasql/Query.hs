@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-redundant-constraints #-}
-
 module Polysemy.Hasql.Query where
 
 import Hasql.Encoders (Params)

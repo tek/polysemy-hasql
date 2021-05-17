@@ -8,7 +8,8 @@ import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim(..), foldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
 import Polysemy.Hasql.Data.DbType (Selector(Selector))
-import Polysemy.Hasql.Data.QueryTable (QueryTable, selector)
+import Polysemy.Hasql.Data.QueryTable (QueryTable, qwhere, selector)
+import Polysemy.Hasql.Data.Where (Where(Where))
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
 
 newtype PartialSql =
@@ -23,20 +24,24 @@ commaSeparatedSnippet =
 
 instance (
     QueryValueNoN effs d
-  ) => FoldTreePrim () PartialField [PartialSql] effs d where
+  ) => FoldTreePrim () PartialField [PartialSql] name effs d where
   foldTreePrim = \case
     PartialField.Keep -> mempty
     PartialField.Update name value ->
       [PartialSql (sql (encodeUtf8 (dquote name)) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
 
+-- TODO where fragment needs to be constructed with explicit values, the regular derivation produces a fragment for a
+-- prepared statement
 update ::
   FoldTree () PartialField [PartialSql] tree =>
   QueryTable query d ->
-  q ->
+  query ->
   PartialTree tree ->
   Snippet
-update table _ tree =
-  sql [text|update #{sel} set |] <> (commaSeparatedSnippet (unPartialSql <$> (foldTree tree)))
+update table q tree =
+  sql [text|update #{sel} set |] <> (commaSeparatedSnippet (unPartialSql <$> (foldTree tree))) <> " where " <> qw q
   where
     Selector sel =
       table ^. selector
+    Where _ qw =
+      table ^. qwhere
