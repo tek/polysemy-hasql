@@ -109,7 +109,7 @@ instance (
 instance (
     KnownSymbol name
   ) => UnfoldTreeExtract () PartialField Value ('Kind.Tree ('NamedField name) effs ('Kind.Prod d trees)) where
-  unfoldTreeExtract = trs' (symbolText @name) . \case
+  unfoldTreeExtract = \case
     Object o -> fromMaybe Null (HashMap.lookup (symbolText @name) o)
     _ -> Null
 
