@@ -355,6 +355,7 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.Tree.DeriveSumField
       Polysemy.Hasql.Test.Tree.DeriveSumFieldDb
       Polysemy.Hasql.Test.Tree.DeriveSumIdDb
+      Polysemy.Hasql.Test.Tree.JsonTest
       Paths_polysemy_hasql
   hs-source-dirs:
       test

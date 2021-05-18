@@ -66,9 +66,9 @@ instance (
   show (SumProd n sub) =
     [text|SumProd #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @Text) sub))}]|]
 
-instance (Eq (Node t n ('Kind.Prim d))) where
-  _ == _ =
-    True
+instance Eq (n d) => Eq (Node t n ('Kind.Prim d)) where
+  Prim l == Prim r =
+    l == r
 
 instance (
     Eq (n d),

@@ -73,8 +73,8 @@ library
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial
       Polysemy.Db.Tree.Partial.Insert
-      Polysemy.Db.Tree.Partial.Tree
       Polysemy.Db.Tree.Partial.Update
+      Polysemy.Db.Tree.Unfold
       Polysemy.Db.Type.Data.Tree
   other-modules:
       Prelude
