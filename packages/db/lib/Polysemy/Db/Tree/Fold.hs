@@ -48,6 +48,13 @@ instance (
 instance (
     FoldTreeConcat t n m name effs,
     All (FoldCon t n m) cons
+  ) => FoldTree t n m ('Kind.Tree name effs ('Kind.SumProd d cons)) where
+  foldTree (Type.Tree _ (Type.SumProd _ trees)) =
+    foldTreeConcat @t @n @m @name @effs (hcollapse (hcmap (Proxy @(FoldCon t n m)) (K . foldCon) trees))
+
+instance (
+    FoldTreeConcat t n m name effs,
+    All (FoldCon t n m) cons
   ) => FoldTree t n m ('Kind.Tree name effs ('Kind.Sum d cons)) where
   foldTree (Type.Tree _ (Type.Sum _ cons)) =
     foldTreeConcat @t @n @m @name @effs (pure (hcollapse (hcmap (Proxy @(FoldCon t n m)) (K . foldCon) cons)))

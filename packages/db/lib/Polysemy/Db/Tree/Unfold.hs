@@ -11,21 +11,32 @@ class UnfoldTreePrim (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env ::
 class UnfoldTreeExtract (t :: Type) (n :: Type -> Type) (env :: Type) (tree :: Kind.Tree) where
   unfoldTreeExtract :: env -> env
 
--- class UnfoldCon (t :: Type) (n :: Type -> Type) (m :: Type) (con :: Kind.Con) where
---   unfoldCon :: Type.Con t n con -> m
+unfoldTrees ::
+  ∀ t n f env trees .
+  Applicative f =>
+  All (UnfoldTree t n f env) trees =>
+  env ->
+  NP (Type.Tree t n) trees ->
+  f (NP (Type.Tree t n) trees)
+unfoldTrees env trees =
+  hctraverse' (Proxy @(UnfoldTree t n f env)) (unfoldTree env) trees
 
--- instance (
---     UnfoldTreeExtract t n m name '[],
---     All (UnfoldTree t n m) trees
---   ) => UnfoldCon t n m ('Kind.Con name trees) where
---   unfoldCon (Type.Con trees) =
---     unfoldTreeExtract @t @n @m @name @'[] (hcollapse (hcmap (Proxy @(UnfoldTree t n m)) (K . unfoldTree) trees))
+class UnfoldCon (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (con :: Kind.Con) where
+  unfoldCon :: env -> Type.Con t n con -> f (Type.Con t n con)
 
--- instance (
---     UnfoldTree t n m tree
---   ) => UnfoldCon t n m ('Kind.ConUna name tree) where
---   unfoldCon (Type.ConUna tree) =
---     unfoldTree tree
+instance (
+    Applicative f,
+    All (UnfoldTree t n f env) trees
+  ) => UnfoldCon t n f env ('Kind.Con name trees) where
+  unfoldCon env (Type.Con trees) =
+    Type.Con <$> unfoldTrees @t @n @f @env @trees env trees
+
+instance (
+    Functor f,
+    UnfoldTree t n f env tree
+  ) => UnfoldCon t n f env ('Kind.ConUna name tree) where
+  unfoldCon env (Type.ConUna tree) =
+    Type.ConUna <$> unfoldTree @t @n @f @env @tree env tree
 
 class UnfoldTree (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (tree :: Kind.Tree) where
   unfoldTree :: env -> Type.Tree t n tree -> f (Type.Tree t n tree)
@@ -40,16 +51,6 @@ instance (
     where
       payload =
         unfoldTreePrim @t @n @f @env @tree @d env
-
-unfoldTrees ::
-  ∀ t n f env trees .
-  Applicative f =>
-  All (UnfoldTree t n f env) trees =>
-  env ->
-  NP (Type.Tree t n) trees ->
-  f (NP (Type.Tree t n) trees)
-unfoldTrees env trees =
-  hctraverse' (Proxy @(UnfoldTree t n f env)) (unfoldTree env) trees
 
 instance (
     Applicative f,
@@ -80,3 +81,11 @@ instance (
   ) => UnfoldRoot t n f env ('Kind.Tree name effs ('Kind.Prod d trees)) where
   unfoldRoot env (Type.Tree t (Type.Prod n trees)) =
     Type.Tree t . Type.Prod n <$> unfoldTrees @t @n @f env trees
+
+instance (
+    Applicative f,
+    tree ~ 'Kind.Tree name effs ('Kind.SumProd d cons),
+    All (UnfoldCon t n f env) cons
+  ) => UnfoldRoot t n f env ('Kind.Tree name effs ('Kind.SumProd d cons)) where
+  unfoldRoot env (Type.Tree t (Type.SumProd n cons)) =
+    Type.Tree t . Type.SumProd n <$> hctraverse' (Proxy @(UnfoldCon t n f env)) (unfoldCon env) cons

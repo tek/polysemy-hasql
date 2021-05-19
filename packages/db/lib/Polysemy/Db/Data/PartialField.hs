@@ -97,7 +97,7 @@ instance (
   ) => UnfoldTreePrim () PartialField Parser Value ('Kind.Tree ('NamedField name) effs node) d where
   unfoldTreePrim = \case
     Object o ->
-      maybe (pure Keep) (fmap (Update name) . parseJSON) (HashMap.lookup (symbolText @name) o)
+      maybe (pure Keep) (fmap (Update name) . parseJSON) (HashMap.lookup name o)
     Null ->
       pure Keep
     value ->
@@ -118,5 +118,13 @@ instance (
     Partial d tree,
     UnfoldRoot () PartialField Parser Value tree
   ) => FromJSON (Type.Tree () PartialField ('Kind.Tree name effs ('Kind.Prod d trees))) where
+  parseJSON value =
+    unfoldRoot value (partial @d)
+
+instance (
+    tree ~ 'Kind.Tree name effs ('Kind.SumProd d trees),
+    Partial d tree,
+    UnfoldRoot () PartialField Parser Value tree
+  ) => FromJSON (Type.Tree () PartialField ('Kind.Tree name effs ('Kind.SumProd d trees))) where
   parseJSON value =
     unfoldRoot value (partial @d)
