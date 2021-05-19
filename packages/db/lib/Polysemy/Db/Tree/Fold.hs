@@ -12,6 +12,12 @@ class FoldTreePrim (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId)
 class FoldTreeConcat (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) where
   foldTreeConcat :: [m] -> m
 
+instance {-# overlappable #-} (
+    Monoid m
+  ) => FoldTreeConcat t n m name effs where
+  foldTreeConcat =
+    mconcat
+
 class FoldCon (t :: Type) (n :: Type -> Type) (m :: Type) (con :: Kind.Con) where
   foldCon :: Type.Con t n con -> m
 
