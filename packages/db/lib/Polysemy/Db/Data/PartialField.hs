@@ -94,7 +94,7 @@ instance (
 instance (
     KnownSymbol name,
     FromJSON d
-  ) => UnfoldTreePrim () PartialField Parser Value ('Kind.Tree ('NamedField name) effs node) d where
+  ) => UnfoldTreePrim () PartialField Parser Value ('Kind.Tree ('NamedField name) effs ('Kind.Prim d)) where
   unfoldTreePrim = \case
     Object o ->
       maybe (pure Keep) (fmap (Update name) . parseJSON) (HashMap.lookup name o)

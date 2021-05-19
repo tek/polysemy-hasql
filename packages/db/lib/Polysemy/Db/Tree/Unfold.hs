@@ -3,10 +3,11 @@ module Polysemy.Db.Tree.Unfold where
 import Generics.SOP (All, HSequence (hctraverse'), NP)
 
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.Kind.Data.Tree (TreeDataType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
-class UnfoldTreePrim (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (tree :: Kind.Tree) (d :: Type) where
-  unfoldTreePrim :: env -> f (n d)
+class UnfoldTreePrim (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (tree :: Kind.Tree) where
+  unfoldTreePrim :: env -> f (n (TreeDataType tree))
 
 class UnfoldTreeExtract (t :: Type) (n :: Type -> Type) (env :: Type) (tree :: Kind.Tree) where
   unfoldTreeExtract :: env -> env
@@ -44,13 +45,13 @@ class UnfoldTree (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Typ
 instance (
     Functor f,
     tree ~ 'Kind.Tree name effs ('Kind.Prim d),
-    UnfoldTreePrim t n f env tree d
+    UnfoldTreePrim t n f env tree
   ) => UnfoldTree t n f env ('Kind.Tree name effs ('Kind.Prim d)) where
   unfoldTree env (Type.Tree t (Type.Prim _)) =
     Type.Tree t . Type.Prim <$> payload
     where
       payload =
-        unfoldTreePrim @t @n @f @env @tree @d env
+        unfoldTreePrim @t @n @f @env @tree env
 
 instance (
     Applicative f,
