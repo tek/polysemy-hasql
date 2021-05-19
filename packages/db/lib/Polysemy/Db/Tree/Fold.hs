@@ -6,15 +6,15 @@ import Polysemy.Db.Data.FieldId (FieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
-class FoldTreePrim (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) (d :: Type) where
+class FoldTreePrim (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) (d :: Type) where
   foldTreePrim :: n d -> m
 
-class FoldTreeConcat (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) where
+class FoldTreeConcat (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) where
   foldTreeConcat :: [m] -> m
 
 instance {-# overlappable #-} (
     Monoid m
-  ) => FoldTreeConcat t n m name effs where
+  ) => FoldTreeConcat root t n m name effs where
   foldTreeConcat =
     mconcat
 
@@ -22,45 +22,45 @@ class FoldCon (t :: Type) (n :: Type -> Type) (m :: Type) (con :: Kind.Con) wher
   foldCon :: Type.Con t n con -> m
 
 instance (
-    FoldTreeConcat t n m name '[],
-    All (FoldTree t n m) trees
+    FoldTreeConcat 'False t n m name '[],
+    All (FoldTree 'False t n m) trees
   ) => FoldCon t n m ('Kind.Con name trees) where
   foldCon (Type.Con trees) =
-    foldTreeConcat @t @n @m @name @'[] (hcollapse (hcmap (Proxy @(FoldTree t n m)) (K . foldTree) trees))
+    foldTreeConcat @'False @t @n @m @name @'[] (hcollapse (hcmap (Proxy @(FoldTree 'False t n m)) (K . foldTree @'False) trees))
 
 instance (
-    FoldTree t n m tree
+    FoldTree 'False t n m tree
   ) => FoldCon t n m ('Kind.ConUna name tree) where
   foldCon (Type.ConUna tree) =
-    foldTree tree
+    foldTree @'False tree
 
-class FoldTree (t :: Type) (n :: Type -> Type) (m :: Type) (tree :: Kind.Tree) where
+class FoldTree (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (tree :: Kind.Tree) where
   foldTree :: Type.Tree t n tree -> m
 
 instance (
-    FoldTreePrim t n m name effs d
-  ) => FoldTree t n m ('Kind.Tree name effs ('Kind.Prim d)) where
+    FoldTreePrim root t n m name effs d
+  ) => FoldTree root t n m ('Kind.Tree name effs ('Kind.Prim d)) where
   foldTree (Type.Tree _ (Type.Prim nd)) =
-    foldTreePrim @t @n @m @name @effs @d nd
+    foldTreePrim @root @t @n @m @name @effs @d nd
 
 -- TODO also collect result for this
 instance (
-    FoldTreeConcat t n m name effs,
-    All (FoldTree t n m) trees
-  ) => FoldTree t n m ('Kind.Tree name effs ('Kind.Prod d trees)) where
+    FoldTreeConcat root t n m name effs,
+    All (FoldTree 'False t n m) trees
+  ) => FoldTree root t n m ('Kind.Tree name effs ('Kind.Prod d trees)) where
   foldTree (Type.Tree _ (Type.Prod _ trees)) =
-    foldTreeConcat @t @n @m @name @effs (hcollapse (hcmap (Proxy @(FoldTree t n m)) (K . foldTree) trees))
+    foldTreeConcat @root @t @n @m @name @effs (hcollapse (hcmap (Proxy @(FoldTree 'False t n m)) (K . foldTree @'False) trees))
 
 instance (
-    FoldTreeConcat t n m name effs,
+    FoldTreeConcat root t n m name effs,
     All (FoldCon t n m) cons
-  ) => FoldTree t n m ('Kind.Tree name effs ('Kind.SumProd d cons)) where
+  ) => FoldTree root t n m ('Kind.Tree name effs ('Kind.SumProd d cons)) where
   foldTree (Type.Tree _ (Type.SumProd _ trees)) =
-    foldTreeConcat @t @n @m @name @effs (hcollapse (hcmap (Proxy @(FoldCon t n m)) (K . foldCon) trees))
+    foldTreeConcat @root @t @n @m @name @effs (hcollapse (hcmap (Proxy @(FoldCon t n m)) (K . foldCon) trees))
 
 instance (
-    FoldTreeConcat t n m name effs,
+    FoldTreeConcat root t n m name effs,
     All (FoldCon t n m) cons
-  ) => FoldTree t n m ('Kind.Tree name effs ('Kind.Sum d cons)) where
+  ) => FoldTree root t n m ('Kind.Tree name effs ('Kind.Sum d cons)) where
   foldTree (Type.Tree _ (Type.Sum _ cons)) =
-    foldTreeConcat @t @n @m @name @effs (pure (hcollapse (hcmap (Proxy @(FoldCon t n m)) (K . foldCon) cons)))
+    foldTreeConcat @root @t @n @m @name @effs (pure (hcollapse (hcmap (Proxy @(FoldCon t n m)) (K . foldCon) cons)))

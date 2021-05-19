@@ -27,7 +27,7 @@ field q =
 instance (
     KnownSymbol name,
     QueryValueNoN effs d
-  ) => FoldTreePrim () I [DynQuerySql] ('NamedField name) effs d where
+  ) => FoldTreePrim root () I [DynQuerySql] ('NamedField name) effs d where
   foldTreePrim (I q) =
     [DynQuerySql (field @name @effs q)]
 
@@ -36,10 +36,10 @@ class DynamicQuery (rep :: Type) (q :: Type) where
 
 instance {-# overlappable #-} (
     DbValueTree rep q tree,
-    FoldTree () I [DynQuerySql] tree
+    FoldTree 'True () I [DynQuerySql] tree
   ) => DynamicQuery rep q where
     dynamicQuery =
-      commaSeparatedSnippet . fmap unDynQuerySql . foldTree . dbValueTree @rep
+      commaSeparatedSnippet . fmap unDynQuerySql . foldTree @'True . dbValueTree @rep
 
 instance (
     KnownSymbol name,

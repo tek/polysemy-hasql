@@ -24,7 +24,7 @@ commaSeparatedSnippet =
 
 instance (
     QueryValueNoN effs d
-  ) => FoldTreePrim () PartialField [PartialSql] name effs d where
+  ) => FoldTreePrim root () PartialField [PartialSql] name effs d where
   foldTreePrim = \case
     PartialField.Keep -> mempty
     PartialField.Update name value ->
@@ -33,13 +33,13 @@ instance (
 -- TODO where fragment needs to be constructed with explicit values, the regular derivation produces a fragment for a
 -- prepared statement
 update ::
-  FoldTree () PartialField [PartialSql] tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   QueryTable query d ->
   query ->
   PartialTree tree ->
   Snippet
 update table q tree =
-  sql [text|update #{sel} set |] <> (commaSeparatedSnippet (unPartialSql <$> (foldTree tree))) <> " where " <> qw q
+  sql [text|update #{sel} set |] <> (commaSeparatedSnippet (unPartialSql <$> (foldTree @'True tree))) <> " where " <> qw q
   where
     Selector sel =
       table ^. selector

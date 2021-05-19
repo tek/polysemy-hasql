@@ -1,20 +1,20 @@
 module Polysemy.Db.Data.PartialField where
 
 import Data.Aeson (Object, Value (Null))
-import Data.Aeson.Types (Value(Object), Parser)
+import Data.Aeson.Types (Parser, Value(Object))
 import qualified Data.HashMap.Strict as HashMap
 
 import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Db.Tree (Root(..))
 import Polysemy.Db.Tree.Api (TreePrim(..))
 import Polysemy.Db.Tree.Data.Params (Params(Params))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreeConcat(..), FoldTreePrim(..), foldTree)
-import Polysemy.Db.Tree.Unfold (UnfoldTreeExtract(..), UnfoldTreePrim(..), UnfoldRoot(..))
+import Polysemy.Db.Tree.Unfold (UnfoldRoot(..), UnfoldTreeExtract(..), UnfoldTreePrim(..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
-import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 
 data PartialField (a :: Type) =
   Update Text a
@@ -73,28 +73,38 @@ instance (
 
 instance (
     ToJSON d
-  ) => FoldTreePrim () PartialField Object name effs d where
+  ) => FoldTreePrim root () PartialField Object name effs d where
     foldTreePrim = \case
       Keep ->
         mempty
       Update key value ->
         HashMap.singleton key (toJSON value)
 
-instance FoldTreeConcat () PartialField Object name effs where
-  foldTreeConcat = \case
-    [] -> mempty
-    os -> mconcat (filter (not . HashMap.null) os)
+filterNulls :: [Object] -> Object
+filterNulls =
+  mconcat . filter (not . HashMap.null)
 
 instance (
-    FoldTree () PartialField Object tree
+    KnownSymbol name
+  ) => FoldTreeConcat 'False () PartialField Object ('NamedField name) effs where
+  foldTreeConcat = \case
+    [] -> mempty
+    os -> HashMap.singleton (symbolText @name) (Object (filterNulls os))
+
+instance FoldTreeConcat 'True () PartialField Object ('NamedField name) effs where
+  foldTreeConcat =
+    filterNulls
+
+instance (
+    FoldTree 'True () PartialField Object tree
   ) => ToJSON (Type.Tree () PartialField tree) where
     toJSON =
-      Object . foldTree @_ @_ @Object
+      Object . foldTree @'True @_ @_ @Object
 
 instance (
     KnownSymbol name,
     FromJSON d
-  ) => UnfoldTreePrim () PartialField Parser Value ('Kind.Tree ('NamedField name) effs ('Kind.Prim d)) where
+  ) => UnfoldTreePrim () PartialField Parser Value ('NamedField name) effs d where
   unfoldTreePrim = \case
     Object o ->
       maybe (pure Keep) (fmap (Update name) . parseJSON) (HashMap.lookup name o)
@@ -108,7 +118,7 @@ instance (
 
 instance (
     KnownSymbol name
-  ) => UnfoldTreeExtract () PartialField Value ('Kind.Tree ('NamedField name) effs ('Kind.Prod d trees)) where
+  ) => UnfoldTreeExtract () PartialField Value ('NamedField name) effs where
   unfoldTreeExtract = \case
     Object o -> fromMaybe Null (HashMap.lookup (symbolText @name) o)
     _ -> Null
