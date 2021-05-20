@@ -46,8 +46,8 @@ queryTable ::
 queryTable =
   schema @Auto @Auto
 
-type UidSchemaWith qrep rep i d =
-  Schema qrep (UidRep PrimaryKey rep) i (Uid i d)
+type UidQuerySchema qrep rep i q d =
+  Schema qrep (UidRep PrimaryKey rep) q (Uid i d)
 
 type UidSchema rep i d =
-  UidSchemaWith (PrimQuery "id") rep i d
+  UidQuerySchema (PrimQuery "id") rep i i d
