@@ -21,7 +21,7 @@ module Polysemy.Hasql (
   -- * Crud Derivation
   -- $derivation
   Schema(schema),
-  UidSchemaWith,
+  UidQuerySchema,
   UidSchema,
   Auto,
 
@@ -51,7 +51,7 @@ import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Query (interpretQuery, interpretQueryAuto, interpretQuerySingleton, interpretQueryWith)
 import Polysemy.Hasql.Reader (interpretReaderDb, interpretReaderDbAuto)
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
-import Polysemy.Hasql.Table.Schema (Schema(schema), UidSchema, UidSchemaWith)
+import Polysemy.Hasql.Table.Schema (Schema(schema), UidQuerySchema, UidSchema)
 
 -- $intro
 -- This library provides two independent features as well as their synthesis:
