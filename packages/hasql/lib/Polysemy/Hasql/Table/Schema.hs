@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Table.Schema where
 
-import Polysemy.Db.Data.Column (Auto, PrimQuery, UidRep)
+import Polysemy.Db.Data.Column (Auto, PrimQuery, UidRep, PrimaryKey)
 import Polysemy.Db.Data.Uid (Uid)
 
 import qualified Polysemy.Hasql.Data.QueryTable as Data
@@ -50,4 +50,4 @@ type UidSchemaWith irep rep i d =
   Schema (PrimQuery "id") (UidRep irep rep) i (Uid i d)
 
 type UidSchema rep i d =
-  UidSchemaWith (PrimQuery "id") rep i d
+  UidSchemaWith PrimaryKey rep i d
