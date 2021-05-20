@@ -13,7 +13,7 @@ import Polysemy.Test (UnitTest, runTestAuto)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.QueryParams (queryParams)
 import Polysemy.Hasql.QueryRows (queryRows)
-import Polysemy.Hasql.Table.QueryTable (queryTable)
+import Polysemy.Hasql.Table.Schema (queryTable)
 import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 

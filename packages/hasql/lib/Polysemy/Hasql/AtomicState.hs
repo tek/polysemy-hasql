@@ -13,7 +13,7 @@ import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.ManagedTable (interpretManagedTableAuto)
 import Polysemy.Hasql.Query (interpretQueryAuto)
 import Polysemy.Hasql.Store (interpretStoreDb)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema)
 
 -- |Interpret 'AtomicState' as a singleton table.
 --
@@ -36,7 +36,7 @@ interpretAtomicStateDb initial =
 --
 -- Uses the automatic derivation strategy.
 interpretAtomicStateDbAuto ::
-  GenQueryTable Auto Auto () d =>
+  Schema Auto Auto () d =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! DbError) r

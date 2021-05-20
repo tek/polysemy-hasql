@@ -75,6 +75,7 @@ library
       Polysemy.Hasql.Store.Statement
       Polysemy.Hasql.StoreUpdate
       Polysemy.Hasql.Table
+      Polysemy.Hasql.Table.BasicSchema
       Polysemy.Hasql.Table.ColumnOptions
       Polysemy.Hasql.Table.DecoderValue
       Polysemy.Hasql.Table.EncoderValue
@@ -91,10 +92,9 @@ library
       Polysemy.Hasql.Table.Query.Update
       Polysemy.Hasql.Table.QueryParam
       Polysemy.Hasql.Table.QueryRow
-      Polysemy.Hasql.Table.QueryTable
       Polysemy.Hasql.Table.ReadNull
       Polysemy.Hasql.Table.ResultShape
-      Polysemy.Hasql.Table.Table
+      Polysemy.Hasql.Table.Schema
       Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
       Polysemy.Hasql.Test.Error.Column.E1

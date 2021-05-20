@@ -105,10 +105,10 @@ deriveGeneric ''RecordRep
 and then pass it explicitly to a generic constructor:
 
 ```haskell
-table = genTable @RecordRep
-queryTable = genQueryTable @RecordRep @Int
+table = basicSchema @RecordRep
+queryTable = schema @RecordRep @Int
 -- TODO
-genTable @Auto
+basicSchema @Auto
 ```
 
 or use one of the interpreters:

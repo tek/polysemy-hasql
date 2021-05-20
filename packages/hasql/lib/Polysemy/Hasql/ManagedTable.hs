@@ -18,7 +18,7 @@ import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.InitDbError (initDbError)
 import Polysemy.Hasql.Table (initTable)
-import Polysemy.Hasql.Table.Table (GenTable, genTable)
+import Polysemy.Hasql.Table.BasicSchema (BasicSchema, basicSchema)
 
 interpretManagedTable ::
   ∀ d r .
@@ -40,25 +40,25 @@ interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
 
 interpretManagedTableGen ::
   ∀ rep d r .
-  GenTable rep d =>
+  BasicSchema rep d =>
   Members [Database !! DbError, Log, Embed IO] r =>
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableGen =
-  interpretManagedTable (genTable @rep @d)
+  interpretManagedTable (basicSchema @rep @d)
 {-# INLINE interpretManagedTableGen #-}
 
 interpretManagedTableAuto ::
   ∀ d r .
-  GenTable Auto d =>
+  BasicSchema Auto d =>
   Members [Database !! DbError, Log, Embed IO] r =>
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableAuto =
-  interpretManagedTable (genTable @Auto @d)
+  interpretManagedTable (basicSchema @Auto @d)
 {-# INLINE interpretManagedTableAuto #-}
 
 interpretManagedTableUnmanaged ::
   ∀ d e r .
-  GenTable Auto d =>
+  BasicSchema Auto d =>
   Member (Database !! e) r =>
   InterpreterFor (ManagedTable d !! e) r
 interpretManagedTableUnmanaged =
@@ -71,7 +71,7 @@ interpretManagedTableUnmanaged =
       restop (Database.runStatementRetrying interval q stmt)
   where
     table =
-      genTable @Auto @d
+      basicSchema @Auto @d
 
 queryTable ::
   ∀ q d e r .

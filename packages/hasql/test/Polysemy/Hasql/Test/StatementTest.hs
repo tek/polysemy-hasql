@@ -15,7 +15,7 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import Polysemy.Hasql.Data.Where (Where(Where))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
-import Polysemy.Hasql.Table.QueryTable (genQueryTable, queryTable)
+import Polysemy.Hasql.Table.Schema (schema, queryTable)
 import Polysemy.Hasql.Where (queryWhere)
 
 data WithMaybe =
@@ -244,7 +244,7 @@ test_queryWhere_Sum_Prim =
     target =
       [text|($1 is null or ("sum_data1")."int" = $1) or ($1 is null or ("sum_data2")."int" = $1)|]
     QueryTable _ _ (Where qw _) =
-      genQueryTable @(PrimQuery "int") @Auto @Int @SumData
+      schema @(PrimQuery "int") @Auto @Int @SumData
 
 test_queryWhere_Sum_Unary :: UnitTest
 test_queryWhere_Sum_Unary =
@@ -286,7 +286,7 @@ test_IdQuery =
     target =
       [text|"id" = $1|]
     QueryTable _ _ (Where qw _) =
-      genQueryTable @Auto @(UidRep Auto Auto) @(IdQuery Int) @(Uid Int IDQTest)
+      schema @Auto @(UidRep Auto Auto) @(IdQuery Int) @(Uid Int IDQTest)
 
 -- test_updateStatement :: UnitTest
 -- test_updateStatement =
@@ -295,7 +295,7 @@ test_IdQuery =
 --     target =
 --       [text|update "rec" where "id" = $1 set "a" = $2, "b" = $3, "c" = $4, "sum_field" = row($5, $6, row($7, $8))|]
 --     SqlCode stmtText =
---       Statement.updateSql (genQueryTable @(PrimQuery "id") @(UidRep Auto RecRep) @Int @(Uid Int Rec))
+--       Statement.updateSql (schema @(PrimQuery "id") @(UidRep Auto RecRep) @Int @(Uid Int Rec))
 
 statementTests :: TestTree
 statementTests =

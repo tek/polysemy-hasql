@@ -21,7 +21,7 @@ import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import qualified Polysemy.Hasql.Store.Statement as Statement
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema, schema)
 
 type StoreStack qOut dOut qIn dIn =
   [Store qOut dOut !! DbError, Crud qIn dIn !! DbError, ManagedTable dIn !! DbError]
@@ -61,7 +61,7 @@ type StoreDeps t dt =
 
 interpretStoreDbFullGenUidAs ::
   ∀ qrep rep ir i q d t dt r .
-  GenQueryTable qrep (UidRep ir rep) q (Uid i d) =>
+  Schema qrep (UidRep ir rep) q (Uid i d) =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (UidStoreStack' i q d) r
 interpretStoreDbFullGenUidAs =
@@ -69,7 +69,7 @@ interpretStoreDbFullGenUidAs =
 
 interpretStoreDbFullGenUid ::
   ∀ rep ir i d t dt r .
-  GenQueryTable (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
+  Schema (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (UidStoreStack i d) r
 interpretStoreDbFullGenUid =
@@ -102,15 +102,15 @@ interpretStoreDbFullUid =
 -- @
 interpretStoreDbFullGen ::
   ∀ qrep rep q d t dt r .
-  GenQueryTable qrep rep q d =>
+  Schema qrep rep q d =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack q d q d) r
 interpretStoreDbFullGen =
-  interpretStoreDbFull (genQueryTable @qrep @rep)
+  interpretStoreDbFull (schema @qrep @rep)
 
 interpretStoreDbSingle ::
   ∀ qrep rep q d r .
-  GenQueryTable qrep rep q d =>
+  Schema qrep rep q d =>
   Members [Resource, Log, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->

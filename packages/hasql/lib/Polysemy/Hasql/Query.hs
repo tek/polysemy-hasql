@@ -7,7 +7,7 @@ import qualified Polysemy.Hasql.Data.Query as Query
 import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Where (Where)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema, schema)
 
 interpretQueryWith ::
   Params q ->
@@ -21,18 +21,18 @@ interpretQueryWith params qwhere =
 
 interpretQuery ::
   ∀ qrep rep q d r .
-  GenQueryTable qrep rep q d =>
+  Schema qrep rep q d =>
   InterpreterFor (Query q d) r
 interpretQuery =
   interpretQueryWith params qwhere
   where
     QueryTable _ params qwhere =
-      genQueryTable @qrep @rep
+      schema @qrep @rep
 {-# INLINE interpretQuery #-}
 
 interpretQueryAuto ::
   ∀ q d r .
-  GenQueryTable Auto Auto q d =>
+  Schema Auto Auto q d =>
   InterpreterFor (Query q d) r
 interpretQueryAuto =
   interpretQuery @Auto @Auto

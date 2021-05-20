@@ -8,7 +8,7 @@ import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (Hedgehog, UnitTest, assertJust)
 
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
@@ -49,7 +49,7 @@ specimen =
 
 prog ::
   Members (Hedgehog IO : TestStoreDeps) r =>
-  GenQueryTable (PrimQuery "id") Auto Int SumTab =>
+  Schema (PrimQuery "id") Auto Int SumTab =>
   Sem r ()
 prog = do
   result <- withTestStoreGen @(PrimQuery "id") @Auto @Int @SumTab do

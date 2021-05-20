@@ -33,8 +33,8 @@ import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Store (StoreStack, UidStoreStack, UidStoreStack', interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable, genQueryTable)
-import Polysemy.Hasql.Table.Table (GenTable, genTable)
+import Polysemy.Hasql.Table.Schema (Schema, schema)
+import Polysemy.Hasql.Table.BasicSchema (BasicSchema, basicSchema)
 
 suffixedTable ::
   Lens' t (Table d) ->
@@ -89,11 +89,11 @@ withTestPlainTable =
 withTestTableGen ::
   ∀ rep d a r .
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
-  GenTable rep d =>
+  BasicSchema rep d =>
   (Table d -> Sem r a) ->
   Sem r a
 withTestTableGen =
-  withTestPlainTable (genTable @rep)
+  withTestPlainTable (basicSchema @rep)
 
 withTestQueryTable ::
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
@@ -106,11 +106,11 @@ withTestQueryTable =
 withTestQueryTableGen ::
   ∀ qrep rep q d a r .
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
-  GenQueryTable qrep rep q d =>
+  Schema qrep rep q d =>
   (QueryTable q d -> Sem r a) ->
   Sem r a
 withTestQueryTableGen =
-  withTestQueryTable (genQueryTable @qrep @rep)
+  withTestQueryTable (schema @qrep @rep)
 
 createTestDb ::
   Members [Random, DbConnection Connection !! DbConnectionError, Stop DbError, Embed IO] r =>
@@ -167,7 +167,7 @@ type TestStoreDeps =
 withTestStoreTableGen ::
   ∀ rep q d r a .
   Members TestStoreDeps r =>
-  GenQueryTable Auto rep q d =>
+  Schema Auto rep q d =>
   (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
@@ -177,7 +177,7 @@ withTestStoreTableGen prog =
 withTestStoreTableUidGenAs ::
   ∀ qrep rep ir q d i r a .
   Members TestStoreDeps r =>
-  GenQueryTable qrep (UidRep ir rep) q (Uid i d) =>
+  Schema qrep (UidRep ir rep) q (Uid i d) =>
   (QueryTable q (Uid i d) -> Sem (UidStoreStack' i q d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGenAs prog =
@@ -187,7 +187,7 @@ withTestStoreTableUidGenAs prog =
 withTestStoreTableUidGen ::
   ∀ rep ir d i r a .
   Members TestStoreDeps r =>
-  GenQueryTable (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
+  Schema (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
   (QueryTable i (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
   Sem r a
 withTestStoreTableUidGen prog =
@@ -197,7 +197,7 @@ withTestStoreTableUidGen prog =
 withTestStoreGen ::
   ∀ qrep rep q d r .
   Members TestStoreDeps r =>
-  GenQueryTable qrep rep q d =>
+  Schema qrep rep q d =>
   InterpretersFor (StoreStack q d q d) r
 withTestStoreGen prog =
   withTestQueryTableGen @qrep @rep \ table ->
@@ -206,7 +206,7 @@ withTestStoreGen prog =
 withTestStore ::
   ∀ q d r a .
   Members TestStoreDeps r =>
-  GenQueryTable Auto Auto q d =>
+  Schema Auto Auto q d =>
   Sem (StoreStack q d q d ++ r) a ->
   Sem r a
 withTestStore prog =
@@ -216,7 +216,7 @@ withTestStore prog =
 withTestStoreUid ::
   ∀ i d r a .
   Members TestStoreDeps r =>
-  GenQueryTable (PrimQuery "id") (UidRep PrimaryKey Auto) i (Uid i d) =>
+  Schema (PrimQuery "id") (UidRep PrimaryKey Auto) i (Uid i d) =>
   Sem (UidStoreStack i d ++ r) a ->
   Sem r a
 withTestStoreUid prog =

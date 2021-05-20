@@ -1,28 +1,28 @@
-module Polysemy.Hasql.Table.Table where
+module Polysemy.Hasql.Table.BasicSchema where
 
 import Polysemy.Db.Data.Column (Auto)
 
 import Polysemy.Hasql.Column.DataColumn (DataTable, dataTable)
-import Polysemy.Hasql.Tree.Table (TableRoot, tableRoot)
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
 import Polysemy.Hasql.QueryRows (QueryRows(queryRows))
+import Polysemy.Hasql.Tree.Table (TableRoot, tableRoot)
 
-class GenTable rep d where
-  genTable :: Table d
+class BasicSchema rep d where
+  basicSchema :: Table d
 
 instance (
     TableRoot rep d tree,
     QueryRows tree d,
     QueryParams tree d,
     DataTable tree
-  ) => GenTable rep d where
-    genTable =
+  ) => BasicSchema rep d where
+    basicSchema =
       Table (dataTable (tableRoot @rep @d)) (queryRows @tree @d) (queryParams @tree @d)
 
 table ::
   ∀ (d :: *) .
-  GenTable Auto d =>
+  BasicSchema Auto d =>
   Table d
 table = do
-  genTable @Auto
+  basicSchema @Auto

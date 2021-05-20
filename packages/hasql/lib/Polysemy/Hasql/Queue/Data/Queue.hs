@@ -3,7 +3,7 @@ module Polysemy.Hasql.Queue.Data.Queue where
 import GHC.TypeLits (AppendSymbol)
 import Polysemy.Db.Data.Column (Auto, PrimQuery)
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Tagged (Tagged)
 
 import Polysemy.Hasql (HasqlConnection)
@@ -24,16 +24,16 @@ type family Queue (queue :: Symbol) t d :: Constraint where
       KnownSymbol queue,
       KnownSymbol (InputConn queue),
       KnownSymbol (OutputConn queue),
-      GenQueryTable (PrimQuery "queue_id") QueuedRep UUID (Queued t d)
+      Schema (PrimQuery "queue_id") QueuedRep UUID (Queued t d)
     )
 
 type family QueueInput (queue :: Symbol) t d :: Constraint where
   QueueInput queue t d =
-    (Ord t, KnownSymbol (InputConn queue), GenQueryTable Auto QueuedRep QueueIdQuery (Queued t d))
+    (Ord t, KnownSymbol (InputConn queue), Schema Auto QueuedRep QueueIdQuery (Queued t d))
 
 type family QueueOutput (queue :: Symbol) t d :: Constraint where
   QueueOutput queue t d =
-    (Ord t, KnownSymbol (OutputConn queue), GenQueryTable Auto QueuedRep QueueIdQuery (Queued t d))
+    (Ord t, KnownSymbol (OutputConn queue), Schema Auto QueuedRep QueueIdQuery (Queued t d))
 
 type family InputQueueConnection (queue :: symbol) :: Effect where
   InputQueueConnection queue =

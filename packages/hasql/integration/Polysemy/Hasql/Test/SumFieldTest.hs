@@ -32,7 +32,7 @@ import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUidAs)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGenAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableRoot)
@@ -143,7 +143,7 @@ sumTest ::
   Eq d =>
   Show d =>
   Members (Hedgehog IO : TestStoreDeps) r =>
-  GenQueryTable Auto rep UuidQuery d =>
+  Schema Auto rep UuidQuery d =>
   d ->
   Sem r ()
 sumTest specimen = do

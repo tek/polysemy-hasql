@@ -13,7 +13,7 @@ import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.ManagedTable (interpretManagedTableAuto)
 import Polysemy.Hasql.Query (interpretQueryAuto)
 import Polysemy.Hasql.Store (interpretStoreDb)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
+import Polysemy.Hasql.Table.Schema (Schema)
 
 -- |Interpret 'Reader' as a singleton table.
 --
@@ -38,7 +38,7 @@ interpretReaderDb initial =
 -- Uses the automatic derivation strategy.
 interpretReaderDbAuto ::
   ∀ d r .
-  GenQueryTable Auto Auto () d =>
+  Schema Auto Auto () d =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
   InterpreterFor (Reader d !! DbError) r

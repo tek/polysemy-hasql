@@ -16,8 +16,8 @@ import Polysemy.Test (UnitTest)
 import Polysemy.Hasql.Tree.Table (TableParams, TableRoot)
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.QueryRows (QueryRows)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
-import Polysemy.Hasql.Table.Table (GenTable)
+import Polysemy.Hasql.Table.Schema (Schema)
+import Polysemy.Hasql.Table.BasicSchema (BasicSchema)
 import Polysemy.Hasql.Where (Where)
 
 data SumPK =
@@ -118,8 +118,8 @@ sumIdDerivation ::
   TableRoot SumIdRecRep SumIdRec SumIdRecTree =>
   QueryRows SumIdRecTree SumIdRec =>
   QueryParams SumIdRecTree SumIdRec =>
-  GenTable Auto SumIdRec =>
-  GenQueryTable Auto SumIdRecRep (IdQuery SumPK) SumIdRec =>
+  BasicSchema Auto SumIdRec =>
+  Schema Auto SumIdRecRep (IdQuery SumPK) SumIdRec =>
   ()
 sumIdDerivation =
   ()

@@ -10,7 +10,7 @@ import Polysemy.Test (UnitTest, assertJust)
 import Polysemy.Hasql.Crud (interpretCrudSingletonWith)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Store (interpretStoreDb)
-import Polysemy.Hasql.Table.Table (genTable)
+import Polysemy.Hasql.Table.BasicSchema (basicSchema)
 import Polysemy.Hasql.Test.Database (withTestPlainTable)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
@@ -42,7 +42,7 @@ prog = do
 test_singletonDb :: UnitTest
 test_singletonDb =
   integrationTest do
-    (a, b) <- withTestPlainTable (genTable @DatRep) $ \ table ->
+    (a, b) <- withTestPlainTable (basicSchema @DatRep) $ \ table ->
       interpretManagedTable table $
         interpretCrudSingletonWith table $
         interpretStoreDb $

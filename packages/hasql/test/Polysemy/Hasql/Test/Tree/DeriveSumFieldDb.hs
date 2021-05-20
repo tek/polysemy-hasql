@@ -14,8 +14,8 @@ import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.QueryRows (QueryRows)
-import Polysemy.Hasql.Table.QueryTable (GenQueryTable)
-import Polysemy.Hasql.Table.Table (GenTable)
+import Polysemy.Hasql.Table.Schema (Schema)
+import Polysemy.Hasql.Table.BasicSchema (BasicSchema)
 import Polysemy.Hasql.Tree.Table (TableParams, TableRoot)
 import Polysemy.Hasql.Where (Where)
 
@@ -119,8 +119,8 @@ datSDerivation ::
   TableRoot Auto DatSF DatSFTree =>
   QueryRows DatSFTree DatSF =>
   QueryParams DatSFTree DatSF =>
-  GenTable Auto DatSF =>
-  GenQueryTable Auto Auto (IdQuery Int) DatSF =>
+  BasicSchema Auto DatSF =>
+  Schema Auto Auto (IdQuery Int) DatSF =>
   ()
 datSDerivation =
   ()

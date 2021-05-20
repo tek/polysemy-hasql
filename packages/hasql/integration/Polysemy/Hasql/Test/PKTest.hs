@@ -21,7 +21,7 @@ import Polysemy.Hasql.Column.DataColumn (tableStructure)
 import Polysemy.Hasql.Tree.Table (TableParams)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Table.QueryTable (queryTable)
+import Polysemy.Hasql.Table.Schema (queryTable)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
