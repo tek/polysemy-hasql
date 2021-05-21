@@ -98,7 +98,9 @@ type family ReplicateSum (qTree :: Kind.Tree) (dTrees :: [Kind.Con]) :: [Kind.Co
   ReplicateSum _ '[] =
     '[]
   ReplicateSum qTree ('Kind.Con name _ : dTrees) =
-    'Kind.Con name '[qTree] : ReplicateSum qTree dTrees
+    'Kind.ConUna name qTree : ReplicateSum qTree dTrees
+  ReplicateSum qTree ('Kind.ConUna name _ : dTrees) =
+    'Kind.ConUna name qTree : ReplicateSum qTree dTrees
 
 type family SumPrimNames (q :: Type) (d :: Type) (cs :: [QCond]) :: [[Segment]] where
   SumPrimNames _ _ '[] =
@@ -128,14 +130,15 @@ type family MatchPrim (prefix :: [Segment]) (name :: FieldId) (q :: Type) (d :: 
   MatchPrim prefix name q d =
     'SimpleCond q d (('FieldSegment name) : prefix)
 
--- TODO seems that this silently ignores missing query fields
+-- This silently ignores missing query fields because it's ok not to match all constructors.
+-- Could be improved by doing a FirstJust kind of deal
 type family MatchCon (meta :: QueryMeta) (prefix :: [Segment]) (qTree :: Kind.Con) (dTree :: Kind.Con) :: QConds where
   MatchCon meta prefix ('Kind.Con _ q) ('Kind.Con conName d) =
     FoldMap (MatchQueryColumnE meta ('ConSegment conName : prefix) d) @@ q
   MatchCon meta prefix ('Kind.ConUna _ q) ('Kind.ConUna _ d) =
     MatchQueryColumnE meta prefix '[d] @@ (ForceMaybePrim q)
   MatchCon meta prefix ('Kind.ConUna _ q) ('Kind.Con conName d) =
-    MatchQueryColumnE meta ('ConSegment conName : prefix) d @@ (ForceMaybePrim q)
+    MatchQueryColumnE meta ('ConSegment conName : prefix) d @@ ForceMaybePrim q
   MatchCon _ _ _ _ =
     '[]
 

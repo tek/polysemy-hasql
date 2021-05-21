@@ -12,7 +12,14 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import qualified Polysemy.Hasql.Data.Where as Data (Where(Where))
 import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery)
 import Polysemy.Hasql.Where.Prepared (QueryWhereColumn(..), concatWhereFields)
-import Polysemy.Hasql.Where.Type (AsSimple, MatchTable, MkQueryMeta, QCond (SimpleCond, SumPrimCond), QConds, Segment (SumSegment, ConSegment, FieldSegment), WithoutMaybe)
+import Polysemy.Hasql.Where.Type (
+  AsSimple,
+  MatchTable,
+  MkQueryMeta,
+  QCond (SimpleCond, SumPrimCond),
+  Segment (SumSegment, ConSegment, FieldSegment),
+  WithoutMaybe,
+  )
 
 simpleSlug ::
   ∀ (name :: Symbol) .
@@ -68,42 +75,28 @@ reifyPath =
     base : rest -> [text|(#{base}).#{Text.intercalate "." rest}|]
 
 class QueryCond (field :: QCond) where
-  queryCond :: Int -> Text
+  queryCond :: K (Int -> Text) field
 
 instance (
     ReifySegments path,
     QueryWhereColumn q d
   ) => QueryCond ('SimpleCond q d path) where
   queryCond =
-    queryWhereColumn @q @d (reifyPath @path)
+    K (queryWhereColumn @q @d (reifyPath @path))
+
+queryConds ::
+  ∀ fields .
+  All QueryCond fields =>
+  [Int -> Text]
+queryConds =
+  hcollapse (hcpure (Proxy @QueryCond) queryCond :: NP (K (Int -> Text)) fields)
 
 instance (
     simple ~ AsSimple q (WithoutMaybe d) ns,
     All QueryCond simple
   ) => QueryCond ('SumPrimCond q d ns) where
   queryCond =
-    fromMaybe (const "") (foldl1 (\ z a -> \ i -> z i <> " or " <> a i) <$> nonEmpty cs)
-    where
-      cs :: [Int -> Text]
-      cs =
-        hcollapse (hcpure (Proxy @QueryCond) f :: NP (K (Int -> Text)) simple)
-      f :: ∀ c . QueryCond c => K (Int -> Text) c
-      f =
-        K (queryCond @c)
-
-class QueryConds (fields :: QConds) where
-  queryConds :: [Int -> Text]
-
-instance QueryConds '[] where
-  queryConds =
-    mempty
-
-instance (
-    QueryCond field,
-    QueryConds fields
-  ) => QueryConds (field : fields) where
-  queryConds =
-    queryCond @field : queryConds @fields
+    K (fromMaybe (const "") (foldl1 (\ z a -> \ i -> z i <> " or " <> a i) <$> nonEmpty (queryConds @simple)))
 
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
 -- present and matching in the data record
@@ -112,7 +105,7 @@ class Where (qrep :: Type) (qTree :: Kind.Tree) (query :: Type) (dTree :: Kind.T
 
 instance (
     fields ~ MatchTable (MkQueryMeta qTree dTree) qTree dTree,
-    QueryConds fields,
+    All QueryCond fields,
     DynamicQuery qrep query
   ) => Where qrep qTree query dTree d where
     queryWhere =

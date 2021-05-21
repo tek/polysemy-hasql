@@ -10,7 +10,7 @@ import Polysemy.Hasql.Test.QueryTest (test_query)
 import Polysemy.Hasql.Test.QueueTest (test_queue)
 import Polysemy.Hasql.Test.SingletonTest (test_singletonDb)
 import Polysemy.Hasql.Test.SumFieldTest (test_multiSum, test_sumField, test_sumId)
-import Polysemy.Hasql.Test.SumTableTest (test_unaryVariants)
+import Polysemy.Hasql.Test.SumTableTest (test_sumTable)
 import Polysemy.Hasql.Test.UpsertTest (test_upsert)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
@@ -30,7 +30,7 @@ tests =
     unitTest "queue with notifications" test_queue,
     unitTest "atomic state as table" test_atomicStateDb,
     unitTest "partial record update" test_partialDbUpdate,
-    unitTest "unary sum variants" test_unaryVariants,
+    unitTest "sum table" test_sumTable,
     unitTest "json field" test_json
   ]
 

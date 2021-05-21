@@ -1,15 +1,15 @@
 module Polysemy.Hasql.Test.SumTableTest where
 
 import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Product, Sum)
+import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Data.Store as Store
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
-import Polysemy.Test (Hedgehog, UnitTest, assertJust)
+import Polysemy.Test (UnitTest, assertJust)
 
-import Polysemy.Hasql.Table.Schema (Schema)
-import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen)
+import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
@@ -47,17 +47,10 @@ specimen :: SumTab
 specimen =
   SumTabTwo id' 1.9
 
-prog ::
-  Members (Hedgehog IO : TestStoreDeps) r =>
-  Schema (PrimQuery "id") Auto Int SumTab =>
-  Sem r ()
-prog = do
-  result <- withTestStoreGen @(PrimQuery "id") @Auto @Int @SumTab do
-    restop (Store.upsert specimen)
-    restop (Store.fetch id')
-  assertJust specimen result
-
-test_unaryVariants :: UnitTest
-test_unaryVariants =
+test_sumTable :: UnitTest
+test_sumTable =
   integrationTest do
-    prog
+    result <- withTestStoreGen @(PrimQuery "id") @Auto @Int @SumTab do
+      restop @DbError (Store.upsert specimen)
+      restop @DbError (Store.fetch id')
+    assertJust specimen result

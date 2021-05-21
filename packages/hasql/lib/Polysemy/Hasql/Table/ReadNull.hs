@@ -22,21 +22,11 @@ instance (
     ignoreDecoder *> nullColumns @cs
 
 instance (
-    -- maybeEff ~ 'TcEffect Maybe d,
-    -- QueryRow (maybeEff : eff) rep (Maybe d),
     NullColumns c,
     NullColumns cs
   ) => NullColumns ('Kind.Tree n eff ('Kind.Prod d c) : cs) where
   nullColumns =
     nullColumns @c *> nullColumns @cs
-
--- -- TODO this should be necessary if 'TcEffect Maybe d' is already in the stack, but doesn't appear to be in practice
--- instance (
---     QueryRow eff rep (Maybe d),
---     NullColumns ds cs
---   ) => NullColumns (d : ds) ('Kind.Tree n eff ('Kind.Prim (Maybe d) t s) : cs) where
---   nullColumns =
---     void (queryRow @eff @rep @(Maybe d)) *> nullColumns @ds @cs
 
 class ReadNullCon (c :: Kind.Con) where
   readNullCon :: Row ()
@@ -47,17 +37,11 @@ instance {-# overlappable #-} (
   readNullCon =
     nullColumns @ts
 
-instance ReadNullCon ('Kind.ConUna _n ('Kind.Tree n eff ('Kind.Prim d))) where
+instance (
+    NullColumns '[tree]
+  ) => ReadNullCon ('Kind.ConUna _n tree) where
   readNullCon =
-    void ignoreDecoder
-
--- instance (
---     ProductCoded d dSub,
---     ReadNullCon rSub dSub,
---     ReadNullCon reps ds
---   ) => ReadNullCon (ProdColumn (Flatten rSub : reps)) (d : ds) where
---   readNullCon =
---     readNullCon @rSub @dSub *> readNullCon @reps @ds
+    nullColumns @'[tree]
 
 class ReadNullCons (cs :: [Kind.Con]) where
   readNullCons :: Row ()

@@ -140,7 +140,7 @@ library
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints
+  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -Wunused-type-patterns
   build-depends:
       aeson
     , base

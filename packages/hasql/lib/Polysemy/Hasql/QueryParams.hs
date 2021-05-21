@@ -62,10 +62,10 @@ instance (
     sequenceContravariantNP (productParams @tree)
 
 instance (
-    QueryParam eff d
-  ) => ConParams ('Kind.ConUna n ('Kind.Tree _n eff ('Kind.Prim d))) '[d] where
+    QueryParams tree d
+  ) => ConParams ('Kind.ConUna n tree) '[d] where
   conParams =
-    unI . hd >$< queryParam @eff
+    unI . hd >$< queryParams @tree
 
 class SumParams (trees :: [Kind.Con]) (dss :: [[*]]) | trees -> dss where
   sumParams :: Params (NS (NP I) dss)
