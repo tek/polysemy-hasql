@@ -13,6 +13,7 @@ import Polysemy.Hasql.Test.Tree.DeriveSumField (test_deriveSumField)
 import Polysemy.Hasql.Test.Tree.DeriveSumFieldDb (test_deriveSumFieldDb)
 import Polysemy.Hasql.Test.Tree.DeriveSumIdDb (test_deriveSumIdDb)
 import Polysemy.Hasql.Test.Tree.JsonTest (test_treeJson)
+import Polysemy.Hasql.Test.UidSumFlattenTest (test_uidSumFlatten)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 
@@ -32,7 +33,8 @@ tests =
     unitTest "derive db tree" test_deriveSumDb,
     unitTest "derive db tree with sum field" test_deriveSumFieldDb,
     unitTest "derive db tree with sum id field" test_deriveSumIdDb,
-    unitTest "partial tree json codec" test_treeJson
+    unitTest "partial tree json codec" test_treeJson,
+    unitTest "derive db tree with sum field in Uid" test_uidSumFlatten
   ]
 
 main :: IO ()

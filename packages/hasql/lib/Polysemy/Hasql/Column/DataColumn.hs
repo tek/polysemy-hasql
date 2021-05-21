@@ -109,12 +109,6 @@ instance (
   dataDbType prefix (Type.Prod _ cols) =
     Data.Prod (join (mapColumns @_ @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols))
 
--- instance (
---     All DataDbCon cols
---   ) => DataDbType ('Kind.Sum d cols) where
---   dataDbType prefix (Type.Sum _ cols) =
---     Data.Sum (mapColumns @_ @NS @_ @cols @DataDbCon (dataDbCon prefix) cols)
-
 instance (
     All DataDbCon cols
   ) => DataDbType ('Kind.SumProd d cols) where

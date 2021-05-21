@@ -72,5 +72,12 @@ data UidRep i a =
   }
   deriving (Generic)
 
+data UidNestRep i a =
+  UidNestRep {
+     id :: i,
+     payload :: a
+  }
+  deriving (Generic)
+
 type UuidRep a =
   UidRep Auto a
