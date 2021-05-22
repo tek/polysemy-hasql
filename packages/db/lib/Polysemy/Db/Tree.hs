@@ -2,15 +2,15 @@ module Polysemy.Db.Tree where
 
 import Generics.SOP (HTrans (htrans), NP(Nil, (:*)), NS (Z, S), POP(POP), SOP, unSOP)
 
-import Polysemy.Db.Data.Column (Prim, PrimQuery, Rep)
+import Polysemy.Db.Data.Column (NewtypeQuery, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.SOP.Constraint (DataName, symbolText)
+import Polysemy.Db.SOP.Constraint (DataName, NewtypeCoded, symbolText)
 import Polysemy.Db.SOP.Fundeps (Fundep, Fundeps)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Api (TreePayload(..), TreePrim(..), TreeSOP(..))
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
 import Polysemy.Db.Tree.Data.Params (NodeParam, Params(Params), PayloadM, TCon, TNode, TTree)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), ConMetaTypes, ConMetas, ConsMetas, TM(TM), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Effect (TreeEffects)
@@ -195,6 +195,10 @@ instance {-# overlappable #-} (
   ) => RootMeta rep d meta
 
 instance RootMeta (PrimQuery name) d ('TreeMeta ('NamedField name) (Rep '[Prim]) d)
+
+instance (
+    NewtypeCoded nt d
+  ) => RootMeta (NewtypeQuery name) nt ('TreeMeta ('NamedField name) (Rep '[Newtype nt d, Prim]) nt)
 
 ------------------------------------------------------------------------------------------------------------------------
 

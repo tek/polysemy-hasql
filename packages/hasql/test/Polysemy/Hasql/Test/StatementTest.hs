@@ -15,7 +15,7 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
 import Polysemy.Hasql.Data.Where (Where(Where))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
-import Polysemy.Hasql.Table.Schema (schema, queryTable)
+import Polysemy.Hasql.Table.Schema (schema, schemaAuto)
 import Polysemy.Hasql.Where (queryWhere)
 
 data WithMaybe =
@@ -74,7 +74,7 @@ test_selectStatement =
     target =
       [text|select "a", "b", "c", ("sum_field")."sum__index", ("sum_field")."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
     SqlCode stmtText =
-      Statement.selectWhereSql (queryTable @Q1 @Rec)
+      Statement.selectWhereSql (schemaAuto @Q1 @Rec)
 
 test_insertStatement :: UnitTest
 test_insertStatement =
@@ -224,7 +224,7 @@ test_queryWhere_Sum =
     target =
       [text|($1 is null or ("sum")."sum__index" = $1) and ($2 is null or ("sum")."sum_data1"."int" = $2) and ($3 is null or ("sum")."sum_data1"."double" = $3) and ($4 is null or ("sum")."sum_data2"."txt" = $4) and ($5 is null or ("sum")."sum_data2"."tixxt" = $5)|]
     QueryTable _ _ (Where qw _) =
-      queryTable @SumTableQ @SumTable
+      schemaAuto @SumTableQ @SumTable
 
 test_queryWhere_Sum_Table :: UnitTest
 test_queryWhere_Sum_Table =
@@ -234,7 +234,7 @@ test_queryWhere_Sum_Table =
     target =
       [text|"sum__index" = $1 and ($2 is null or ("sum_data1")."int" = $2) and ($3 is null or ("sum_data1")."double" = $3) and ($4 is null or ("sum_data2")."txt" = $4) and ($5 is null or ("sum_data2")."tixxt" = $5)|]
     QueryTable _ _ (Where qw _) =
-      queryTable @SumQ @SumData
+      schemaAuto @SumQ @SumData
 
 test_queryWhere_Sum_Prim :: UnitTest
 test_queryWhere_Sum_Prim =
@@ -254,7 +254,7 @@ test_queryWhere_Sum_Unary =
     target =
       [text|"sum__index" = $1 and ($2 is null or "una_l" = $2) and ($3 is null or "una_r" = $3)|]
     QueryTable _ _ (Where qw _) =
-      queryTable @SumUna @SumUna
+      schemaAuto @SumUna @SumUna
 
 test_queryWhere_Sum_UnaryQ :: UnitTest
 test_queryWhere_Sum_UnaryQ =
@@ -264,7 +264,7 @@ test_queryWhere_Sum_UnaryQ =
     target =
       [text|"sum__index" = $1 and ($2 is null or ("sum_una_ext_l")."una_l" = $2) and ($3 is null or "una_r" = $3)|]
     QueryTable _ _ (Where qw _) =
-      queryTable @SumUna @SumUnaExt
+      schemaAuto @SumUna @SumUnaExt
 
 data IDQTest =
   IDQTest {

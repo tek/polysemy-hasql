@@ -2,7 +2,7 @@ module Polysemy.Hasql.Test.ParamTest where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Column (Auto, Prim, Product, Sum)
+import Polysemy.Db.Data.Column (Auto, NewtypeQuery, Prim, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
@@ -13,7 +13,7 @@ import Polysemy.Test (UnitTest, runTestAuto)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.QueryParams (queryParams)
 import Polysemy.Hasql.QueryRows (queryRows)
-import Polysemy.Hasql.Table.Schema (queryTable)
+import Polysemy.Hasql.Table.Schema (schema, schemaAuto)
 import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
@@ -139,11 +139,20 @@ data DoubleQ =
 
 queryTable_Simple_Auto :: QueryTable DoubleQ Simple
 queryTable_Simple_Auto =
-  queryTable @DoubleQ @Simple
+  schemaAuto @DoubleQ @Simple
 
 queryTable_Dat_Auto :: QueryTable DoubleQ Dat
 queryTable_Dat_Auto =
-  queryTable @DoubleQ @Dat
+  schemaAuto @DoubleQ @Dat
+
+newtype NtId =
+  NtId { unNtId :: Double }
+  deriving (Eq, Show, Generic)
+  deriving newtype (Num, Ord, Enum, Real, Fractional)
+
+queryTable_Newtype_PrimQuery :: QueryTable NtId Simple
+queryTable_Newtype_PrimQuery =
+  schema @(NewtypeQuery "double") @Auto @NtId
 
 test_param2 :: UnitTest
 test_param2 =

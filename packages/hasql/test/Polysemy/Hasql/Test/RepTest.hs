@@ -216,34 +216,34 @@ type DatTypeAuto =
 type PR =
   '[Product ProddoRep]
 
-column_Int :: TableTree ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
-column_Int =
+tree_Int :: TableTree ('Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int))
+tree_Int =
   tree @TableParams @('TreeMeta ('NamedField "int") (Rep '[Prim]) Int) mempty
 
-column_Double :: TableTree (PrimDouble "double")
-column_Double =
+tree_Double :: TableTree (PrimDouble "double")
+tree_Double =
   tree @TableParams @('TreeMeta ('NamedField "double") Auto Double) mempty
 
-column_Newt :: TableTree ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
-column_Newt =
+tree_Newt :: TableTree ('Kind.Tree ('NamedField "newt") '[Newtype Newt Text, Prim] ('Kind.Prim Newt))
+tree_Newt =
   tree @TableParams @('TreeMeta ('NamedField "newt") Auto Newt) mempty
 
-column_Newt_Prim :: TableTree ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
-column_Newt_Prim =
+tree_Newt_Prim :: TableTree ('Kind.Tree ('NamedField "newt") '[PrimaryKey, Prim] ('Kind.Prim NewtPrim))
+tree_Newt_Prim =
   tree @TableParams @('TreeMeta ('NamedField "newt") (Rep '[ForcePrim NewtPrim, PrimaryKey]) NewtPrim) mempty
 
-column_Proddo :: TableTree (ProddoType "proddo")
-column_Proddo =
+tree_Proddo :: TableTree (ProddoType "proddo")
+tree_Proddo =
   tree @TableParams @('TreeMeta ('NamedField "proddo") (Rep PR) Proddo) mempty
 
-columns_Dat_explicit ::
+root_Dat_explicit ::
   TableTree DatType
-columns_Dat_explicit =
+root_Dat_explicit =
   tableRoot @(Product DatRep) @Dat
 
-columns_Dat_Auto ::
+root_Dat_Auto ::
   TableTree DatTypeAuto
-columns_Dat_Auto =
+root_Dat_Auto =
   tableRoot @Auto @Dat
 
 effectfulTest ::

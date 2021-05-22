@@ -12,10 +12,10 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import qualified Polysemy.Hasql.Data.Where as Data (Where(Where))
 import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery)
 import Polysemy.Hasql.Where.Prepared (QueryWhereColumn(..), concatWhereFields)
+import Polysemy.Hasql.Where.QueryMeta (MkQueryMeta)
 import Polysemy.Hasql.Where.Type (
   AsSimple,
   MatchTable,
-  MkQueryMeta,
   QCond (SimpleCond, SumPrimCond),
   Segment (SumSegment, ConSegment, FieldSegment),
   WithoutMaybe,

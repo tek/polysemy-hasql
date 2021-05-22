@@ -39,11 +39,11 @@ instance (
     schema =
       Data.QueryTable (basicSchema @rep @d) (queryParams @qTree @q) (queryWhere @qrep @qTree @_ @dTree)
 
-queryTable ::
+schemaAuto ::
   ∀ q d .
   Schema Auto Auto q d =>
   Data.QueryTable q d
-queryTable =
+schemaAuto =
   schema @Auto @Auto
 
 type UidQuerySchema qrep rep i q d =

@@ -21,7 +21,7 @@ import Polysemy.Hasql.Column.DataColumn (tableStructure)
 import Polysemy.Hasql.Tree.Table (TableParams)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Table.Schema (queryTable)
+import Polysemy.Hasql.Table.Schema (schemaAuto)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
@@ -52,7 +52,7 @@ struct =
 
 table :: QueryTable (IdQuery Id) (Uid Id Rec)
 table =
-  queryTable
+  schemaAuto
 
 type RecType =
   'Kind.Tree ('NamedField "Rec") '[ADT (ADTMeta' (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) (Product (UidRep PrimaryKey Auto))] ('Kind.Prod (Uid Id Rec) '[

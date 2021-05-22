@@ -11,7 +11,7 @@ import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.ManagedTable (queryTable)
+import Polysemy.Hasql.ManagedTable (schemaAuto)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (PartialSql)
 
@@ -38,6 +38,6 @@ interpretStoreUpdateDb ::
   Members [Query i d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (StoreUpdate i d tree !! e) r
 interpretStoreUpdateDb sem = do
-  table <- queryTable
+  table <- schemaAuto
   interpretStoreUpdateDbWith table sem
 {-# INLINE interpretStoreUpdateDb #-}

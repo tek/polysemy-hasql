@@ -8,9 +8,11 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdSymbol, JoinCommaF
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.SOP.List (FirstJust)
-import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
+import Polysemy.Db.Tree.Data.Effect (ContainsFlatten, Newtype)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
+
+import Polysemy.Hasql.Where.QueryMeta (QueryMeta(QueryMeta))
 
 data FieldName =
   FieldName Symbol
@@ -127,8 +129,10 @@ type family GroupSumPrim (simple :: QConds) :: QConds where
 type family MatchPrim (prefix :: [Segment]) (name :: FieldId) (q :: Type) (d :: Type) :: QCond where
   MatchPrim (p : ps) name q d =
     'SimpleCond (ForceMaybe q) d (('FieldSegment name) : p : ps)
-  MatchPrim prefix name q d =
-    'SimpleCond q d (('FieldSegment name) : prefix)
+  MatchPrim '[] name q d =
+    'SimpleCond q d '[('FieldSegment name)]
+  -- MatchPrim prefix name q d =
+  --   'SimpleCond q d (('FieldSegment name) : prefix)
 
 -- This silently ignores missing query fields because it's ok not to match all constructors.
 -- Could be improved by doing a FirstJust kind of deal
@@ -159,9 +163,17 @@ type family MatchProd (meta :: QueryMeta) (prefix :: [Segment]) (flatten :: Bool
   MatchProd _ _ _ _ _ =
     'Nothing
 
+type family UnwrapNewtype (a :: Type) (effs :: [Type]) :: Type where
+  UnwrapNewtype a '[] =
+    a
+  UnwrapNewtype a (Newtype a d : effs) =
+    UnwrapNewtype d effs
+  UnwrapNewtype a (_ : effs) =
+    UnwrapNewtype a effs
+
 type family MatchNode (meta :: QueryMeta) (prefix :: [Segment]) (name :: FieldId) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: Maybe QConds where
-  MatchNode _ prefix name ('Kind.Tree _ _ ('Kind.Prim q)) ('Kind.Tree _ _ ('Kind.Prim d)) =
-    'Just '[MatchPrim prefix name q d]
+  MatchNode _ prefix name ('Kind.Tree _ qEffs ('Kind.Prim q)) ('Kind.Tree _ dEffs ('Kind.Prim d)) =
+    'Just '[MatchPrim prefix name (UnwrapNewtype q qEffs) (UnwrapNewtype d dEffs)]
   MatchNode meta prefix name ('Kind.Tree _ _ ('Kind.SumProd _ qTrees)) ('Kind.Tree _ _ ('Kind.SumProd _ dTrees)) =
     'Just (MatchSum meta ('SumSegment name : prefix) qTrees dTrees)
   MatchNode _ _ name ('Kind.Tree _ _ ('Kind.Sum _ _)) ('Kind.Tree _ _ _) =
@@ -203,31 +215,6 @@ type family MatchCols (meta :: QueryMeta) (prefix :: [Segment]) (qTree :: Kind.T
 data MatchQueryColumnE (meta :: QueryMeta) (prefix :: [Segment]) :: [Kind.Tree] -> Kind.Tree -> Exp QConds
 type instance Eval (MatchQueryColumnE meta prefix dTrees qTree) =
   FromMaybe (MissingColumn meta qTree) @@ MatchCols meta prefix qTree dTrees
-
-data QueryMeta =
-  QueryMeta {
-    rep :: Kind.Tree,
-    query :: FieldId,
-    fields :: [FieldId]
-  }
-
-data ConFieldNames :: Kind.Con -> Exp [FieldId]
-
-type instance Eval (ConFieldNames ('Kind.Con name cols)) =
-  name : FoldMap NodeFieldNames @@ cols
-
-data NodeFieldNames :: Kind.Tree -> Exp [FieldId]
-
-type instance Eval (NodeFieldNames ('Kind.Tree name _ ('Kind.Prim _))) =
-  '[name]
-type instance Eval (NodeFieldNames ('Kind.Tree _ _ ('Kind.Prod _ cols))) =
-  FoldMap NodeFieldNames @@ cols
-type instance Eval (NodeFieldNames ('Kind.Tree name _ ('Kind.Sum _ cons))) =
-  name : FoldMap ConFieldNames @@ cons
-
-type family MkQueryMeta (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QueryMeta where
-  MkQueryMeta ('Kind.Tree name _ _) dTree =
-    'QueryMeta dTree name (NodeFieldNames @@ dTree)
 
 type family MatchTable (meta :: QueryMeta) (qTree :: Kind.Tree) (dTree :: Kind.Tree) :: QConds where
   MatchTable meta ('Kind.Tree _ _ ('Kind.Prod _ qTrees)) ('Kind.Tree _ _ ('Kind.Prod _ dTrees)) =
