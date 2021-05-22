@@ -6,7 +6,7 @@ import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
 import Polysemy.Hasql.Data.Table (Table(Table))
-import Polysemy.Hasql.ManagedTable (schemaAuto)
+import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 
 interpretCrudWith ::
@@ -34,7 +34,7 @@ interpretCrud ::
   Members [Query q d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (Crud q d !! e) r
 interpretCrud sem = do
-  table <- schemaAuto
+  table <- queryTable
   interpretCrudWith table sem
 {-# INLINE interpretCrud #-}
 
@@ -62,6 +62,6 @@ interpretCrudSingleton ::
   Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (Crud () d !! e) r
 interpretCrudSingleton sem = do
-  QueryTable table _ _ <- schemaAuto
+  QueryTable table _ _ <- queryTable
   interpretCrudSingletonWith table sem
 {-# INLINE interpretCrudSingleton #-}

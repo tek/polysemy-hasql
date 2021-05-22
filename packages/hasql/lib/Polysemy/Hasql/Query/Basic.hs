@@ -8,7 +8,7 @@ import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.ManagedTable (schemaAuto)
+import Polysemy.Hasql.ManagedTable (queryTable)
 
 interpretStoreQueryWith ::
   ∀ f qOut qIn dIn dOut dResult e r .
@@ -35,7 +35,7 @@ interpretStoreQueryUsing ::
   (dIn -> dOut) ->
   InterpreterFor (StoreQuery qOut dResult !! e) r
 interpretStoreQueryUsing create result fromQ toD sem = do
-  statement <- create <$> schemaAuto
+  statement <- create <$> queryTable
   interpretStoreQueryWith statement result fromQ toD sem
 
 interpretStoreQuery ::

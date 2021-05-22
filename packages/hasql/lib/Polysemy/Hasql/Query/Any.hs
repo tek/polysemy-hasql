@@ -5,7 +5,7 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Data.Query (Query)
-import Polysemy.Hasql.ManagedTable (schemaAuto)
+import Polysemy.Hasql.ManagedTable (queryTable)
 import Polysemy.Hasql.Query.Basic (interpretStoreQuery)
 import Polysemy.Hasql.Statement (anyWhere)
 
@@ -15,5 +15,5 @@ interpretStoreQueryAny ::
   Members [Query q d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (StoreQuery q Bool !! e) r
 interpretStoreQueryAny sem = do
-  table <- schemaAuto
+  table <- queryTable
   interpretStoreQuery (anyWhere table) sem

@@ -10,7 +10,8 @@ import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Tree.Table (TableRoot)
-import Polysemy.Hasql.Where.Type (MatchTable, MkQueryMeta, QCond(SumPrimCond), ReplicateSum, Segment(FieldSegment))
+import Polysemy.Hasql.Where.QueryMeta (MkQueryMeta)
+import Polysemy.Hasql.Where.Type (MatchTable, QCond(SumPrimCond), ReplicateSum, Segment(FieldSegment))
 
 data Sum1 =
   Sum1 {
