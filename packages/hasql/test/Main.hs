@@ -1,5 +1,6 @@
 module Main where
 
+import Polysemy.Hasql.Test.DeriveQuery.UnaSumNumberedTest (test_deriveQuery_UnaSumNumbered)
 import Polysemy.Hasql.Test.EnumTest (test_enumColTable, test_enumsColTable)
 import Polysemy.Hasql.Test.ParamTest ()
 import Polysemy.Hasql.Test.PartialTest (test_partialTree, test_partialUpdateSum)
@@ -34,7 +35,8 @@ tests =
     unitTest "derive db tree with sum field" test_deriveSumFieldDb,
     unitTest "derive db tree with sum id field" test_deriveSumIdDb,
     unitTest "partial tree json codec" test_treeJson,
-    unitTest "derive db tree with sum field in Uid" test_uidSumFlatten
+    unitTest "derive db tree with sum field in Uid" test_uidSumFlatten,
+    unitTest "derive a where clause with a prim query for an unary sum constructor" test_deriveQuery_UnaSumNumbered
   ]
 
 main :: IO ()

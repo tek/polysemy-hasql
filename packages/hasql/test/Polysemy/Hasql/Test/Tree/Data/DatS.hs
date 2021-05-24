@@ -21,11 +21,11 @@ type DatSSum =
 
 type DatSAdtMetas =
   '[
-    'ConMeta ('NamedField "DatS1") '[
+    'ConMeta 0 ('NamedField "DatS1") '[
       'TreeMeta ('NamedField "id") Auto Int,
       'TreeMeta ('NamedField "double1") Auto Double
     ],
-    'ConMeta ('NamedField "DatS2") '[
+    'ConMeta 1 ('NamedField "DatS2") '[
       'TreeMeta ('NamedField "id") Auto Int,
       'TreeMeta ('NamedField "text2") Auto Text
     ]
@@ -39,11 +39,11 @@ type DatSTreeEffs =
 
 type DatSCons =
   '[
-    'Kind.Con ('NamedField "DatS1") '[
+    'Kind.Con 0 ('NamedField "DatS1") '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "double1") '[Prim] ('Kind.Prim Double)
       ],
-    'Kind.Con ('NamedField "DatS2") '[
+    'Kind.Con 1 ('NamedField "DatS2") '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "text2") '[Prim] ('Kind.Prim Text)
     ]
@@ -59,11 +59,11 @@ type DataSDataTree1 =
 
 type DatSDataTrees =
   '[
-    'Kind.Con ('NamedField "DatS1") '[
+    'Kind.Con 0 ('NamedField "DatS1") '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "double1") '[Prim] ('Kind.Prim Double)
     ],
-    'Kind.Con ('NamedField "DatS2") '[
+    'Kind.Con 1 ('NamedField "DatS2") '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "text2") '[Prim] ('Kind.Prim Text)
     ]

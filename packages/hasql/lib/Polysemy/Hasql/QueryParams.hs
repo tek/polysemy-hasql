@@ -57,13 +57,13 @@ class ConParams (tree :: Kind.Con) (ds :: [*]) | tree -> ds where
 instance (
     SListI ds,
     ProductParams tree ds
-  ) => ConParams ('Kind.Con n tree) ds where
+  ) => ConParams ('Kind.Con num n tree) ds where
   conParams =
     sequenceContravariantNP (productParams @tree)
 
 instance (
     QueryParams tree d
-  ) => ConParams ('Kind.ConUna n tree) '[d] where
+  ) => ConParams ('Kind.ConUna num n tree) '[d] where
   conParams =
     unI . hd >$< queryParams @tree
 

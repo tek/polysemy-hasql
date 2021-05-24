@@ -140,6 +140,7 @@ instance (
     ResolveRep tag (Rep reps) ('D d') ('Effs effs)
   ) => TyconOrNewtype tag ('Right '(reps, eff, d')) d ('Effs (eff : effs))
 
+-- TODO add a class that allows users to force a specific newtype to be used as prim, e.g. for GreaterOrEq et al
 instance (
     IsNewtype d nt,
     NewtypeOrADT tag (MatchNt nt '[] reps) ('D d) effs

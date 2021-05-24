@@ -100,9 +100,12 @@ library
       Polysemy.Hasql.Tree.Table
       Polysemy.Hasql.Tree.Value
       Polysemy.Hasql.Where
+      Polysemy.Hasql.Where.Cond
       Polysemy.Hasql.Where.Dynamic
+      Polysemy.Hasql.Where.Error
+      Polysemy.Hasql.Where.FlatFields
       Polysemy.Hasql.Where.Prepared
-      Polysemy.Hasql.Where.QueryMeta
+      Polysemy.Hasql.Where.Segment
       Polysemy.Hasql.Where.Type
   other-modules:
       Paths_polysemy_hasql

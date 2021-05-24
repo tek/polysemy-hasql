@@ -39,7 +39,7 @@ instance UpdatePartialSumProd '[] us where
 instance (
     UpdatePartialProd d u,
     UpdatePartialSumProd ds us
-  ) => UpdatePartialSumProd ('Kind.Con _n d : ds) ('Kind.Con _n u : us) where
+  ) => UpdatePartialSumProd ('Kind.Con _num _n d : ds) ('Kind.Con _num _n u : us) where
   updatePartialSumProd (Z (Type.Con d)) ((Type.Con u) :* _) =
     Z (Type.Con (updatePartialProd d u))
   updatePartialSumProd (S d) (_ :* us) =

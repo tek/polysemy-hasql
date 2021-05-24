@@ -2,7 +2,7 @@ module Polysemy.Db.Tree.Data.TreeMeta where
 
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Functor (FMap)
-import Generics.SOP (AllZip, AllZip2, HTrans (htrans), I(I), K(K), LiftedCoercible, NP, SOP, hcoerce)
+import Generics.SOP (AllZip, AllZip2, HTrans (htrans), I (I), K (K), LiftedCoercible, NP, SOP, hcoerce)
 
 import Polysemy.Db.Data.FieldId (FieldId)
 import Polysemy.Db.SOP.Constraint (Top2)
@@ -29,15 +29,16 @@ type family TreesMetaTypes (metas :: [[TreeMeta]]) :: [[Type]] where
 
 data ConMeta =
   ConMeta {
+    conNum :: Nat,
     conName :: FieldId,
     nodeMetas :: [TreeMeta]
   }
 
 type family ConMetas (meta :: ConMeta) :: [TreeMeta] where
-  ConMetas ('ConMeta _ metas) = metas
+  ConMetas ('ConMeta _ _ metas) = metas
 
 type family ConMetaTypes (meta :: ConMeta) :: [Type] where
-  ConMetaTypes ('ConMeta _ nodes) = TreeMetaTypes nodes
+  ConMetaTypes ('ConMeta _ _ nodes) = TreeMetaTypes nodes
 
 type family ConsMetas (metas :: [ConMeta]) :: [[TreeMeta]] where
   ConsMetas '[] = '[]

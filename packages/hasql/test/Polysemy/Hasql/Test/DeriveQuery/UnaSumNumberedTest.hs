@@ -2,16 +2,18 @@
 
 module Polysemy.Hasql.Test.DeriveQuery.UnaSumNumberedTest where
 
+import Fcf (Eval)
 import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Product, Sum)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField, NumberedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Tree.Table (TableRoot)
-import Polysemy.Hasql.Where.QueryMeta (MkQueryMeta)
-import Polysemy.Hasql.Where.Type (MatchTable, QCond(SumPrimCond), ReplicateSum, Segment(FieldSegment))
+import Polysemy.Hasql.Where.Cond (MatchTable, QCond (SumPrimCond))
+import Polysemy.Hasql.Where.FlatFields (FieldPath(FieldPath), FlatRoot)
+import Polysemy.Hasql.Where.Segment (Segment (FieldSegment, ConSegment))
 
 data Sum1 =
   Sum1 {
@@ -43,13 +45,13 @@ type UnaSumMeta =
   ADTMeta' (Sum Auto) UnaSum
 
 type UnaCons = '[
-    'Kind.ConUna ('NamedField "UnaSum1") (
+    'Kind.ConUna 0 ('NamedField "UnaSum1") (
       'Kind.Tree ('NumberedField "UnaSum1" 1) '[ADT Sum1Meta Auto] ('Kind.Prod Sum1 '[
         'Kind.Tree ('NamedField "int1") '[Prim] ('Kind.Prim Int),
         'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
       ])
     ),
-    'Kind.ConUna ('NamedField "UnaSum2") (
+    'Kind.ConUna 1 ('NamedField "UnaSum2") (
       'Kind.Tree ('NumberedField "UnaSum2" 1) '[ADT Sum2Meta Auto] ('Kind.Prod Sum2 '[
         'Kind.Tree ('NamedField "int2") '[Prim] ('Kind.Prim Int),
         'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
@@ -68,19 +70,43 @@ derive ::
   t ~ Double =>
   qTree ~ 'Kind.Tree qn e ('Kind.Prim t) =>
   TableRoot (PrimQuery "double") Double qTree =>
-  ReplicateSum qTree dCons ~ '[
-    'Kind.ConUna ('NamedField "UnaSum1") qTree,
-    'Kind.ConUna ('NamedField "UnaSum2") qTree
+  qFlat ~ Eval (FlatRoot qTree) =>
+  qFlat ~ '[ 'FieldPath '[ 'FieldSegment ('NamedField "double") ] Double ] =>
+  dFlat ~ Eval (FlatRoot dTree) =>
+  dFlat ~ '[
+    'FieldPath '[ 'FieldSegment ('NamedField "sum__index") ] Int,
+    'FieldPath '[
+      'ConSegment 0 ('NamedField "UnaSum1") 'True,
+      'FieldSegment ('NumberedField "UnaSum1" 1),
+      'FieldSegment ('NamedField "int1")
+    ] Int,
+    'FieldPath '[
+      'ConSegment 0 ('NamedField "UnaSum1") 'True,
+      'FieldSegment ('NumberedField "UnaSum1" 1),
+      'FieldSegment ('NamedField "double")
+    ] Double,
+    'FieldPath '[
+      'ConSegment 1 ('NamedField "UnaSum2") 'True,
+      'FieldSegment ('NumberedField "UnaSum2" 1),
+      'FieldSegment ('NamedField "int2")
+    ] Int,
+    'FieldPath '[
+      'ConSegment 1 ('NamedField "UnaSum2") 'True,
+      'FieldSegment ('NumberedField "UnaSum2" 1),
+      'FieldSegment ('NamedField "double")
+    ] Double
   ] =>
-  fields ~ MatchTable (MkQueryMeta qTree dTree) qTree dTree =>
+  fields ~ MatchTable qTree dTree =>
   fields ~ '[ 'SumPrimCond (Maybe Double) Double '[
     '[
-      'FieldSegment ('NamedField "double"),
-      'FieldSegment ('NumberedField "UnaSum1" 1)
+      'ConSegment 0 ('NamedField "UnaSum1") 'True,
+      'FieldSegment ('NumberedField "UnaSum1" 1),
+      'FieldSegment ('NamedField "double")
     ],
     '[
-      'FieldSegment ('NamedField "double"),
-      'FieldSegment ('NumberedField "UnaSum2" 1)
+      'ConSegment 1 ('NamedField "UnaSum2") 'True,
+      'FieldSegment ('NumberedField "UnaSum2" 1),
+      'FieldSegment ('NamedField "double")
     ]
   ]] =>
   ()

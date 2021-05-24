@@ -2,24 +2,32 @@ module Polysemy.Hasql.Where where
 
 import Data.Foldable (foldl1)
 import qualified Data.Text as Text
-import Generics.SOP (All, K(K), NP, hcollapse, hcpure)
+import Fcf (Pure1, type (<=<), type (@@), Eval)
+import Fcf.Class.Functor (FMap)
+import Generics.SOP (All, K (K), NP, hcollapse, hcpure)
 import Hasql.DynamicStatements.Snippet (Snippet)
-import Polysemy.Db.Data.FieldId (FieldIdText, quotedFieldId)
+import Polysemy.Db.Data.FieldId (FieldId (NumberedField, NamedField), FieldIdText, quotedFieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import qualified Polysemy.Hasql.Data.Where as Data (Where(Where))
-import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery)
-import Polysemy.Hasql.Where.Prepared (QueryWhereColumn(..), concatWhereFields)
-import Polysemy.Hasql.Where.QueryMeta (MkQueryMeta)
-import Polysemy.Hasql.Where.Type (
-  AsSimple,
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import qualified Polysemy.Hasql.Data.Where as Data (Where (Where))
+import Polysemy.Hasql.Where.Cond (
   MatchTable,
+  PrimCond (PrimCond),
   QCond (SimpleCond, SumPrimCond),
-  Segment (SumSegment, ConSegment, FieldSegment),
-  WithoutMaybe,
   )
+import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery)
+import Polysemy.Hasql.Where.Prepared (QueryWhereColumn (..), concatWhereFields)
+import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment), SegmentId)
+
+type family AsSimple (q :: Type) (d :: Type) (ns :: [[Segment]]) :: [QCond] where
+  AsSimple q d ns =
+    FMap (Pure1 'SimpleCond <=< Pure1 ('PrimCond q d)) @@ ns
+
+type family WithoutMaybe (d :: Type) :: Type where
+  WithoutMaybe (Maybe d) = d
+  WithoutMaybe d = d
 
 simpleSlug ::
   ∀ (name :: Symbol) .
@@ -35,21 +43,6 @@ where' ::
 where' fields =
   Data.Where (SqlCode (concatWhereFields fields))
 
-class ReifySegment (s :: Segment) where
-  reifySegment :: Text
-
-instance FieldIdText id => ReifySegment ('SumSegment id) where
-  reifySegment =
-    quotedFieldId @id
-
-instance FieldIdText id => ReifySegment ('ConSegment id) where
-  reifySegment =
-    quotedFieldId @id
-
-instance FieldIdText id => ReifySegment ('FieldSegment id) where
-  reifySegment =
-    quotedFieldId @id
-
 class ReifySegments (s :: [Segment]) where
   reifySegments :: [Text]
 
@@ -57,19 +50,34 @@ instance ReifySegments '[] where
   reifySegments =
     mempty
 
-instance (
-    ReifySegment s,
+instance {-# overlappable #-} (
+    id ~ Eval (SegmentId s),
+    FieldIdText id,
     ReifySegments ss
   ) => ReifySegments (s : ss) where
   reifySegments =
-    reifySegment @s : reifySegments @ss
+    quotedFieldId @id : reifySegments @ss
+
+instance (
+    FieldIdText ('NamedField id),
+    ReifySegments ss
+  ) => ReifySegments ('ConSegment _num _id 'True : 'FieldSegment ('NamedField id) : ss) where
+    reifySegments =
+      quotedFieldId @('NamedField id) : reifySegments @ss
+
+instance (
+    FieldIdText id,
+    ReifySegments ss
+  ) => ReifySegments ('ConSegment _cnum id 'True : 'FieldSegment ('NumberedField _n _num) : ss) where
+    reifySegments =
+      quotedFieldId @id : reifySegments @ss
 
 reifyPath ::
   ∀ s .
   ReifySegments s =>
   Text
 reifyPath =
-  case reverse (reifySegments @s) of
+  case reifySegments @s of
     [] -> ""
     [prim] -> prim
     base : rest -> [text|(#{base}).#{Text.intercalate "." rest}|]
@@ -80,7 +88,7 @@ class QueryCond (field :: QCond) where
 instance (
     ReifySegments path,
     QueryWhereColumn q d
-  ) => QueryCond ('SimpleCond q d path) where
+  ) => QueryCond ('SimpleCond ('PrimCond q d path)) where
   queryCond =
     K (queryWhereColumn @q @d (reifyPath @path))
 
@@ -104,7 +112,7 @@ class Where (qrep :: Type) (qTree :: Kind.Tree) (query :: Type) (dTree :: Kind.T
   queryWhere :: Data.Where d query
 
 instance (
-    fields ~ MatchTable (MkQueryMeta qTree dTree) qTree dTree,
+    fields ~ MatchTable qTree dTree,
     All QueryCond fields,
     DynamicQuery qrep query
   ) => Where qrep qTree query dTree d where

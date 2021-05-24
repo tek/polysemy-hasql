@@ -40,7 +40,7 @@ instance (
     Applicative f,
     UnfoldTreeExtract t n env name '[],
     All (UnfoldTree t n f env) trees
-  ) => UnfoldCon t n f env ('Kind.Con name trees) where
+  ) => UnfoldCon t n f env ('Kind.Con num name trees) where
   unfoldCon env (Type.Con trees) =
     Type.Con <$> unfoldTrees @t @n @f @env @trees subEnv trees
     where
@@ -51,7 +51,7 @@ instance (
     Functor f,
     UnfoldTreeExtract t n env name '[],
     UnfoldTree t n f env tree
-  ) => UnfoldCon t n f env ('Kind.ConUna name tree) where
+  ) => UnfoldCon t n f env ('Kind.ConUna num name tree) where
   unfoldCon env (Type.ConUna tree) =
     Type.ConUna <$> unfoldTree @t @n @f @env @tree subEnv tree
     where

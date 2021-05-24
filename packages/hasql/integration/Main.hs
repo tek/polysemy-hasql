@@ -11,6 +11,7 @@ import Polysemy.Hasql.Test.QueueTest (test_queue)
 import Polysemy.Hasql.Test.SingletonTest (test_singletonDb)
 import Polysemy.Hasql.Test.SumFieldTest (test_multiSum, test_sumField, test_sumId)
 import Polysemy.Hasql.Test.SumTableTest (test_sumTable)
+import Polysemy.Hasql.Test.UnarySumTest (test_unarySum)
 import Polysemy.Hasql.Test.UpsertTest (test_upsert)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
@@ -31,7 +32,8 @@ tests =
     unitTest "atomic state as table" test_atomicStateDb,
     unitTest "partial record update" test_partialDbUpdate,
     unitTest "sum table" test_sumTable,
-    unitTest "json field" test_json
+    unitTest "json field" test_json,
+    unitTest "unary sum" test_unarySum
   ]
 
 main :: IO ()

@@ -54,10 +54,10 @@ type SumIdRec =
 
 type SumPKMeta =
   'AdtSum '[
-    'ConMeta ('NamedField "SumPKL") '[
+    'ConMeta 0 ('NamedField "SumPKL") '[
       'TreeMeta ('NamedField "l") Prim Int
     ],
-    'ConMeta ('NamedField "SumPKR") '[
+    'ConMeta 1 ('NamedField "SumPKR") '[
       'TreeMeta ('NamedField "r") Prim Int
     ]
   ]
@@ -66,8 +66,8 @@ type Tr = 'Kind.Tree ('NamedField "dummy") '[Prim] ('Kind.Prim Int)
 
 type SumPKTree =
   '[
-    'Kind.ConUna ('NamedField "SumPKL") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Int)),
-    'Kind.ConUna ('NamedField "SumPKR") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Int))
+    'Kind.ConUna 0 ('NamedField "SumPKL") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Int)),
+    'Kind.ConUna 1 ('NamedField "SumPKR") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Int))
   ]
 
 type SumPKNode =

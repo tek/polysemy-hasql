@@ -8,30 +8,35 @@ import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdTextRaw)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 
 data Con (t :: Type) (n :: Type -> Type) :: Kind.Con -> Type where
-  Con :: NP (Tree t n) sub -> Con t n ('Kind.Con name sub)
-  ConUna :: Tree t n tree -> Con t n ('Kind.ConUna name tree)
+  Con :: NP (Tree t n) sub -> Con t n ('Kind.Con num name sub)
+  ConUna :: Tree t n tree -> Con t n ('Kind.ConUna num name tree)
 
 instance (
+    KnownNat num,
     All (Compose Show (Tree t n)) sub
-  ) => Show (Con t n ('Kind.Con name sub)) where
+  ) => Show (Con t n ('Kind.Con num name sub)) where
   show (Con sub) =
-    [text|Con [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+    [text|Con #{natVal (Proxy @num)} [#{Text.intercalate ", " trees}]|]
+    where
+      trees =
+        hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub)
 
 instance (
+    KnownNat num,
     Show (Tree t n tree)
-  ) => Show (Con t n ('Kind.ConUna name tree)) where
+  ) => Show (Con t n ('Kind.ConUna num name tree)) where
   show (ConUna sub) =
     [text|Con (#{sub})|]
 
 instance (
     Eq (Tree t n tree)
-  ) => (Eq (Con t n ('Kind.ConUna name tree))) where
+  ) => (Eq (Con t n ('Kind.ConUna num name tree))) where
   ConUna l == ConUna r =
     l == r
 
 instance (
     All (Compose Eq (Tree t n)) sub
-  ) => (Eq (Con t n ('Kind.Con name sub))) where
+  ) => (Eq (Con t n ('Kind.Con num name sub))) where
   Con l == Con r =
     l == r
 

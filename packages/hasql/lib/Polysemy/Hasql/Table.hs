@@ -125,7 +125,7 @@ initType connection (Column _ _ tpe _ dbType) =
   case dbType of
     Data.Prim ->
       unit
-    Data.Prod columns ->
+    Data.Prod columns -> do
       initProd connection (Name tpe) (nameSelector tpe) columns
     Data.Sum (Column _ _ _ _ (Data.Prod columns)) ->
       initProd connection (Name tpe) (nameSelector tpe) columns

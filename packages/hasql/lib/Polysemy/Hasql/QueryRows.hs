@@ -29,13 +29,13 @@ class ConRow (tree :: Kind.Con) (ds :: [*]) | tree -> ds where
 
 instance (
     ProductRows trees ds
-  ) => ConRow ('Kind.Con n trees) ds where
+  ) => ConRow ('Kind.Con num n trees) ds where
   conRow =
     productRows @trees
 
 instance (
     QueryRows tree d
-  ) => ConRow ('Kind.ConUna n tree) '[d] where
+  ) => ConRow ('Kind.ConUna num n tree) '[d] where
   conRow =
     queryRows @tree @d :* Nil
 

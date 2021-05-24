@@ -77,7 +77,7 @@ class ReifyDataSum (tree :: Kind.Con) (ds :: [*]) where
 
 instance (
     AllZip ReifyDataTree trees ds
-  ) => ReifyDataSum ('Kind.Con name trees) ds where
+  ) => ReifyDataSum ('Kind.Con num name trees) ds where
   reifyDataSum (Type.Con sub) =
     htrans (Proxy @ReifyDataTree) (I . reifyDataTree) sub
 

@@ -1,18 +1,18 @@
 module Polysemy.Db.Tree where
 
-import Generics.SOP (HTrans (htrans), NP(Nil, (:*)), NS (Z, S), POP(POP), SOP, unSOP)
+import Generics.SOP (HTrans (htrans), NP (Nil, (:*)), NS (S, Z), POP (POP), SOP, unSOP)
 
 import Polysemy.Db.Data.Column (NewtypeQuery, Prim, PrimQuery, Rep)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName, NewtypeCoded, symbolText)
 import Polysemy.Db.SOP.Fundeps (Fundep, Fundeps)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
-import Polysemy.Db.Tree.Api (TreePayload(..), TreePrim(..), TreeSOP(..))
+import Polysemy.Db.Tree.Api (TreePayload (..), TreePrim (..), TreeSOP (..))
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
-import Polysemy.Db.Tree.Data.Params (NodeParam, Params(Params), PayloadM, TCon, TNode, TTree)
-import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), ConMetaTypes, ConMetas, ConsMetas, TM(TM), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.Params (NodeParam, Params (Params), PayloadM, TCon, TNode, TTree)
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), ConMetaTypes, ConMetas, ConsMetas, TM (TM), TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Effect (TreeEffects)
 import Polysemy.Db.Tree.Meta (AdtMetadata (AdtProd, AdtSum), ProdDefaultRep)
 import qualified Polysemy.Db.Type.Data.Tree as Type
@@ -34,14 +34,14 @@ class ConTree (p :: Params) (meta :: ConMeta) (con :: Kind.Con) | p meta -> con 
 instance (
     p ~ 'Params tag t n sfp,
     ProdTrees p (meta0 : meta1 : metas) trees
-  ) => ConTree p ('ConMeta name (meta0 : meta1 : metas)) ('Kind.Con name trees) where
+  ) => ConTree p ('ConMeta num name (meta0 : meta1 : metas)) ('Kind.Con num name trees) where
     conTree con =
       Type.Con (prodTrees @p con)
 
 instance (
     p ~ 'Params tag t n sfp,
     Tree p meta tree
-  ) => ConTree p ('ConMeta name '[meta]) ('Kind.ConUna name tree) where
+  ) => ConTree p ('ConMeta num name '[meta]) ('Kind.ConUna num name tree) where
     conTree (payload :* Nil) =
       Type.ConUna (tree @p @meta payload)
 

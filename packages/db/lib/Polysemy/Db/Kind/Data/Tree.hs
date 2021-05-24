@@ -2,13 +2,16 @@ module Polysemy.Db.Kind.Data.Tree where
 
 import Polysemy.Db.Data.FieldId (FieldId)
 
+-- TODO cons have to be numbered, so the Where machinery can match them, since Rep cons may have different names
 data Con =
   Con {
+    num :: Nat,
     name :: FieldId,
     sub :: [Tree]
   }
   |
   ConUna {
+    num :: Nat,
     name :: FieldId,
     tree :: Tree
   }

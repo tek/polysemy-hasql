@@ -5,21 +5,21 @@ module Polysemy.Hasql.Test.QueryTest where
 import Data.Time (UTCTime)
 import Hasql.Encoders (Params)
 import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
-import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
-import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
+import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
+import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UuidStore)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid(Uid), Uuid)
+import Polysemy.Db.Data.Uid (Uid (Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
-import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata(AdtSum, AdtProd))
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
+import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata (AdtProd, AdtSum))
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
@@ -37,7 +37,6 @@ import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableRoot, TableTree, tableRoot)
 import Polysemy.Hasql.Where (queryWhere)
-import Polysemy.Hasql.Where.Type (QCond(SimpleCond), Segment (FieldSegment, SumSegment))
 
 newtype Content =
   Content { unContent :: Text }
@@ -111,14 +110,14 @@ data ContentNumber =
 
 type XXorMeta =
   'AdtSum '[
-    'ConMeta ('NamedField "Lef") '[ 'TreeMeta ('NamedField "l") Auto Double],
-    'ConMeta ('NamedField "Righ") '[ 'TreeMeta ('NamedField "r") Auto Bool]
+    'ConMeta 0 ('NamedField "Lef") '[ 'TreeMeta ('NamedField "l") Auto Double],
+    'ConMeta 1 ('NamedField "Righ") '[ 'TreeMeta ('NamedField "r") Auto Bool]
   ]
 
 type XXorCols =
   [
-    'Kind.ConUna ('NamedField "Lef") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Double)),
-    'Kind.ConUna ('NamedField "Righ") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Bool))
+    'Kind.ConUna 0 ('NamedField "Lef") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Double)),
+    'Kind.ConUna 1 ('NamedField "Righ") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Bool))
   ]
 
 type XXorType rep =
@@ -187,23 +186,6 @@ queryParams_ContentNumber ::
   Params ContentNumber
 queryParams_ContentNumber =
   queryParams @ContentNumberType @ContentNumber
-
-type LefQuery =
-  '[ 'SimpleCond Double Double ['FieldSegment ('NamedField "Lef"), 'SumSegment ('NamedField "")] ]
-
-type CNColsQuery =
-  '[
-    'SimpleCond Int Int ['FieldSegment ('NamedField "sum__index"), 'SumSegment ('NamedField "")],
-    'SimpleCond Double Double ['FieldSegment ('NamedField "Lef"), 'SumSegment ('NamedField "")],
-    'SimpleCond Double Double ['FieldSegment ('NamedField "Righ"), 'SumSegment ('NamedField "")]
-    ]
-
-type CNQuery =
-  '[
-    'SimpleCond Int Int ['FieldSegment ('NamedField "sum__index"), 'SumSegment ('NamedField "xxor")],
-    'SimpleCond Double Double ['FieldSegment ('NamedField "Lef"), 'SumSegment ('NamedField "xxor")],
-    'SimpleCond Double Double ['FieldSegment ('NamedField "Righ"), 'SumSegment ('NamedField "xxor")]
-    ]
 
 queryWhere_ContentNumber ::
   TableRoot DatRep Dat DatTable =>

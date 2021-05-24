@@ -22,7 +22,6 @@ import Polysemy.Hasql.Test.Tree.Data.DatS (
   DatSPartialTree,
   DatSTreeEffs,
   )
-import Polysemy.Hasql.Where (Where)
 
 datSDerivation ::
   d ~ DatS =>
@@ -35,7 +34,6 @@ datSDerivation ::
   AdtNode p d DatSAdtMeta '[] node =>
   Node p ('NamedField "DatS") DatS effs node =>
   Tree p meta DatSDataTree =>
-  Where Auto DatSDataTree DatS DatSDataTree DatS =>
   ()
 datSDerivation =
   ()

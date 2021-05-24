@@ -5,17 +5,18 @@ module Polysemy.Db.Tree.Meta where
 
 import Fcf (Eval, FromMaybe, type (@@))
 import GHC.TypeLits (AppendSymbol)
+import GHC.TypeNats (type (+))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
-import Generics.SOP.Type.Metadata (DatatypeInfo(Newtype, ADT))
-import Type.Errors (ErrorMessage(ShowType, Text))
+import Generics.SOP.Type.Metadata (DatatypeInfo (ADT, Newtype))
+import Type.Errors (ErrorMessage (ShowType, Text))
 import Type.Errors.Pretty (TypeError, type (%), type (<>))
 
 import Polysemy.Db.Data.Column (Auto, Flatten, Product, Rep, Sum)
-import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField), FieldIdSymbol)
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.SOP.FieldNames (FieldIds)
-import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
 
 type Ids =
   [[FieldId]]
@@ -66,11 +67,11 @@ type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [Fiel
   ZipFields reps rns ds dns =
     ErrorWithType "internal: ZipFields" '(reps, rns, ds, dns)
 
-type family ADTConsGen (names :: [Symbol]) (repss :: [[*]]) (rnss :: Ids)  (dss :: [[*]]) (dnss :: Ids) :: [ConMeta] where
-  ADTConsGen '[] '[] '[] '[] '[] =
+type family ADTConsGen (index :: Nat) (names :: [Symbol]) (repss :: [[*]]) (rnss :: Ids)  (dss :: [[*]]) (dnss :: Ids) :: [ConMeta] where
+  ADTConsGen _ '[] '[] '[] '[] '[] =
     '[]
-  ADTConsGen (name : names) (reps : repss) (rns : rnss) (ds : dss) (dns : dnss) =
-    'ConMeta ('NamedField name) (ZipFields reps rns ds dns) : ADTConsGen names repss rnss dss dnss
+  ADTConsGen index (name : names) (reps : repss) (rns : rnss) (ds : dss) (dns : dnss) =
+    'ConMeta index ('NamedField name) (ZipFields reps rns ds dns) : ADTConsGen (index + 1) names repss rnss dss dnss
 
 type family AdtEnumGen (rep :: *) (d :: *) (dss :: [[*]]) :: Maybe AdtMetadata where
   AdtEnumGen _ _ '[] =
@@ -82,7 +83,7 @@ type family AdtEnumGen (rep :: *) (d :: *) (dss :: [[*]]) :: Maybe AdtMetadata w
 
 type family AdtSumGen (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: AdtMetadata where
   AdtSumGen _ d repss rnss dss dnss =
-    'AdtSum (ADTConsGen (ConstructorNames d) repss rnss dss dnss)
+    'AdtSum (ADTConsGen 0 (ConstructorNames d) repss rnss dss dnss)
 
 type family AdtEnumOrSum (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: AdtMetadata where
   AdtEnumOrSum rep d repss rnss dss dnss =

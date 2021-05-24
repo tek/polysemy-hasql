@@ -33,13 +33,13 @@ class ReadNullCon (c :: Kind.Con) where
 
 instance {-# overlappable #-} (
     NullColumns ts
-  ) => ReadNullCon ('Kind.Con n ts) where
+  ) => ReadNullCon ('Kind.Con num n ts) where
   readNullCon =
     nullColumns @ts
 
 instance (
     NullColumns '[tree]
-  ) => ReadNullCon ('Kind.ConUna _n tree) where
+  ) => ReadNullCon ('Kind.ConUna num _n tree) where
   readNullCon =
     nullColumns @'[tree]
 

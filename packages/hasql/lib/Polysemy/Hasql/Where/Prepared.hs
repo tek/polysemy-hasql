@@ -42,7 +42,7 @@ class QueryWhereColumn q d where
   queryWhereColumn :: Text -> Int -> Text
 
 instance {-# overlappable #-} (
-  ErrorWithType2 "cannot query a column of type" d "with a query type" q
+  ErrorWithType2 "Cannot query a column of type" d "with a query type" q
   ) => QueryWhereColumn q d where
   queryWhereColumn _ _ =
     "error"

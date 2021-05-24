@@ -53,13 +53,13 @@ class WriteNullCon (c :: Kind.Con) where
 
 instance (
     NullColumns '[tree]
-  ) => WriteNullCon ('Kind.ConUna n tree) where
+  ) => WriteNullCon ('Kind.ConUna num n tree) where
   writeNullCon =
     nullColumns @'[tree]
 
 instance (
   NullColumns cs
-  ) => WriteNullCon ('Kind.Con n cs) where
+  ) => WriteNullCon ('Kind.Con num n cs) where
   writeNullCon =
     nullColumns @cs
 

@@ -162,8 +162,8 @@ type NewtType =
 
 type SummerConssType =
   [
-    'Kind.ConUna ('NamedField "Summer1") ('Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text)),
-    'Kind.Con ('NamedField "Summer2") [
+    'Kind.ConUna 0 ('NamedField "Summer1") ('Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text)),
+    'Kind.Con 1 ('NamedField "Summer2") [
       'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
     ]

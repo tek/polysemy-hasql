@@ -25,7 +25,7 @@ class InsertFieldCon (path :: FieldPath) (a :: *) (con :: Kind.Con) where
 
 instance (
     All (InsertFieldTree path a) ts
-  ) => InsertFieldCon path a ('Kind.Con n ts) where
+  ) => InsertFieldCon path a ('Kind.Con num n ts) where
     insertFieldCon update (Type.Con sub) =
       Type.Con (hcmap (Proxy @(InsertFieldTree path a)) (insertFieldTree update) sub)
 
@@ -132,7 +132,7 @@ type family MatchNodeType (a :: Type) (node :: Type) :: Bool where
     'False
 
 type family InsertableConName (a :: Type) (name :: Symbol) (con :: Kind.Con) :: Bool where
-  InsertableConName a name ('Kind.Con _ sub) =
+  InsertableConName a name ('Kind.Con _ _ sub) =
     Any (InsertableNameExp a name) @@ sub
 
 data InsertableConNameExp (a :: Type) (name :: Symbol) :: Kind.Con -> Exp Bool

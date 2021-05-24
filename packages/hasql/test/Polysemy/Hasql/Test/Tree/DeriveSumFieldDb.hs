@@ -40,11 +40,11 @@ type DatSFSum =
 
 type SummyMeta =
   'AdtSum '[
-    'ConMeta ('NamedField "Lefty") '[
+    'ConMeta 0 ('NamedField "Lefty") '[
       'TreeMeta ('NamedField "intL") Auto Int,
       'TreeMeta ('NamedField "doubleL") Auto Double
     ],
-    'ConMeta ('NamedField "Righty") '[
+    'ConMeta 1 ('NamedField "Righty") '[
       'TreeMeta ('NamedField "intR") Auto Int,
       'TreeMeta ('NamedField "doubleR") Auto Double
     ]
@@ -66,8 +66,8 @@ type RightyTrees =
 
 type SummyCons =
   '[
-    'Kind.Con ('NamedField "Lefty") LeftyTrees,
-    'Kind.Con ('NamedField "Righty") RightyTrees
+    'Kind.Con 0 ('NamedField "Lefty") LeftyTrees,
+    'Kind.Con 1 ('NamedField "Righty") RightyTrees
   ]
 
 type DatSFMeta =

@@ -24,13 +24,13 @@ class FoldCon (t :: Type) (n :: Type -> Type) (m :: Type) (con :: Kind.Con) wher
 instance (
     FoldTreeConcat 'False t n m name '[],
     All (FoldTree 'False t n m) trees
-  ) => FoldCon t n m ('Kind.Con name trees) where
+  ) => FoldCon t n m ('Kind.Con num name trees) where
   foldCon (Type.Con trees) =
     foldTreeConcat @'False @t @n @m @name @'[] (hcollapse (hcmap (Proxy @(FoldTree 'False t n m)) (K . foldTree @'False) trees))
 
 instance (
     FoldTree 'False t n m tree
-  ) => FoldCon t n m ('Kind.ConUna name tree) where
+  ) => FoldCon t n m ('Kind.ConUna num name tree) where
   foldCon (Type.ConUna tree) =
     foldTree @'False tree
 

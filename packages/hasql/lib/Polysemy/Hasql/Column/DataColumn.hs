@@ -2,7 +2,7 @@ module Polysemy.Hasql.Column.DataColumn where
 
 import Generics.SOP (All, AllN, CollapseTo, HAp, HCollapse(hcollapse), K(K), NP, Prod, hcmap)
 import Generics.SOP.Constraint (SListIN)
-import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
+import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText, FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Text.DbIdentifier (dbIdentifierT, quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
@@ -57,14 +57,14 @@ class DataProduct (flatten :: Bool) (c :: Kind.Tree) where
 instance (
     All DataProductOrFlatten cols
   ) => DataProduct 'True ('Kind.Tree name effs ('Kind.Prod d cols)) where
-  dataProduct prefix (Type.Tree _ (Type.Prod _ cols)) =
-    join (mapColumns @_ @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols)
+    dataProduct prefix (Type.Tree _ (Type.Prod _ cols)) =
+      join (mapColumns @_ @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols)
 
 instance (
     DataColumn ('Kind.Tree name effs tpe)
   ) => DataProduct 'False ('Kind.Tree name effs tpe) where
-  dataProduct =
-    pure .: dataColumn
+    dataProduct =
+      pure .: dataColumn
 
 class DataProductOrFlatten (c :: Kind.Tree) where
   dataProductOrFlatten :: ColumnPrefix -> TableTree c -> [Data.Column]
@@ -83,7 +83,7 @@ class DataDbCon (con :: Kind.Con) where
 instance (
     All (DataProduct 'False) cols,
     FieldIdText name
-  ) => DataDbCon ('Kind.Con name cols) where
+  ) => DataDbCon ('Kind.Con num name cols) where
     dataDbCon prefix (Type.Con cols) =
       Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) name def dbType
       where
@@ -94,25 +94,38 @@ instance (
         newPrefix =
           addPrefix name prefix
 
-instance (
-    DataColumn tree
-  ) => DataDbCon ('Kind.ConUna name tree) where
-    dataDbCon prefix (Type.ConUna tree) =
-      dataColumn prefix tree
+type family ConUnaName (cname :: FieldId) (fname :: FieldId) :: FieldId where
+  ConUnaName _ ('NamedField name) =
+    'NamedField name
+  ConUnaName cname _ =
+    cname
 
-class DataDbType (t :: Kind.Node) where
-  dataDbType :: ColumnPrefix -> TableNode t -> Data.DbType
+instance (
+    DataDbNode node,
+    name ~ ConUnaName cname fname,
+    FieldIdText name
+  ) => DataDbCon ('Kind.ConUna num cname ('Kind.Tree fname effs node)) where
+    dataDbCon prefix (Type.ConUna (Type.Tree (ColumnData tpe options) tree)) =
+      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) tpe options (dataDbNode newPrefix tree)
+      where
+        newPrefix =
+          addPrefix name prefix
+        name =
+          fieldIdText @name
+
+class DataDbNode (t :: Kind.Node) where
+  dataDbNode :: ColumnPrefix -> TableNode t -> Data.DbType
 
 instance (
     All DataProductOrFlatten cols
-  ) => DataDbType ('Kind.Prod d cols) where
-  dataDbType prefix (Type.Prod _ cols) =
+  ) => DataDbNode ('Kind.Prod d cols) where
+  dataDbNode prefix (Type.Prod _ cols) =
     Data.Prod (join (mapColumns @_ @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols))
 
 instance (
     All DataDbCon cols
-  ) => DataDbType ('Kind.SumProd d cols) where
-  dataDbType prefix (Type.SumProd _ cols) =
+  ) => DataDbNode ('Kind.SumProd d cols) where
+  dataDbNode prefix (Type.SumProd _ cols) =
     Data.Prod (indexColumn : mapColumns @_ @NP @_ @cols @DataDbCon (dataDbCon prefix) cols)
     where
       indexColumn =
@@ -120,22 +133,22 @@ instance (
       indexName =
         "sum__index"
 
-instance DataDbType ('Kind.Prim d) where
-    dataDbType _ (Type.Prim _) =
+instance DataDbNode ('Kind.Prim d) where
+    dataDbNode _ (Type.Prim _) =
       Data.Prim
 
 class DataColumn (c :: Kind.Tree) where
   dataColumn :: ColumnPrefix -> TableTree c -> Data.Column
 
 instance (
-    DataDbType t,
+    DataDbNode t,
     FieldIdText name
   ) => DataColumn ('Kind.Tree name effs t) where
     dataColumn prefix (Type.Tree (ColumnData tpe options) dbType) =
       Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) tpe options dataType
       where
         dataType =
-          dataDbType (addPrefix name prefix) dbType
+          dataDbNode (addPrefix name prefix) dbType
         name =
           fieldIdText @name
 

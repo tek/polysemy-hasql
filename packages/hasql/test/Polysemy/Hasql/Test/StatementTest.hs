@@ -200,7 +200,7 @@ data SumUna =
   deriving (Eq, Show, Generic)
 
 data SumUnaExt =
-  SumUnaExtL { unaL :: Int, unaL2 :: Int }
+  SumUnaExtL { unaL2 :: Int, unaL :: Int }
   |
   SumUnaExtR { unaR :: Double }
   deriving (Eq, Show, Generic)

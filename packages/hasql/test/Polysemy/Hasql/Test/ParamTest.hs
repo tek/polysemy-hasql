@@ -90,8 +90,8 @@ type ProddoType =
 
 type SummerConssType =
   [
-    'Kind.ConUna ('NamedField "Summer1") ('Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text)),
-    'Kind.Con ('NamedField "Summer2") [
+    'Kind.ConUna 0 ('NamedField "Summer1") ('Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text)),
+    'Kind.Con 1 ('NamedField "Summer2") [
       PrimInt "int",
       PrimDouble "dubble"
     ]

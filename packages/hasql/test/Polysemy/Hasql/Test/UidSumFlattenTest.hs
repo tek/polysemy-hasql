@@ -88,7 +88,7 @@ type MainMeta =
 
 type UnaSumType =
   'Kind.Tree ('NamedField "record") '[ADT UnaSumMeta (Sum UnaSumRep)] ('Kind.SumProd UnaSum '[
-    'Kind.ConUna ('NamedField "UnaSum1") (
+    'Kind.ConUna 0 ('NamedField "UnaSum1") (
       'Kind.Tree ('NumberedField "UnaSum1" 1) '[ADT Sum1Meta (Product Sum1Rep)] ('Kind.Prod Sum1 '[
         'Kind.Tree ('NamedField "int1") '[Prim] ('Kind.Prim Int),
         'Kind.Tree ('NamedField "flatty") '[ADT FlattyMeta (Flatten Auto)] ('Kind.Prod Flatty '[
@@ -97,7 +97,7 @@ type UnaSumType =
         ])
       ])
     ),
-    'Kind.ConUna ('NamedField "UnaSum2") (
+    'Kind.ConUna 1 ('NamedField "UnaSum2") (
       'Kind.Tree ('NumberedField "UnaSum2" 1) '[ADT Sum2Meta Auto] ('Kind.Prod Sum2 '[
         'Kind.Tree ('NamedField "int2") '[Prim] ('Kind.Prim Int),
         'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
