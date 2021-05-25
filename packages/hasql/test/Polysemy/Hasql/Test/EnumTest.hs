@@ -4,7 +4,7 @@ import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Hasql.Data.DbType (DbType(Prim, Prod), Column(Column))
+import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod), TypeName (CompositeTypeName))
 
 data En =
   One
@@ -29,7 +29,7 @@ enumColTable =
 test_enumColTable :: UnitTest
 test_enumColTable =
   runTestAuto do
-    Column "enum_col" [text|"enum_col"|] "enum_col" def (Prod [Column "e" [text|"e"|] "text" def Prim]) === enumColTable
+    Column "enum_col" [text|"enum_col"|] (CompositeTypeName "enum_col") def (Prod [Column "e" [text|"e"|] "text" def Prim]) === enumColTable
 
 enumsColTable :: Column
 enumsColTable =
@@ -38,4 +38,4 @@ enumsColTable =
 test_enumsColTable :: UnitTest
 test_enumsColTable =
   runTestAuto do
-    Column "enums_col" [text|"enums_col"|] "enums_col" def (Prod [Column "e" [text|"e"|] "text[]" def Prim]) === enumsColTable
+    Column "enums_col" [text|"enums_col"|] (CompositeTypeName "enums_col") def (Prod [Column "e" [text|"e"|] "text[]" def Prim]) === enumsColTable

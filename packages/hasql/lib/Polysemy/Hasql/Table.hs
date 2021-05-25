@@ -15,11 +15,11 @@ import Polysemy.Log (Log)
 
 import Polysemy.Hasql.Column.DataColumn (TableStructure, tableStructure)
 import qualified Polysemy.Hasql.Data.DbType as Data
-import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector, nameSelector)
+import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName))
 import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
-import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Hasql.DbType (baseColumns)
+import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import Polysemy.Hasql.DbType (baseColumns, typeName)
 import qualified Polysemy.Hasql.Statement as Statement
 
 runStatement ::
@@ -70,10 +70,10 @@ tableColumns =
 typeColumns ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  Name ->
+  TypeName ->
   Sem r (Maybe (NonEmpty ExistingColumn))
-typeColumns =
-  dbColumnsFor code
+typeColumns connection =
+  dbColumnsFor code connection . Name . typeName
   where
     code =
       SqlCode [text|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
@@ -90,27 +90,23 @@ initCtorType ::
   Connection ->
   Column ->
   Sem r ()
-initCtorType connection col@(Column name _ _ _ _) = do
-  exists <- isJust <$> typeColumns connection name
-  unless exists (run (Statement.createCtorType col))
-  where
-    run =
-      runStatement connection ()
+initCtorType connection col@(Column _ _ tpe _ _) = do
+  exists <- isJust <$> typeColumns connection tpe
+  unless exists (runStatement connection () (Statement.createCtorType col))
 
 initProd ::
   Members [Embed IO, Stop QueryError] r =>
   Connection ->
-  Name ->
-  Selector ->
+  TypeName ->
   [Column] ->
   Sem r ()
-initProd connection name selector columns = do
-  existing <- typeColumns connection name
+initProd connection tpe columns = do
+  existing <- typeColumns connection tpe
   maybe createType updateType existing
   where
     createType = do
       traverse_ (initType connection) columns
-      run (Statement.createProdType selector columns)
+      run (Statement.createProdType tpe columns)
     run =
       runStatement connection ()
 
@@ -126,9 +122,9 @@ initType connection (Column _ _ tpe _ dbType) =
     Data.Prim ->
       unit
     Data.Prod columns -> do
-      initProd connection (Name tpe) (nameSelector tpe) columns
+      initProd connection tpe columns
     Data.Sum (Column _ _ _ _ (Data.Prod columns)) ->
-      initProd connection (Name tpe) (nameSelector tpe) columns
+      initProd connection tpe columns
     _ ->
       undefined
 
@@ -174,21 +170,17 @@ missingColumns dbColumns dataColumns =
     dbMap =
       columnMap dbColumns
 
-sameType :: Text -> Text -> Bool
-sameType "ARRAY" dataType =
+sameType :: Text -> TypeName -> Bool
+sameType "ARRAY" (PrimTypeName dataType) =
   Text.takeEnd 2 dataType == "[]"
-sameType dbType dataType =
+sameType dbType (PrimTypeName dataType) =
   dbType == dataType
+sameType _ (CompositeTypeName _) =
+  False
 
 userDefined :: Text
 userDefined =
   "USER-DEFINED"
-
-primType :: Text -> Data.DbType -> Text
-primType tpe = \case
-  Data.Sum _ -> userDefined
-  Data.Prod _ -> userDefined
-  Data.Prim -> tpe
 
 mismatchedColumns ::
   [ExistingColumn] ->
@@ -197,10 +189,10 @@ mismatchedColumns ::
 mismatchedColumns dbColumns dataColumns =
   nonEmpty (mapMaybe mismatchedColumn (toList dataColumns))
   where
-    mismatchedColumn dataColumn@(Column name _ tpe _ colType) = do
+    mismatchedColumn dataColumn@(Column name _ tpe _ _) = do
       -- dbType <- Map.lookup (fromMaybe name ("USER-DEFINED" <$ comp)) dbMap
       dbType <- Map.lookup name dbMap
-      if sameType dbType (primType tpe colType) then Nothing else Just (Name dbType, dataColumn)
+      if sameType dbType tpe then Nothing else Just (Name dbType, dataColumn)
     dbMap =
       columnMap dbColumns
 

@@ -2,11 +2,11 @@ module Polysemy.Hasql.Where where
 
 import Data.Foldable (foldl1)
 import qualified Data.Text as Text
-import Fcf (Pure1, type (<=<), type (@@), Eval)
+import Fcf (Eval, Pure1, type (<=<), type (@@))
 import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, K (K), NP, hcollapse, hcpure)
 import Hasql.DynamicStatements.Snippet (Snippet)
-import Polysemy.Db.Data.FieldId (FieldId (NumberedField, NamedField), FieldIdText, quotedFieldId)
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdText, quotedFieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 

@@ -106,7 +106,6 @@ library
       Polysemy.Hasql.Where.FlatFields
       Polysemy.Hasql.Where.Prepared
       Polysemy.Hasql.Where.Segment
-      Polysemy.Hasql.Where.Type
   other-modules:
       Paths_polysemy_hasql
   autogen-modules:

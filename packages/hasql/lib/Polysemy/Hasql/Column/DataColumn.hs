@@ -1,16 +1,16 @@
 module Polysemy.Hasql.Column.DataColumn where
 
-import Generics.SOP (All, AllN, CollapseTo, HAp, HCollapse(hcollapse), K(K), NP, Prod, hcmap)
+import Generics.SOP (All, AllN, CollapseTo, HAp, HCollapse (hcollapse), K (K), NP, Prod, hcmap)
 import Generics.SOP.Constraint (SListIN)
-import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText, FieldId (NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Text.DbIdentifier (dbIdentifierT, quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 import qualified Polysemy.Hasql.Data.DbType as Data
-import Polysemy.Hasql.Data.DbType (Name(Name), Selector(Selector))
-import Polysemy.Hasql.Tree.Table (ColumnData(ColumnData), TableCon, TableNode, TableRoot, TableTree, tableRoot)
+import Polysemy.Hasql.Data.DbType (Name (Name), Selector (Selector), TypeName (CompositeTypeName, PrimTypeName))
+import Polysemy.Hasql.Tree.Table (ColumnData (ColumnData), TableCon, TableNode, TableRoot, TableTree, tableRoot)
 
 data ColumnPrefix =
   InitPrefix
@@ -40,25 +40,40 @@ prefixed name = \case
   TypePrefix prefix -> [text|#{prefix}.#{quotedDbId name}|]
 
 mapColumns ::
-  ∀ k (f :: (k -> Type) -> [k] -> Type) (a :: Type) (cols :: [k]) (cls :: k -> Constraint) n .
+  ∀ k (f :: (k -> Type) -> [k] -> Type) (a :: Type) (trees :: [k]) (cls :: k -> Constraint) n .
   HCollapse f =>
-  SListIN f cols =>
-  AllN (Prod f) cls cols =>
+  SListIN f trees =>
+  AllN (Prod f) cls trees =>
   HAp f =>
   (∀ x . cls x => n x -> a) ->
-  f n cols ->
+  f n trees ->
   CollapseTo f a
-mapColumns f cols =
-  hcollapse @_ @_ @f @_ @a (hcmap (Proxy @cls) (K . f) cols)
+mapColumns f trees =
+  hcollapse @_ @_ @f @_ @a (hcmap (Proxy @cls) (K . f) trees)
 
-class DataProduct (flatten :: Bool) (c :: Kind.Tree) where
-  dataProduct :: ColumnPrefix -> TableTree c -> [Data.Column]
+class ColumnTypeName (node :: Kind.Node) where
+  columnTypeName :: Text -> TypeName
+
+instance ColumnTypeName ('Kind.Prim d) where
+  columnTypeName =
+    PrimTypeName
+
+instance ColumnTypeName ('Kind.Prod tpe sub) where
+  columnTypeName =
+    CompositeTypeName
+
+instance ColumnTypeName ('Kind.SumProd tpe sub) where
+  columnTypeName =
+    CompositeTypeName
+
+class DataProduct (flatten :: Bool) (tree :: Kind.Tree) where
+  dataProduct :: ColumnPrefix -> TableTree tree -> [Data.Column]
 
 instance (
-    All DataProductOrFlatten cols
-  ) => DataProduct 'True ('Kind.Tree name effs ('Kind.Prod d cols)) where
-    dataProduct prefix (Type.Tree _ (Type.Prod _ cols)) =
-      join (mapColumns @_ @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols)
+    All DataProductOrFlatten trees
+  ) => DataProduct 'True ('Kind.Tree name effs ('Kind.Prod d trees)) where
+    dataProduct prefix (Type.Tree _ (Type.Prod _ trees)) =
+      join (mapColumns @_ @NP @_ @trees @DataProductOrFlatten (dataProductOrFlatten prefix) trees)
 
 instance (
     DataColumn ('Kind.Tree name effs tpe)
@@ -66,31 +81,31 @@ instance (
     dataProduct =
       pure .: dataColumn
 
-class DataProductOrFlatten (c :: Kind.Tree) where
-  dataProductOrFlatten :: ColumnPrefix -> TableTree c -> [Data.Column]
+class DataProductOrFlatten (tree :: Kind.Tree) where
+  dataProductOrFlatten :: ColumnPrefix -> TableTree tree -> [Data.Column]
 
 instance (
-    c ~ 'Kind.Tree name effs tpe,
+    tree ~ 'Kind.Tree name effs tpe,
     flatten ~ ContainsFlatten effs,
-    DataProduct flatten c
-  ) => DataProductOrFlatten c where
+    DataProduct flatten tree
+  ) => DataProductOrFlatten tree where
     dataProductOrFlatten =
-      dataProduct @flatten @c
+      dataProduct @flatten
 
 class DataDbCon (con :: Kind.Con) where
   dataDbCon :: ColumnPrefix -> TableCon con -> Data.Column
 
 instance (
-    All (DataProduct 'False) cols,
+    All (DataProduct 'False) trees,
     FieldIdText name
-  ) => DataDbCon ('Kind.Con num name cols) where
-    dataDbCon prefix (Type.Con cols) =
-      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) name def dbType
+  ) => DataDbCon ('Kind.Con num name trees) where
+    dataDbCon prefix (Type.Con trees) =
+      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) (CompositeTypeName name) def dbType
       where
         name =
           fieldIdText @name
         dbType =
-          Data.Prod (join (mapColumns @_ @NP @_ @cols @(DataProduct 'False) (dataProduct @'False newPrefix) cols))
+          Data.Prod (join (mapColumns @_ @NP @_ @trees @(DataProduct 'False) (dataProduct @'False newPrefix) trees))
         newPrefix =
           addPrefix name prefix
 
@@ -103,33 +118,38 @@ type family ConUnaName (cname :: FieldId) (fname :: FieldId) :: FieldId where
 instance (
     DataDbNode node,
     name ~ ConUnaName cname fname,
-    FieldIdText name
+    FieldIdText name,
+    ColumnTypeName node
   ) => DataDbCon ('Kind.ConUna num cname ('Kind.Tree fname effs node)) where
     dataDbCon prefix (Type.ConUna (Type.Tree (ColumnData tpe options) tree)) =
-      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) tpe options (dataDbNode newPrefix tree)
+      Data.Column (Name (dbIdentifierT name)) selector typeName options (dataDbNode newPrefix tree)
       where
         newPrefix =
           addPrefix name prefix
+        typeName =
+          columnTypeName @node tpe
         name =
           fieldIdText @name
+        selector =
+          Selector (prefixed name prefix)
 
 class DataDbNode (t :: Kind.Node) where
   dataDbNode :: ColumnPrefix -> TableNode t -> Data.DbType
 
 instance (
-    All DataProductOrFlatten cols
-  ) => DataDbNode ('Kind.Prod d cols) where
-  dataDbNode prefix (Type.Prod _ cols) =
-    Data.Prod (join (mapColumns @_ @NP @_ @cols @DataProductOrFlatten (dataProductOrFlatten prefix) cols))
+    All DataProductOrFlatten trees
+  ) => DataDbNode ('Kind.Prod d trees) where
+  dataDbNode prefix (Type.Prod _ trees) =
+    Data.Prod (join (mapColumns @_ @NP @_ @trees @DataProductOrFlatten (dataProductOrFlatten prefix) trees))
 
 instance (
-    All DataDbCon cols
-  ) => DataDbNode ('Kind.SumProd d cols) where
-  dataDbNode prefix (Type.SumProd _ cols) =
-    Data.Prod (indexColumn : mapColumns @_ @NP @_ @cols @DataDbCon (dataDbCon prefix) cols)
+    All DataDbCon trees
+  ) => DataDbNode ('Kind.SumProd d trees) where
+  dataDbNode prefix (Type.SumProd _ trees) =
+    Data.Prod (indexColumn : mapColumns @_ @NP @_ @trees @DataDbCon (dataDbCon prefix) trees)
     where
       indexColumn =
-        Data.Column (Name indexName) (Selector (prefixed indexName prefix)) "bigint" def Data.Prim
+        Data.Column (Name indexName) (Selector (prefixed indexName prefix)) (PrimTypeName "bigint") def Data.Prim
       indexName =
         "sum__index"
 
@@ -137,36 +157,39 @@ instance DataDbNode ('Kind.Prim d) where
     dataDbNode _ (Type.Prim _) =
       Data.Prim
 
-class DataColumn (c :: Kind.Tree) where
-  dataColumn :: ColumnPrefix -> TableTree c -> Data.Column
+class DataColumn (tree :: Kind.Tree) where
+  dataColumn :: ColumnPrefix -> TableTree tree -> Data.Column
 
 instance (
-    DataDbNode t,
+    ColumnTypeName node,
+    DataDbNode node,
     FieldIdText name
-  ) => DataColumn ('Kind.Tree name effs t) where
+  ) => DataColumn ('Kind.Tree name effs node) where
     dataColumn prefix (Type.Tree (ColumnData tpe options) dbType) =
-      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) tpe options dataType
+      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) typeName options dataType
       where
         dataType =
           dataDbNode (addPrefix name prefix) dbType
+        typeName =
+          columnTypeName @node tpe
         name =
           fieldIdText @name
 
-class DataTable (c :: Kind.Tree) where
-  dataTable :: TableTree c -> Data.Column
+class DataTable (tree :: Kind.Tree) where
+  dataTable :: TableTree tree -> Data.Column
 
 instance (
-    DataColumn c
-  ) => DataTable c where
+    DataColumn tree
+  ) => DataTable tree where
   dataTable =
-    dataColumn @c InitPrefix
+    dataColumn @tree InitPrefix
 
 class TableStructure (rep :: *) (d :: *) where
   tableStructure :: Data.Column
 
 instance (
-    TableRoot rep d c,
-    DataTable c
+    TableRoot rep d tree,
+    DataTable tree
   ) => TableStructure rep d where
     tableStructure =
       dataTable (tableRoot @rep @d)

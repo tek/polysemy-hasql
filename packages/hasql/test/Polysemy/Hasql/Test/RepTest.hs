@@ -4,33 +4,34 @@ module Polysemy.Hasql.Test.RepTest where
 
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, Prim, PrimaryKey, Product, Rep, Sum)
 import Polysemy.Db.Data.ColumnOptions (notNull)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (tree)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
-import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Meta (
   ADTMeta,
   ADTMeta',
   ADTRep,
-  AdtMetadata(AdtProd),
-  MaybeADT(MaybeADT),
+  AdtMetadata (AdtProd),
+  MaybeADT (MaybeADT),
   )
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql.Column.DataColumn (dataTable)
 import Polysemy.Hasql.Column.Effect (
-  D(D),
-  Effs(Effs),
+  D (D),
+  Effs (Effs),
   IsADT,
   MaybeADTResolves,
   NewtypeOrADT,
   ResolveColumnEffects,
   ResolveRep,
   )
-import Polysemy.Hasql.ColumnType (ColumnType(..))
+import Polysemy.Hasql.ColumnType (ColumnType (..))
 import qualified Polysemy.Hasql.Data.DbType as Data
+import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
 import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Hasql.Tree.Table (TableParams, TableTree, tableRoot)
 
@@ -268,15 +269,15 @@ effectfulTest =
 
 datTargetWith :: [Data.Column] -> Data.Column
 datTargetWith flattyColumns =
-  Data.Column "dat" "\"dat\"" "dat" def $ Data.Prod $ [
+  Data.Column "dat" "\"dat\"" (CompositeTypeName "dat") def $ Data.Prod $ [
     Data.Column "double" "\"double\"" "double precision" def { notNull = False } Data.Prim,
-    Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
+    Data.Column "proddo" "\"proddo\"" (CompositeTypeName "proddo") def (Data.Prod [
       Data.Column "pr_int" "(\"proddo\").\"pr_int\"" "bigint" def Data.Prim
     ]),
-    Data.Column "summer" "\"summer\"" "summer" def (Data.Prod [
+    Data.Column "summer" "\"summer\"" (CompositeTypeName "summer") def (Data.Prod [
       Data.Column "sum__index" "(\"summer\").\"sum__index\"" "bigint" def (Data.Prim),
       Data.Column "txt" "(\"summer\").\"txt\"" "text" def Data.Prim,
-      Data.Column "summer2" "(\"summer\").\"summer2\"" "summer2" def (Data.Prod [
+      Data.Column "summer2" "(\"summer\").\"summer2\"" (CompositeTypeName "summer2") def (Data.Prod [
         Data.Column "int" "(\"summer\").\"summer2\".\"int\"" "bigint" def Data.Prim,
         Data.Column "double" "(\"summer\").\"summer2\".\"double\"" "double precision" def Data.Prim
       ])
@@ -302,7 +303,7 @@ test_rep =
       ]
     datTargetAuto =
       datTargetWith [
-        Data.Column "flatty" "\"flatty\"" "flatty" def (Data.Prod [
+        Data.Column "flatty" "\"flatty\"" (CompositeTypeName "flatty") def (Data.Prod [
           Data.Column "flat1" "(\"flatty\").\"flat1\"" "bigint" def Data.Prim,
           Data.Column "flat2" "(\"flatty\").\"flat2\"" "text" def Data.Prim
         ])
@@ -314,7 +315,7 @@ test_rep =
     intCol =
       dataTable (tree @TableParams @('TreeMeta ('NamedField "int") (Prim) Int) mempty)
     proddoTarget =
-      Data.Column "proddo" "\"proddo\"" "proddo" def (Data.Prod [
+      Data.Column "proddo" "\"proddo\"" (CompositeTypeName "proddo") def (Data.Prod [
         Data.Column "pr_int" "\"pr_int\"" "bigint" def Data.Prim
       ])
     proddoCol =

@@ -5,25 +5,26 @@ module Polysemy.Hasql.Test.PKTest where
 import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, UidRep)
 import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.IdQuery (IdQuery (IdQuery))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.Uid (Uid(Uid))
+import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Tree as Tree
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
-import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Hasql.Tree.Table (TableParams)
 import qualified Polysemy.Hasql.Data.DbType as Data
+import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.Table.Schema (schemaAuto)
 import Polysemy.Hasql.Test.Database (withTestStoreGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Tree.Table (TableParams)
 
 newtype Id =
   Id { unId :: Int }
@@ -73,7 +74,7 @@ testDerivation =
 
 targetStructure :: Data.Column
 targetStructure =
-  Data.Column "rec" [text|"rec"|] "uid" def $ Data.Prod [
+  Data.Column "rec" [text|"rec"|] (CompositeTypeName "uid") def $ Data.Prod [
     Data.Column "id" [text|"id"|] "bigint" def { primaryKey = True } Data.Prim,
     Data.Column "a" [text|"a"|] "bigint" def Data.Prim,
     Data.Column "b" [text|"b"|] "text" def Data.Prim

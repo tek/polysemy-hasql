@@ -1,14 +1,14 @@
 module Polysemy.Hasql.Test.TableTest where
 
 import Polysemy.Db.Data.Column (Auto)
-import Polysemy.Hasql.Table (missingColumns)
 import Polysemy.Db.Text.DbIdentifier (dbIdentifier)
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
-import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn(ExistingColumn))
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Prod, Prim))
+import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod), TypeName (CompositeTypeName))
+import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
+import Polysemy.Hasql.Table (missingColumns)
 
 data Rec =
   Rec {
@@ -27,7 +27,7 @@ test_recColumns =
     target === recTable
   where
     target =
-      Column "rec" [text|"rec"|] "rec" def (Prod [
+      Column "rec" [text|"rec"|] (CompositeTypeName "rec") def (Prod [
         Column "field1" [text|"field1"|] "text" def Prim,
         Column "field2" [text|"field2"|] "bigint" def Prim
       ])
@@ -46,7 +46,7 @@ test_uuidColTable =
     target === uuidColTable
   where
     target =
-      Column "uuid_col" [text|"uuid_col"|] "uuid_col" def (Prod [Column "uuid" [text|"uuid"|] "uuid" def Prim])
+      Column "uuid_col" [text|"uuid_col"|] (CompositeTypeName "uuid_col") def (Prod [Column "uuid" [text|"uuid"|] "uuid" def Prim])
 
 test_tableName :: UnitTest
 test_tableName =

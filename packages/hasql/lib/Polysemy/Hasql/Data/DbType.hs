@@ -21,6 +21,16 @@ newtype Selector =
   deriving (Eq, Show, Generic, Ord)
   deriving newtype (IsString)
 
+data TypeName =
+  PrimTypeName { unTypeName :: Text }
+  |
+  CompositeTypeName { unTypeName :: Text }
+  deriving (Eq, Show, Generic)
+
+instance IsString TypeName where
+  fromString =
+    PrimTypeName . toText
+
 nameSelector :: Text -> Selector
 nameSelector =
   Selector . dquote
@@ -29,7 +39,7 @@ data Column =
   Column {
     _name :: Name,
     _selector :: Selector,
-    _tpe :: Text,
+    _tpe :: TypeName,
     _options :: ColumnOptions,
     _dbType :: DbType
   }

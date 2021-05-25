@@ -6,21 +6,21 @@ import Hasql.Decoders (Row, int8, noResult, nullable)
 import Hasql.DynamicStatements.Snippet (Snippet)
 import Hasql.DynamicStatements.Statement (dynamicallyParameterized)
 import Hasql.Encoders (Params, noParams)
-import Hasql.Statement (Statement(Statement))
-import Polysemy.Db.Data.DbName (DbName(DbName))
+import Hasql.Statement (Statement (Statement))
+import Polysemy.Db.Data.DbName (DbName (DbName))
 import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Text.Quote (dquote)
 import Polysemy.Db.Tree.Fold (FoldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
 import qualified Polysemy.Hasql.Data.DbType as Column
-import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
+import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector, TypeName ())
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable), qwhere)
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode, unSqlCode))
-import Polysemy.Hasql.Data.Table (Table(Table, _row, _structure, _params))
-import Polysemy.Hasql.Data.Where (Where(Where))
-import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName)
+import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable), qwhere)
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode, unSqlCode))
+import Polysemy.Hasql.Data.Table (Table (Table, _params, _row, _structure))
+import Polysemy.Hasql.Data.Where (Where (Where))
+import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName, typeName)
 import Polysemy.Hasql.Table.Query.Delete (deleteSql)
 import Polysemy.Hasql.Table.Query.Fragment (addColumnFragment, alterFragment, conflictFragment, fromFragment)
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
@@ -29,7 +29,7 @@ import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
 import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated, commaSeparatedSql)
 import qualified Polysemy.Hasql.Table.Query.Update as Query
 import Polysemy.Hasql.Table.Query.Update (PartialSql)
-import Polysemy.Hasql.Table.ResultShape (ResultShape(resultShape))
+import Polysemy.Hasql.Table.ResultShape (ResultShape (resultShape))
 
 statement ::
   ResultShape d result =>
@@ -179,8 +179,8 @@ update qtable q t =
 createTableSql ::
   Column ->
   SqlCode
-createTableSql column@(Column _ (Selector selector) _ _ _) =
-  SqlCode [text|create table #{selector} (#{formattedColumns})|]
+createTableSql column@(Column _ _ _ _ _) =
+  SqlCode [text|create table #{quotedName column} (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (toList (unSqlCode . columnSpec <$> baseColumns column))
@@ -192,13 +192,13 @@ createTable =
   plain . createTableSql
 
 createCtorTypeSql :: Column -> SqlCode
-createCtorTypeSql column =
-  [text|create type #{quotedName column} as (#{formattedColumns})|]
+createCtorTypeSql column@(Column _ _ tpe _ _) =
+  [text|create type #{typeName tpe} as (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (toList (formattedColumn <$> baseColumns column))
-    formattedColumn col =
-      [text|#{quotedName col} #{dquote (Column._tpe col)}|]
+    formattedColumn col@(Column _ _ t _ _) =
+      [text|#{quotedName col} #{typeName t}|]
 
 createCtorType ::
   Column ->
@@ -207,39 +207,23 @@ createCtorType =
   plain . createCtorTypeSql
 
 createProdTypeSql ::
-  Selector ->
+  TypeName ->
   [Column] ->
   SqlCode
-createProdTypeSql (Selector prodName) columns =
-  [text|create type #{prodName} as (#{formattedColumns})|]
+createProdTypeSql prodName columns =
+  [text|create type #{typeName prodName} as (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (formattedColumn <$> columns)
-    formattedColumn (Column (Name name) _ tpe _ _) =
-      [text|#{name} #{tpe}|]
+    formattedColumn column@(Column _ _ tpe _ _) =
+      [text|#{quotedName column} #{typeName tpe}|]
 
 createProdType ::
-  Selector ->
+  TypeName ->
   [Column] ->
   Statement () ()
 createProdType =
   plain .: createProdTypeSql
-
-createSumTypeSql :: Column -> SqlCode
--- createSumTypeSql (Column (quotedName -> name) (Column indexName indexType _ _) columns) =
-createSumTypeSql column =
-  [text|create type #{quotedName column} as (#{formattedColumns})|]
-  where
-    formattedColumns =
-      commaSeparated ([text|#{dquote "sum__index"} bigint|] : toList (formattedColumn <$> baseColumns column))
-    formattedColumn (quotedName -> n) =
-      [text|#{n} #{n}|]
-
-createSumType ::
-  Column ->
-  Statement () ()
-createSumType =
-  plain . createSumTypeSql
 
 dropTypeSql ::
   Text ->

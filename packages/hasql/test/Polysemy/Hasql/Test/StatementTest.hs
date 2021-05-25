@@ -104,7 +104,7 @@ test_createStatement =
     target === unSqlCode stmtText
   where
     target =
-      [text|create table "rec" ("a" text unique not null, "b" bigint not null, "c" double precision, "sum_field" sum_rec not null)|]
+      [text|create table "rec" ("a" text unique not null, "b" bigint not null, "c" double precision, "sum_field" ph_type__sum_rec not null)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (tableStructure @RecRep @Rec)
@@ -211,7 +211,7 @@ test_createStatement_Sum =
     target === unSqlCode stmtText
   where
     target =
-      [text|create table "sum_data" ("sum__index" bigint not null, "sum_data1" sum_data1 not null, "sum_data2" sum_data2 not null)|]
+      [text|create table "sum_data" ("sum__index" bigint not null, "sum_data1" ph_type__sum_data1 not null, "sum_data2" ph_type__sum_data2 not null)|]
     stmtText :: SqlCode
     stmtText =
       Statement.createTableSql (tableStructure @Auto @SumData)
