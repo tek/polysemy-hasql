@@ -15,7 +15,7 @@ import Polysemy.Log (Log)
 
 import Polysemy.Hasql.Column.DataColumn (TableStructure, tableStructure)
 import qualified Polysemy.Hasql.Data.DbType as Data
-import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName))
+import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName), unName)
 import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
@@ -232,7 +232,7 @@ initTable ::
   Column ->
   Sem r ()
 initTable connection t@(Column name _ _ _ _) = do
-  Log.debug [text|initializing table #{name}|]
+  Log.debug [text|initializing table #{unName name}|]
   process =<< liftError (tableColumns connection name)
   where
     process (Just existing) =
