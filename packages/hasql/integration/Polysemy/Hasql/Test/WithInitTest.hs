@@ -18,6 +18,7 @@ prog = do
     () <- Database.sql () "select 1"
     resume_ DbConnection.disconnect
     () <- Database.sql () "select 1"
+    () <- Database.sql () "select 1"
     pure ()
   atomicGet
 

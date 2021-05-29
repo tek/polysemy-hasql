@@ -232,7 +232,7 @@ initTable ::
   Column ->
   Sem r ()
 initTable connection t@(Column name _ _ _ _) = do
-  Log.debug [text|initializing table #{unName name}|]
+  Log.debug [text|initializing table `#{unName name}`|]
   process =<< liftError (tableColumns connection name)
   where
     process (Just existing) =

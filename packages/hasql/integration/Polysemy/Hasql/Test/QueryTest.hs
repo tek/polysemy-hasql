@@ -26,7 +26,6 @@ import Polysemy.Test.Hedgehog (assertJust)
 import Polysemy.Time (GhcTime, mkDatetime)
 
 import Polysemy.Hasql.Column.DataColumn (dataTable)
-import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.Query (interpretQuery)
@@ -35,7 +34,7 @@ import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Hasql.Tree.Table (TableRoot, TableTree, tableRoot)
+import Polysemy.Hasql.Tree.Table (TableRoot, tableRoot)
 import Polysemy.Hasql.Where (queryWhere)
 
 newtype Content =
@@ -175,12 +174,6 @@ type UidDatType =
     ]
   )
 
-column_ContentNumber ::
-  ResolveColumnEffects Auto ContentNumber '[ADT ContentNumberMeta Auto] =>
-  TableTree ContentNumberType
-column_ContentNumber =
-  tableRoot @Auto @ContentNumber
-
 queryParams_ContentNumber ::
   QueryParams ContentNumberType ContentNumber =>
   Params ContentNumber
@@ -202,7 +195,6 @@ queryWhere_ContentNumber_Uid =
 test_derivation :: IO ()
 test_derivation = do
   void (pure (dataTable (tableRoot @(UidRep Auto DatRep) @(Uuid Dat))))
-  void (pure column_ContentNumber)
   void (pure queryParams_ContentNumber)
   void (pure queryWhere_ContentNumber)
   void (pure queryWhere_ContentNumber_Uid)

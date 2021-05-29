@@ -17,11 +17,16 @@ import Polysemy.Hasql.StoreUpdate (interpretStoreUpdateDb)
 import Polysemy.Hasql.Test.Database (withTestStoreUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
+newtype Tex =
+  Tex { unTex :: Text }
+  deriving (Eq, Show, Generic)
+  deriving newtype (IsString)
+
 data Dat =
   Dat {
     int :: Int,
     double :: Double,
-    txt :: Text
+    txt :: Tex
   }
   deriving (Eq, Show, Generic)
 

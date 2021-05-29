@@ -1,20 +1,19 @@
 module Polysemy.Hasql.Tree.Value where
 
-import Generics.SOP (I(I))
-import Polysemy.Db.Data.Column (ForcePrim, Rep)
+import Generics.SOP (I (I))
+import Polysemy.Db.Data.Column (Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (Root(..))
-import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..))
-import Polysemy.Db.Tree.Data.Params (Params(Params), TTree)
-import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
+import Polysemy.Db.Tree (Root (..))
+import Polysemy.Db.Tree.Api (TreeConPayload (..), TreePayload (..))
+import Polysemy.Db.Tree.Data.Params (Params (Params), TTree)
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
+import Polysemy.Db.Tree.Effect (D (D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor)
 
-import Polysemy.Hasql.Column.Effect (PrimColumn)
-import Polysemy.Hasql.Tree.Table (DbTag)
 import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
-import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions(..), RepOptions(..), RepToList)
+import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions (..), RepOptions (..), RepToList)
+import Polysemy.Hasql.Tree.Table (DbTag, PrimColumn, MatchPrim)
 
 data DbValueTag =
   DbValueTag
@@ -28,12 +27,6 @@ data ColumnData =
   deriving (Eq, Show)
 
 type DbValueParams = 'Params DbValueTag () I 'False
-
-type family MatchPrim (global :: Bool) (d :: Type) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
-  MatchPrim 'True _ pre '[] = 'Right (WithPrim pre)
-  MatchPrim 'False _ pre '[] = 'Left pre
-  MatchPrim _ d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
-  MatchPrim global d pre (rep : rest) = MatchPrim global d (pre ++ '[rep]) rest
 
 instance (
     PrimColumn d prim,

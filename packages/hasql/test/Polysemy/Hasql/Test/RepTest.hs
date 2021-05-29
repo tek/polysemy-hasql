@@ -9,26 +9,11 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (tree)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
-import Polysemy.Db.Tree.Meta (
-  ADTMeta,
-  ADTMeta',
-  ADTRep,
-  AdtMetadata (AdtProd),
-  MaybeADT (MaybeADT),
-  )
+import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata (AdtProd))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql.Column.DataColumn (dataTable)
-import Polysemy.Hasql.Column.Effect (
-  D (D),
-  Effs (Effs),
-  IsADT,
-  MaybeADTResolves,
-  NewtypeOrADT,
-  ResolveColumnEffects,
-  ResolveRep,
-  )
 import Polysemy.Hasql.ColumnType (ColumnType (..))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
@@ -247,26 +232,6 @@ root_Dat_Auto ::
 root_Dat_Auto =
   tableRoot @Auto @Dat
 
-effectfulTest ::
-  ADTRep (Rep PR) ~ ProddoRep =>
-  ADTMeta (Rep PR) Proddo ~ 'MaybeADT ProddoMeta =>
-  IsADT (Rep PR) Proddo ('Just ProddoMeta) =>
-  MaybeADTResolves (ADTMeta (Rep '[]) Text) 'Nothing =>
-  ResolveColumnEffects (Rep '[ForcePrim Newt]) Newt '[Prim] =>
-  ResolveColumnEffects Auto (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] =>
-  ResolveColumnEffects (Rep '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text]) (Maybe [Newt]) '[Tycon Maybe [Newt], Tycon [] Newt, Newtype Newt Text, Prim] =>
-  ResolveColumnEffects Auto Proddo '[ADT ProddoMeta Auto] =>
-  ResolveColumnEffects (Rep '[Product Auto]) Proddo '[ADT ProddoMeta (Product Auto)] =>
-  ResolveColumnEffects (Rep '[Product ProddoRep]) Proddo '[ADT ProddoMeta (Product ProddoRep)] =>
-  ResolveColumnEffects (Rep '[Product ProddoRep]) (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta (Product ProddoRep)] =>
-  ResolveColumnEffects Auto (Maybe Proddo) '[Tycon Maybe Proddo, ADT ProddoMeta Auto] =>
-  ResolveColumnEffects Auto (Maybe [Proddo]) '[Tycon Maybe [Proddo], Tycon [] Proddo, ADT ProddoMeta Auto] =>
-  ResolveRep (Rep '[]) ('D Custom) ('Effs '[Prim]) =>
-  NewtypeOrADT ('Left PR) ('D Proddo) ('Effs '[ADT ProddoMeta (Product ProddoRep)]) =>
-  ()
-effectfulTest =
-  ()
-
 datTargetWith :: [Data.Column] -> Data.Column
 datTargetWith flattyColumns =
   Data.Column "dat" "\"dat\"" (CompositeTypeName "dat") def $ Data.Prod $ [
@@ -290,7 +255,6 @@ datTargetWith flattyColumns =
 test_rep :: UnitTest
 test_rep =
   runTestAuto do
-    void (pure effectfulTest)
     datTarget === dataTable datCols
     datTargetAuto === dataTable (tableRoot @Auto @Dat)
     intTarget === intCol

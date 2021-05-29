@@ -4,34 +4,33 @@ module Polysemy.Hasql.Test.SumFieldTest where
 
 import Hasql.Decoders (Row)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
-import Polysemy.Db.Data.ColumnOptions (ColumnOptions(unique))
-import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
-import Polysemy.Db.Data.CreationTime (CreationTime(CreationTime))
+import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
+import Polysemy.Db.Data.ColumnOptions (ColumnOptions (unique))
+import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
+import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
+import Polysemy.Db.Data.IdQuery (IdQuery (IdQuery), UuidQuery)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid, Uid(Uid), Uuid)
+import Polysemy.Db.Data.Uid (Uid, Uid (Uid), Uuid)
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
 
 import Polysemy.Hasql (HasqlConnection)
-import Polysemy.Hasql.Column.Effect (ResolveColumnEffects)
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
+import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable))
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import Polysemy.Hasql.Query (interpretQuery)
 import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUidAs)
-import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions(..))
+import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions (..))
 import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGenAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
@@ -110,13 +109,6 @@ queryRows_SumField ::
 queryRows_SumField =
   queryRows @c
 
-testSumField ::
-  ResolveColumnEffects Auto (Path Abs File) '[Prim] =>
-  ResolveColumnEffects Auto Nume '[Enum] =>
-  ()
-testSumField =
-  ()
-
 id' :: UUID
 id' =
   Uid.uuid 555
@@ -155,7 +147,6 @@ sumTest specimen = do
 test_reps :: IO ()
 test_reps = do
   _ <- pure row_queryRows_Sinister
-  _ <- pure testSumField
   unit
 
 test_sumField :: UnitTest

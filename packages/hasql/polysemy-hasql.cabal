@@ -30,7 +30,6 @@ library
       Polysemy.Hasql
       Polysemy.Hasql.AtomicState
       Polysemy.Hasql.Column.DataColumn
-      Polysemy.Hasql.Column.Effect
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Crud
@@ -353,6 +352,7 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.StatementTest
       Polysemy.Hasql.Test.TableTest
       Polysemy.Hasql.Test.Tree.Data.DatS
+      Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest
       Polysemy.Hasql.Test.Tree.DeriveProd
       Polysemy.Hasql.Test.Tree.DeriveSum
       Polysemy.Hasql.Test.Tree.DeriveSumDb

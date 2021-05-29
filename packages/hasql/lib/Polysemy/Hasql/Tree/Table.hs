@@ -4,16 +4,15 @@ import Polysemy.Db.Data.Column (ForcePrim, Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (Root(..))
-import Polysemy.Db.Tree.Api (TreeConPayload(..), TreePayload(..))
-import Polysemy.Db.Tree.Data.Params (Params(Params))
-import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Effect (D(D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
+import Polysemy.Db.Tree (Root (..))
+import Polysemy.Db.Tree.Api (TreeConPayload (..), TreePayload (..))
+import Polysemy.Db.Tree.Data.Params (Params (Params))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
+import Polysemy.Db.Tree.Effect (D (D), PrimOrTycon, ResolveRep, TreeEffects, TreeEffectsFor, WithPrim)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
-import Polysemy.Hasql.Column.Effect (PrimColumn)
-import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
-import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions(..), RepOptions(..), RepToList)
+import Polysemy.Hasql.ColumnType (ColumnTypeDefined, EffectfulColumnType, effectfulColumnType)
+import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions (..), RepOptions (..), RepToList)
 
 data DbTag =
   DbTag
@@ -31,11 +30,25 @@ type TableTree = Type.Tree ColumnData Proxy
 type TableCon = Type.Con ColumnData Proxy
 type TableParams = 'Params DbTag ColumnData Proxy 'True
 
-type family MatchPrim (global :: Bool) (d :: Type) (pre :: [*]) (reps :: [*]) :: Either [*] [*] where
+type family MatchPrim (global :: Bool) (d :: Type) (pre :: [Type]) (reps :: [Type]) :: Either [Type] [Type] where
   MatchPrim 'True _ pre '[] = 'Right (WithPrim pre)
   MatchPrim 'False _ pre '[] = 'Left pre
   MatchPrim _ d pre (ForcePrim d : rest) = 'Right (WithPrim (pre ++ rest))
   MatchPrim global d pre (rep : rest) = MatchPrim global d (pre ++ '[rep]) rest
+
+----------------------------------------------------------------------------------------------------
+
+class ColumnTypeResolves (resolves :: Bool) (prim :: Bool) | resolves -> prim
+
+instance {-# incoherent #-} prim ~ 'False => ColumnTypeResolves resolves prim
+
+instance prim ~ 'True => ColumnTypeResolves 'True prim
+
+----------------------------------------------------------------------------------------------------
+
+class PrimColumn (d :: Type) (decision :: Bool) | d -> decision
+
+instance ColumnTypeResolves (ColumnTypeDefined d) decision => PrimColumn d decision
 
 instance (
     PrimColumn d prim,

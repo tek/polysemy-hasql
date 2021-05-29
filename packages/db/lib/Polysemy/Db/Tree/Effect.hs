@@ -6,7 +6,7 @@ import Prelude hiding (Enum)
 import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata(AdtEnum), MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtEnum), MaybeADT (MaybeADT))
 
 newtype D =
   D Type
@@ -167,7 +167,7 @@ instance (
 class ResolveRep (tag :: Type) (reps :: Type) (d :: D) (effs :: Effs) | reps d -> effs
 
 instance (
-    PrimOrTycon tag (MatchPrim d '[] reps) ('D d) effs
+    PrimOrTycon DefaultEffects (MatchPrim d '[] reps) ('D d) effs
   ) => ResolveRep DefaultEffects (Rep reps) ('D d) effs
 
 instance ResolveRep tag (ForceRep reps) ('D d) ('Effs reps)
@@ -188,6 +188,6 @@ instance {-# overlappable #-} (
     ResolveRep tag (Rep '[rep]) ('D d) ('Effs effs)
   ) => TreeEffectsFor tag rep d effs
 
-class TreeEffects (tag :: Type) (rep :: Type) (d :: Type) (effs :: [Type]) | rep d -> effs
+class TreeEffects (tag :: Type) (rep :: Type) (d :: Type) (effs :: [Type]) | tag rep d -> effs
 
 instance TreeEffectsFor DefaultEffects rep d effs => TreeEffects DefaultEffects rep d effs

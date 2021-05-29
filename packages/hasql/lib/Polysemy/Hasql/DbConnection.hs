@@ -110,7 +110,7 @@ kill ::
 kill = \case
   ConnectionState _ (Just _) (Just tid) -> do
     embed (throwTo tid KillCommand)
-    disconnect  =<< atomicGet
+    disconnect =<< atomicGet
   ConnectionState _ _ _ ->
     unit
 
