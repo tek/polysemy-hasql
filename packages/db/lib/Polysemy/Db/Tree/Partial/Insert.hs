@@ -134,6 +134,8 @@ type family MatchNodeType (a :: Type) (node :: Type) :: Bool where
 type family InsertableConName (a :: Type) (name :: Symbol) (con :: Kind.Con) :: Bool where
   InsertableConName a name ('Kind.Con _ _ sub) =
     Any (InsertableNameExp a name) @@ sub
+  InsertableConName a name ('Kind.ConUna _ _ tree) =
+    InsertableNameExp a name @@ tree
 
 data InsertableConNameExp (a :: Type) (name :: Symbol) :: Kind.Con -> Exp Bool
 type instance Eval (InsertableConNameExp a name con) =
