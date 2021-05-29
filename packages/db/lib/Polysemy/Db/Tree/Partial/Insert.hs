@@ -29,6 +29,12 @@ instance (
     insertFieldCon update (Type.Con sub) =
       Type.Con (hcmap (Proxy @(InsertFieldTree path a)) (insertFieldTree update) sub)
 
+instance (
+    InsertFieldTree path a tree
+  ) => InsertFieldCon path a ('Kind.ConUna num n tree) where
+    insertFieldCon update (Type.ConUna tree) =
+      Type.ConUna (insertFieldTree update tree)
+
 class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node) where
   insertFieldNode :: FieldUpdate path a -> PartialNode n -> PartialNode n
 
