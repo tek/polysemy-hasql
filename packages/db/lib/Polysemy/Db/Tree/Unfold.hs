@@ -86,6 +86,18 @@ instance (
 
 instance (
     Applicative f,
+    tree ~ 'Kind.Tree name effs ('Kind.SumProd d cons),
+    UnfoldTreeExtract t n env name effs,
+    All (UnfoldCon t n f env) cons
+  ) => UnfoldTree t n f env ('Kind.Tree name effs ('Kind.SumProd d cons)) where
+  unfoldTree env (Type.Tree t (Type.SumProd n cons)) =
+    Type.Tree t . Type.SumProd n <$> unfoldCons @t @n @f subEnv cons
+    where
+      subEnv =
+        unfoldTreeExtract @t @n @env @name @effs env
+
+instance (
+    Applicative f,
     tree ~ 'Kind.Tree name effs ('Kind.Sum d cons),
     UnfoldTreeExtract t n env name effs,
     All (UnfoldCon t n f env) cons
