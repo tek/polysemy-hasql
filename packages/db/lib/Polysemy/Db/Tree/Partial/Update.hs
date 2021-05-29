@@ -1,14 +1,14 @@
 module Polysemy.Db.Tree.Partial.Update where
 
-import Generics.SOP (I(I), NP ((:*)), NS (Z, S))
+import Generics.SOP (I (I), NP ((:*)), NS (S, Z))
 
 import Polysemy.Db.Data.Column (Auto)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (Tree(tree))
+import Polysemy.Db.Tree (Tree (tree))
 import Polysemy.Db.Tree.Data (DataCon, DataParams, DataTree)
-import Polysemy.Db.Tree.Data.TreeMeta (TM(TM), TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (TM (TM), TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Partial.Insert (PartialCon, PartialTree)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
@@ -42,6 +42,15 @@ instance (
   ) => UpdatePartialSumProd ('Kind.Con _num _n d : ds) ('Kind.Con _num _n u : us) where
   updatePartialSumProd (Z (Type.Con d)) ((Type.Con u) :* _) =
     Z (Type.Con (updatePartialProd d u))
+  updatePartialSumProd (S d) (_ :* us) =
+    S (updatePartialSumProd d us)
+
+instance (
+    UpdatePartialTree d u,
+    UpdatePartialSumProd ds us
+  ) => UpdatePartialSumProd ('Kind.ConUna _num _n d : ds) ('Kind.ConUna _num _n u : us) where
+  updatePartialSumProd (Z (Type.ConUna d)) ((Type.ConUna u) :* _) =
+    Z (Type.ConUna (updatePartialTree d u))
   updatePartialSumProd (S d) (_ :* us) =
     S (updatePartialSumProd d us)
 
