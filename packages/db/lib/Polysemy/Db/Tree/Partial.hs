@@ -33,9 +33,6 @@ field ::
 field =
   FieldUpdate
 
-type InsertName (name :: Symbol) (a :: Type) (tree :: Kind.Tree) =
-  Insert ('FieldName name) a tree
-
 (+>) ::
   ∀ (path :: FieldPath) (a :: Type) (tree :: Kind.Tree) .
   Insert path a tree =>

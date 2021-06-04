@@ -1,3 +1,5 @@
+{-# language UndecidableSuperClasses #-}
+
 module Polysemy.Db.Tree.Partial.Insert where
 
 import Fcf (Eval, Exp, type (@@))
@@ -7,9 +9,14 @@ import Generics.SOP (All, hcmap)
 import Type.Errors (TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Data.PartialField as PartialField
-import Polysemy.Db.Data.PartialField (FieldPath (FieldName), FieldUpdate(FieldUpdate), PartialField)
+import Polysemy.Db.Data.PartialField (
+  FieldPath    (FieldName, FieldPath),
+  FieldUpdate    (FieldUpdate),
+  Partial,
+  PartialField,
+  )
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
 import Polysemy.Db.SOP.Constraint (symbolText)
@@ -172,7 +179,6 @@ type family InsertableResult (d :: Type) (a :: Type) (path :: FieldPath) (found 
       "While attempting to construct a partial update"
       )
 
--- TODO also check field type
 type family Insertable (a :: Type) (path :: FieldPath) (tree :: Kind.Tree) :: Maybe ErrorMessage where
   Insertable a ('FieldName name) tree =
     InsertableResult (TreeDataType tree) a ('FieldName name) (InsertableName a name tree)
@@ -186,3 +192,33 @@ instance (
   ) => Insert path a tree where
   insert =
     insertFieldOrError @insertable
+
+data FieldSpec =
+  FieldSpec {
+    path :: FieldPath,
+    tpe :: Type
+  }
+
+type family (@>) (path :: k) (tpe :: Type) :: FieldSpec where
+  (path :: Symbol) @> tpe =
+    'FieldSpec ('FieldName path) tpe
+  (path :: [Symbol]) @> tpe =
+    'FieldSpec ('FieldPath path) tpe
+  (path :: FieldPath) @> tpe =
+    'FieldSpec path tpe
+
+class InsertablePath (d :: Type) (path :: FieldPath) (a :: Type) (tree :: Kind.Tree) where
+
+type family InsertPaths' (d :: Type) (tree :: Kind.Tree) (paths :: [FieldSpec]) :: Constraint where
+  InsertPaths' _ _ '[] = ()
+  InsertPaths' d tree ('FieldSpec path a : paths) = (Insert path a tree, InsertPaths' d tree paths)
+
+class (
+    Partial d tree,
+    InsertPaths' d tree paths
+  ) => InsertPaths (d :: Type) (paths :: [FieldSpec]) (tree :: Kind.Tree) where
+
+instance (
+    Partial d tree,
+    InsertPaths' d tree paths
+  ) => InsertPaths d paths tree where

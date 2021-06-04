@@ -41,8 +41,9 @@ library
       Polysemy.Db.Data.PartialField
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
-      Polysemy.Db.Data.StoreUpdate
       Polysemy.Db.Debug
+      Polysemy.Db.Effect.StoreUpdate
+      Polysemy.Db.Interpreter.StoreUpdate
       Polysemy.Db.Kind.Data.Tree
       Polysemy.Db.Prelude
       Polysemy.Db.Random
@@ -58,7 +59,6 @@ library
       Polysemy.Db.SOP.Text
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery
-      Polysemy.Db.StoreUpdate
       Polysemy.Db.Text.Case
       Polysemy.Db.Text.DbIdentifier
       Polysemy.Db.Text.Quote

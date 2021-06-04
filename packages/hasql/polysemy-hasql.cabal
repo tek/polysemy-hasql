@@ -52,6 +52,7 @@ library
       Polysemy.Hasql.DbType
       Polysemy.Hasql.DeriveStatement
       Polysemy.Hasql.InitDbError
+      Polysemy.Hasql.Interpreter.StoreUpdate
       Polysemy.Hasql.ManagedTable
       Polysemy.Hasql.Query
       Polysemy.Hasql.Query.Any
@@ -71,7 +72,6 @@ library
       Polysemy.Hasql.Statement
       Polysemy.Hasql.Store
       Polysemy.Hasql.Store.Statement
-      Polysemy.Hasql.StoreUpdate
       Polysemy.Hasql.Table
       Polysemy.Hasql.Table.BasicSchema
       Polysemy.Hasql.Table.ColumnOptions
@@ -220,14 +220,15 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.DeleteTest
       Polysemy.Hasql.Test.InitTest
       Polysemy.Hasql.Test.JsonTest
-      Polysemy.Hasql.Test.PartialTest
       Polysemy.Hasql.Test.PKTest
       Polysemy.Hasql.Test.QueryTest
       Polysemy.Hasql.Test.QueueTest
       Polysemy.Hasql.Test.Run
       Polysemy.Hasql.Test.SingletonTest
+      Polysemy.Hasql.Test.StoreUpdateTest
       Polysemy.Hasql.Test.SumFieldTest
       Polysemy.Hasql.Test.SumTableTest
+      Polysemy.Hasql.Test.ThingTest
       Polysemy.Hasql.Test.UnarySumTest
       Polysemy.Hasql.Test.UpsertTest
       Polysemy.Hasql.Test.WithInitTest
