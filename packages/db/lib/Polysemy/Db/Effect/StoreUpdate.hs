@@ -1,11 +1,10 @@
 module Polysemy.Db.Effect.StoreUpdate where
 
 import Polysemy.Db.Data.Uid (Uid)
-import Polysemy.Db.Tree.Partial (PartialTree)
-import Polysemy.Db.Tree.Partial.Insert (FieldSpec, InsertPaths)
+import Polysemy.Db.Tree.Partial.Insert (FieldSpec, PartialUpdate)
 
 data StoreUpdate (i :: Type) (d :: Type) (fields :: [FieldSpec]) :: Effect where
-  Partial :: i -> (∀ tree . InsertPaths d fields tree => PartialTree tree) -> StoreUpdate i d fields m ()
+  Partial :: i -> PartialUpdate d fields -> StoreUpdate i d fields m ()
 
 makeSem ''StoreUpdate
 

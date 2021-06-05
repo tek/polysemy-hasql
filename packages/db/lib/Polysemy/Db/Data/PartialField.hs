@@ -1,19 +1,19 @@
 module Polysemy.Db.Data.PartialField where
 
 import Data.Aeson (Object, Value (Null))
-import Data.Aeson.Types (Parser, Value(Object))
+import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
 
 import Polysemy.Db.Data.Column (Auto)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Db.Tree (Root(..))
-import Polysemy.Db.Tree.Api (TreePrim(..))
-import Polysemy.Db.Tree.Data.Params (Params(Params))
+import Polysemy.Db.Tree (Root (..))
+import Polysemy.Db.Tree.Api (TreePrim (..))
+import Polysemy.Db.Tree.Data.Params (Params (Params))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Fold (FoldTree, FoldTreeConcat(..), FoldTreePrim(..), foldTree)
-import Polysemy.Db.Tree.Unfold (UnfoldRoot(..), UnfoldTreeExtract(..), UnfoldTreePrim(..))
+import Polysemy.Db.Tree.Fold (FoldTree, FoldTreeConcat (..), FoldTreePrim (..), foldTree)
+import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeExtract (..), UnfoldTreePrim (..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data PartialField (a :: Type) =
