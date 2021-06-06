@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.Tree.JsonTest where
 
 import qualified Data.Aeson as Aeson
-import Polysemy.Db.Tree.Partial (field, partial, (+>))
+import Polysemy.Db.Tree.Partial (field, partially, (+>))
 import Polysemy.Test (UnitTest, assertRight, runTestAuto, (===))
 
 data Sub =
@@ -33,4 +33,4 @@ test_treeJson =
     encoded =
       Aeson.encode tree
     tree =
-      partial @Dat +> field @"int" (10 :: Int) +> field @"nouble" (9.2 :: Double) +> field @"txt" ("update" :: Text)
+      partially @Dat +> field @"int" (10 :: Int) +> field @"nouble" (9.2 :: Double) +> field @"txt" ("update" :: Text)

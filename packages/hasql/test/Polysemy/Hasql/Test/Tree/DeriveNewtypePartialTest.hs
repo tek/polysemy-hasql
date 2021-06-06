@@ -4,10 +4,11 @@ module Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest where
 
 import Polysemy.Db.Data.Column (Auto, Prim, Rep)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.PartialField (Partially)
 import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Effect (D (D), DefaultEffects, Effs (Effs), ResolveRep, TreeEffects, TreeEffectsFor)
-import Polysemy.Db.Tree.Partial (Partial, PartialParams, PartialTag)
+import Polysemy.Db.Tree.Partial (PartialParams, PartialTag)
 import Polysemy.Test (UnitTest)
 
 newtype Tex =
@@ -32,7 +33,7 @@ newtypePartialDerivation ::
   TreeEffectsFor tag Auto Tex effs =>
   TreeEffects PartialTag Auto Tex effs =>
   effs ~ '[Newtype Tex Text, Prim] =>
-  Partial d tree =>
+  Partially d tree =>
   ()
 newtypePartialDerivation =
   ()

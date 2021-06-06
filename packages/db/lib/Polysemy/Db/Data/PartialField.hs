@@ -3,6 +3,7 @@ module Polysemy.Db.Data.PartialField where
 import Data.Aeson (Object, Value (Null))
 import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
+import qualified Text.Show as Show
 
 import Polysemy.Db.Data.Column (Auto)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
@@ -15,6 +16,7 @@ import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreeConcat (..), FoldTreePrim (..), foldTree)
 import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeExtract (..), UnfoldTreePrim (..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
+import Unsafe.Coerce (unsafeCoerce)
 
 data PartialField (a :: Type) =
   Update Text a
@@ -62,14 +64,36 @@ instance TreePrim PartialTag PartialField name d where
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects PartialTag rep d effs where
 
-class Partial d tree | d -> tree where
-  partial :: PartialTree tree
+class Partially d tree | d -> tree where
+  partially :: PartialTree tree
 
 instance (
     Root Auto PartialParams d tree
-  ) => Partial d tree where
-  partial =
+  ) => Partially d tree where
+  partially =
     root @Auto @PartialParams @d Keep
+
+newtype Partial (d :: Type) =
+  Partial { unPartial :: ∀ tree . Partially d tree => PartialTree tree }
+
+instance (Partially d tree, Show (PartialTree tree)) => Show (Partial d) where
+  show (Partial tree) =
+    show tree
+
+instance (Partially d tree, Eq (PartialTree tree)) => Eq (Partial d) where
+  Partial l == Partial r =
+    l == r
+
+instance (Partially d tree, FromJSON (PartialTree tree)) => FromJSON (Partial d) where
+  parseJSON value =
+    parseJSON @(PartialTree tree) value <&> \case
+      tree -> Partial (unsafeCoerce tree)
+
+partial ::
+  ∀ d .
+  Partial d
+partial =
+  Partial (partially @d)
 
 instance (
     ToJSON d
@@ -111,7 +135,7 @@ instance (
     Null ->
       pure Keep
     value ->
-      fail [text|invalid json type for partial update of field '#{name}': #{value}|]
+      fail [text|invalid json type for partially update of field '#{name}': #{value}|]
     where
       name =
         symbolText @name
@@ -125,16 +149,16 @@ instance (
 
 instance (
     tree ~ 'Kind.Tree name effs ('Kind.Prod d trees),
-    Partial d tree,
+    Partially d tree,
     UnfoldRoot () PartialField Parser Value tree
   ) => FromJSON (Type.Tree () PartialField ('Kind.Tree name effs ('Kind.Prod d trees))) where
   parseJSON value =
-    unfoldRoot value (partial @d)
+    unfoldRoot value (partially @d)
 
 instance (
     tree ~ 'Kind.Tree name effs ('Kind.SumProd d trees),
-    Partial d tree,
+    Partially d tree,
     UnfoldRoot () PartialField Parser Value tree
   ) => FromJSON (Type.Tree () PartialField ('Kind.Tree name effs ('Kind.SumProd d trees))) where
   parseJSON value =
-    unfoldRoot value (partial @d)
+    unfoldRoot value (partially @d)

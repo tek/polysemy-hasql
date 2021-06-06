@@ -1,6 +1,6 @@
 module Polysemy.Db.Tree.Partial (
   module Polysemy.Db.Tree.Partial,
-  Partial(partial),
+  Partially (partially),
   PartialParams,
   PartialTree,
   PartialTag,
@@ -10,7 +10,7 @@ module Polysemy.Db.Tree.Partial (
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
-  Partial (partial),
+  Partially (partially),
   PartialParams,
   PartialTag,
   PartialTree,

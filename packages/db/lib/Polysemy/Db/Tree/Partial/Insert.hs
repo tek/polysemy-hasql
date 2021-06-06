@@ -16,8 +16,8 @@ import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
-  Partial,
   PartialField,
+  Partially,
   )
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (NodeDataType, TreeDataType)
@@ -172,6 +172,7 @@ data InsertableNameExp (a :: Type) (name :: Symbol) :: Kind.Tree -> Exp Bool
 type instance Eval (InsertableNameExp a name tree) =
   InsertableName a name tree
 
+-- TODO also use WhenStuck?
 type family InsertableResult (d :: Type) (a :: Type) (path :: FieldPath) (found :: Bool) :: Maybe ErrorMessage where
   InsertableResult _ _ _ 'True =
     'Nothing
@@ -216,12 +217,12 @@ type family InsertPaths' (d :: Type) (paths :: [FieldSpec]) (tree :: Kind.Tree) 
   InsertPaths' d ('FieldSpec path a : paths) tree = (Insert path a tree, InsertPaths' d paths tree)
 
 class (
-    Partial d tree,
+    Partially d tree,
     InsertPaths' d paths tree
   ) => InsertPaths (d :: Type) (paths :: [FieldSpec]) (tree :: Kind.Tree) | d -> tree where
 
 instance (
-    Partial d tree,
+    Partially d tree,
     InsertPaths' d paths tree
   ) => InsertPaths d paths tree where
 

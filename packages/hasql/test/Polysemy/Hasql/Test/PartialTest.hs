@@ -7,7 +7,7 @@ import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
-import Polysemy.Db.Tree.Partial (PartialTree, field, partial, updatePartial, (+>))
+import Polysemy.Db.Tree.Partial (PartialTree, field, partially, updatePartial, (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 import Polysemy.Hasql.Test.Tree.Data.DatS (DatS (DatS1), DatSDataTree, DatSPartialTree)
@@ -50,7 +50,7 @@ target =
 
 partialUpdateTree :: PartialTree DatTree
 partialUpdateTree =
-  partial @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
+  partially @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
 
 test_partialTree :: UnitTest
 test_partialTree =
@@ -59,7 +59,7 @@ test_partialTree =
 
 partialUpdateTreeSum :: PartialTree DatSPartialTree
 partialUpdateTreeSum =
-  partial @DatS +> field @"id" (5 :: Int) +> field @"double1" (17.5 :: Double)
+  partially @DatS +> field @"id" (5 :: Int) +> field @"double1" (17.5 :: Double)
 
 recordS :: DatS
 recordS =
@@ -117,7 +117,7 @@ test_partialUpdateNestedSum =
     targetN === updatePartial updateTree recordN
   where
     updateTree =
-      partial @DatN
+      partially @DatN
         +> field @"int" (5 :: Int)
         +> field @"text" ("updated" :: Text)
         +> field @"n2b" (DatN2a 101 "updated 101")
