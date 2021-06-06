@@ -4,11 +4,10 @@ module Polysemy.Db.Data.Uid where
 
 import Control.Comonad (Comonad(..))
 import Control.Lens (makeClassy)
-import Data.Aeson (FromJSON(..), ToJSON(..), Value(Object), genericParseJSON, object, withObject, (.:), (.=))
-import qualified Data.HashMap.Strict as HashMap
+import Data.Aeson (FromJSON(..), ToJSON(..), genericParseJSON, object, withObject, (.:), (.=))
 import qualified Data.UUID as UUID
 import Data.UUID (UUID)
-import Prelude (Eq, Functor, Generic, Int, Show, fromIntegral, (<$>), (<*>), (<>), (<|>))
+import Prelude (Eq, Functor, Generic, Int, Show, fromIntegral, (<$>), (<*>), (<|>))
 
 import Polysemy.Db.Json (jsonOptions)
 
@@ -30,9 +29,7 @@ instance (FromJSON a, FromJSON i) => FromJSON (Uid i a) where
 
 instance (ToJSON a, ToJSON i) => ToJSON (Uid i a) where
   toJSON (Uid id' a) =
-    case toJSON a of
-      Object aObject -> Object (aObject <> HashMap.fromList [("id", toJSON id')])
-      aValue -> object ["id" .= toJSON id', "payload" .= aValue]
+    object ["id" .= toJSON id', "payload" .= a]
 
 instance Comonad (Uid i) where
   extract (Uid _ a) =
