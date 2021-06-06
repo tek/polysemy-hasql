@@ -1,10 +1,8 @@
 module Polysemy.Db.Tree.Merge where
 
-import Fcf (Pure1, type (@@))
-import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, hcmap)
 
-import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.FieldId (FieldId, NamedFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
@@ -52,11 +50,14 @@ instance MergeAt '[] ('Kind.Tree name eff node) ('Kind.Tree name eff node) where
   mergeAt (Type.Tree t rnode) (Type.Tree _ _) =
     Type.Tree t rnode
 
+type MergeAtNames names patch tree =
+  MergeAt (NamedFields names) patch tree
+
 mergeAtNames ::
   ∀ names patch tree t n .
-  MergeAt (FMap (Pure1 'NamedField) @@ names) patch tree =>
+  MergeAtNames names patch tree =>
   Type.Tree t n patch ->
   Type.Tree t n tree ->
   Type.Tree t n tree
 mergeAtNames =
-  mergeAt @(FMap (Pure1 'NamedField) @@ names)
+  mergeAt @(NamedFields names)

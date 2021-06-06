@@ -1,16 +1,14 @@
 module Polysemy.Db.Tree.Lookup where
 
-import Fcf (Pure1, type (@@))
-import Fcf.Class.Functor (FMap)
+import Generics.SOP (NP, hd, tl)
 import Prelude hiding (lookup)
 
-import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField), NamedFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import qualified Polysemy.Db.Type.Data.Tree as Type
-import Generics.SOP (NP, tl, hd)
-import Polysemy.Db.SOP.Error (ErrorWithType)
-import Polysemy.Db.SOP.Constraint (DataNameF)
 import Polysemy.Db.Kind.Data.Tree (NodeDataType)
+import Polysemy.Db.SOP.Constraint (DataNameF)
+import Polysemy.Db.SOP.Error (ErrorWithType)
+import qualified Polysemy.Db.Type.Data.Tree as Type
 
 class LookupProd (path :: [FieldId]) (trees :: [Kind.Tree]) (sub :: Kind.Tree) where
   lookupProd :: NP (Type.Tree t n) trees -> Type.Tree t n sub
@@ -67,10 +65,13 @@ instance (
     lookup (Type.Tree _ node) =
       lookupNode @path node
 
+type LookupNames names tree sub =
+  Lookup (NamedFields names) tree sub
+
 lookupNames ::
   ∀ names tree sub t n .
-  Lookup (FMap (Pure1 'NamedField) @@ names) tree sub =>
+  LookupNames names tree sub =>
   Type.Tree t n tree ->
   Type.Tree t n sub
 lookupNames =
-  lookup @(FMap (Pure1 'NamedField) @@ names)
+  lookup @(NamedFields names)

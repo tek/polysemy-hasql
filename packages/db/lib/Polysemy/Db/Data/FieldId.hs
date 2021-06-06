@@ -1,6 +1,6 @@
 module Polysemy.Db.Data.FieldId where
 
-import Fcf (Eval, Exp, type (@@))
+import Fcf (Eval, Exp, type (@@), Pure1)
 import Fcf.Class.Functor (FMap)
 import Type.Errors (ErrorMessage(ShowType, Text))
 import Type.Errors.Pretty (type (<>))
@@ -49,3 +49,6 @@ type instance Eval (FieldIdSymbol ('NumberedField name index)) = name <> "_" <> 
 type family JoinCommaFieldIds (ids :: [FieldId]) :: ErrorMessage where
   JoinCommaFieldIds ids =
     JoinComma (FMap FieldIdSymbol @@ ids)
+
+type NamedFields names =
+  FMap (Pure1 'NamedField) @@ names
