@@ -7,17 +7,10 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField), NamedFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (NodeDataType)
 import Polysemy.Db.SOP.Constraint (DataNameF)
-import Polysemy.Db.SOP.Error (ErrorWithType)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
-class LookupProd (path :: [FieldId]) (trees :: [Kind.Tree]) (sub :: Kind.Tree) where
+class LookupProd (path :: [FieldId]) (trees :: [Kind.Tree]) (sub :: Kind.Tree) | path trees -> sub where
   lookupProd :: NP (Type.Tree t n) trees -> Type.Tree t n sub
-
-instance (
-    ErrorWithType "lookup: invalid path" path
-  ) => LookupProd path '[] sub where
-    lookupProd =
-      error "impossible"
 
 instance {-# overlappable #-} (
     LookupProd path trees sub
@@ -31,7 +24,7 @@ instance (
   lookupProd =
     lookupTree @path . hd
 
-class LookupNode (path :: [FieldId]) (node :: Kind.Node) (sub :: Kind.Tree) where
+class LookupNode (path :: [FieldId]) (node :: Kind.Node) (sub :: Kind.Tree) | path node -> sub where
   lookupNode :: Type.Node t n node -> Type.Tree t n sub
 
 instance (
@@ -40,7 +33,7 @@ instance (
   lookupNode (Type.Prod _ trees) =
     lookupProd @path trees
 
-class LookupTree (path :: [FieldId]) (tree :: Kind.Tree) (sub :: Kind.Tree) where
+class LookupTree (path :: [FieldId]) (tree :: Kind.Tree) (sub :: Kind.Tree) | path tree -> sub where
   lookupTree :: Type.Tree t n tree -> Type.Tree t n sub
 
 instance (
@@ -56,7 +49,7 @@ instance (
     lookupTree (Type.Tree _ node) =
       lookupNode @path node
 
-class Lookup (path :: [FieldId]) (tree :: Kind.Tree) (sub :: Kind.Tree) where
+class Lookup (path :: [FieldId]) (tree :: Kind.Tree) (sub :: Kind.Tree) | path tree -> sub where
   lookup :: Type.Tree t n tree -> Type.Tree t n sub
 
 instance (
