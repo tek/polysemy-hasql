@@ -36,7 +36,7 @@ interpretManagedTable table@(Table column@(Column (Name name) _ _ _ _) _ _) =
   where
     initDb =
       InitDb name \ c -> initTable c column
-{-# INLINE interpretManagedTable #-}
+{-# inline interpretManagedTable #-}
 
 interpretManagedTableGen ::
   ∀ rep d r .
@@ -45,7 +45,7 @@ interpretManagedTableGen ::
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableGen =
   interpretManagedTable (basicSchema @rep @d)
-{-# INLINE interpretManagedTableGen #-}
+{-# inline interpretManagedTableGen #-}
 
 interpretManagedTableAuto ::
   ∀ d r .
@@ -54,7 +54,7 @@ interpretManagedTableAuto ::
   InterpreterFor (ManagedTable d !! DbError) r
 interpretManagedTableAuto =
   interpretManagedTable (basicSchema @Auto @d)
-{-# INLINE interpretManagedTableAuto #-}
+{-# inline interpretManagedTableAuto #-}
 
 interpretManagedTableUnmanaged ::
   ∀ d e r .

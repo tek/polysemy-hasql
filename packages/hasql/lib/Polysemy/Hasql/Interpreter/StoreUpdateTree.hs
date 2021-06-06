@@ -14,24 +14,33 @@ import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (PartialSql)
 
-interpretStoreUpdateDbWith ::
+interpretStoreUpdateTreeDbWith ::
   ∀ i d e tree r .
   FoldTree 'True () PartialField [PartialSql] tree =>
   Member (ManagedTable d !! e) r =>
   QueryTable i d ->
   InterpreterFor (StoreUpdateTree i d tree !! e) r
-interpretStoreUpdateDbWith table =
+interpretStoreUpdateTreeDbWith table =
   interpretResumable \case
     StoreUpdateTree.Partial i t ->
       restop (ManagedTable.runStatement () (Statement.update table i t))
+{-# inline interpretStoreUpdateTreeDbWith #-}
 
-interpretStoreUpdateDb ::
+interpretStoreUpdateTreeDb ::
   ∀ i d e tree r .
   Show e =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members [Query i d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (StoreUpdateTree i d tree !! e) r
-interpretStoreUpdateDb sem = do
+interpretStoreUpdateTreeDb sem = do
   table <- queryTable
-  interpretStoreUpdateDbWith @_ @_ @_ @tree table sem
-{-# INLINE interpretStoreUpdateDb #-}
+  interpretStoreUpdateTreeDbWith @_ @_ @_ @tree table sem
+{-# inline interpretStoreUpdateTreeDb #-}
+
+interpretStoreUpdateTreeNull ::
+  InterpreterFor (StoreUpdateTree i d paths !! e) r
+interpretStoreUpdateTreeNull =
+  interpretResumable \case
+    StoreUpdateTree.Partial _ _ ->
+      pure Nothing
+{-# inline interpretStoreUpdateTreeNull #-}

@@ -148,7 +148,7 @@ interpretDatabaseState initDb =
       pureT =<< retrying (hoistInitDb (raise . raise) initDb) interval q statement
     Sql param sql ->
       pureT =<< connectWithReset (hoistInitDb (raise . raise) initDb) param (deriveQuery sql)
-{-# INLINE interpretDatabaseState #-}
+{-# inline interpretDatabaseState #-}
 
 -- |Run a 'Database' effect in terms of a Hasql 'Connection'.
 -- To fully run with dependencies:
@@ -162,4 +162,4 @@ interpretDatabase ::
   InterpreterFor (Database !! DbError) r
 interpretDatabase =
   interpretAtomic mempty . interpretDatabaseState def . raiseUnder
-{-# INLINE interpretDatabase #-}
+{-# inline interpretDatabase #-}

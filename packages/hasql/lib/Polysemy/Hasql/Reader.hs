@@ -29,7 +29,7 @@ interpretReaderDb initial =
   interpretStoreDb .
   interpretReaderStore initial .
   raiseUnder2
-{-# INLINE interpretReaderDb #-}
+{-# inline interpretReaderDb #-}
 
 -- |Interpret 'Reader' as a singleton table.
 --
@@ -47,4 +47,4 @@ interpretReaderDbAuto initial =
   interpretManagedTableAuto .
   interpretReaderDb initial .
   raiseUnder2
-{-# INLINE interpretReaderDbAuto #-}
+{-# inline interpretReaderDbAuto #-}

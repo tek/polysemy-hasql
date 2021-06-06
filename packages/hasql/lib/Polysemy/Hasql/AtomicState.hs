@@ -28,7 +28,7 @@ interpretAtomicStateDb initial =
   interpretStoreDb .
   interpretAtomicStateStore initial .
   raiseUnder2
-{-# INLINE interpretAtomicStateDb #-}
+{-# inline interpretAtomicStateDb #-}
 
 -- |Interpret 'AtomicState' as a singleton table.
 --
@@ -45,4 +45,4 @@ interpretAtomicStateDbAuto initial =
   interpretManagedTableAuto .
   interpretAtomicStateDb initial .
   raiseUnder2
-{-# INLINE interpretAtomicStateDbAuto #-}
+{-# inline interpretAtomicStateDbAuto #-}

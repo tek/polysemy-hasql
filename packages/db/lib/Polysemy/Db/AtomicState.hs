@@ -37,4 +37,4 @@ interpretAtomicStateStore initial =
       a <$ insertState @d @e newState
     AtomicGet ->
       readState @d @e initial
-{-# INLINE interpretAtomicStateStore #-}
+{-# inline interpretAtomicStateStore #-}

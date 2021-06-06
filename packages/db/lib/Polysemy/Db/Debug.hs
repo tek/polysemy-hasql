@@ -79,7 +79,7 @@ tr ::
   a
 tr msg a =
   unsafePerformIO (a <$ debugPrint (srcLoc callStack) msg)
-{-# INLINE tr #-}
+{-# inline tr #-}
 
 trs ::
   Show a =>
@@ -88,7 +88,7 @@ trs ::
   a
 trs a =
   unsafePerformIO (a <$ debugPrint (srcLoc callStack) (show a))
-{-# INLINE trs #-}
+{-# inline trs #-}
 
 trs' ::
   Show b =>

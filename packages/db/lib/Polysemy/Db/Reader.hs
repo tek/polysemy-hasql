@@ -20,4 +20,4 @@ interpretReaderStore initial =
       liftT (readState @d @e initial)
     Local f ma ->
       raise . interpretReaderStore (f initial) =<< runT ma
-{-# INLINE interpretReaderStore #-}
+{-# inline interpretReaderStore #-}

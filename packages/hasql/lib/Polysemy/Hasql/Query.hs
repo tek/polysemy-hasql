@@ -17,7 +17,7 @@ interpretQueryWith params qwhere =
   interpret \case
     Query.Params -> pure params
     Query.Query -> pure qwhere
-{-# INLINE interpretQueryWith #-}
+{-# inline interpretQueryWith #-}
 
 interpretQuery ::
   ∀ qrep rep q d r .
@@ -28,7 +28,7 @@ interpretQuery =
   where
     QueryTable _ params qwhere =
       schema @qrep @rep
-{-# INLINE interpretQuery #-}
+{-# inline interpretQuery #-}
 
 interpretQueryAuto ::
   ∀ q d r .
@@ -36,7 +36,7 @@ interpretQueryAuto ::
   InterpreterFor (Query q d) r
 interpretQueryAuto =
   interpretQuery @Auto @Auto
-{-# INLINE interpretQueryAuto #-}
+{-# inline interpretQueryAuto #-}
 
 interpretQuerySingleton ::
   InterpreterFor (Query q d) r
@@ -44,4 +44,4 @@ interpretQuerySingleton =
   interpret \case
     Query.Params -> pure mempty
     Query.Query -> pure mempty
-{-# INLINE interpretQuerySingleton #-}
+{-# inline interpretQuerySingleton #-}

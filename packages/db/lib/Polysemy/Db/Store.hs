@@ -129,9 +129,9 @@ interpretStoreUidStrict =
   interpretStoreStrict Uid._id
 
 interpretStoreNull ::
-  InterpreterFor (Store i d) r
+  InterpreterFor (Store i d !! e) r
 interpretStoreNull =
-  interpret \case
+  interpretResumable \case
     Insert _ ->
       unit
     Upsert _ ->
