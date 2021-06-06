@@ -1,14 +1,9 @@
 module Polysemy.Hasql.Test.Tree.MergePartial where
 
-import Polysemy.Db.Data.FieldId (FieldId (NamedField))
-import Polysemy.Db.Data.Rep (Auto)
-import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Kind.Data.Tree (AdtRoot, AdtTree, PrimTree, ProdRoot, ProdTree)
-import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Merge (mergeAt)
-import Polysemy.Db.Tree.Meta (ADTMeta')
-import Polysemy.Db.Tree.Partial (PartialTree, partially)
-import Polysemy.Test (UnitTest, runTestAuto)
+import Polysemy.Db.Kind.Data.Tree (PrimTree, ProdRoot, ProdTree)
+import Polysemy.Db.Tree.Merge (mergeAtNames)
+import Polysemy.Db.Tree.Partial (PartialTree, field, partially, (+>))
+import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Sub1 =
   Sub1 {
@@ -48,6 +43,10 @@ tree :: PartialTree DatTree
 tree =
   partially @Dat +> field @"int" (5 :: Int) +> field @"double" (2.4 :: Double)
 
+target :: PartialTree DatTree
+target =
+  tree +> field @"int" (11 :: Int)
+
 patch :: PartialTree Sub1Tree
 patch =
   partially @Sub1 +> field @"int" (11 :: Int)
@@ -55,4 +54,4 @@ patch =
 test_mergePartial :: UnitTest
 test_mergePartial =
   runTestAuto do
-    dbgs (mergeAt @['NamedField "sub", 'NamedField "sub1"] tree patch)
+    target === mergeAtNames @["sub", "sub1"] patch tree
