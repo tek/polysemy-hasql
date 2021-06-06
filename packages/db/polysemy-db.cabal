@@ -71,6 +71,7 @@ library
       Polysemy.Db.Tree.Data.TreeMeta
       Polysemy.Db.Tree.Effect
       Polysemy.Db.Tree.Fold
+      Polysemy.Db.Tree.Lookup
       Polysemy.Db.Tree.Merge
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial

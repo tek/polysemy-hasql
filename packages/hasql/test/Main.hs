@@ -15,6 +15,8 @@ import Polysemy.Hasql.Test.Tree.DeriveSumField (test_deriveSumField)
 import Polysemy.Hasql.Test.Tree.DeriveSumFieldDb (test_deriveSumFieldDb)
 import Polysemy.Hasql.Test.Tree.DeriveSumIdDb (test_deriveSumIdDb)
 import Polysemy.Hasql.Test.Tree.JsonTest (test_treeJson)
+import Polysemy.Hasql.Test.Tree.LookupPartial (test_lookupPartial)
+import Polysemy.Hasql.Test.Tree.MergePartial (test_mergePartial)
 import Polysemy.Hasql.Test.UidSumFlattenTest (test_uidSumFlatten)
 import Polysemy.Test (unitTest)
 import Test.Tasty (TestTree, defaultMain, testGroup)
@@ -38,7 +40,9 @@ tests =
     unitTest "partial tree json codec" test_treeJson,
     unitTest "derive db tree with sum field in Uid" test_uidSumFlatten,
     unitTest "derive a where clause with a prim query for an unary sum constructor" test_deriveQuery_UnaSumNumbered,
-    unitTest "derive a partial tree with a newtype field" test_deriveNewtypePartial
+    unitTest "derive a partial tree with a newtype field" test_deriveNewtypePartial,
+    unitTest "merge a partial tree into another" test_mergePartial,
+    unitTest "extract a partial subtree" test_lookupPartial
   ]
 
 main :: IO ()
