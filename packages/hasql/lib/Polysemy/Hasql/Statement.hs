@@ -172,9 +172,9 @@ update ::
   QueryTable query d ->
   query ->
   PartialTree tree ->
-  Statement () ()
-update qtable q t =
-  dynamicallyParameterized (updateSql qtable q t) noResult False
+  Statement () (Maybe d)
+update qtable@QueryTable { _table = Table {_row} } q t =
+  dynamicallyParameterized (updateSql qtable q t) (resultShape _row) False
 
 createTableSql ::
   Column ->

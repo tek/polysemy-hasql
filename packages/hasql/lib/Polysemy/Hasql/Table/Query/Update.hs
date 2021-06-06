@@ -8,9 +8,11 @@ import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim(..), foldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
 import Polysemy.Hasql.Data.DbType (Selector(Selector))
-import Polysemy.Hasql.Data.QueryTable (QueryTable, qwhere, selector)
+import Polysemy.Hasql.Data.QueryTable (QueryTable, qwhere, selector, structure)
 import Polysemy.Hasql.Data.Where (Where(Where))
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
+import Polysemy.Hasql.Table.Query.Text (commaColumns)
+import Polysemy.Hasql.DbType (baseColumns)
 
 newtype PartialSql =
   PartialSql { unPartialSql :: Snippet }
@@ -39,9 +41,16 @@ update ::
   PartialTree tree ->
   Snippet
 update table q tree =
-  sql [text|update #{sel} set |] <> (commaSeparatedSnippet (unPartialSql <$> (foldTree @'True tree))) <> " where " <> qw q
+  sql [text|update #{sel} set |] <>
+  commaSeparatedSnippet (unPartialSql <$> (foldTree @'True tree)) <>
+  " where " <>
+  qw q <>
+  " returning " <>
+  sql (encodeUtf8 cols)
   where
     Selector sel =
       table ^. selector
     Where _ qw =
       table ^. qwhere
+    cols =
+      commaColumns (baseColumns (table ^. structure))

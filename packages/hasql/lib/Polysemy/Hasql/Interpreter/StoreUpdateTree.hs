@@ -19,7 +19,7 @@ interpretStoreUpdateDbWith ::
   FoldTree 'True () PartialField [PartialSql] tree =>
   Member (ManagedTable d !! e) r =>
   QueryTable i d ->
-  InterpreterFor (StoreUpdateTree i tree !! e) r
+  InterpreterFor (StoreUpdateTree i d tree !! e) r
 interpretStoreUpdateDbWith table =
   interpretResumable \case
     StoreUpdateTree.Partial i t ->
@@ -30,7 +30,7 @@ interpretStoreUpdateDb ::
   Show e =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members [Query i d, ManagedTable d !! e, Error InitDbError] r =>
-  InterpreterFor (StoreUpdateTree i tree !! e) r
+  InterpreterFor (StoreUpdateTree i d tree !! e) r
 interpretStoreUpdateDb sem = do
   table <- queryTable
   interpretStoreUpdateDbWith @_ @_ @_ @tree table sem

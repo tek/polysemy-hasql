@@ -63,7 +63,7 @@ updateWith ::
   PartialUpdate (Uid Int Dat) DatUpdates ->
   Sem r ()
 updateWith upd =
-  restop (StoreUpdate.partial 1 upd)
+  restop (void (StoreUpdate.partial 1 upd))
 
 prog ::
   ∀ e r .
@@ -72,7 +72,7 @@ prog ::
 prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
-  restop (StoreUpdate.partial 1 (PartialUpdate update))
+  updateWith (PartialUpdate update)
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"_payload":{"txt":"updated"}}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
