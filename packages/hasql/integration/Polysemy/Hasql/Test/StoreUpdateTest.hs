@@ -2,7 +2,7 @@ module Polysemy.Hasql.Test.StoreUpdateTest where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.List.NonEmpty as NonEmpty
-import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, UidRep)
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, UidRep)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.PartialField (PartialTree, partially)
 import qualified Polysemy.Db.Data.Store as Store

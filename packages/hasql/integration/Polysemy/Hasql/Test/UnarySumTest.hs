@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.UnarySumTest where
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidNestRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidNestRep)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField, NumberedField))
 import qualified Polysemy.Db.Data.Store as Store

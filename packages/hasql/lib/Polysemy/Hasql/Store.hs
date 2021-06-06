@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Store where
 
 import Polysemy (raise3Under)
-import Polysemy.Db.Data.Column (PrimQuery, UidRep)
+import Polysemy.Db.Data.Rep (PrimQuery, UidRep)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store

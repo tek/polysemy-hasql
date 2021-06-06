@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.TableTest where
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Text.DbIdentifier (dbIdentifier)
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)

@@ -3,7 +3,7 @@
 module Polysemy.Hasql.Test.UidSumFlattenTest where
 
 import qualified Chronos as Chronos
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimQuery, PrimaryKey, Product, Sum, UidNestRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimQuery, PrimaryKey, Product, Sum, UidNestRep)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind

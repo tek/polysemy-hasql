@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.AnyTest where
 
-import Polysemy.Db.Data.Column (Auto, PrimaryKey, UidRep)
+import Polysemy.Db.Data.Rep (Auto, PrimaryKey, UidRep)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UidStore)

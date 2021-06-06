@@ -38,7 +38,7 @@ module Polysemy.Hasql (
   interpretQuerySingleton,
 ) where
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 

@@ -1,4 +1,4 @@
-module Polysemy.Db.Data.Column where
+module Polysemy.Db.Data.Rep where
 
 data Rep (r :: [*]) =
   Rep

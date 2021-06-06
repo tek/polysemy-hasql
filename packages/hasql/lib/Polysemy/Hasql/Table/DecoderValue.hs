@@ -1,11 +1,11 @@
 module Polysemy.Hasql.Table.DecoderValue where
 
 import Hasql.Decoders (Value, jsonBytes)
-import Polysemy.Db.Data.Column (Enum, Json)
+import Polysemy.Db.Data.Rep (Enum, Json)
 import Prelude hiding (Enum, bool)
 
 import qualified Data.Aeson as Aeson
-import Polysemy.Db.Data.Column (Prim)
+import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Hasql.SOP.Enum (EnumTable)
 import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 import Polysemy.Hasql.Table.PrimDecoder (PrimDecoder, primDecoder)

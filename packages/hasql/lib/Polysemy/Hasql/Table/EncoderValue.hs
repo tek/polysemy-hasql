@@ -2,7 +2,7 @@ module Polysemy.Hasql.Table.EncoderValue where
 
 import qualified Data.Aeson as Aeson
 import Hasql.Encoders (Value, enum, jsonBytes)
-import Polysemy.Db.Data.Column (Enum, Json, Prim)
+import Polysemy.Db.Data.Rep (Enum, Json, Prim)
 import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Prelude hiding (Enum, bool)
 

@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Table.Schema where
 
-import Polysemy.Db.Data.Column (Auto, PrimQuery, UidRep, PrimaryKey)
+import Polysemy.Db.Data.Rep (Auto, PrimQuery, UidRep, PrimaryKey)
 import Polysemy.Db.Data.Uid (Uid)
 
 import qualified Polysemy.Hasql.Data.QueryTable as Data

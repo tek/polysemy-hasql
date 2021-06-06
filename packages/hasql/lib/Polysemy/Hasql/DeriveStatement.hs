@@ -1,7 +1,7 @@
 module Polysemy.Hasql.DeriveStatement where
 
 import Hasql.Statement (Statement(Statement))
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 
 import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)

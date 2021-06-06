@@ -1,8 +1,12 @@
 module Polysemy.Db.Kind.Data.Tree where
 
-import Polysemy.Db.Data.FieldId (FieldId)
+import Polysemy.Db.Data.Rep (Auto)
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.SOP.Constraint (DataNameF)
+import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Meta (ADTMeta')
+import qualified Polysemy.Db.Data.Rep as Rep
 
--- TODO cons have to be numbered, so the Where machinery can match them, since Rep cons may have different names
 data Con =
   Con {
     num :: Nat,
@@ -52,3 +56,23 @@ type family NodeDataType (node :: Node) :: * where
 
 type family TreeDataType (tree :: Tree) :: * where
   TreeDataType ('Tree _ _ node) = NodeDataType node
+
+type family AdtTree (field :: Symbol) (d :: Type) (node :: Node) :: Tree where
+  AdtTree field d node =
+    'Tree ('NamedField field) '[ADT (ADTMeta' Auto d) Auto] node
+
+type family AdtRoot (d :: Type) (node :: Node) :: Tree where
+  AdtRoot d node =
+    AdtTree (DataNameF d) d node
+
+type family ProdTree (field :: Symbol) (d :: Type) (trees :: [Tree]) :: Tree where
+  ProdTree field d trees =
+    AdtTree field d ('Prod d trees)
+
+type family ProdRoot (d :: Type) (trees :: [Tree]) :: Tree where
+  ProdRoot d node =
+    ProdTree (DataNameF d) d node
+
+type family PrimTree (field :: Symbol) (d :: Type) :: Tree where
+  PrimTree field d =
+    'Tree ('NamedField field) '[Rep.Prim] ('Prim d)

@@ -3,7 +3,7 @@
 module Polysemy.Hasql.Test.Tree.DeriveProd where
 
 import Generics.SOP (I, NP)
-import Polysemy.Db.Data.Column (Auto, Prim)
+import Polysemy.Db.Data.Rep (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (AdtNode, Node, ProdTrees, Tree)

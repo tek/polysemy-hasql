@@ -1,6 +1,6 @@
 module Polysemy.Db.Data.IdQuery where
 
-import Polysemy.Db.Data.Column (Prim)
+import Polysemy.Db.Data.Rep (Prim)
 
 data IdQuery i =
   IdQuery { id :: i }

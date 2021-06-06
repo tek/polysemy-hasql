@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Queue.Output where
 
-import Polysemy.Db.Data.Column (PrimQuery)
+import Polysemy.Db.Data.Rep (PrimQuery)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)

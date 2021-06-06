@@ -3,7 +3,7 @@ module Polysemy.Db.Tree.Effect where
 import Data.Vector (Vector)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
+import Polysemy.Db.Data.Rep (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
 import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtEnum), MaybeADT (MaybeADT))

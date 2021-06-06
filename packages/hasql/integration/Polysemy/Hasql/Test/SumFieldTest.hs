@@ -4,7 +4,7 @@ module Polysemy.Hasql.Test.SumFieldTest where
 
 import Hasql.Decoders (Row)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions (unique))
 import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))

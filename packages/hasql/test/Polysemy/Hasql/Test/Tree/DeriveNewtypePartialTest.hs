@@ -2,7 +2,7 @@
 
 module Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim, Rep)
+import Polysemy.Db.Data.Rep (Auto, Prim, Rep)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.PartialField (Partially)
 import Polysemy.Db.Tree.Data.Effect (Newtype)

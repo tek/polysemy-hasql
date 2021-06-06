@@ -2,7 +2,7 @@ module Polysemy.Hasql.Test.InitTest where
 
 import Control.Lens (view)
 import qualified Data.Set as Set
-import Polysemy.Db.Data.Column (Prim)
+import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (UnitTest)

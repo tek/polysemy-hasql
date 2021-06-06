@@ -9,7 +9,7 @@ import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Hasql.Connection (withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
-import Polysemy.Db.Data.Column (PrimQuery)
+import Polysemy.Db.Data.Rep (PrimQuery)
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)

@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queue where
 
 import GHC.TypeLits (AppendSymbol)
-import Polysemy.Db.Data.Column (Auto, PrimQuery)
+import Polysemy.Db.Data.Rep (Auto, PrimQuery)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Tagged (Tagged)

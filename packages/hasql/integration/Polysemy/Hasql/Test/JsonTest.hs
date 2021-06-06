@@ -5,7 +5,7 @@ import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (column, jsonBytes)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (int8, param)
-import Polysemy.Db.Data.Column (Json, Prim)
+import Polysemy.Db.Data.Rep (Json, Prim)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Uid (Uid(Uid))

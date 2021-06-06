@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.SumTableTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Product, Sum)
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Data.Store as Store

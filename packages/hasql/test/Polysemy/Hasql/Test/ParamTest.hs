@@ -2,7 +2,7 @@ module Polysemy.Hasql.Test.ParamTest where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Column (Auto, NewtypeQuery, Prim, Product, Sum)
+import Polysemy.Db.Data.Rep (Auto, NewtypeQuery, Prim, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)

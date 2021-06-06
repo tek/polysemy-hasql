@@ -87,6 +87,13 @@ class Ctors (d :: *) (ctors :: [ConstructorInfo]) (types :: [[*]]) | d -> ctors 
 
 instance (CtorsT (GDatatypeInfoOf d) ctors, types ~ GCode d) => Ctors d ctors types where
 
+type family DataNameF' (dt :: DatatypeInfo) :: Symbol where
+  DataNameF' ('ADT _ name _ _) = name
+  DataNameF' ('Newtype _ name _) = name
+
+type family DataNameF (d :: *) :: Symbol where
+  DataNameF d = DataNameF' (GDatatypeInfoOf d)
+
 class DataName (d :: *) (name :: Symbol) | d -> name where
   dataNameString :: String
 

@@ -2,7 +2,7 @@
 
 module Polysemy.Hasql.Test.RepTest where
 
-import Polysemy.Db.Data.Column (Auto, Enum, Flatten, ForcePrim, Prim, PrimaryKey, Product, Rep, Sum)
+import Polysemy.Db.Data.Rep (Auto, Enum, Flatten, ForcePrim, Prim, PrimaryKey, Product, Rep, Sum)
 import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind

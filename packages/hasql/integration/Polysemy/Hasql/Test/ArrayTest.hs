@@ -1,9 +1,9 @@
 module Polysemy.Hasql.Test.ArrayTest where
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Enum, Prim)
+import Polysemy.Db.Data.Rep (Enum, Prim)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
 import qualified Polysemy.Db.Data.Store as Store

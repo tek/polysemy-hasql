@@ -3,7 +3,7 @@
 module Polysemy.Hasql.Test.DeriveQuery.UnaSumNumberedTest where
 
 import Fcf (Eval)
-import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, Product, Sum)
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)

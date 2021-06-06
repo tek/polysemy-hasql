@@ -30,7 +30,6 @@ library
       Polysemy.Db
       Polysemy.Db.Atomic
       Polysemy.Db.AtomicState
-      Polysemy.Db.Data.Column
       Polysemy.Db.Data.ColumnOptions
       Polysemy.Db.Data.Cond
       Polysemy.Db.Data.CreationTime
@@ -39,6 +38,7 @@ library
       Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.IdQuery
       Polysemy.Db.Data.PartialField
+      Polysemy.Db.Data.Rep
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
       Polysemy.Db.Debug
@@ -71,6 +71,7 @@ library
       Polysemy.Db.Tree.Data.TreeMeta
       Polysemy.Db.Tree.Effect
       Polysemy.Db.Tree.Fold
+      Polysemy.Db.Tree.Merge
       Polysemy.Db.Tree.Meta
       Polysemy.Db.Tree.Partial
       Polysemy.Db.Tree.Partial.Insert

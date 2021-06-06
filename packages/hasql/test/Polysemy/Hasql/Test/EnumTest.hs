@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.EnumTest where
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 import Polysemy.Hasql.Column.DataColumn (tableStructure)

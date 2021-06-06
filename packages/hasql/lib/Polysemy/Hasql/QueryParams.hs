@@ -22,7 +22,7 @@ import Generics.SOP (
   )
 import Generics.SOP.GGP (gfrom)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Column (Prim)
+import Polysemy.Db.Data.Rep (Prim)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ConstructSOP, ProductCoded)
 import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)

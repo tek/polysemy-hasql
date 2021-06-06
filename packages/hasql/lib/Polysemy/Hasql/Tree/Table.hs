@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Tree.Table where
 
-import Polysemy.Db.Data.Column (ForcePrim, Rep)
+import Polysemy.Db.Data.Rep (ForcePrim, Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind

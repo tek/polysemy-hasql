@@ -2,7 +2,7 @@ module Polysemy.Hasql.Where.Dynamic where
 
 import Generics.SOP (I(I))
 import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
-import Polysemy.Db.Data.Column (Prim, PrimQuery)
+import Polysemy.Db.Data.Rep (Prim, PrimQuery)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Text.DbIdentifier (dbSymbolBS)
 import Polysemy.Db.Tree.Fold (FoldTree(foldTree), FoldTreePrim(..))

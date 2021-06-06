@@ -3,7 +3,7 @@ module Polysemy.Db.Tree.Data.Effect where
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 
-import Polysemy.Db.Data.Column (Flatten, NewtypeQuery, PrimQuery)
+import Polysemy.Db.Data.Rep (Flatten, NewtypeQuery, PrimQuery)
 import Polysemy.Db.SOP.List (FirstJust)
 import Polysemy.Db.Tree.Meta (AdtMetadata)
 

@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Tree.Value where
 
 import Generics.SOP (I (I))
-import Polysemy.Db.Data.Column (Rep)
+import Polysemy.Db.Data.Rep (Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind

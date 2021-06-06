@@ -2,7 +2,7 @@
 
 module Polysemy.Hasql.Test.Tree.DeriveSumIdDb where
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, Product, Rep, Sum, UidRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, Product, Rep, Sum, UidRep)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery, IdQueryRep)
 import Polysemy.Db.Data.Uid

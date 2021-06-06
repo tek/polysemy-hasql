@@ -4,7 +4,7 @@ module Polysemy.Hasql.Test.QueryTest where
 
 import Data.Time (UTCTime)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
 import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
 import Polysemy.Db.Data.DbError (DbError)

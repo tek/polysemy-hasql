@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Reader where
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Reader (interpretReaderStore)

@@ -3,7 +3,7 @@ module Polysemy.Hasql.QueryRows where
 import Generics.SOP (I, NP((:*), Nil), NS(Z, S), SListI, SOP(SOP), hsequence)
 import Generics.SOP.GGP (gto)
 import Hasql.Decoders (Row)
-import Polysemy.Db.Data.Column (Prim)
+import Polysemy.Db.Data.Rep (Prim)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ProductCoded, ReifySOP)
 

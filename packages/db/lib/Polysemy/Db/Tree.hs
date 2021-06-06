@@ -2,11 +2,11 @@ module Polysemy.Db.Tree where
 
 import Generics.SOP (HTrans (htrans), NP (Nil, (:*)), NS (S, Z), POP (POP), SOP, unSOP)
 
-import Polysemy.Db.Data.Column (NewtypeQuery, Prim, PrimQuery, Rep)
+import Polysemy.Db.Data.Rep (NewtypeQuery, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.SOP.Constraint (DataName, NewtypeCoded, symbolText)
+import Polysemy.Db.SOP.Constraint (DataNameF, NewtypeCoded, symbolText)
 import Polysemy.Db.SOP.Fundeps (Fundep, Fundeps)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Api (TreePayload (..), TreePrim (..), TreeSOP (..))
@@ -179,8 +179,8 @@ class KnownSymbol name => RootName (d :: Type) (name :: Symbol) | d -> name wher
     quotedDbId (symbolText @name)
 
 instance {-# overlappable #-} (
-    KnownSymbol name,
-    DataName d name
+    name ~ DataNameF d,
+    KnownSymbol name
   ) => RootName d name
 
 instance RootName d name => RootName (Uid i d) name where

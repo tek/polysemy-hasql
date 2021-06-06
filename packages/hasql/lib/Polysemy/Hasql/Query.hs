@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Query where
 
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 
 import qualified Polysemy.Hasql.Data.Query as Query
 import Polysemy.Hasql.Data.Query (Query)

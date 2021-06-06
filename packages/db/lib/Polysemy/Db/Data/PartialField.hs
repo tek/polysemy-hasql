@@ -5,7 +5,7 @@ import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
 import qualified Text.Show as Show
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (symbolText)

@@ -4,7 +4,7 @@ import Generics.SOP (AllZip, I (I), NP (Nil, (:*)), NS (Z), SOP (SOP), htrans)
 import Generics.SOP.Constraint (SListI)
 import Generics.SOP.GGP (GCode, gto)
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ReifySOP)

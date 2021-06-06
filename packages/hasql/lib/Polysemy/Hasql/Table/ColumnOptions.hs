@@ -1,9 +1,9 @@
 module Polysemy.Hasql.Table.ColumnOptions where
 
-import Polysemy.Db.Data.Column (Rep)
+import Polysemy.Db.Data.Rep (Rep)
 import Prelude hiding (Enum)
 
-import Polysemy.Db.Data.Column (Auto, ForeignKey, PrimaryKey, Unique)
+import Polysemy.Db.Data.Rep (Auto, ForeignKey, PrimaryKey, Unique)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions(..))
 
 class ExplicitColumnOptions (r :: *) where

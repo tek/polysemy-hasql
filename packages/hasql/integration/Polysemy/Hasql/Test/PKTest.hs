@@ -2,7 +2,7 @@
 
 module Polysemy.Hasql.Test.PKTest where
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Prim, PrimaryKey, Product, UidRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, UidRep)
 import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))

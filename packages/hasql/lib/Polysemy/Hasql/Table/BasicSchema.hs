@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Table.BasicSchema where
 
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 
 import Polysemy.Hasql.Column.DataColumn (DataTable, dataTable)
 import Polysemy.Hasql.Data.Table (Table(Table))

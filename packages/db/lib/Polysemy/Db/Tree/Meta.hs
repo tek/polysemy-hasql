@@ -11,7 +11,7 @@ import Generics.SOP.Type.Metadata (DatatypeInfo (ADT, Newtype))
 import Type.Errors (ErrorMessage (ShowType, Text))
 import Type.Errors.Pretty (TypeError, type (%), type (<>))
 
-import Polysemy.Db.Data.Column (Auto, Flatten, Product, Rep, Sum)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Product, Rep, Sum)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)

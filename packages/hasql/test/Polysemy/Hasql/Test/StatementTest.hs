@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.StatementTest where
 
-import Polysemy.Db.Data.Column (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery)

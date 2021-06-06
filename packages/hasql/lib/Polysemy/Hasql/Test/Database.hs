@@ -4,7 +4,7 @@ import Control.Lens (Lens', view)
 import qualified Data.UUID as UUID
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
-import Polysemy.Db.Data.Column (Auto, PrimQuery, PrimaryKey, UidRep)
+import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
 import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)

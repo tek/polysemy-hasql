@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
 import GHC.TypeLits (AppendSymbol)
-import Polysemy.Db.Data.Column (Json, Prim)
+import Polysemy.Db.Data.Rep (Json, Prim)
 import Polysemy.Db.Tree (RootName)
 
 data Queued t a =

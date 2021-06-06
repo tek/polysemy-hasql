@@ -1,7 +1,7 @@
 module Polysemy.Hasql.ManagedTable where
 
 import Control.Lens (mapMOf)
-import Polysemy.Db.Data.Column (Auto)
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Log (Log)
