@@ -1,15 +1,18 @@
 module Polysemy.Db.Tree.Partial (
   module Polysemy.Db.Tree.Partial,
+  Partial (..),
   Partially (partially),
   PartialParams,
   PartialTree,
   PartialTag,
+  PartialUpdate (..),
   UpdatePartialTree,
 ) where
 
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
+  Partial (..),
   PartialParams,
   PartialTag,
   PartialTree,
@@ -17,7 +20,7 @@ import Polysemy.Db.Data.PartialField (
   )
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (GenDataTree (..), ReifyDataTree (..))
-import Polysemy.Db.Tree.Partial.Insert (Insert (..))
+import Polysemy.Db.Tree.Partial.Insert (Insert (..), PartialUpdate (..))
 import Polysemy.Db.Tree.Partial.Update (UpdatePartialTree (..))
 
 type family MkFieldPath (path :: k) :: FieldPath where

@@ -63,7 +63,7 @@ updateWith ::
   PartialUpdate (Uid Int Dat) DatUpdates ->
   Sem r ()
 updateWith upd =
-  restop (void (StoreUpdate.partial 1 upd))
+  restop (void (StoreUpdate.create 1 upd))
 
 prog ::
   ∀ e r .

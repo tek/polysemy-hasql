@@ -5,6 +5,7 @@ import Polysemy.Db.Data.PartialField (PartialField)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
 import Polysemy.Db.Tree.Fold (FoldTree)
+import Polysemy.Db.Tree.Partial (Partial (Partial))
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths, PartialUpdate (PartialUpdate))
 
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
@@ -24,7 +25,9 @@ interpretStoreUpdateDbWith ::
   InterpreterFor (StoreUpdate i d paths !! e) r
 interpretStoreUpdateDbWith table =
   interpretResumable \case
-    StoreUpdate.Partial i (PartialUpdate t) ->
+    StoreUpdate.Create i (PartialUpdate t) ->
+      restop (ManagedTable.runStatement () (Statement.update table i t))
+    StoreUpdate.Use i (Partial t) ->
       restop (ManagedTable.runStatement () (Statement.update table i t))
 
 interpretStoreUpdateDb ::
