@@ -8,5 +8,5 @@ data StoreUpdate (i :: Type) (d :: Type) (fields :: [FieldSpec]) :: Effect where
 
 makeSem ''StoreUpdate
 
-type UidStoreUpdate i d =
-  StoreUpdate i (Uid i d)
+type UidStoreUpdate i d fields =
+  StoreUpdate i (Uid i d) fields
