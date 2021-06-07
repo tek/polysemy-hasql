@@ -45,6 +45,7 @@ library
       Polysemy.Db.Effect.StoreUpdate
       Polysemy.Db.Effect.StoreUpdateTree
       Polysemy.Db.Interpreter.StoreUpdate
+      Polysemy.Db.Interpreter.StoreUpdateTree
       Polysemy.Db.Kind.Data.Tree
       Polysemy.Db.Prelude
       Polysemy.Db.Random

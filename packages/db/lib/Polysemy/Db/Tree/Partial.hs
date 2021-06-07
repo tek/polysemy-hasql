@@ -10,10 +10,10 @@ module Polysemy.Db.Tree.Partial (
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
-  Partially (partially),
   PartialParams,
   PartialTag,
   PartialTree,
+  Partially (partially),
   )
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (GenDataTree (..), ReifyDataTree (..))
@@ -43,7 +43,7 @@ field =
   flip insert
 
 updatePartial ::
-  ∀ d (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .
+  ∀ (d :: Type) (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .
   GenDataTree d dataTree =>
   ReifyDataTree dataTree d =>
   UpdatePartialTree dataTree updateTree =>

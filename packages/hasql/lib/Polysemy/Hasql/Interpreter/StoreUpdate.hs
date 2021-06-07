@@ -38,11 +38,3 @@ interpretStoreUpdateDb sem = do
   table <- queryTable
   interpretStoreUpdateDbWith @_ @_ @_ @_ @tree table sem
 {-# inline interpretStoreUpdateDb #-}
-
-interpretStoreUpdateNull ::
-  InterpreterFor (StoreUpdate i d paths !! e) r
-interpretStoreUpdateNull =
-  interpretResumable \case
-    StoreUpdate.Partial _ _ ->
-      pure Nothing
-{-# inline interpretStoreUpdateNull #-}

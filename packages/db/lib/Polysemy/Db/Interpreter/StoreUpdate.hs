@@ -23,3 +23,11 @@ interpretStoreUpdateStore =
       restop @e @(Store i d) do
         (Store.alter i (updatePartial @d t))
         Store.fetch i
+
+interpretStoreUpdateNull ::
+  InterpreterFor (StoreUpdate i d paths !! e) r
+interpretStoreUpdateNull =
+  interpretResumable \case
+    StoreUpdate.Partial _ _ ->
+      pure Nothing
+{-# inline interpretStoreUpdateNull #-}
