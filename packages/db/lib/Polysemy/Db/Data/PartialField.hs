@@ -17,6 +17,7 @@ import Polysemy.Db.Tree.Fold (FoldTree, FoldTreeConcat (..), FoldTreePrim (..), 
 import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeExtract (..), UnfoldTreePrim (..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Unsafe.Coerce (unsafeCoerce)
+import Polysemy.Db.Data.Uid (Uid)
 
 data PartialField (a :: Type) =
   Update Text a
@@ -73,8 +74,14 @@ instance (
   partially =
     root @Auto @PartialParams @d Keep
 
+type UidPartially i d tree =
+  Partially (Uid i d) tree
+
 newtype Partial (d :: Type) =
   Partial { unPartial :: ∀ tree . Partially d tree => PartialTree tree }
+
+type UidPartial i d =
+  Partial (Uid i d)
 
 instance (Partially d tree, Show (PartialTree tree)) => Show (Partial d) where
   show (Partial tree) =
