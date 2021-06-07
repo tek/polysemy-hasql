@@ -3,7 +3,7 @@ module Polysemy.Hasql.Interpreter.StoreUpdateTree where
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.PartialField (PartialField)
 import qualified Polysemy.Db.Effect.StoreUpdateTree as StoreUpdateTree
-import Polysemy.Db.Effect.StoreUpdateTree (StoreUpdateTree)
+import Polysemy.Db.Effect.StoreUpdateTree (StoreUpdateTree, UidStoreUpdateTree)
 import Polysemy.Db.Tree.Fold (FoldTree)
 
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
@@ -13,6 +13,12 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (PartialSql)
+import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Hasql.Store (StoreDeps, interpretStoreDbFullGen)
+import Polysemy.Hasql.Table.Schema (Schema)
+import Polysemy.Hasql.Query (interpretQuery)
+import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Data.Rep (UidRep, PrimQuery)
 
 interpretStoreUpdateTreeDbWith ::
   ∀ i d e tree r .
@@ -36,3 +42,37 @@ interpretStoreUpdateTreeDb sem = do
   table <- queryTable
   interpretStoreUpdateTreeDbWith @_ @_ @_ @tree table sem
 {-# inline interpretStoreUpdateTreeDb #-}
+
+interpretStoreUpdateTreeDbFull ::
+  ∀ qrep rep q d tree t dt r .
+  Schema qrep rep q d =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
+  Members (Error InitDbError : StoreDeps t dt) r =>
+  InterpreterFor (StoreUpdateTree q d tree !! DbError) r
+interpretStoreUpdateTreeDbFull =
+  interpretStoreDbFullGen @qrep @rep @q @d .
+  interpretQuery @qrep @rep .
+  interpretStoreUpdateTreeDb @q @d .
+  raiseUnder3 .
+  raiseUnder
+{-# inline interpretStoreUpdateTreeDbFull #-}
+
+interpretStoreUpdateTreeDbFullUidAs ::
+  ∀ qrep rep ir i q d tree t dt r .
+  Schema qrep (UidRep ir rep) q (Uid i d) =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
+  Members (Error InitDbError : StoreDeps t dt) r =>
+  InterpreterFor (StoreUpdateTree q (Uid i d) tree !! DbError) r
+interpretStoreUpdateTreeDbFullUidAs =
+  interpretStoreUpdateTreeDbFull @qrep @(UidRep ir rep)
+{-# inline interpretStoreUpdateTreeDbFullUidAs #-}
+
+interpretStoreUpdateTreeDbFullUid ::
+  ∀ rep ir i d tree t dt r .
+  Schema (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
+  Members (Error InitDbError : StoreDeps t dt) r =>
+  InterpreterFor (UidStoreUpdateTree i d tree !! DbError) r
+interpretStoreUpdateTreeDbFullUid =
+  interpretStoreUpdateTreeDbFullUidAs @(PrimQuery "id") @rep @ir
+{-# inline interpretStoreUpdateTreeDbFullUid #-}
