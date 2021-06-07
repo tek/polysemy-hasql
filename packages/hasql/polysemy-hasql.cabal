@@ -229,7 +229,6 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.StoreUpdateTest
       Polysemy.Hasql.Test.SumFieldTest
       Polysemy.Hasql.Test.SumTableTest
-      Polysemy.Hasql.Test.ThingTest
       Polysemy.Hasql.Test.UnarySumTest
       Polysemy.Hasql.Test.UpsertTest
       Polysemy.Hasql.Test.WithInitTest
