@@ -9,13 +9,22 @@ import qualified Polysemy.Db.Store as Store
 import Polysemy.Db.Tree.Data (GenDataTree, ReifyDataTree)
 import Polysemy.Db.Tree.Partial (UpdatePartialTree, updatePartial)
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths, PartialUpdate (PartialUpdate))
+import Polysemy.Db.Data.Uid (Uid)
+
+type StrictStoreUpdate d fields tree dataTree =
+  (
+    GenDataTree d dataTree,
+    ReifyDataTree dataTree d,
+    UpdatePartialTree dataTree tree,
+    InsertPaths d fields tree
+  )
+
+type UidStrictStoreUpdate i d fields tree dataTree =
+  StrictStoreUpdate (Uid i d) fields tree dataTree
 
 interpretStoreUpdateStore ::
   ∀ i d e fields tree dataTree r .
-  GenDataTree d dataTree =>
-  ReifyDataTree dataTree d =>
-  UpdatePartialTree dataTree tree =>
-  InsertPaths d fields tree =>
+  StrictStoreUpdate d fields tree dataTree =>
   Member (Store i d !! e) r =>
   InterpreterFor (StoreUpdate i d fields !! e) r
 interpretStoreUpdateStore =
