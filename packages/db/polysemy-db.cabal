@@ -157,6 +157,7 @@ library
     , first-class-families
     , generics-sop
     , lens
+    , path
     , polysemy
     , polysemy-db-data
     , polysemy-resume

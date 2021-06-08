@@ -2,9 +2,11 @@
 
 module Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest where
 
-import Polysemy.Db.Data.Rep (Auto, Prim, Rep)
+import Path (File, Path, Rel)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.PartialField (Partially)
+import Polysemy.Db.Data.Rep (Auto, Prim, Rep)
+import Polysemy.Db.Kind.Data.Tree (PrimTree, PrimTreeWith, ProdRoot)
 import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Effect (D (D), DefaultEffects, Effs (Effs), ResolveRep, TreeEffects, TreeEffectsFor)
@@ -18,9 +20,8 @@ newtype Tex =
 
 data Dat =
   Dat {
-    int :: Int,
-    double :: Double,
-    txt :: Tex
+    txt :: Tex,
+    path :: Path Rel File
   }
   deriving (Eq, Show, Generic)
 
@@ -34,6 +35,10 @@ newtypePartialDerivation ::
   TreeEffects PartialTag Auto Tex effs =>
   effs ~ '[Newtype Tex Text, Prim] =>
   Partially d tree =>
+  tree ~ ProdRoot Dat [
+    PrimTreeWith "txt" '[Newtype Tex Text, Prim] Tex,
+    PrimTree "path" (Path Rel File)
+  ] =>
   ()
 newtypePartialDerivation =
   ()

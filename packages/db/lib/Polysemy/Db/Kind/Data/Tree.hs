@@ -1,11 +1,11 @@
 module Polysemy.Db.Kind.Data.Tree where
 
-import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import qualified Polysemy.Db.Data.Rep as Rep
+import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.SOP.Constraint (DataNameF)
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
-import qualified Polysemy.Db.Data.Rep as Rep
 
 data Con =
   Con {
@@ -73,6 +73,10 @@ type family ProdRoot (d :: Type) (trees :: [Tree]) :: Tree where
   ProdRoot d node =
     ProdTree (DataNameF d) d node
 
+type family PrimTreeWith (field :: Symbol) (rep :: [Type]) (d :: Type) :: Tree where
+  PrimTreeWith field rep d =
+    'Tree ('NamedField field) rep ('Prim d)
+
 type family PrimTree (field :: Symbol) (d :: Type) :: Tree where
   PrimTree field d =
-    'Tree ('NamedField field) '[Rep.Prim] ('Prim d)
+    PrimTreeWith field '[Rep.Prim] d

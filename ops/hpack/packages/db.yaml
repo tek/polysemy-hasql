@@ -18,6 +18,7 @@ dependencies:
   - either
   - first-class-families
   - fcf-containers ^>= 0.6
+  - path
   - polysemy-db-data
   - polysemy-resume
   - random

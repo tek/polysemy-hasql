@@ -1,6 +1,9 @@
+{-# language CPP #-}
+
 module Polysemy.Db.Tree.Effect where
 
 import Data.Vector (Vector)
+import Path (Path)
 import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Rep (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
@@ -95,6 +98,27 @@ instance withPrim ~ WithEffect prim reps => ADTOrPrim ('Left '(prim, reps)) ('D 
 
 ----------------------------------------------------------------------------------------------------
 
+class NewtypeIsPrim (d :: Type) where
+  type NewtypeIsPrimResolves d :: Bool
+#if MIN_VERSION_GLASGOW_HASKELL(8,10,0,0)
+  type NewtypeIsPrimResolves _ = 'True
+#else
+  type NewtypeIsPrimResolves d = 'True
+#endif
+
+instance NewtypeIsPrim (Path b t)
+  
+class NewtypeOrPrim (tag :: Type) (defined :: Bool) (d :: Type) (wrapped :: Type) (reps :: [Type]) (effs :: Effs) | defined d wrapped reps -> effs
+
+instance effs ~ 'Effs '[Prim] => NewtypeOrPrim tag 'True d wrapped '[] effs
+
+instance {-# incoherent #-} (
+    effs' ~ 'Effs (Newtype d wrapped : effs),
+    ResolveRep tag (Rep reps) ('D wrapped) ('Effs effs)
+  ) => NewtypeOrPrim tag defined d wrapped reps effs'
+
+----------------------------------------------------------------------------------------------------
+
 type MatchedNt =
   Either [Type] ([Type], Type)
 
@@ -111,8 +135,8 @@ type family MatchNt (inferred :: Maybe Type) (pre :: [Type]) (reps :: [Type]) ::
 class NewtypeOrADT (tag :: Type) (nt :: MatchedNt) (d :: D) (effs :: Effs) | nt d -> effs
 
 instance (
-    ResolveRep tag (Rep reps) ('D wrapped) ('Effs effs)
-  ) => NewtypeOrADT tag ('Right '(reps, wrapped)) ('D d) ('Effs (Newtype d wrapped : effs))
+    NewtypeOrPrim tag (NewtypeIsPrimResolves d) d wrapped reps effs
+  ) => NewtypeOrADT tag ('Right '(reps, wrapped)) ('D d) effs
 
 instance (
     IsADT (Rep reps) d meta,
