@@ -1,12 +1,12 @@
 module Polysemy.Db.Data.PartialField where
 
-import Data.Aeson (Object, Value (Null))
+import Data.Aeson (Object, Value (Null, Array))
 import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
 import qualified Text.Show as Show
 
 import Polysemy.Db.Data.Rep (Auto)
-import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (symbolText)
 import Polysemy.Db.Tree (Root (..))
@@ -18,6 +18,8 @@ import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeExtract (..), UnfoldT
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Unsafe.Coerce (unsafeCoerce)
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
+import Polysemy.Db.Tree.Data.Effect (ADT)
 
 data PartialField (a :: Type) =
   Update Text a
@@ -126,6 +128,11 @@ instance (
     [] -> mempty
     os -> HashMap.singleton (symbolText @name) (Object (filterNulls os))
 
+-- Only single field constructors are sound for numbered fields
+instance FoldTreeConcat 'False () PartialField Object ('NumberedField name num) '[ADT ('AdtProd '[meta]) rep] where
+  foldTreeConcat =
+    filterNulls
+
 instance FoldTreeConcat 'True () PartialField Object ('NamedField name) effs where
   foldTreeConcat =
     filterNulls
@@ -157,6 +164,10 @@ instance (
   unfoldTreeExtract = \case
     Object o -> fromMaybe Null (HashMap.lookup (symbolText @name) o)
     _ -> Null
+
+instance UnfoldTreeExtract () PartialField Value ('NumberedField name num) '[ADT ('AdtProd '[meta]) rep] where
+  unfoldTreeExtract =
+    id
 
 instance (
     tree ~ 'Kind.Tree name effs ('Kind.Prod d trees),
