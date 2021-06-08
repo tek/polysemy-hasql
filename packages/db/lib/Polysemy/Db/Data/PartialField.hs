@@ -128,8 +128,7 @@ instance (
     [] -> mempty
     os -> HashMap.singleton (symbolText @name) (Object (filterNulls os))
 
--- Only single field constructors are sound for numbered fields
-instance FoldTreeConcat 'False () PartialField Object ('NumberedField name num) '[ADT ('AdtProd '[meta]) rep] where
+instance FoldTreeConcat 'False () PartialField Object ('NumberedField name num) effs where
   foldTreeConcat =
     filterNulls
 
@@ -165,7 +164,7 @@ instance (
     Object o -> fromMaybe Null (HashMap.lookup (symbolText @name) o)
     _ -> Null
 
-instance UnfoldTreeExtract () PartialField Value ('NumberedField name num) '[ADT ('AdtProd '[meta]) rep] where
+instance UnfoldTreeExtract () PartialField Value ('NumberedField name num) effs where
   unfoldTreeExtract =
     id
 
