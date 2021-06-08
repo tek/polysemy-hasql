@@ -168,7 +168,7 @@ withTestStoreTableGen ::
   ∀ rep q d r a .
   Members TestStoreDeps r =>
   Schema Auto rep q d =>
-  (QueryTable q d -> Sem (StoreStack q d q d ++ r) a) ->
+  (QueryTable q d -> Sem (StoreStack q d ++ r) a) ->
   Sem r a
 withTestStoreTableGen prog =
   withTestQueryTableGen @Auto @rep \ table ->
@@ -198,7 +198,7 @@ withTestStoreGen ::
   ∀ qrep rep q d r .
   Members TestStoreDeps r =>
   Schema qrep rep q d =>
-  InterpretersFor (StoreStack q d q d) r
+  InterpretersFor (StoreStack q d) r
 withTestStoreGen prog =
   withTestQueryTableGen @qrep @rep \ table ->
     interpretStoreDbFull table prog
@@ -207,7 +207,7 @@ withTestStore ::
   ∀ q d r a .
   Members TestStoreDeps r =>
   Schema Auto Auto q d =>
-  Sem (StoreStack q d q d ++ r) a ->
+  Sem (StoreStack q d ++ r) a ->
   Sem r a
 withTestStore prog =
   withTestQueryTableGen @Auto @Auto \ table ->
