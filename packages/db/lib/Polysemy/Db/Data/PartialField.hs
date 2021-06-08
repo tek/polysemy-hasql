@@ -96,6 +96,10 @@ instance (Partially d tree, FromJSON (PartialTree tree)) => FromJSON (Partial d)
     parseJSON @(PartialTree tree) value <&> \case
       tree -> Partial (unsafeCoerce tree)
 
+instance (Partially d tree, ToJSON (PartialTree tree)) => ToJSON (Partial d) where
+  toJSON (Partial tree) =
+    toJSON tree
+
 partial ::
   ∀ d .
   Partial d
