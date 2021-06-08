@@ -1,7 +1,10 @@
 module Polysemy.Hasql.Interpreter.StoreUpdate where
 
+import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Data.Rep (PrimQuery, UidRep)
+import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate, UidStoreUpdate)
 import Polysemy.Db.Tree.Fold (FoldTree)
@@ -15,12 +18,9 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.ManagedTable (queryTable)
 import Polysemy.Hasql.Query (interpretQuery)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Store (StoreDeps, interpretStoreDbFullGen)
+import Polysemy.Hasql.Store (StoreDeps, StoreStack, interpretStoreDbFullGen, UidStoreStack', UidStoreStack)
 import Polysemy.Hasql.Table.Query.Update (PartialSql)
 import Polysemy.Hasql.Table.Schema (Schema)
-import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.Rep (UidRep, PrimQuery)
-import Polysemy.Db.Data.Uid (Uid)
 
 interpretStoreUpdateDbWith ::
   ∀ i d paths e tree r .
@@ -54,12 +54,11 @@ interpretStoreUpdateDbFull ::
   InsertPaths d paths tree =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Error InitDbError : StoreDeps t dt) r =>
-  InterpreterFor (StoreUpdate q d paths !! DbError) r
+  InterpretersFor (StoreUpdate q d paths !! DbError : StoreStack q d) r
 interpretStoreUpdateDbFull =
   interpretStoreDbFullGen @qrep @rep @q @d .
   interpretQuery @qrep @rep .
   interpretStoreUpdateDb @q @d .
-  raiseUnder3 .
   raiseUnder
 {-# inline interpretStoreUpdateDbFull #-}
 
@@ -69,7 +68,7 @@ interpretStoreUpdateDbFullUidAs ::
   InsertPaths (Uid i d) paths tree =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Error InitDbError : StoreDeps t dt) r =>
-  InterpreterFor (StoreUpdate q (Uid i d) paths !! DbError) r
+  InterpretersFor (StoreUpdate q (Uid i d) paths !! DbError : UidStoreStack' i q d) r
 interpretStoreUpdateDbFullUidAs =
   interpretStoreUpdateDbFull @qrep @(UidRep ir rep)
 {-# inline interpretStoreUpdateDbFullUidAs #-}
@@ -80,7 +79,7 @@ interpretStoreUpdateDbFullUid ::
   InsertPaths (Uid i d) paths tree =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Error InitDbError : StoreDeps t dt) r =>
-  InterpreterFor (UidStoreUpdate i d paths !! DbError) r
+  InterpretersFor (UidStoreUpdate i d paths !! DbError : UidStoreStack i d) r
 interpretStoreUpdateDbFullUid =
   interpretStoreUpdateDbFullUidAs @(PrimQuery "id") @rep @ir
 {-# inline interpretStoreUpdateDbFullUid #-}

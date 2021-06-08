@@ -23,14 +23,14 @@ import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import qualified Polysemy.Hasql.Store.Statement as Statement
 import Polysemy.Hasql.Table.Schema (Schema, schema)
 
-type StoreStack qOut dOut qIn dIn =
-  [Store qOut dOut !! DbError, Crud qIn dIn !! DbError, ManagedTable dIn !! DbError]
+type StoreStack q d =
+  [Store q d !! DbError, Crud q d !! DbError, ManagedTable d !! DbError]
 
 type UidStoreStack' i q d =
-  [Store q (Uid i d) !! DbError, Crud q (Uid i d) !! DbError, ManagedTable (Uid i d) !! DbError]
+  StoreStack q (Uid i d)
 
 type UidStoreStack i d =
-  StoreStack i (Uid i d) i (Uid i d)
+  UidStoreStack' i i d
 
 interpretStoreDb ::
   Members [Crud q d !! e, ManagedTable d !! e] r =>
@@ -78,7 +78,7 @@ interpretStoreDbFullGenUid =
 interpretStoreDbFull ::
   Members (StoreDeps t dt) r =>
   QueryTable q d ->
-  InterpretersFor (StoreStack q d q d) r
+  InterpretersFor (StoreStack q d) r
 interpretStoreDbFull table =
   interpretManagedTable (table ^. QueryTable.table) .
   interpretCrudWith table .
@@ -104,7 +104,7 @@ interpretStoreDbFullGen ::
   ∀ qrep rep q d t dt r .
   Schema qrep rep q d =>
   Members (StoreDeps t dt) r =>
-  InterpretersFor (StoreStack q d q d) r
+  InterpretersFor (StoreStack q d) r
 interpretStoreDbFullGen =
   interpretStoreDbFull (schema @qrep @rep)
 
@@ -114,7 +114,7 @@ interpretStoreDbSingle ::
   Members [Resource, Log, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->
-  InterpretersFor (StoreStack q d q d) r
+  InterpretersFor (StoreStack q d) r
 interpretStoreDbSingle name host =
   interpretDbConnection name host .
   interpretTimeGhc .

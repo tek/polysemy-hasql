@@ -14,7 +14,7 @@ import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (PartialSql)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Hasql.Store (StoreDeps, interpretStoreDbFullGen)
+import Polysemy.Hasql.Store (StoreDeps, interpretStoreDbFullGen, StoreStack, UidStoreStack', UidStoreStack)
 import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Hasql.Query (interpretQuery)
 import Polysemy.Db.Data.Uid (Uid)
@@ -48,12 +48,11 @@ interpretStoreUpdateTreeDbFull ::
   Schema qrep rep q d =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Error InitDbError : StoreDeps t dt) r =>
-  InterpreterFor (StoreUpdateTree q d tree !! DbError) r
+  InterpretersFor (StoreUpdateTree q d tree !! DbError : StoreStack q d) r
 interpretStoreUpdateTreeDbFull =
   interpretStoreDbFullGen @qrep @rep @q @d .
   interpretQuery @qrep @rep .
   interpretStoreUpdateTreeDb @q @d .
-  raiseUnder3 .
   raiseUnder
 {-# inline interpretStoreUpdateTreeDbFull #-}
 
@@ -62,7 +61,7 @@ interpretStoreUpdateTreeDbFullUidAs ::
   Schema qrep (UidRep ir rep) q (Uid i d) =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Error InitDbError : StoreDeps t dt) r =>
-  InterpreterFor (StoreUpdateTree q (Uid i d) tree !! DbError) r
+  InterpretersFor (StoreUpdateTree q (Uid i d) tree !! DbError : UidStoreStack' i q d) r
 interpretStoreUpdateTreeDbFullUidAs =
   interpretStoreUpdateTreeDbFull @qrep @(UidRep ir rep)
 {-# inline interpretStoreUpdateTreeDbFullUidAs #-}
@@ -72,7 +71,7 @@ interpretStoreUpdateTreeDbFullUid ::
   Schema (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
   FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Error InitDbError : StoreDeps t dt) r =>
-  InterpreterFor (UidStoreUpdateTree i d tree !! DbError) r
+  InterpretersFor (UidStoreUpdateTree i d tree !! DbError : UidStoreStack i d) r
 interpretStoreUpdateTreeDbFullUid =
   interpretStoreUpdateTreeDbFullUidAs @(PrimQuery "id") @rep @ir
 {-# inline interpretStoreUpdateTreeDbFullUid #-}
