@@ -1,18 +1,18 @@
 module Polysemy.Hasql.Test.StatementTest where
 
-import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
-import Polysemy.Db.Data.Cond (LessOrEq(LessOrEq))
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.IdQuery (IdQuery)
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
 import Polysemy.Hasql.Column.DataColumn (tableStructure)
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(..))
-import Polysemy.Hasql.Data.Where (Where(Where))
+import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (..))
+import Polysemy.Hasql.Data.Where (Where (Where))
 import qualified Polysemy.Hasql.Statement as Statement
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
 import Polysemy.Hasql.Table.Schema (schema, schemaAuto)
