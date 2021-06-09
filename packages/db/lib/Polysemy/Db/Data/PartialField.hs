@@ -1,6 +1,6 @@
 module Polysemy.Db.Data.PartialField where
 
-import Data.Aeson (Object, Value (Null))
+import Data.Aeson (Object, Value (Null, Array))
 import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
 import qualified Text.Show as Show
@@ -18,6 +18,8 @@ import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeExtract (..), UnfoldT
 import qualified Polysemy.Db.Type.Data.Tree as Type
 import Unsafe.Coerce (unsafeCoerce)
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
+import Polysemy.Db.Tree.Data.Effect (ADT)
 
 data PartialField (a :: Type) =
   Update Text a
