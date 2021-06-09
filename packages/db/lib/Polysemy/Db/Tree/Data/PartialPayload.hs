@@ -3,12 +3,13 @@
 module Polysemy.Db.Tree.Data.PartialPayload (
   PartialPayload,
   UidPartialPayload,
-  partialPayload
-) where
+  partialPayload,
+  decodePartialPayload,
+decodePartialPayloadTree) where
 
-import Data.Aeson (Value)
+import Data.Aeson (Result (Error, Success), Value, fromJSON)
 
-import Polysemy.Db.Data.PartialField (PartialTree, Partially)
+import Polysemy.Db.Data.PartialField (PartialTree, Partially, Partial)
 import Polysemy.Db.Data.Uid (Uid)
 
 newtype PartialPayload d =
@@ -21,9 +22,32 @@ type UidPartialPayload i d =
   PartialPayload (Uid i d)
 
 partialPayload ::
+  ∀ d tree .
   Partially d tree =>
   ToJSON (PartialTree tree) =>
   PartialTree tree ->
   PartialPayload d
 partialPayload tree =
   PartialPayload (toJSON tree)
+
+decodePartialPayloadTree ::
+  ∀ d tree .
+  Partially d tree =>
+  FromJSON (PartialTree tree) =>
+  PartialPayload d ->
+  Either Text (PartialTree tree)
+decodePartialPayloadTree (PartialPayload val) =
+  case fromJSON val of
+    Success tree -> Right tree
+    Error e -> Left (toText e)
+
+decodePartialPayload ::
+  ∀ d tree .
+  Partially d tree =>
+  FromJSON (Partial d) =>
+  PartialPayload d ->
+  Either Text (Partial d)
+decodePartialPayload (PartialPayload val) =
+  case fromJSON val of
+    Success tree -> Right tree
+    Error e -> Left (toText e)

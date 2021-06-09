@@ -9,6 +9,7 @@ module Polysemy.Db.Tree.Partial (
   UpdatePartialTree,
 ) where
 
+import Unsafe.Coerce (unsafeCoerce)
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
@@ -20,7 +21,7 @@ import Polysemy.Db.Data.PartialField (
   )
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (GenDataTree (..), ReifyDataTree (..))
-import Polysemy.Db.Tree.Partial.Insert (Insert (..), PartialUpdate (..))
+import Polysemy.Db.Tree.Partial.Insert (Insert (insert), PartialUpdate (..))
 import Polysemy.Db.Tree.Partial.Update (UpdatePartialTree (..))
 
 type family MkFieldPath (path :: k) :: FieldPath where
@@ -44,6 +45,16 @@ field =
   PartialTree tree
 (+>) =
   flip insert
+
+(++>) ::
+  ∀ (path :: FieldPath) (a :: Type) (d :: Type) (tree :: Kind.Tree) .
+  Partially d tree =>
+  Insert path a tree =>
+  Partial d ->
+  FieldUpdate path a ->
+  Partial d
+(++>) (Partial (tree :: PartialTree tree)) update =
+  Partial (unsafeCoerce (insert update tree))
 
 updatePartial ::
   ∀ (d :: Type) (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .
