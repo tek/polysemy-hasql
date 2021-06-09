@@ -6,6 +6,7 @@ import Data.Vector (Vector)
 import Path (Path)
 import Prelude hiding (Enum)
 
+import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
 import Polysemy.Db.Data.Rep (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
@@ -107,7 +108,11 @@ class NewtypeIsPrim (d :: Type) where
 #endif
 
 instance NewtypeIsPrim (Path b t)
-  
+instance NewtypeIsPrim (Less a)
+instance NewtypeIsPrim (LessOrEq a)
+instance NewtypeIsPrim (Greater a)
+instance NewtypeIsPrim (GreaterOrEq a)
+
 class NewtypeOrPrim (tag :: Type) (defined :: Bool) (d :: Type) (wrapped :: Type) (reps :: [Type]) (effs :: Effs) | defined d wrapped reps -> effs
 
 instance effs ~ 'Effs '[Prim] => NewtypeOrPrim tag 'True d wrapped '[] effs
