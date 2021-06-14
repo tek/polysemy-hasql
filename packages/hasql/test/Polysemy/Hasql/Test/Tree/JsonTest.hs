@@ -46,7 +46,7 @@ test_treeJson :: UnitTest
 test_treeJson =
   runTestAuto do
     target === encoded
-    assertRight tree (Aeson.eitherDecode encoded)
+    assertRight pTree (Aeson.eitherDecode encoded)
     target === encodedPayload
     assertRight pTree (decodePartialPayloadTree @Dat =<< mapLeft toText (Aeson.eitherDecode encodedPayload))
     assertRight parTree (decodePartialPayload @Dat =<< mapLeft toText (Aeson.eitherDecode encodedPayload))
@@ -54,8 +54,6 @@ test_treeJson =
     target =
       [text|{"Dat1":{"txt":"update","int":10},"Dat2":{"sub":{"nouble":9.2},"int":10}}|]
     encoded =
-      Aeson.encode tree
+      Aeson.encode pTree
     encodedPayload =
       Aeson.encode payload
-    tree =
-      partially @Dat +> field @"int" (10 :: Int) +> field @"nouble" (9.2 :: Double) +> field @"txt" ("update" :: Text)

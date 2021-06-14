@@ -5,11 +5,12 @@ module Polysemy.Db.Tree.Data.PartialPayload (
   UidPartialPayload,
   partialPayload,
   decodePartialPayload,
-decodePartialPayloadTree) where
+  decodePartialPayloadTree,
+) where
 
 import Data.Aeson (Result (Error, Success), Value, fromJSON)
 
-import Polysemy.Db.Data.PartialField (PartialTree, Partially, Partial)
+import Polysemy.Db.Data.PartialField (Partial, PartialTree, Partially)
 import Polysemy.Db.Data.Uid (Uid)
 
 newtype PartialPayload d =

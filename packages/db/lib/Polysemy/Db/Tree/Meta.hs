@@ -61,7 +61,7 @@ type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [Fiel
   ZipFields _ (rn : _) (d : _) (dn : _) =
     FieldNameMismatch d (FieldIdSymbol @@ rn) (FieldIdSymbol @@ dn)
   ZipFields (rep : _) (rn : _) '[] '[] =
-    TypeError ("Extra field '" <> rn <> " :: " <> 'ShowType rep <> "' in rep")
+    TypeError ("Extra field '" <> (FieldIdSymbol @@ rn) <> " :: " <> 'ShowType rep <> "' in rep")
   ZipFields '[] '[] (d : _) (dn : _) =
     TypeError ("Missing field for '" <> FieldIdSymbol @@ dn <> " :: " <> 'ShowType d <> "' in rep")
   ZipFields reps rns ds dns =
