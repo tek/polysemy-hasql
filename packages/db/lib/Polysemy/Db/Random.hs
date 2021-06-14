@@ -47,6 +47,6 @@ runRandom q = runState q . reinterpret (\case
 -- | Run a 'Random' effect by using the 'IO' random generator.
 runRandomIO :: Member (Embed IO) r => Sem (Random ': r) a -> Sem r a
 runRandomIO m = do
-  q <- embed R.newStdGen
+  q <- embed @IO R.newStdGen
   snd <$> runRandom q m
 {-# inline runRandomIO #-}
