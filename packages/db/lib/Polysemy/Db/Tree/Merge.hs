@@ -61,3 +61,21 @@ mergeAtNames ::
   Type.Tree t n tree
 mergeAtNames =
   mergeAt @(NamedFields names)
+
+mergeAtName ::
+  ∀ name patch tree t n .
+  MergeAtNames '[name] patch tree =>
+  Type.Tree t n patch ->
+  Type.Tree t n tree ->
+  Type.Tree t n tree
+mergeAtName =
+  mergeAtNames @'[name]
+
+mergePayload ::
+  ∀ patch tree t n .
+  MergeAtNames '["_payload"] patch tree =>
+  Type.Tree t n patch ->
+  Type.Tree t n tree ->
+  Type.Tree t n tree
+mergePayload =
+  mergeAtName @"_payload"
