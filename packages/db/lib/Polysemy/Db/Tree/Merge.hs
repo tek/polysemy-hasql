@@ -53,6 +53,12 @@ instance MergeAt '[] ('Kind.Tree name eff node) ('Kind.Tree name eff node) where
 type MergeAtNames names patch tree =
   MergeAt (NamedFields names) patch tree
 
+type MergeAtName name patch tree =
+  MergeAtNames '[name] patch tree
+
+type MergePayload patch tree =
+  MergeAtName "_payload" patch tree
+
 mergeAtNames ::
   ∀ names patch tree t n .
   MergeAtNames names patch tree =>
@@ -64,7 +70,7 @@ mergeAtNames =
 
 mergeAtName ::
   ∀ name patch tree t n .
-  MergeAtNames '[name] patch tree =>
+  MergeAtName name patch tree =>
   Type.Tree t n patch ->
   Type.Tree t n tree ->
   Type.Tree t n tree
@@ -73,7 +79,7 @@ mergeAtName =
 
 mergePayload ::
   ∀ patch tree t n .
-  MergeAtNames '["_payload"] patch tree =>
+  MergePayload patch tree =>
   Type.Tree t n patch ->
   Type.Tree t n tree ->
   Type.Tree t n tree
