@@ -9,11 +9,11 @@ module Polysemy.Db.Tree.Partial (
   UpdatePartialTree,
 ) where
 
-import Unsafe.Coerce (unsafeCoerce)
+
+import Polysemy.Db.Data.Partial (Partial (Partial), wrapPartial)
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
-  Partial (..),
   PartialParams,
   PartialTag,
   PartialTree,
@@ -54,7 +54,7 @@ field =
   FieldUpdate path a ->
   Partial d
 (++>) (Partial (tree :: PartialTree tree)) update =
-  Partial (unsafeCoerce (insert update tree))
+  wrapPartial (insert update tree)
 
 updatePartial ::
   ∀ (d :: Type) (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .

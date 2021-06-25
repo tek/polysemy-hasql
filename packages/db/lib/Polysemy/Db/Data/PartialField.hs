@@ -3,8 +3,6 @@ module Polysemy.Db.Data.PartialField where
 import Data.Aeson (Object, Value (Null))
 import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
-import qualified Text.Show as Show
-import Unsafe.Coerce (unsafeCoerce)
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import Polysemy.Db.Data.Rep (Auto)
@@ -76,35 +74,6 @@ instance (
 
 type UidPartially i d tree =
   Partially (Uid i d) tree
-
-newtype Partial (d :: Type) =
-  Partial { unPartial :: ∀ tree . Partially d tree => PartialTree tree }
-
-type UidPartial i d =
-  Partial (Uid i d)
-
-instance (Partially d tree, Show (PartialTree tree)) => Show (Partial d) where
-  show (Partial tree) =
-    show tree
-
-instance (Partially d tree, Eq (PartialTree tree)) => Eq (Partial d) where
-  Partial l == Partial r =
-    l == r
-
-instance (Partially d tree, FromJSON (PartialTree tree)) => FromJSON (Partial d) where
-  parseJSON value =
-    parseJSON @(PartialTree tree) value <&> \case
-      tree -> Partial (unsafeCoerce tree)
-
-instance (Partially d tree, ToJSON (PartialTree tree)) => ToJSON (Partial d) where
-  toJSON (Partial tree) =
-    toJSON tree
-
-partial ::
-  ∀ d .
-  Partial d
-partial =
-  Partial (partially @d)
 
 instance (
     ToJSON d

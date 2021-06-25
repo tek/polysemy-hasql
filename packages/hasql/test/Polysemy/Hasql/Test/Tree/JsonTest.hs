@@ -1,9 +1,14 @@
 module Polysemy.Hasql.Test.Tree.JsonTest where
 
 import qualified Data.Aeson as Aeson
-import Polysemy.Db.Data.PartialField (partial)
-import Polysemy.Db.Tree.Data.PartialPayload (PartialPayload, decodePartialPayload, decodePartialPayloadTree, partialPayload)
-import Polysemy.Db.Tree.Partial (Partial, PartialTree, field, partially, (+>), (++>))
+import Polysemy.Db.Data.Partial (partial)
+import Polysemy.Db.Tree.Data.PartialPayload (
+  PartialPayload,
+  decodePartialPayload,
+  decodePartialPayloadTree,
+  partialPayload,
+  )
+import Polysemy.Db.Tree.Partial (Partial, PartialTree, field, partially, (++>), (+>))
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths, type (@>))
 import Polysemy.Test (UnitTest, assertRight, runTestAuto, (===))
 

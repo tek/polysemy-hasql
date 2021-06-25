@@ -37,6 +37,7 @@ library
       Polysemy.Db.Data.DbError
       Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.IdQuery
+      Polysemy.Db.Data.Partial
       Polysemy.Db.Data.PartialField
       Polysemy.Db.Data.Rep
       Polysemy.Db.Data.Store
