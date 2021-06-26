@@ -5,6 +5,8 @@ import Generics.SOP (All, hcmap)
 import Polysemy.Db.Data.FieldId (FieldId, NamedFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Type.Data.Tree as Type
+import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Data.PartialField (partially, Partially, PartialTree)
 
 class MergeNodeAt (path :: [FieldId]) (patch :: Kind.Tree) (node :: Kind.Node) where
   mergeNodeAt :: Type.Tree t n patch -> Type.Node t n node -> Type.Node t n node
@@ -85,3 +87,12 @@ mergePayload ::
   Type.Tree t n tree
 mergePayload =
   mergeAtName @"_payload"
+
+payloadPatch ::
+  ∀ i d patch tree .
+  MergePayload patch tree =>
+  Partially (Uid i d) tree =>
+  PartialTree patch ->
+  PartialTree tree
+payloadPatch patch =
+  mergePayload patch (partially @(Uid i d))

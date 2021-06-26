@@ -37,9 +37,8 @@ instance (Partially d tree, Eq (PartialTree tree)) => Eq (Partial d) where
     l == r
 
 instance (Partially d tree, FromJSON (PartialTree tree)) => FromJSON (Partial d) where
-  parseJSON value =
-    parseJSON @(PartialTree tree) value <&> \case
-      tree -> Partial (unsafeCoerce tree)
+  parseJSON =
+    fmap wrapPartial . parseJSON
 
 instance (Partially d tree, ToJSON (PartialTree tree)) => ToJSON (Partial d) where
   toJSON (Partial tree) =
