@@ -4,13 +4,14 @@ import Control.Lens (view, views)
 import Polysemy.AtomicState (atomicState')
 
 import Polysemy.Db.Atomic (interpretAtomic)
-import Polysemy.Db.Data.Partial (getPartial)
+import Polysemy.Db.Data.Partial (Partial (Partial), getPartial, wrapPartial)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store (..), UidStore)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Tree.Data (GenDataTree, ReifyDataTree)
-import Polysemy.Db.Tree.Partial (UpdatePartialTree, updatePartial)
+import Polysemy.Db.Tree.Merge (MergePayload, payloadPatch)
+import Polysemy.Db.Tree.Partial (Partially, UpdatePartialTree, updatePartial)
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths)
 
 type StrictStoreUpdate d fields tree dataTree =
@@ -245,3 +246,15 @@ alterDefault ::
   Sem r ()
 alterDefault =
   alterOr @i def
+
+updatePayload ::
+  ∀ i d patch tree r .
+  Partially d patch =>
+  Partially (Uid i d) tree =>
+  MergePayload patch tree =>
+  Member (UidStore i d) r =>
+  i ->
+  Partial d ->
+  Sem r (Maybe (Uid i d))
+updatePayload i (Partial patch) =
+  Store.update i (wrapPartial (payloadPatch @i @d patch))
