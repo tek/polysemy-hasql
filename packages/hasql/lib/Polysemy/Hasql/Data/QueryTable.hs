@@ -26,7 +26,7 @@ data QueryTable q d =
   QueryTable {
     _table :: Table d,
     _qparams :: Params q,
-    _qwhere :: Where d q
+    _qwhere :: Where q d
   }
 
 makeClassy ''QueryTable

@@ -8,9 +8,7 @@ import Hasql.DynamicStatements.Statement (dynamicallyParameterized)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement (Statement))
 import Polysemy.Db.Data.DbName (DbName (DbName))
-import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Text.Quote (dquote)
-import Polysemy.Db.Tree.Fold (FoldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
 import qualified Polysemy.Hasql.Data.DbType as Column
@@ -28,7 +26,7 @@ import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
 import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated, commaSeparatedSql)
 import qualified Polysemy.Hasql.Table.Query.Update as Query
-import Polysemy.Hasql.Table.Query.Update (PartialSql)
+import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.ResultShape (ResultShape (resultShape))
 
 statement ::
@@ -159,22 +157,31 @@ deleteAll table@(Table _ row _) =
   prepared (deleteWhereSql table "") row noParams
 
 updateSql ::
-  FoldTree 'True () PartialField [PartialSql] tree =>
-  QueryTable query d ->
+  BuildPartialSql d tree =>
+  Table d ->
+  Maybe (Where query d) ->
   query ->
   PartialTree tree ->
   Snippet
-updateSql table q tree =
-  Query.update table q tree
+updateSql table qw q tree =
+  Query.update table qw q tree
 
 update ::
-  FoldTree 'True () PartialField [PartialSql] tree =>
+  BuildPartialSql d tree =>
   QueryTable query d ->
   query ->
   PartialTree tree ->
   Statement () (Maybe d)
-update qtable@QueryTable { _table = Table {_row} } q t =
-  dynamicallyParameterized (updateSql qtable q t) (resultShape _row) False
+update (QueryTable tbl@Table {_row} _ qw) q t =
+  dynamicallyParameterized (updateSql tbl (Just qw) q t) (resultShape _row) False
+
+updateSingle ::
+  BuildPartialSql d tree =>
+  Table d ->
+  PartialTree tree ->
+  Statement () (Maybe d)
+updateSingle tbl@Table {_row} t =
+  dynamicallyParameterized (updateSql tbl Nothing () t) (resultShape _row) False
 
 createTableSql ::
   Column ->

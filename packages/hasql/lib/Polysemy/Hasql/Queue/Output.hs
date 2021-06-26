@@ -1,17 +1,17 @@
 module Polysemy.Hasql.Queue.Output where
 
-import Polysemy.Db.Data.Rep (PrimQuery)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.Rep (PrimQuery)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Random (Random, random)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import qualified Polysemy.Log as Log
 import Polysemy.Log (Log)
-import Polysemy.Output (Output(Output))
+import Polysemy.Output (Output (Output))
 import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (Seconds(Seconds), Time)
+import Polysemy.Time (Seconds (Seconds), Time)
 import Prelude hiding (group)
 
 import Polysemy.Hasql.Data.Database (Database)
@@ -20,7 +20,7 @@ import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (OutputQueueConnection, Queue)
-import Polysemy.Hasql.Queue.Data.Queued (Queued(Queued), QueuedRep)
+import Polysemy.Hasql.Queue.Data.Queued (Queued (Queued), QueuedRep)
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 
 interpretOutputDbQueue ::
@@ -55,8 +55,8 @@ interpretOutputDbQueueFull =
   raiseUnder2
 
 interpretOutputDbQueueFullGen ::
-  ∀ (queue :: Symbol) d t dt r .
-  Queue queue t d =>
+  ∀ (queue :: Symbol) d tree t dt r .
+  Queue queue t d tree =>
   Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =

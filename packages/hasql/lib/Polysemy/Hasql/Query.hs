@@ -11,7 +11,7 @@ import Polysemy.Hasql.Table.Schema (Schema, schema)
 
 interpretQueryWith ::
   Params q ->
-  Where d q ->
+  Where q d ->
   InterpreterFor (Query q d) r
 interpretQueryWith params qwhere =
   interpret \case

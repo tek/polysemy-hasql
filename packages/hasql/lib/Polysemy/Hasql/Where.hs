@@ -39,7 +39,7 @@ simpleSlug =
 where' ::
   [Int -> Text] ->
   (query -> Snippet) ->
-  Data.Where a query
+  Data.Where query d
 where' fields =
   Data.Where (SqlCode (concatWhereFields fields))
 
@@ -109,7 +109,7 @@ instance (
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
 -- present and matching in the data record
 class Where (qrep :: Type) (qTree :: Kind.Tree) (query :: Type) (dTree :: Kind.Tree) (d :: Type) where
-  queryWhere :: Data.Where d query
+  queryWhere :: Data.Where query d
 
 instance (
     fields ~ MatchTable qTree dTree,

@@ -3,9 +3,10 @@
 module Polysemy.Hasql.Store.Statement where
 
 import Hasql.Statement (Statement)
+import Polysemy.Db.Data.Partial (Partial)
 
 import qualified Polysemy.Hasql.Data.Crud as Crud
-import Polysemy.Hasql.Data.Crud (Crud(..))
+import Polysemy.Hasql.Data.Crud (Crud (..))
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 
@@ -64,3 +65,11 @@ fetchAll ::
   Sem r [d]
 fetchAll =
   runStatement (restop Crud.fetchAll) ()
+
+update ::
+  StatementEffects q e r d =>
+  q ->
+  Partial d ->
+  Sem r (Maybe d)
+update i patch =
+  runStatement (restop (Crud.update i patch)) ()

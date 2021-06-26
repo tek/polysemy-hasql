@@ -2,16 +2,17 @@ module Polysemy.Hasql.Test.StoreUpdateTest where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.List.NonEmpty as NonEmpty
-import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, UidRep)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.Partial (partial)
 import Polysemy.Db.Data.PartialField (PartialTree, partially)
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, UidRep)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UidStore)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
-import Polysemy.Db.Tree.Partial (field, (+>))
+import Polysemy.Db.Tree.Partial (field, (++>), (+>))
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths, PartialUpdate (PartialUpdate), type (@>))
 import Polysemy.Test (UnitTest, assertJust)
 
@@ -43,10 +44,6 @@ keepRecord :: Uid Int Dat
 keepRecord =
   Uid 2 (Dat 1 1 "one")
 
-target :: NonEmpty (Uid Int Dat)
-target =
-  [Uid 1 (Dat 5 73.18 "updated"), keepRecord]
-
 type DatUpdates =
   ["int" @> Int, "double" @> Double, "txt" @> Tex]
 
@@ -73,9 +70,14 @@ prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith (PartialUpdate update)
+  restop (Store.update 1 (partial @(Uid Int Dat) ++> field @"int" (99 :: Int)))
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"_payload":{"txt":"updated"}}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
+
+target :: NonEmpty (Uid Int Dat)
+target =
+  [Uid 1 (Dat 99 73.18 "updated"), keepRecord]
 
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =

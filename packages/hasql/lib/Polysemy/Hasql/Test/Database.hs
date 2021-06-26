@@ -4,16 +4,19 @@ import Control.Lens (Lens', view)
 import qualified Data.UUID as UUID
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
-import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
-import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
+import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.DbName (DbName(DbName))
+import Polysemy.Db.Data.DbName (DbName (DbName))
+import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Random (Random, random, runRandomIO)
 import Polysemy.Db.Text.Quote (dquote)
+import Polysemy.Db.Tree.Fold (FoldTree)
+import Polysemy.Db.Tree.Partial (Partially)
 import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Time (GhcTime, Time)
@@ -22,7 +25,7 @@ import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
-import Polysemy.Hasql.Data.DbType (Column(Column), Name(Name), Selector(Selector))
+import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector (Selector))
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
@@ -33,8 +36,9 @@ import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Store (StoreStack, UidStoreStack, UidStoreStack', interpretStoreDbFull, interpretStoreDbFullUid)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
-import Polysemy.Hasql.Table.Schema (Schema, schema)
 import Polysemy.Hasql.Table.BasicSchema (BasicSchema, basicSchema)
+import Polysemy.Hasql.Table.Query.Update (PartialSql)
+import Polysemy.Hasql.Table.Schema (Schema, schema)
 
 suffixedTable ::
   Lens' t (Table d) ->
@@ -165,7 +169,9 @@ type TestStoreDeps =
   ]
 
 withTestStoreTableGen ::
-  ∀ rep q d r a .
+  ∀ rep q d r tree a .
+  Partially d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Members TestStoreDeps r =>
   Schema Auto rep q d =>
   (QueryTable q d -> Sem (StoreStack q d ++ r) a) ->
@@ -175,7 +181,9 @@ withTestStoreTableGen prog =
     interpretStoreDbFull table (prog table)
 
 withTestStoreTableUidGenAs ::
-  ∀ qrep rep ir q d i r a .
+  ∀ qrep rep ir q d i r tree a .
+  Partially (Uid i d) tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Members TestStoreDeps r =>
   Schema qrep (UidRep ir rep) q (Uid i d) =>
   (QueryTable q (Uid i d) -> Sem (UidStoreStack' i q d ++ r) a) ->
@@ -185,7 +193,9 @@ withTestStoreTableUidGenAs prog =
     interpretStoreDbFullUid table (prog table)
 
 withTestStoreTableUidGen ::
-  ∀ rep ir d i r a .
+  ∀ rep ir d i r tree a .
+  Partially (Uid i d) tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Members TestStoreDeps r =>
   Schema (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
   (QueryTable i (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
@@ -195,7 +205,9 @@ withTestStoreTableUidGen prog =
     interpretStoreDbFullUid table (prog table)
 
 withTestStoreGen ::
-  ∀ qrep rep q d r .
+  ∀ qrep rep q d r tree .
+  Partially d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Members TestStoreDeps r =>
   Schema qrep rep q d =>
   InterpretersFor (StoreStack q d) r
@@ -204,7 +216,9 @@ withTestStoreGen prog =
     interpretStoreDbFull table prog
 
 withTestStore ::
-  ∀ q d r a .
+  ∀ q d r tree a .
+  Partially d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Members TestStoreDeps r =>
   Schema Auto Auto q d =>
   Sem (StoreStack q d ++ r) a ->
@@ -214,8 +228,10 @@ withTestStore prog =
     interpretStoreDbFull table prog
 
 withTestStoreUid ::
-  ∀ i d r a .
+  ∀ i d r tree a .
   Members TestStoreDeps r =>
+  Partially (Uid i d) tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Schema (PrimQuery "id") (UidRep PrimaryKey Auto) i (Uid i d) =>
   Sem (UidStoreStack i d ++ r) a ->
   Sem r a

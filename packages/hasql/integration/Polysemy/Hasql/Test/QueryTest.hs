@@ -182,13 +182,13 @@ queryParams_ContentNumber =
 
 queryWhere_ContentNumber ::
   TableRoot DatRep Dat DatTable =>
-  Where Dat ContentNumber
+  Where ContentNumber Dat
 queryWhere_ContentNumber =
   queryWhere @Auto @ContentNumberType @ContentNumber @DatTable @Dat
 
 queryWhere_ContentNumber_Uid ::
   TableRoot (UidRep PrimaryKey DatRep) (Uuid Dat) (UidDatType) =>
-  Where (Uuid Dat) ContentNumber
+  Where ContentNumber (Uuid Dat)
 queryWhere_ContentNumber_Uid =
   queryWhere @Auto @ContentNumberType @ContentNumber @UidDatType @(Uuid Dat)
 

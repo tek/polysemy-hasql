@@ -4,19 +4,22 @@ module Polysemy.Hasql.Test.SumFieldTest where
 
 import Hasql.Decoders (Row)
 import Path (Abs, File, Path, absfile)
-import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions (unique))
 import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.IdQuery (IdQuery (IdQuery), UuidQuery)
 import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Rep, Sum, UidRep, UuidRep)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid, Uid (Uid), Uuid)
+import Polysemy.Db.Data.Uid (Uid (Uid), Uuid)
+import Polysemy.Db.Tree.Fold (FoldTree)
+import Polysemy.Db.Tree.Partial (Partially)
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
@@ -31,6 +34,7 @@ import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryRows (QueryRows, queryRows)
 import Polysemy.Hasql.Store (interpretStoreDbFullGenUidAs)
 import Polysemy.Hasql.Table.ColumnOptions (ExplicitColumnOptions (..))
+import Polysemy.Hasql.Table.Query.Update (PartialSql)
 import Polysemy.Hasql.Table.Schema (Schema)
 import Polysemy.Hasql.Test.Database (TestStoreDeps, withTestStoreGen, withTestStoreTableUidGenAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
@@ -131,9 +135,11 @@ prog specimen =
     Store.fetch (IdQuery id')
 
 sumTest ::
-  ∀ rep d r .
+  ∀ rep d tree r .
   Eq d =>
   Show d =>
+  Partially d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Members (Hedgehog IO : TestStoreDeps) r =>
   Schema Auto rep UuidQuery d =>
   d ->

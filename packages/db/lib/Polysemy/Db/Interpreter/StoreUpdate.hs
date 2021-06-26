@@ -1,26 +1,14 @@
 module Polysemy.Db.Interpreter.StoreUpdate where
 
-import Polysemy.Db.Data.PartialField (Partial (Partial))
+import Polysemy.Db.Data.Partial (Partial (Partial))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
 import qualified Polysemy.Db.Store as Store
-import Polysemy.Db.Tree.Data (GenDataTree, ReifyDataTree)
-import Polysemy.Db.Tree.Partial (UpdatePartialTree, updatePartial)
-import Polysemy.Db.Tree.Partial.Insert (InsertPaths, PartialUpdate (PartialUpdate))
-import Polysemy.Db.Data.Uid (Uid)
-
-type StrictStoreUpdate d fields tree dataTree =
-  (
-    GenDataTree d dataTree,
-    ReifyDataTree dataTree d,
-    UpdatePartialTree dataTree tree,
-    InsertPaths d fields tree
-  )
-
-type UidStrictStoreUpdate i d fields tree dataTree =
-  StrictStoreUpdate (Uid i d) fields tree dataTree
+import Polysemy.Db.Store (StrictStoreUpdate)
+import Polysemy.Db.Tree.Partial (updatePartial)
+import Polysemy.Db.Tree.Partial.Insert (PartialUpdate (PartialUpdate))
 
 interpretStoreUpdateStore ::
   ∀ i d e fields tree dataTree r .
@@ -37,6 +25,7 @@ interpretStoreUpdateStore =
       restop @e @(Store i d) do
         (Store.alter i (updatePartial @d t))
         Store.fetch i
+{-# inline interpretStoreUpdateStore #-}
 
 interpretStoreUpdateNull ::
   InterpreterFor (StoreUpdate i d paths !! e) r

@@ -189,9 +189,9 @@ interpretInputDbQueueFull errorDelay errorHandler =
   raiseUnder2
 
 interpretInputDbQueueFullGen ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (queue :: Symbol) d tree t dt u r .
   TimeUnit u =>
-  Queue queue t d =>
+  Queue queue t d tree =>
   Members [InputQueueConnection queue, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->

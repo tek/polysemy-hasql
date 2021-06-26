@@ -5,20 +5,20 @@ import qualified Text.Show as Show
 
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 
-data Where d q =
+data Where q d =
   Where {
     prepared :: SqlCode,
     fields :: q -> Snippet
   }
 
-instance Semigroup (Where d q) where
+instance Semigroup (Where q d) where
   Where pl fl <> Where pr fr =
     Where (pl <> pr) (fl <> fr)
 
-instance Monoid (Where d q) where
+instance Monoid (Where q d) where
   mempty =
     Where mempty mempty
 
-instance Show (Where d q) where
+instance Show (Where q d) where
   show (Where p _) =
     [text|Where #{p}|]

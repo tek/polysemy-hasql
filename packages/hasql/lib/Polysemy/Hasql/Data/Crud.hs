@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Data.Crud where
 
 import Hasql.Statement (Statement)
+import Polysemy.Db.Data.Partial (Partial)
 
 -- TODO generalize @Statement@ using @Profunctor@?
 data Crud q d :: Effect where
@@ -10,5 +11,6 @@ data Crud q d :: Effect where
   Upsert :: Crud q d m (Statement d ())
   Delete :: Crud q d m (Statement q [d])
   DeleteAll :: Crud q d m (Statement () [d])
+  Update :: q -> Partial d -> Crud q d m (Statement () (Maybe d))
 
 makeSem ''Crud

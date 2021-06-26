@@ -1,6 +1,6 @@
 module Polysemy.Db.Effect.StoreUpdate where
 
-import Polysemy.Db.Data.PartialField (Partial)
+import Polysemy.Db.Data.Partial (Partial)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Tree.Partial.Insert (FieldSpec, PartialUpdate)
 

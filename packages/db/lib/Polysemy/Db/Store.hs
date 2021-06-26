@@ -4,10 +4,25 @@ import Control.Lens (view, views)
 import Polysemy.AtomicState (atomicState')
 
 import Polysemy.Db.Atomic (interpretAtomic)
+import Polysemy.Db.Data.Partial (getPartial)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store(..), UidStore)
+import Polysemy.Db.Data.Store (Store (..), UidStore)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Tree.Data (GenDataTree, ReifyDataTree)
+import Polysemy.Db.Tree.Partial (UpdatePartialTree, updatePartial)
+import Polysemy.Db.Tree.Partial.Insert (InsertPaths)
+
+type StrictStoreUpdate d fields tree dataTree =
+  (
+    GenDataTree d dataTree,
+    ReifyDataTree dataTree d,
+    UpdatePartialTree dataTree tree,
+    InsertPaths d fields tree
+  )
+
+type UidStrictStoreUpdate i d fields tree dataTree =
+  StrictStoreUpdate (Uid i d) fields tree dataTree
 
 newtype StrictStore a =
   StrictStore {
@@ -19,8 +34,9 @@ newtype StrictStore a =
 makeClassy ''StrictStore
 
 interpretStoreAtomicState ::
-  ∀ i d e r .
+  ∀ i d e r tree dataTree .
   Eq i =>
+  StrictStoreUpdate d '[] tree dataTree =>
   (d -> i) ->
   Member (AtomicState (StrictStore d)) r =>
   InterpreterFor (Store i d !! e) r
@@ -42,6 +58,16 @@ interpretStoreAtomicState getId =
       atomicGets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
       atomicGets @(StrictStore d) (nonEmpty . view records)
+    Update i patch ->
+      atomicGets @(StrictStore d) (views records (find ((i ==) . getId))) >>= \case
+        Just d ->
+          Just updated <$ atomicModify' @(StrictStore d) (over records mod')
+          where
+            mod' a =
+              updated : filter (\ d' -> getId d /= getId d') a
+            updated =
+              updatePartial (getPartial patch) d
+        Nothing -> pure Nothing
 
 -- |This is a blackbox interpreter that takes an initial list of records and stores them in an 'AtomicState'.
 -- The @getId@ parameter is used to extract the query id from the record type.
@@ -53,9 +79,10 @@ interpretStoreAtomicState getId =
 -- >>> runM (runStop (runAsResumable (interpretStoreAtomic User.id mempty progStore)))
 -- Right (Just (User 1 "root"))
 interpretStoreAtomic ::
-  ∀ i d e r .
+  ∀ i d e r tree dataTree .
   Eq i =>
   Member (Embed IO) r =>
+  StrictStoreUpdate d '[] tree dataTree =>
   (d -> i) ->
   StrictStore d ->
   InterpreterFor (Store i d !! e) r
@@ -63,8 +90,9 @@ interpretStoreAtomic getId init' =
   interpretAtomic init' . interpretStoreAtomicState getId . raiseUnder
 
 interpretStoreUidAtomic ::
-  ∀ i d e r .
+  ∀ i d e r tree dataTree .
   Eq i =>
+  StrictStoreUpdate (Uid i d) '[] tree dataTree =>
   Member (Embed IO) r =>
   StrictStore (Uid i d) ->
   InterpreterFor (Store i (Uid i d) !! e) r
@@ -72,8 +100,9 @@ interpretStoreUidAtomic =
   interpretStoreAtomic Uid._id
 
 interpretStoreStrictState ::
-  ∀ i d e r .
+  ∀ i d e r tree dataTree .
   Eq i =>
+  StrictStoreUpdate d '[] tree dataTree =>
   Member (State (StrictStore d)) r =>
   (d -> i) ->
   InterpreterFor (Store i d !! e) r
@@ -95,10 +124,21 @@ interpretStoreStrictState getId =
       gets @(StrictStore d) (views records (find ((id' ==) . getId)))
     FetchAll ->
       gets @(StrictStore d) $ nonEmpty . view records
+    Update i patch ->
+      gets @(StrictStore d) (views records (find ((i ==) . getId))) >>= \case
+        Just d ->
+          Just updated <$ modify' @(StrictStore d) (over records mod')
+          where
+            mod' a =
+              updated : filter (\ d' -> getId d /= getId d') a
+            updated =
+              updatePartial (getPartial patch) d
+        Nothing -> pure Nothing
 
 interpretStoreTVar ::
   Eq i =>
   Member (Embed IO) r =>
+  StrictStoreUpdate d '[] tree dataTree =>
   (d -> i) ->
   TVar (StrictStore d) ->
   InterpreterFor (Store i d !! e) r
@@ -108,9 +148,10 @@ interpretStoreTVar getId tvar =
   raiseUnder
 
 interpretStoreStrict ::
-  ∀ i d e r .
+  ∀ i d e r tree dataTree .
   Eq i =>
   Member (Embed IO) r =>
+  StrictStoreUpdate d '[] tree dataTree =>
   (d -> i) ->
   StrictStore d ->
   InterpreterFor (Store i d !! e) r
@@ -120,9 +161,10 @@ interpretStoreStrict getId init' =
   raiseUnder
 
 interpretStoreUidStrict ::
-  ∀ i d e r .
+  ∀ i d e r tree dataTree .
   Eq i =>
   Member (Embed IO) r =>
+  StrictStoreUpdate (Uid i d) '[] tree dataTree =>
   StrictStore (Uid i d) ->
   InterpreterFor (Store i (Uid i d) !! e) r
 interpretStoreUidStrict =
@@ -143,6 +185,8 @@ interpretStoreNull =
     Fetch _ ->
       pure Nothing
     FetchAll ->
+      pure Nothing
+    Update _ _ ->
       pure Nothing
 
 elem ::
