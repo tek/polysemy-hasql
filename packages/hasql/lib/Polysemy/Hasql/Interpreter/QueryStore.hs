@@ -58,7 +58,6 @@ interpretQueryStoreDb =
 type QueryStoreDeps t dt =
   [Database !! DbError, Time t dt, Log, Embed IO]
 
--- TODO rename to *FullWith (?) for consistency
 interpretQueryStoreDbFullWith ::
   BuildPartialSql p tree =>
   Members (QueryStoreDeps t dt) r =>

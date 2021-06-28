@@ -13,12 +13,6 @@ data Cat =
   }
   deriving (Eq, Show, Generic)
 
--- TODO
--- the problem here is probably that when deleting all, nonNullable is not used.
--- the same is likely the cause of the similar error in bodhi
---
--- update: it looks rather like instead of returning the qualified fields, the query is returning "payload", mismatching
--- with the expected decoder. needs to return ("payload")."number" etc.
 test_atomicStateDb :: UnitTest
 test_atomicStateDb =
   integrationTest do
