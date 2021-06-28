@@ -54,9 +54,13 @@ mapColumns f trees =
 class ColumnTypeName (node :: Kind.Node) where
   columnTypeName :: Text -> TypeName
 
-instance ColumnTypeName ('Kind.Prim d) where
+instance {-# overlappable #-} ColumnTypeName ('Kind.Prim d) where
   columnTypeName =
     PrimTypeName
+
+instance ColumnTypeName ('Kind.Prim ()) where
+  columnTypeName =
+    CompositeTypeName
 
 instance ColumnTypeName ('Kind.Prod tpe sub) where
   columnTypeName =
@@ -75,7 +79,11 @@ instance (
     dataProduct prefix (Type.Tree _ (Type.Prod _ trees)) =
       join (mapColumns @_ @NP @_ @trees @DataProductOrFlatten (dataProductOrFlatten prefix) trees)
 
-instance (
+instance DataProduct 'False ('Kind.Tree name effs ('Kind.Prim ())) where
+    dataProduct =
+      mempty
+
+instance {-# overlappable #-} (
     DataColumn ('Kind.Tree name effs tpe)
   ) => DataProduct 'False ('Kind.Tree name effs tpe) where
     dataProduct =

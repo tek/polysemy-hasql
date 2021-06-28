@@ -7,17 +7,19 @@ import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, K (K), NP, hcollapse, hcpure)
 import Hasql.DynamicStatements.Snippet (Snippet)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdText, quotedFieldId)
+import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
 
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import qualified Polysemy.Hasql.Data.Where as Data (Where (Where))
+import Polysemy.Hasql.Table.QueryParam (QueryValueNoN)
 import Polysemy.Hasql.Where.Cond (
   MatchTable,
   PrimCond (PrimCond),
   QCond (SimpleCond, SumPrimCond),
   )
-import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery)
+import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery, field)
 import Polysemy.Hasql.Where.Prepared (QueryWhereColumn (..), concatWhereFields)
 import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment), SegmentId)
 
@@ -114,7 +116,14 @@ class Where (qrep :: Type) (qTree :: Kind.Tree) (query :: Type) (dTree :: Kind.T
 instance (
     fields ~ MatchTable qTree dTree,
     All QueryCond fields,
-    DynamicQuery qrep query
+    DynamicQuery qrep query d
   ) => Where qrep qTree query dTree d where
     queryWhere =
-      where' (queryConds @fields) (dynamicQuery @qrep @query)
+      where' (queryConds @fields) (dynamicQuery @qrep @query @d)
+
+uidWhere ::
+  ∀ effs i d .
+  QueryValueNoN effs i =>
+  Data.Where i (Uid i d)
+uidWhere =
+  Data.Where (SqlCode "id = $1") (field @"id" @effs)

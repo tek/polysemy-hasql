@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Data.ManagedTable where
 
 import Hasql.Statement (Statement)
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Time (TimeUnit)
 
 import Polysemy.Hasql.Data.Table (Table)
@@ -11,3 +12,6 @@ data ManagedTable d :: Effect where
   RetryStatement :: TimeUnit t => t -> q -> Statement q o -> ManagedTable d m o
 
 makeSem ''ManagedTable
+
+type ManagedTableUid i d =
+  ManagedTable (Uid i d)

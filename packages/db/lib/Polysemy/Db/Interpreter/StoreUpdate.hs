@@ -1,7 +1,6 @@
 module Polysemy.Db.Interpreter.StoreUpdate where
 
 import Polysemy.Db.Data.Partial (Partial (Partial))
-import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
@@ -20,11 +19,11 @@ interpretStoreUpdateStore =
     StoreUpdate.Create i (PartialUpdate t) -> do
       restop @e @(Store i d) do
         (Store.alter i (updatePartial @d t))
-        Store.fetch i
+        Store.fetchPayload i
     StoreUpdate.Use i (Partial t) -> do
       restop @e @(Store i d) do
         (Store.alter i (updatePartial @d t))
-        Store.fetch i
+        Store.fetchPayload i
 {-# inline interpretStoreUpdateStore #-}
 
 interpretStoreUpdateNull ::

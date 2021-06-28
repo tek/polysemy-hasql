@@ -39,7 +39,7 @@ instance (
       [PartialSql (sql (encodeUtf8 (dquote name)) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
 
 update ::
-  BuildPartialSql d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Table d ->
   Maybe (Where query d) ->
   query ->

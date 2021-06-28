@@ -9,14 +9,15 @@ import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Hasql.Connection (withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
-import Polysemy.Db.Data.Rep (PrimQuery)
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
+import qualified Polysemy.Db.Data.Uid as Uid
+import Polysemy.Db.Data.Uid (Uuid)
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Input (Input(Input))
+import Polysemy.Input (Input (Input))
 import qualified Polysemy.Log as Log
 import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
@@ -26,12 +27,12 @@ import Polysemy.Time (Time, TimeUnit)
 import Prelude hiding (group)
 
 import qualified Polysemy.Hasql.Data.Database as Database
-import Polysemy.Hasql.Data.Database (Database, InitDb(InitDb))
+import Polysemy.Hasql.Data.Database (Database, InitDb (InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (InputQueueConnection, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (Queued, QueuedRep)
-import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued(..))
+import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 
 tryDequeue ::
@@ -64,10 +65,10 @@ listen = do
 
 processMessages ::
   Ord t =>
-  NonEmpty (Queued t d) ->
+  NonEmpty (Uuid (Queued t d)) ->
   NonEmpty d
 processMessages =
-  fmap Queued.queue_payload . NonEmpty.sortWith Queued.queue_created
+  fmap (Queued.queue_payload . Uid._payload) . NonEmpty.sortWith (Queued.queue_created . Uid._payload)
 
 initQueue ::
   ∀ (queue :: Symbol) e d t r .
@@ -197,7 +198,7 @@ interpretInputDbQueueFullGen ::
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueFullGen errorDelay errorHandler =
-  interpretStoreDbFullGen @(PrimQuery "queue_id") @QueuedRep .
+  interpretStoreDbFullGen @QueuedRep .
   raiseUnder2 .
   interpretInputDbQueueFull @queue errorDelay (raise . errorHandler) .
   raiseUnder

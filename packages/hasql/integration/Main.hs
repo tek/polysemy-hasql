@@ -1,7 +1,8 @@
 module Main where
 
 import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
-import Polysemy.Hasql.Test.AtomicState (test_atomicStateDb)
+import Polysemy.Hasql.Test.AtomicStateTest (test_atomicStateDb)
+import Polysemy.Hasql.Test.DeleteTest (test_deleteEmpty)
 import Polysemy.Hasql.Test.InitTest (test_initTable)
 import Polysemy.Hasql.Test.JsonTest (test_json)
 import Polysemy.Hasql.Test.PKTest (test_pk)
@@ -33,7 +34,8 @@ tests =
     unitTest "partial record update" test_partialDbUpdate,
     unitTest "sum table" test_sumTable,
     unitTest "json field" test_json,
-    unitTest "unary sum" test_unarySum
+    unitTest "unary sum" test_unarySum,
+    unitTest "delete all in an empty table" test_deleteEmpty
   ]
 
 main :: IO ()

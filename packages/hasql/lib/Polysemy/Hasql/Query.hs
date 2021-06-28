@@ -1,13 +1,13 @@
 module Polysemy.Hasql.Query where
 
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Rep (Auto)
+import Polysemy.Db.Data.Rep (Auto, UidRep)
 
 import qualified Polysemy.Hasql.Data.Query as Query
-import Polysemy.Hasql.Data.Query (Query)
-import Polysemy.Hasql.Data.QueryTable (QueryTable(QueryTable))
+import Polysemy.Hasql.Data.Query (Query, UidQuery)
+import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable))
 import Polysemy.Hasql.Data.Where (Where)
-import Polysemy.Hasql.Table.Schema (Schema, schema)
+import Polysemy.Hasql.Table.Schema (Schema, UidQuerySchema, schema)
 
 interpretQueryWith ::
   Params q ->
@@ -29,6 +29,14 @@ interpretQuery =
     QueryTable _ params qwhere =
       schema @qrep @rep
 {-# inline interpretQuery #-}
+
+interpretQueryUid ::
+  ∀ qrep irep rep i d r .
+  UidQuerySchema qrep irep rep i i d =>
+  InterpreterFor (UidQuery i d) r
+interpretQueryUid =
+  interpretQuery @qrep @(UidRep irep rep)
+{-# inline interpretQueryUid #-}
 
 interpretQueryAuto ::
   ∀ q d r .

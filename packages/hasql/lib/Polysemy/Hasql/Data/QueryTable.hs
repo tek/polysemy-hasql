@@ -2,6 +2,7 @@ module Polysemy.Hasql.Data.QueryTable where
 
 import Control.Lens (Lens')
 import Hasql.Encoders (Params)
+import Polysemy.Db.Data.Uid (Uid)
 import qualified Text.Show as Show
 
 import Polysemy.Hasql.Data.DbType (Column, Name, Selector)
@@ -46,3 +47,6 @@ selector =
 instance Show (QueryTable q a) where
   show (QueryTable tbl _ qw) =
     [text|QueryTable { table = #{tbl}, qparams = Params, qwhere = #{qw} }|]
+
+type UidQueryTable i d =
+  QueryTable i (Uid i d)

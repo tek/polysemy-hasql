@@ -10,13 +10,10 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName (DbName))
-import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Random (Random, random, runRandomIO)
 import Polysemy.Db.Text.Quote (dquote)
-import Polysemy.Db.Tree.Fold (FoldTree)
-import Polysemy.Db.Tree.Partial (Partially)
 import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Time (GhcTime, Time)
@@ -27,18 +24,18 @@ import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector (Selector))
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
-import Polysemy.Hasql.Data.QueryTable (QueryTable)
+import Polysemy.Hasql.Data.QueryTable (QueryTable, UidQueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Store (StoreStack, UidStoreStack, UidStoreStack', interpretStoreDbFull, interpretStoreDbFullUid)
+import Polysemy.Hasql.Store (StoreStack, interpretStoreDbFull)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.BasicSchema (BasicSchema, basicSchema)
-import Polysemy.Hasql.Table.Query.Update (PartialSql)
-import Polysemy.Hasql.Table.Schema (Schema, schema)
+import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
+import Polysemy.Hasql.Table.Schema (Schema, UidQuerySchema, UidSchema, schema)
 
 suffixedTable ::
   Lens' t (Table d) ->
@@ -168,73 +165,83 @@ type TestStoreDeps =
     GhcTime
   ]
 
-withTestStoreTableGen ::
-  ∀ rep q d r tree a .
-  Partially d tree =>
-  FoldTree 'True () PartialField [PartialSql] tree =>
+withTestStoreTable ::
+  ∀ qrep rep d i r tree a .
+  BuildPartialSql d tree =>
   Members TestStoreDeps r =>
-  Schema Auto rep q d =>
-  (QueryTable q d -> Sem (StoreStack q d ++ r) a) ->
+  Schema qrep rep i (Uid i d) =>
+  (UidQueryTable i d -> Sem (StoreStack i d ++ r) a) ->
   Sem r a
-withTestStoreTableGen prog =
-  withTestQueryTableGen @Auto @rep \ table ->
+withTestStoreTable prog =
+  withTestQueryTableGen @qrep @rep \ table ->
     interpretStoreDbFull table (prog table)
 
-withTestStoreTableUidGenAs ::
-  ∀ qrep rep ir q d i r tree a .
-  Partially (Uid i d) tree =>
-  FoldTree 'True () PartialField [PartialSql] tree =>
+withTestStoreTableGenAs ::
+  ∀ qrep rep irep d i r tree a .
+  BuildPartialSql d tree =>
   Members TestStoreDeps r =>
-  Schema qrep (UidRep ir rep) q (Uid i d) =>
-  (QueryTable q (Uid i d) -> Sem (UidStoreStack' i q d ++ r) a) ->
+  UidQuerySchema qrep irep rep i i d =>
+  (UidQueryTable i d -> Sem (StoreStack i d ++ r) a) ->
   Sem r a
-withTestStoreTableUidGenAs prog =
-  withTestQueryTableGen @qrep @(UidRep ir rep) \ table ->
-    interpretStoreDbFullUid table (prog table)
+withTestStoreTableGenAs prog =
+  withTestQueryTableGen @qrep @(UidRep irep rep) \ table ->
+    interpretStoreDbFull table (prog table)
 
-withTestStoreTableUidGen ::
-  ∀ rep ir d i r tree a .
-  Partially (Uid i d) tree =>
-  FoldTree 'True () PartialField [PartialSql] tree =>
+withTestStoreTableGen ::
+  ∀ rep i d r tree a .
+  BuildPartialSql d tree =>
   Members TestStoreDeps r =>
-  Schema (PrimQuery "id") (UidRep ir rep) i (Uid i d) =>
-  (QueryTable i (Uid i d) -> Sem (UidStoreStack i d ++ r) a) ->
+  UidSchema rep i d =>
+  (UidQueryTable i d -> Sem (StoreStack i d ++ r) a) ->
   Sem r a
-withTestStoreTableUidGen prog =
-  withTestQueryTableGen @(PrimQuery "id") @(UidRep ir rep) \ table ->
-    interpretStoreDbFullUid table (prog table)
-
-withTestStoreGen ::
-  ∀ qrep rep q d r tree .
-  Partially d tree =>
-  FoldTree 'True () PartialField [PartialSql] tree =>
-  Members TestStoreDeps r =>
-  Schema qrep rep q d =>
-  InterpretersFor (StoreStack q d) r
-withTestStoreGen prog =
-  withTestQueryTableGen @qrep @rep \ table ->
-    interpretStoreDbFull table prog
+withTestStoreTableGen prog =
+  withTestQueryTableGen @(PrimQuery "id") @(UidRep PrimaryKey rep) \ table ->
+    interpretStoreDbFull table (prog table)
 
 withTestStore ::
-  ∀ q d r tree a .
-  Partially d tree =>
-  FoldTree 'True () PartialField [PartialSql] tree =>
+  ∀ qrep rep i d r tree .
+  BuildPartialSql d tree =>
   Members TestStoreDeps r =>
-  Schema Auto Auto q d =>
-  Sem (StoreStack q d ++ r) a ->
-  Sem r a
+  Schema qrep rep i (Uid i d) =>
+  InterpretersFor (StoreStack i d) r
 withTestStore prog =
-  withTestQueryTableGen @Auto @Auto \ table ->
-    interpretStoreDbFull table prog
+  withTestStoreTable @qrep @rep (const prog)
+
+withTestStoreGenAs ::
+  ∀ qrep irep rep i d r tree .
+  BuildPartialSql d tree =>
+  Members TestStoreDeps r =>
+  UidQuerySchema qrep irep rep i i d =>
+  InterpretersFor (StoreStack i d) r
+withTestStoreGenAs prog =
+  withTestStoreTableGenAs @qrep @rep @irep (const prog)
+
+withTestStoreGen ::
+  ∀ rep i d r tree .
+  BuildPartialSql d tree =>
+  Members TestStoreDeps r =>
+  UidSchema rep i d =>
+  InterpretersFor (StoreStack i d) r
+withTestStoreGen =
+  withTestStoreGenAs @(PrimQuery "id") @PrimaryKey @rep
+
+withTestStoreAuto ::
+  ∀ i d r tree a .
+  BuildPartialSql d tree =>
+  Members TestStoreDeps r =>
+  UidSchema Auto i d =>
+  Sem (StoreStack i d ++ r) a ->
+  Sem r a
+withTestStoreAuto =
+  withTestStoreGen @Auto
 
 withTestStoreUid ::
   ∀ i d r tree a .
   Members TestStoreDeps r =>
-  Partially (Uid i d) tree =>
-  FoldTree 'True () PartialField [PartialSql] tree =>
+  BuildPartialSql d tree =>
   Schema (PrimQuery "id") (UidRep PrimaryKey Auto) i (Uid i d) =>
-  Sem (UidStoreStack i d ++ r) a ->
+  Sem (StoreStack i d ++ r) a ->
   Sem r a
 withTestStoreUid prog =
   withTestQueryTableGen @(PrimQuery "id") @(UidRep PrimaryKey Auto) \ table ->
-    interpretStoreDbFullUid table prog
+    interpretStoreDbFull table prog

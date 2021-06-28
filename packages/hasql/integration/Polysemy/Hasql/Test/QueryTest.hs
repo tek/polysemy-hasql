@@ -32,7 +32,7 @@ import Polysemy.Hasql.Query (interpretQuery)
 import Polysemy.Hasql.Query.Many (interpretMany)
 import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
-import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
+import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableRoot, tableRoot)
 import Polysemy.Hasql.Where (queryWhere)
@@ -232,7 +232,7 @@ prog' ::
   Sem r ()
 prog' =
   interpretQuery @Auto @(UidRep PrimaryKey DatRep) $
-  interpretStoreDbFullGenUid @DatRep @PrimaryKey $
+  interpretStoreDbFullGen @DatRep $
   interpretOne @ContentNumber @(Uuid Dat) $
   interpretMany @ContentNumber @(Uuid Dat) do
     (count, result) <- prog

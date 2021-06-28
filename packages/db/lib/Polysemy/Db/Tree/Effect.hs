@@ -40,9 +40,9 @@ instance meta ~ 'Just m => MaybeADTResolves ('MaybeADT m) meta
 
 ----------------------------------------------------------------------------------------------------
 
-class IsADT (rep :: Type) (d :: Type) (meta :: Maybe AdtMetadata) | rep d -> meta
+class IsAdt (rep :: Type) (d :: Type) (meta :: Maybe AdtMetadata) | rep d -> meta
 
-instance MaybeADTResolves (ADTMeta rep d) meta => IsADT rep d meta
+instance MaybeADTResolves (ADTMeta rep d) meta => IsAdt rep d meta
 
 ----------------------------------------------------------------------------------------------------
 
@@ -57,44 +57,44 @@ type WithPrim reps =
 type WithEnum reps =
   WithEffect Enum reps
 
-type MatchedADT =
-  Either (*, [Type]) [Type]
+type MatchedAdt =
+  Either (Type, [Type]) [Type]
 
-type family ExtractAdtRep (effs :: [*]) :: * where
+type family ExtractAdtRep (effs :: [Type]) :: Type where
   ExtractAdtRep (ADT _ rep : _) = rep
   ExtractAdtRep (_ : effs) = ExtractAdtRep effs
 
-type family RegularADT (meta :: AdtMetadata) (pre :: [Type]) (reps :: [Type]) (rep :: Type) :: Either a [Type] where
-  RegularADT meta pre reps rep =
+type family RegularAdt (meta :: AdtMetadata) (pre :: [Type]) (reps :: [Type]) (rep :: Type) :: Either a [Type] where
+  RegularAdt meta pre reps rep =
     'Right (pre ++ reps ++ '[ADT meta rep])
 
-type family MatchADT (meta :: Maybe AdtMetadata) (pre :: [Type]) (reps :: [Type]) :: MatchedADT where
-  MatchADT ('Just 'AdtEnum) '[] reps =
+type family MatchAdt (meta :: Maybe AdtMetadata) (pre :: [Type]) (reps :: [Type]) :: MatchedAdt where
+  MatchAdt ('Just 'AdtEnum) '[] reps =
     'Right (Enum : reps)
-  MatchADT ('Just meta) pre '[] =
+  MatchAdt ('Just meta) pre '[] =
     'Right (ADT meta Auto : pre)
-  MatchADT 'Nothing pre '[] =
+  MatchAdt 'Nothing pre '[] =
     'Left '(Prim, pre)
-  MatchADT ('Just meta) pre (Product rep : reps) =
-    RegularADT meta pre reps (Product rep)
-  MatchADT ('Just meta) pre (Flatten rep : reps) =
-    RegularADT meta pre reps (Flatten rep)
-  MatchADT ('Just meta) pre (Sum rep : reps) =
-    RegularADT meta pre reps (Sum rep)
-  MatchADT _ pre (Json : reps) =
+  MatchAdt ('Just meta) pre (Product rep : reps) =
+    RegularAdt meta pre reps (Product rep)
+  MatchAdt ('Just meta) pre (Flatten rep : reps) =
+    RegularAdt meta pre reps (Flatten rep)
+  MatchAdt ('Just meta) pre (Sum rep : reps) =
+    RegularAdt meta pre reps (Sum rep)
+  MatchAdt _ pre (Json : reps) =
     'Left '(Json, pre ++ reps)
-  MatchADT _ pre (JsonB : reps) =
+  MatchAdt _ pre (JsonB : reps) =
     'Left '(JsonB, pre ++ reps)
-  MatchADT _ pre (Prim : reps) =
+  MatchAdt _ pre (Prim : reps) =
     'Left '(Prim, pre ++ reps)
-  MatchADT meta pre (rep : reps) =
-    MatchADT meta (pre ++ '[rep]) reps
+  MatchAdt meta pre (rep : reps) =
+    MatchAdt meta (pre ++ '[rep]) reps
 
-class ADTOrPrim (adt :: MatchedADT) (d :: D) (effs :: Effs) | adt d -> effs
+class AdtOrPrim (adt :: MatchedAdt) (d :: D) (effs :: Effs) | adt d -> effs
 
-instance ADTOrPrim ('Right reps) ('D d) ('Effs reps)
+instance AdtOrPrim ('Right reps) ('D d) ('Effs reps)
 
-instance withPrim ~ WithEffect prim reps => ADTOrPrim ('Left '(prim, reps)) ('D d) ('Effs withPrim)
+instance withPrim ~ WithEffect prim reps => AdtOrPrim ('Left '(prim, reps)) ('D d) ('Effs withPrim)
 
 ----------------------------------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ class NewtypeIsPrim (d :: Type) where
 #endif
 
 instance NewtypeIsPrim (Path b t)
-  
+
 class NewtypeOrPrim (tag :: Type) (defined :: Bool) (d :: Type) (wrapped :: Type) (reps :: [Type]) (effs :: Effs) | defined d wrapped reps -> effs
 
 instance effs ~ 'Effs '[Prim] => NewtypeOrPrim tag 'True d wrapped '[] effs
@@ -132,16 +132,16 @@ type family MatchNt (inferred :: Maybe Type) (pre :: [Type]) (reps :: [Type]) ::
   MatchNt 'Nothing pre '[] =
     'Left pre
 
-class NewtypeOrADT (tag :: Type) (nt :: MatchedNt) (d :: D) (effs :: Effs) | nt d -> effs
+class NewtypeOrAdt (tag :: Type) (nt :: MatchedNt) (d :: D) (effs :: Effs) | nt d -> effs
 
 instance (
     NewtypeOrPrim tag (NewtypeIsPrimResolves d) d wrapped reps effs
-  ) => NewtypeOrADT tag ('Right '(reps, wrapped)) ('D d) effs
+  ) => NewtypeOrAdt tag ('Right '(reps, wrapped)) ('D d) effs
 
 instance (
-    IsADT (Rep reps) d meta,
-    ADTOrPrim (MatchADT meta '[] reps) ('D d) effs
-  ) => NewtypeOrADT tag ('Left reps) ('D d) effs
+    IsAdt (Rep reps) d meta,
+    AdtOrPrim (MatchAdt meta '[] reps) ('D d) effs
+  ) => NewtypeOrAdt tag ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------
 
@@ -164,10 +164,9 @@ instance (
     ResolveRep tag (Rep reps) ('D d') ('Effs effs)
   ) => TyconOrNewtype tag ('Right '(reps, eff, d')) d ('Effs (eff : effs))
 
--- TODO add a class that allows users to force a specific newtype to be used as prim, e.g. for GreaterOrEq et al
 instance (
     IsNewtype d nt,
-    NewtypeOrADT tag (MatchNt nt '[] reps) ('D d) effs
+    NewtypeOrAdt tag (MatchNt nt '[] reps) ('D d) effs
   ) => TyconOrNewtype tag ('Left reps) ('D d) effs
 
 ----------------------------------------------------------------------------------------------------

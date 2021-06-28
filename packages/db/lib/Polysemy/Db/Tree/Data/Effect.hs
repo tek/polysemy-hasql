@@ -3,7 +3,7 @@ module Polysemy.Db.Tree.Data.Effect where
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 
-import Polysemy.Db.Data.Rep (Flatten, NewtypeQuery, PrimQuery)
+import Polysemy.Db.Data.Rep (Flatten, PrimQuery)
 import Polysemy.Db.SOP.List (FirstJust)
 import Polysemy.Db.Tree.Meta (AdtMetadata)
 
@@ -47,8 +47,6 @@ type family FindFlatten (effs :: [Type]) :: Maybe Type where
 
 type family GetPrimQuery (eff :: Type) :: Maybe Symbol where
   GetPrimQuery (PrimQuery name) =
-    'Just name
-  GetPrimQuery (NewtypeQuery name) =
     'Just name
   GetPrimQuery _ =
     'Nothing

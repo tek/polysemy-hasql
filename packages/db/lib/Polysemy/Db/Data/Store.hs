@@ -1,46 +1,40 @@
 module Polysemy.Db.Data.Store where
 
 import Polysemy.Db.Data.Partial (Partial)
-import Polysemy.Db.Data.Uid (Uid, Uuid)
+import Polysemy.Db.Data.Uid (Uid)
 
 -- |A 'Store' is characterized by a record type @d@ and a primary key type @i@.
--- The parameter is usually something like 'UUID' or 'Int', assumed to be a field in @d@.
+-- The parameter is usually something like 'UUID' or 'Int', and it is combined with the record in the data type 'Uid'.
 -- Programs using 'Store' need no knowledge about the database that might be backing the effect:
 --
 -- @
--- data User { id :: Int, name :: Text }
--- progStore :: Member (Store Int User) r => Sem r (Maybe User)
+-- data User { name :: Text }
+-- progStore :: Member (Store Int User) r => Sem r (Maybe (Uid Int User))
 -- progStore = do
---   Store.insert (User 1 "admin")
---   Store.upsert (User 1 "root")
---   Store.upsert (User 2 "guest")
+--   Store.insert (Uid 1 (User "admin"))
+--   Store.upsert (Uid 1 (User "root"))
+--   Store.upsert (Uid 2 (User "guest"))
 --   _ \<- Store.delete 2
 --   Store.fetch 1
 -- @
---
--- The parameter type doesn't necessarily have to correspond to the field's type; it's up to the interpreter to make
--- them agree.
 data Store i d :: Effect where
-  Insert :: d -> Store i d m ()
-  Upsert :: d -> Store i d m ()
-  Delete :: i -> Store i d m (Maybe (NonEmpty d))
-  DeleteAll :: Store i d m (Maybe (NonEmpty d))
-  Fetch :: i -> Store i d m (Maybe d)
-  FetchAll :: Store i d m (Maybe (NonEmpty d))
-  Update :: i -> Partial d -> Store i d m (Maybe d)
+  Insert :: Uid i d -> Store i d m ()
+  Upsert :: Uid i d -> Store i d m ()
+  Delete :: i -> Store i d m (Maybe (NonEmpty (Uid i d)))
+  DeleteAll :: Store i d m (Maybe (NonEmpty (Uid i d)))
+  Fetch :: i -> Store i d m (Maybe (Uid i d))
+  FetchAll :: Store i d m (Maybe (NonEmpty (Uid i d)))
+  Update :: i -> Partial d -> Store i d m (Maybe (Uid i d))
 
 makeSem ''Store
 
-type UidStore i d =
-  Store i (Uid i d)
-
 type UuidStore d =
-  Store UUID (Uuid d)
+  Store UUID d
 
 type family StoreEffects i e ds :: EffectRow where
   StoreEffects _ _ '[] = '[]
-  StoreEffects i e (d : ds) = (UidStore i d !! e : StoreEffects i e ds)
+  StoreEffects i e (d : ds) = (Store i d !! e : StoreEffects i e ds)
 
 type family Stores i e ds r :: Constraint where
   Stores _ _ '[] _ = ()
-  Stores i e (d : ds) r = (Member (UidStore i d !! e) r, Stores i e ds r)
+  Stores i e (d : ds) r = (Member (Store i d !! e) r, Stores i e ds r)

@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-redundant-constraints #-}
 
-module Polysemy.Hasql.Test.Tree.DeriveProd where
+module Polysemy.Hasql.Test.Tree.DeriveUnitTest where
 
 import Generics.SOP (I, NP)
 import Polysemy.Db.Data.Rep (Auto, Prim)
@@ -19,14 +19,14 @@ import Polysemy.Hasql.Where (Where)
 data Dat =
   Dat {
     int :: Int,
-    double :: Double
+    uni :: ()
   }
   deriving (Eq, Show, Generic)
 
 type DatAdtMetas =
   '[
     'TreeMeta ('NamedField "int") Auto Int,
-    'TreeMeta ('NamedField "double") Auto Double
+    'TreeMeta ('NamedField "uni") Auto ()
   ]
 
 type DatAdtMeta =
@@ -38,7 +38,7 @@ type DatTreeEffs =
 type DatTrees =
   '[
     'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
+    'Kind.Tree ('NamedField "uni") '[Prim] ('Kind.Prim ())
   ]
 
 type DatNode =
@@ -47,7 +47,7 @@ type DatNode =
 type DatTree =
   'Kind.Tree ('NamedField "Dat") DatTreeEffs DatNode
 
-datDerivation ::
+unitDerivation ::
   d ~ Dat =>
   tag ~ DataTag =>
   p ~ DataParams =>
@@ -63,9 +63,9 @@ datDerivation ::
   Tree p meta DatTree =>
   Where Auto DatTree d DatTree d =>
   ()
-datDerivation =
+unitDerivation =
   ()
 
-test_deriveProd :: UnitTest
-test_deriveProd =
-  pure datDerivation
+test_deriveUnit :: UnitTest
+test_deriveUnit =
+  pure unitDerivation

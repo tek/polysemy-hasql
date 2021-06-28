@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Statement where
 
-import qualified Data.Text as Text
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, int8, noResult, nullable)
 import Hasql.DynamicStatements.Snippet (Snippet)
@@ -8,11 +7,13 @@ import Hasql.DynamicStatements.Statement (dynamicallyParameterized)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement (Statement))
 import Polysemy.Db.Data.DbName (DbName (DbName))
+import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Text.Quote (dquote)
+import Polysemy.Db.Tree.Fold (FoldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
 import qualified Polysemy.Hasql.Data.DbType as Column
-import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector, TypeName ())
+import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector, TypeName)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable), qwhere)
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode, unSqlCode))
@@ -20,13 +21,20 @@ import Polysemy.Hasql.Data.Table (Table (Table, _params, _row, _structure))
 import Polysemy.Hasql.Data.Where (Where (Where))
 import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName, typeName)
 import Polysemy.Hasql.Table.Query.Delete (deleteSql)
-import Polysemy.Hasql.Table.Query.Fragment (addColumnFragment, alterFragment, conflictFragment, fromFragment)
+import Polysemy.Hasql.Table.Query.Fragment (
+  addColumnFragment,
+  alterFragment,
+  conflictFragment,
+  fromFragment,
+  selectFragment,
+  whereFragment,
+  )
 import qualified Polysemy.Hasql.Table.Query.Insert as Query (insert)
 import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import qualified Polysemy.Hasql.Table.Query.Set as Query (set)
-import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated, commaSeparatedSql)
+import Polysemy.Hasql.Table.Query.Text (commaSeparated, commaSeparatedSql)
 import qualified Polysemy.Hasql.Table.Query.Update as Query
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
+import Polysemy.Hasql.Table.Query.Update (PartialSql)
 import Polysemy.Hasql.Table.ResultShape (ResultShape (resultShape))
 
 statement ::
@@ -61,19 +69,34 @@ plain :: SqlCode -> Statement () ()
 plain (SqlCode sql) =
   Statement (encodeUtf8 sql) mempty noResult False
 
+selectSql ::
+  Column ->
+  SqlCode
+selectSql column@Column {_selector} =
+  SqlCode [text|#{sel} #{from}|]
+  where
+    SqlCode sel =
+      selectFragment column
+    SqlCode from =
+      fromFragment _selector
+
 select ::
-  ∀ d .
+  ∀ d result .
+  ResultShape d result =>
   Column ->
   Row d ->
-  Statement () [d]
-select table row =
-  prepared (selectColumns table) row noParams
+  Statement () result
+select column row =
+  prepared (selectSql column) row noParams
 
 selectWhereSql ::
   QueryTable query d ->
   SqlCode
-selectWhereSql (QueryTable (Table (selectColumns -> SqlCode sel) _ _) _ (Where (SqlCode qw) _)) =
-  SqlCode [text|#{sel} where #{qw}|]
+selectWhereSql (QueryTable (Table column _ _) _ (whereFragment -> SqlCode wh)) =
+  SqlCode [text|#{sel} #{wh}|]
+  where
+    SqlCode sel =
+      selectSql column
 
 -- |Construct a query of the shape "select ... from ... where ..."
 -- The point of the 'ResultShape' constraint is to help with inferring the @d@ type from the @result@ type so no manual
@@ -129,35 +152,33 @@ upsert Table {_structure, _params} =
 
 deleteWhereSql ::
   Table d ->
-  SqlCode ->
+  Where q d ->
   SqlCode
-deleteWhereSql Table {_structure} (SqlCode qw) =
-  [text|#{del}#{qwFragment} returning #{cols}|]
+deleteWhereSql Table {_structure} where' =
+  [text|#{del} #{wh} returning #{cols}|]
   where
-    qwFragment =
-      if Text.null qw
-      then "" :: Text
-      else [text| where #{qw}|]
+    SqlCode wh =
+      whereFragment where'
     SqlCode del =
       deleteSql _structure
-    cols =
-      commaColumns (baseColumns _structure)
+    SqlCode cols =
+      selectColumns _structure
 
 deleteWhere ::
   ResultShape d result =>
   QueryTable query d ->
   Statement query result
-deleteWhere QueryTable {_table = table@Table {_row}, _qparams, _qwhere = Where qw _} =
-  prepared (deleteWhereSql table qw) _row _qparams
+deleteWhere QueryTable {_table = table@Table {_row}, _qparams, _qwhere} =
+  prepared (deleteWhereSql table _qwhere) _row _qparams
 
 deleteAll ::
   Table d ->
   Statement () [d]
 deleteAll table@(Table _ row _) =
-  prepared (deleteWhereSql table "") row noParams
+  prepared (deleteWhereSql table mempty) row noParams
 
 updateSql ::
-  BuildPartialSql d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Table d ->
   Maybe (Where query d) ->
   query ->
@@ -167,7 +188,7 @@ updateSql table qw q tree =
   Query.update table qw q tree
 
 update ::
-  BuildPartialSql d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   QueryTable query d ->
   query ->
   PartialTree tree ->
@@ -176,7 +197,7 @@ update (QueryTable tbl@Table {_row} _ qw) q t =
   dynamicallyParameterized (updateSql tbl (Just qw) q t) (resultShape _row) False
 
 updateSingle ::
-  BuildPartialSql d tree =>
+  FoldTree 'True () PartialField [PartialSql] tree =>
   Table d ->
   PartialTree tree ->
   Statement () (Maybe d)

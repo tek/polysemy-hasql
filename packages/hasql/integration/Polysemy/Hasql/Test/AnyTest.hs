@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.AnyTest where
 import Polysemy.Db.Data.Rep (Auto, PrimaryKey, UidRep)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (UidStore)
+import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import Polysemy.Db.Data.Uid (Uid(Uid))
@@ -25,7 +25,7 @@ specimen =
   Uid 1 (Dat "name")
 
 prog ::
-  Members [UidStore Int Dat, StoreQuery Dat Bool, Hedgehog IO] r =>
+  Members [Store Int Dat, StoreQuery Dat Bool, Hedgehog IO] r =>
   Sem r ()
 prog = do
   Store.insert (Uid 1 (Dat "first"))
@@ -38,4 +38,4 @@ test_any =
     withTestStoreUid $
       interpretQuery @Auto @(UidRep PrimaryKey Auto) $
       interpretStoreQueryAny @Dat @(Uid Int Dat) $
-      restop @DbError @(StoreQuery Dat Bool) $ restop @DbError @(UidStore Int Dat) prog
+      restop @DbError @(StoreQuery Dat Bool) $ restop @DbError @(Store Int Dat) prog

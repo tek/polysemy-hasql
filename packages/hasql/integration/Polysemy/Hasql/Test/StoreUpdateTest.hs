@@ -7,7 +7,7 @@ import Polysemy.Db.Data.Partial (partial)
 import Polysemy.Db.Data.PartialField (PartialTree, partially)
 import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, UidRep)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (UidStore)
+import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
@@ -49,29 +49,29 @@ type DatUpdates =
 
 update ::
   ∀ tree .
-  InsertPaths (Uid Int Dat) DatUpdates tree =>
+  InsertPaths Dat DatUpdates tree =>
   PartialTree tree
 update =
-  partially @(Uid Int Dat) +> field @"int" (5 :: Int) +> field @"double" (73.18 :: Double)
+  partially @Dat +> field @"int" (5 :: Int) +> field @"double" (73.18 :: Double)
 
 updateWith ::
   ∀ e r .
-  Members [StoreUpdate Int (Uid Int Dat) DatUpdates !! e, Stop e] r =>
-  PartialUpdate (Uid Int Dat) DatUpdates ->
+  Members [StoreUpdate Int Dat DatUpdates !! e, Stop e] r =>
+  PartialUpdate Dat DatUpdates ->
   Sem r ()
 updateWith upd =
   restop (void (StoreUpdate.create 1 upd))
 
 prog ::
   ∀ e r .
-  Members [UidStore Int Dat !! e, StoreUpdate Int (Uid Int Dat) DatUpdates !! e, Stop e, Error Text] r =>
+  Members [Store Int Dat !! e, StoreUpdate Int Dat DatUpdates !! e, Stop e, Error Text] r =>
   Sem r (Maybe (NonEmpty (Uid Int Dat)))
 prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith (PartialUpdate update)
-  restop (Store.update 1 (partial @(Uid Int Dat) ++> field @"int" (99 :: Int)))
-  jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"_payload":{"txt":"updated"}}|]))
+  restop (Store.update 1 (partial @Dat ++> field @"int" (99 :: Int)))
+  jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
 

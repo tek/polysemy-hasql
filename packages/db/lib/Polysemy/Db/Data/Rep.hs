@@ -65,9 +65,8 @@ data PrimQuery (field :: Symbol) =
   PrimQuery
   deriving (Eq, Show)
 
-data NewtypeQuery (field :: Symbol) =
-  NewtypeQuery
-  deriving (Eq, Show)
+type IdQuery =
+  PrimQuery "id"
 
 data UidRep i a =
   UidRep {

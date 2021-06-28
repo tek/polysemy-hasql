@@ -5,14 +5,14 @@ import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (column, jsonBytes)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (int8, param)
-import Polysemy.Db.Data.Rep (Json, Prim)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.Rep (Json, Prim)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Uid (Uid(Uid))
+import Polysemy.Db.Data.Uid (Uid (Uid))
 import Polysemy.Test (UnitTest, assertRight, evalMaybe)
 
 import qualified Polysemy.Hasql.Database as Database
-import Polysemy.Hasql.Store (interpretStoreDbFullGenUid)
+import Polysemy.Hasql.Store (interpretStoreDbFullGen)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Field3 =
@@ -43,7 +43,7 @@ data DatRep =
 test_json :: UnitTest
 test_json =
   integrationTest do
-    interpretStoreDbFullGenUid @DatRep @Prim @Int @Dat do
+    interpretStoreDbFullGen @DatRep @Int @Dat do
       restop @DbError $ Store.insert dat
     result <- evalMaybe =<< Database.retryingQuerySqlDef @DbError query enc dec 5
     assertRight f3 (Aeson.eitherDecodeStrict' result)

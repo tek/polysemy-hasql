@@ -7,7 +7,7 @@ import Control.Lens (makeClassy)
 import Data.Aeson (FromJSON(..), ToJSON(..), genericParseJSON, object, withObject, (.:), (.=))
 import qualified Data.UUID as UUID
 import Data.UUID (UUID)
-import Prelude (Eq, Functor, Generic, Int, Show, fromIntegral, (<$>), (<*>), (<|>))
+import Prelude (Eq, Functor, Generic, Int, Show, fromIntegral, (<$>), (<*>), (<|>), Applicative(..), Monad(..))
 
 import Polysemy.Db.Json (jsonOptions)
 
@@ -19,6 +19,16 @@ data Uid i a =
   deriving (Eq, Show, Generic, Functor)
 
 makeClassy ''Uid
+
+instance Applicative (Uid ()) where
+  pure =
+    Uid ()
+  (<*>) (Uid () f) (Uid () a) =
+    Uid () (f a)
+
+instance Monad (Uid ()) where
+  (>>=) (Uid () a) f =
+    f a
 
 instance (FromJSON a, FromJSON i) => FromJSON (Uid i a) where
   parseJSON v =

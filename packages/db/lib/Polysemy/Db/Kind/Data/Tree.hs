@@ -40,7 +40,6 @@ data Node =
     cons :: [Con]
   }
 
-
 data Tree =
   Tree {
     name :: FieldId,

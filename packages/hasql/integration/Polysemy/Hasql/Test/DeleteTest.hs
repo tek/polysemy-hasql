@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Test.DeleteTest where
 
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.Rep (Auto)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Test (UnitTest)
@@ -23,5 +24,5 @@ prog =
 test_deleteEmpty :: UnitTest
 test_deleteEmpty = do
   integrationTest do
-    withTestStore @() @Dat do
+    withTestStore @Auto @Auto do
       restop @DbError prog

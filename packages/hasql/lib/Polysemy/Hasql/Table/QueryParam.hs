@@ -1,7 +1,8 @@
 module Polysemy.Hasql.Table.QueryParam where
 
 import Data.Vector (Vector)
-import Hasql.Encoders (NullableOrNot, Params, Value, array, dimension, element, nonNullable, nullable, param)
+import Hasql.Encoders (NullableOrNot, Params, Value, array, dimension, element, noParams, nonNullable, nullable, param)
+import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 import Polysemy.Hasql.Table.EncoderValue (EncoderValue, encoderValue)
@@ -69,3 +70,7 @@ instance (
   ) => QueryParam (Newtype n d : effs) n where
   queryParam =
     coerce (queryParam @effs @d)
+
+instance QueryParam '[Prim] () where
+  queryParam =
+    noParams

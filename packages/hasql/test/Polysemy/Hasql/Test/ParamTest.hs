@@ -2,11 +2,11 @@ module Polysemy.Hasql.Test.ParamTest where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Rep (Auto, NewtypeQuery, Prim, Product, Sum)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
-import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Meta
 import Polysemy.Test (UnitTest, runTestAuto)
 
@@ -152,7 +152,7 @@ newtype NtId =
 
 queryTable_Newtype_PrimQuery :: QueryTable NtId Simple
 queryTable_Newtype_PrimQuery =
-  schema @(NewtypeQuery "double") @Auto @NtId
+  schema @(PrimQuery "double") @Auto @NtId
 
 test_param2 :: UnitTest
 test_param2 =

@@ -12,6 +12,7 @@ data Partial (d :: Type) =
   Partial { unPartial :: ∀ tree . Partially d tree => PartialTree tree }
 
 getPartial ::
+  ∀ d tree .
   Partially d tree =>
   Partial d ->
   PartialTree tree
@@ -19,6 +20,7 @@ getPartial =
   unsafeCoerce . unPartial
 
 wrapPartial ::
+  ∀ d tree .
   Partially d tree =>
   PartialTree tree ->
   Partial d

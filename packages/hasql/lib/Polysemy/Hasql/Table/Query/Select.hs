@@ -1,8 +1,7 @@
 module Polysemy.Hasql.Table.Query.Select where
 
-import Polysemy.Hasql.Data.DbType (Column(Column), DbType(Sum, Prim, Prod), Selector(Selector))
-import Polysemy.Hasql.Data.SqlCode (SqlCode(SqlCode))
-import Polysemy.Hasql.Table.Query.Fragment (fromFragment)
+import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod, Sum), Selector (Selector))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import Polysemy.Hasql.Table.Query.Text (commaSeparated)
 
 foldPrims ::
@@ -24,5 +23,5 @@ foldPrims prim =
 selectColumns ::
   Column ->
   SqlCode
-selectColumns column@(Column _ (fromFragment -> SqlCode from) _ _ _) =
-  SqlCode [text|select #{commaSeparated @[] (foldPrims pure column)} #{from}|]
+selectColumns column =
+  SqlCode (commaSeparated @[] (foldPrims pure column))

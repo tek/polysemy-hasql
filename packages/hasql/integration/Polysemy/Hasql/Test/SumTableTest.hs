@@ -1,15 +1,15 @@
 module Polysemy.Hasql.Test.SumTableTest where
 
-import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
-import qualified Polysemy.Db.Data.Store as Store
+import qualified Polysemy.Db.Data.QueryStore as QueryStore
+import Polysemy.Db.Data.Rep (Auto, IdQuery, Prim, Product, Sum)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest, assertJust)
 
-import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.QueryStore (withTestQueryStore)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
@@ -50,7 +50,8 @@ specimen =
 test_sumTable :: UnitTest
 test_sumTable =
   integrationTest do
-    result <- withTestStoreGen @(PrimQuery "id") @Auto @Int @SumTab do
-      restop @DbError (Store.upsert specimen)
-      restop @DbError (Store.fetch id')
+    result <- withTestQueryStore @IdQuery @IdQuery @(Sum Auto) @Int @SumTab @Int @SumTab do
+      restop @DbError do
+        QueryStore.upsert specimen
+        QueryStore.fetch id'
     assertJust specimen result

@@ -5,8 +5,9 @@ import qualified Data.Map.Strict as Map
 
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.StoreQuery (StoreQuery(..))
-import Polysemy.Db.Store (StrictStore(StrictStore))
+import Polysemy.Db.Data.StoreQuery (StoreQuery (..))
+import qualified Polysemy.Db.Data.Uid as Uid
+import Polysemy.Db.Store (StrictStore (StrictStore))
 import qualified Polysemy.Db.Store as StrictStore (records)
 
 interpretStoreQueryStrict ::
@@ -121,4 +122,4 @@ interpretStoreQueryAny ::
 interpretStoreQueryAny match =
   interpretResumable \case
     Basic q ->
-      maybe False (any (match q)) <$> restop @e @(Store i d) (Store.fetchAll @i)
+      maybe False (any (match q . Uid._payload)) <$> restop @e @(Store i d) (Store.fetchAll @i)

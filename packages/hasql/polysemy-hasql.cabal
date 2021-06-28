@@ -52,6 +52,7 @@ library
       Polysemy.Hasql.DbType
       Polysemy.Hasql.DeriveStatement
       Polysemy.Hasql.InitDbError
+      Polysemy.Hasql.Interpreter.QueryStore
       Polysemy.Hasql.Interpreter.StoreUpdate
       Polysemy.Hasql.Interpreter.StoreUpdateTree
       Polysemy.Hasql.ManagedTable
@@ -97,6 +98,7 @@ library
       Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
       Polysemy.Hasql.Test.Error.Column.E1
+      Polysemy.Hasql.Test.QueryStore
       Polysemy.Hasql.Tree.Table
       Polysemy.Hasql.Tree.Value
       Polysemy.Hasql.Where
@@ -216,7 +218,7 @@ test-suite polysemy-hasql-integration
   other-modules:
       Polysemy.Hasql.Test.AnyTest
       Polysemy.Hasql.Test.ArrayTest
-      Polysemy.Hasql.Test.AtomicState
+      Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.DeleteTest
       Polysemy.Hasql.Test.InitTest
@@ -354,15 +356,17 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.TableTest
       Polysemy.Hasql.Test.Tree.Data.DatS
       Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest
-      Polysemy.Hasql.Test.Tree.DeriveProd
-      Polysemy.Hasql.Test.Tree.DeriveSum
-      Polysemy.Hasql.Test.Tree.DeriveSumDb
-      Polysemy.Hasql.Test.Tree.DeriveSumField
-      Polysemy.Hasql.Test.Tree.DeriveSumFieldDb
-      Polysemy.Hasql.Test.Tree.DeriveSumIdDb
+      Polysemy.Hasql.Test.Tree.DeriveNewtypeQueryTest
+      Polysemy.Hasql.Test.Tree.DeriveProdTest
+      Polysemy.Hasql.Test.Tree.DeriveSumDbTest
+      Polysemy.Hasql.Test.Tree.DeriveSumFieldDbTest
+      Polysemy.Hasql.Test.Tree.DeriveSumFieldTest
+      Polysemy.Hasql.Test.Tree.DeriveSumIdDbTest
+      Polysemy.Hasql.Test.Tree.DeriveSumTest
+      Polysemy.Hasql.Test.Tree.DeriveUnitTest
       Polysemy.Hasql.Test.Tree.JsonTest
-      Polysemy.Hasql.Test.Tree.LookupPartial
-      Polysemy.Hasql.Test.Tree.MergePartial
+      Polysemy.Hasql.Test.Tree.LookupPartialTest
+      Polysemy.Hasql.Test.Tree.MergePartialTest
       Polysemy.Hasql.Test.UidSumFlattenTest
       Paths_polysemy_hasql
   hs-source-dirs:

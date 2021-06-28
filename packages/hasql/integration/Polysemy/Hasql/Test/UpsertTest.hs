@@ -2,9 +2,9 @@ module Polysemy.Hasql.Test.UpsertTest where
 
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (UidStore)
+import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid(Uid))
-import Polysemy.Db.Store (interpretStoreUidAtomic)
+import Polysemy.Db.Store (interpretStoreAtomic)
 import Polysemy.Test (UnitTest, assertJust, evalEither, runTestAuto)
 
 import Polysemy.Hasql.Test.Database (withTestStoreUid)
@@ -21,7 +21,7 @@ specimen =
   Uid 1 (Dat "second")
 
 prog ::
-  Member (UidStore Int Dat) r =>
+  Member (Store Int Dat) r =>
   Sem r (Maybe (NonEmpty (Uid Int Dat)))
 prog = do
   Store.insert (Uid 1 (Dat "first"))
@@ -37,6 +37,6 @@ test_upsert = do
 test_upsert_strict :: UnitTest
 test_upsert_strict =
   runTestAuto do
-    r <- runStop @() $ interpretStoreUidAtomic @Int @Dat def do
+    r <- runStop @() $ interpretStoreAtomic @Int @Dat def do
       restop @() prog
     assertJust [specimen] =<< evalEither r

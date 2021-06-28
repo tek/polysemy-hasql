@@ -36,9 +36,9 @@ library
       Polysemy.Db.Data.DbConnectionError
       Polysemy.Db.Data.DbError
       Polysemy.Db.Data.FieldId
-      Polysemy.Db.Data.IdQuery
       Polysemy.Db.Data.Partial
       Polysemy.Db.Data.PartialField
+      Polysemy.Db.Data.QueryStore
       Polysemy.Db.Data.Rep
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
@@ -80,6 +80,7 @@ library
       Polysemy.Db.Tree.Partial
       Polysemy.Db.Tree.Partial.Insert
       Polysemy.Db.Tree.Partial.Update
+      Polysemy.Db.Tree.QueryName
       Polysemy.Db.Tree.Unfold
       Polysemy.Db.Type.Data.Tree
   other-modules:

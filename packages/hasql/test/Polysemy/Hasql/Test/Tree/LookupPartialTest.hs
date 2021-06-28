@@ -1,9 +1,9 @@
-module Polysemy.Hasql.Test.Tree.MergePartial where
+module Polysemy.Hasql.Test.Tree.LookupPartialTest where
 
 import Polysemy.Db.Kind.Data.Tree (PrimTree, ProdRoot, ProdTree)
-import Polysemy.Db.Tree.Merge (mergeAtNames)
 import Polysemy.Db.Tree.Partial (PartialTree, field, partially, (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
+import Polysemy.Db.Tree.Lookup (lookupNames)
 
 data Sub1 =
   Sub1 {
@@ -43,15 +43,11 @@ tree :: PartialTree DatTree
 tree =
   partially @Dat +> field @"int" (5 :: Int) +> field @"double" (2.4 :: Double)
 
-target :: PartialTree DatTree
+target :: PartialTree Sub1Tree
 target =
-  tree +> field @"int" (11 :: Int)
+  partially @Sub1 +> field @"int" (5 :: Int)
 
-patch :: PartialTree Sub1Tree
-patch =
-  partially @Sub1 +> field @"int" (11 :: Int)
-
-test_mergePartial :: UnitTest
-test_mergePartial =
+test_lookupPartial :: UnitTest
+test_lookupPartial =
   runTestAuto do
-    target === mergeAtNames @["sub", "sub1"] patch tree
+    target === lookupNames @["sub", "sub1"] tree

@@ -1,8 +1,10 @@
 module Polysemy.Db.AtomicState where
 
-import Polysemy.AtomicState (AtomicState(AtomicGet, AtomicState))
+import Polysemy.AtomicState (AtomicState (AtomicGet, AtomicState))
+
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
+import qualified Polysemy.Db.Store as Store
 
 insertState ::
   ∀ d e r .
@@ -11,7 +13,7 @@ insertState ::
   Sem r d
 insertState initial =
   restop @e @(Store () d) do
-    initial <$ (Store.deleteAll @() @d >> Store.insert @() @d initial)
+    initial <$ (Store.deleteAll @() @d >> Store.insert @() @d (pure initial))
 
 readState ::
   ∀ d e r .
@@ -19,7 +21,7 @@ readState ::
   d ->
   Sem r d
 readState initial = do
-  stored <- restop @e @(Store () d) (Store.fetch @() @d ())
+  stored <- restop @e @(Store () d) (Store.fetchPayload @() @d ())
   maybe (insertState @d @e initial) pure stored
 
 -- |Interpret 'AtomicState' as a singleton table.

@@ -1,10 +1,10 @@
 module Polysemy.Hasql.Tree.Table where
 
-import Polysemy.Db.Data.Rep (ForcePrim, Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
+import Polysemy.Db.Data.Rep (ForcePrim, Rep)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (Root (..))
+import Polysemy.Db.Tree (QueryRoot (..), Root (..))
 import Polysemy.Db.Tree.Api (TreeConPayload (..), TreePayload (..))
 import Polysemy.Db.Tree.Data.Params (Params (Params))
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
@@ -78,7 +78,16 @@ class TableRoot (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree wh
   tableRoot :: TableTree tree
 
 instance (
-    Root rep TableParams d tree
+    Root TableParams rep d tree
   ) => TableRoot rep d tree where
   tableRoot =
-    root @rep @TableParams @d Proxy
+    root @TableParams @rep @d Proxy
+
+class DbQueryRoot (rep :: Type) (q :: Type) (d :: Type) (tree :: Kind.Tree) | rep q d -> tree where
+  dbQueryRoot :: TableTree tree
+
+instance (
+    QueryRoot TableParams rep q d tree
+  ) => DbQueryRoot rep q d tree where
+    dbQueryRoot =
+      queryRoot @TableParams @rep @q @d Proxy

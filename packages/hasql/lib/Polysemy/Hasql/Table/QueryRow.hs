@@ -2,9 +2,10 @@ module Polysemy.Hasql.Table.QueryRow where
 
 import Data.Vector (Vector)
 import Hasql.Decoders (Array, Row, Value, array, column, listArray, nonNullable, nullable, vectorArray)
+import Polysemy.Db.Data.Rep (Prim)
+import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 import Polysemy.Hasql.Table.DecoderValue (DecoderValue, decoderValue)
-import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 value :: Value a -> Row a
 value =
@@ -46,3 +47,7 @@ instance {-# overlappable #-} (
   ) => QueryRow eff d where
   queryRow =
     value (decoderValue @eff)
+
+instance QueryRow '[Prim] () where
+  queryRow =
+    unit

@@ -9,67 +9,86 @@ import qualified Polysemy.Hasql.Data.Crud as Crud
 import Polysemy.Hasql.Data.Crud (Crud (..))
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
+import Polysemy.Hasql.Table.ResultShape (ResultShape)
 
-class Members [Crud q d !! e, ManagedTable d !! e, Stop e] r => StatementEffects q e r d
+class Members [Crud i d q p !! e, ManagedTable d !! e, Stop e] r => StatementEffects i e r d q p
 
-instance Members [Crud q d !! e, ManagedTable d !! e, Stop e] r => StatementEffects q e r d
+instance Members [Crud i d q p !! e, ManagedTable d !! e, Stop e] r => StatementEffects i e r d q p
 
 runStatement ::
   Members [ManagedTable d !! e, Stop e] r =>
-  Sem r (Statement q o) ->
-  q ->
+  Sem r (Statement i o) ->
+  i ->
   Sem r o
 runStatement statementSem param =
   restop . ManagedTable.runStatement param =<< statementSem
 
 insert ::
-  StatementEffects q e r d =>
+  StatementEffects i e r d q p =>
   d ->
   Sem r ()
 insert =
   runStatement (restop Crud.insert)
 
 upsert ::
-  StatementEffects q e r d =>
+  StatementEffects i e r d q p =>
   d ->
   Sem r ()
 upsert =
   runStatement (restop Crud.upsert)
 
 delete ::
-  ∀ d q e r .
-  StatementEffects q e r d =>
-  q ->
+  ∀ i d q p e r .
+  StatementEffects i e r d q p =>
+  i ->
   Sem r [d]
 delete =
   runStatement (restop Crud.delete)
 
 deleteAll ::
-  ∀ d q e r .
-  StatementEffects q e r d =>
+  ∀ i d q p e r .
+  StatementEffects i e r d q p =>
   Sem r [d]
 deleteAll =
   runStatement (restop Crud.deleteAll) ()
 
 fetch ::
-  ∀ d q e r .
-  StatementEffects q e r d =>
+  ∀ i d o q p e r .
+  ResultShape d o =>
+  StatementEffects i e r d q p =>
+  i ->
+  Sem r o
+fetch =
+  runStatement (restop Crud.fetch)
+
+fetchQ ::
+  ∀ i d o q p e r .
+  ResultShape d o =>
+  StatementEffects i e r d q p =>
   q ->
-  Sem r (Maybe d)
-fetch q =
-  runStatement (restop Crud.fetch) q
+  Sem r o
+fetchQ =
+  runStatement (restop Crud.fetchQ)
 
 fetchAll ::
-  ∀ d q e r .
-  StatementEffects q e r d =>
+  ∀ i d q p e r .
+  StatementEffects i e r d q p =>
   Sem r [d]
 fetchAll =
   runStatement (restop Crud.fetchAll) ()
 
 update ::
-  StatementEffects q e r d =>
-  q ->
-  Partial d ->
+  StatementEffects i e r d q p =>
+  i ->
+  Partial p ->
   Sem r (Maybe d)
 update i patch =
   runStatement (restop (Crud.update i patch)) ()
+
+updateQ ::
+  StatementEffects i e r d q p =>
+  q ->
+  Partial p ->
+  Sem r (Maybe d)
+updateQ q patch =
+  runStatement (restop (Crud.updateQ q patch)) ()

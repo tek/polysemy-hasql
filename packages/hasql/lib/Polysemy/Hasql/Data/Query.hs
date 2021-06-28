@@ -1,6 +1,8 @@
 module Polysemy.Hasql.Data.Query where
 
 import Hasql.Encoders (Params)
+import Polysemy.Db.Data.Uid (Uid)
+
 import Polysemy.Hasql.Data.Where (Where)
 
 data Query q d :: Effect where
@@ -8,3 +10,6 @@ data Query q d :: Effect where
   Query :: Query q d m (Where q d)
 
 makeSem ''Query
+
+type UidQuery i d =
+  Query i (Uid i d)

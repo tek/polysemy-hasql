@@ -1,11 +1,11 @@
 module Polysemy.Hasql.Tree.Value where
 
 import Generics.SOP (I (I))
-import Polysemy.Db.Data.Rep (Rep)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdText)
+import Polysemy.Db.Data.Rep (Rep)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree (Root (..))
+import Polysemy.Db.Tree (QueryRoot (queryRoot), Root (..))
 import Polysemy.Db.Tree.Api (TreeConPayload (..), TreePayload (..))
 import Polysemy.Db.Tree.Data.Params (Params (Params), TTree)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
@@ -13,7 +13,7 @@ import Polysemy.Db.Tree.Effect (D (D), PrimOrTycon, ResolveRep, TreeEffects, Tre
 
 import Polysemy.Hasql.ColumnType (EffectfulColumnType, effectfulColumnType)
 import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions (..), RepOptions (..), RepToList)
-import Polysemy.Hasql.Tree.Table (DbTag, PrimColumn, MatchPrim)
+import Polysemy.Hasql.Tree.Table (DbTag, MatchPrim, PrimColumn)
 
 data DbValueTag =
   DbValueTag
@@ -56,7 +56,16 @@ class DbValueTree (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep d -> tree 
   dbValueTree :: d -> TTree DbValueParams tree
 
 instance (
-    Root rep DbValueParams d tree
+    Root DbValueParams rep d tree
   ) => DbValueTree rep d tree where
   dbValueTree =
-    root @rep @DbValueParams @d . I
+    root @DbValueParams @rep @d . I
+
+class DbValueQueryTree (rep :: Type) (q :: Type) (d :: Type) (tree :: Kind.Tree) | rep q d -> tree where
+  dbValueQueryTree :: q -> TTree DbValueParams tree
+
+instance (
+    QueryRoot DbValueParams rep q d tree
+  ) => DbValueQueryTree rep q d tree where
+  dbValueQueryTree =
+    queryRoot @DbValueParams @rep @q @d . I

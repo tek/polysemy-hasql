@@ -1,15 +1,14 @@
 module Polysemy.Hasql.Where.Dynamic where
 
-import Generics.SOP (I(I))
+import Generics.SOP (I (I))
 import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
-import Polysemy.Db.Data.Rep (Prim, PrimQuery)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Text.DbIdentifier (dbSymbolBS)
-import Polysemy.Db.Tree.Fold (FoldTree(foldTree), FoldTreePrim(..))
+import Polysemy.Db.Tree.Fold (FoldTree (foldTree), FoldTreePrim (..))
 
 import Polysemy.Hasql.Table.Query.Update (commaSeparatedSnippet)
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
-import Polysemy.Hasql.Tree.Value (DbValueTree(..))
+import Polysemy.Hasql.Tree.Value (DbValueQueryTree, dbValueQueryTree)
 
 newtype DynQuerySql =
   DynQuerySql { unDynQuerySql :: Snippet }
@@ -24,26 +23,23 @@ field ::
 field q =
   sql (dbSymbolBS @name) <> " = " <> encoderAndParam (queryValueNoN @effs) q
 
-instance (
+instance {-# overlappable #-} (
     KnownSymbol name,
     QueryValueNoN effs d
   ) => FoldTreePrim root () I [DynQuerySql] ('NamedField name) effs d where
   foldTreePrim (I q) =
     [DynQuerySql (field @name @effs q)]
 
-class DynamicQuery (rep :: Type) (q :: Type) where
+instance FoldTreePrim root () I [DynQuerySql] ('NamedField name) effs () where
+  foldTreePrim (I _) =
+    []
+
+class DynamicQuery (rep :: Type) (q :: Type) (d :: Type) where
   dynamicQuery :: q -> Snippet
 
-instance {-# overlappable #-} (
-    DbValueTree rep q tree,
-    FoldTree 'True () I [DynQuerySql] tree
-  ) => DynamicQuery rep q where
-    dynamicQuery =
-      commaSeparatedSnippet . fmap unDynQuerySql . foldTree @'True . dbValueTree @rep
-
 instance (
-    KnownSymbol name,
-    QueryValueNoN '[Prim] q
-  ) => DynamicQuery (PrimQuery name) q where
-  dynamicQuery =
-    field @name @'[Prim]
+    DbValueQueryTree rep q d tree,
+    FoldTree 'True () I [DynQuerySql] tree
+  ) => DynamicQuery rep q d where
+    dynamicQuery =
+      commaSeparatedSnippet . fmap unDynQuerySql . foldTree @'True . dbValueQueryTree @rep @q @d

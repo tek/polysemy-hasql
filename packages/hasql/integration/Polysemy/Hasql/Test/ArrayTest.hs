@@ -1,18 +1,18 @@
 module Polysemy.Hasql.Test.ArrayTest where
 
-import Polysemy.Db.Data.Rep (Auto)
-import Prelude hiding (Enum)
-
-import Polysemy.Db.Data.Rep (Enum, Prim)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.IdQuery (IdQuery(IdQuery), UuidQuery)
+import Polysemy.Db.Data.Rep (Enum)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store)
+import Polysemy.Db.Data.Store (UuidStore)
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Hasql.Test.Database (withTestStoreGen)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Db.Data.Uid (Uid (Uid))
+import qualified Polysemy.Db.Store as Store
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
+import Prelude hiding (Enum)
+
+import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Flag =
   On
@@ -24,14 +24,12 @@ data Flag =
 
 data ArrayField =
   ArrayField {
-    id :: UUID,
     f1 :: [Flag]
   }
   deriving (Eq, Show, Generic)
 
 data ArrayFieldRep =
   ArrayFieldRep {
-    id :: Prim,
     f1 :: Enum
   }
   deriving (Eq, Show, Generic)
@@ -42,17 +40,17 @@ id' =
 
 array :: ArrayField
 array =
-  ArrayField id' [On, Off, Superposition]
+  ArrayField [On, Off, Superposition]
 
 prog ::
-  Member (Store UuidQuery ArrayField) r =>
+  Member (UuidStore ArrayField) r =>
   Sem r (Maybe ArrayField)
 prog = do
-  _ <- Store.upsert array
-  Store.fetch (IdQuery id')
+  _ <- Store.upsert (Uid id' array)
+  Store.fetchPayload id'
 
 test_arrayField :: UnitTest
 test_arrayField =
   integrationTest do
-    result <- withTestStoreGen @Auto @ArrayFieldRep @UuidQuery @ArrayField (restop @DbError prog)
+    result <- withTestStoreGen @ArrayFieldRep (restop @DbError prog)
     assertJust array result

@@ -7,12 +7,12 @@ import Fcf (Eval, FromMaybe, type (@@))
 import GHC.TypeLits (AppendSymbol)
 import GHC.TypeNats (type (+))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
-import Generics.SOP.Type.Metadata (DatatypeInfo (ADT, Newtype))
+import Generics.SOP.Type.Metadata (DatatypeInfo (ADT))
 import Type.Errors (ErrorMessage (ShowType, Text))
 import Type.Errors.Pretty (TypeError, type (%), type (<>))
 
-import Polysemy.Db.Data.Rep (Auto, Flatten, Product, Rep, Sum)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Product, Rep, Sum)
 import Polysemy.Db.SOP.Constructor (ConstructorNames)
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.SOP.FieldNames (FieldIds)
@@ -21,14 +21,15 @@ import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
 type Ids =
   [[FieldId]]
 
+-- TODO cleanup
 data AdtMetadata =
   AdtSum { cons :: [ConMeta] }
   |
   AdtProd { nodeMetas :: [TreeMeta] }
   |
   AdtEnum
-  |
-  AdtNewtype { wrapped :: * }
+  -- |
+  -- AdtNewtype { wrapped :: * }
 
 data MaybeADT =
   MaybeADT AdtMetadata
@@ -131,8 +132,8 @@ type family ADTMetaExplicit (rep :: *) (d :: *) (meta :: DatatypeInfo) :: AdtMet
   ADTMetaExplicit rep d ('ADT _ _ _ _) =
     ADTMetaGen rep d (GCode rep) (FieldIds rep) (GCode d) (FieldIds d)
 #endif
-  ADTMetaExplicit _ d ('Newtype _ _ _) =
-    'AdtNewtype (NewtypePayload (GCode d))
+  -- ADTMetaExplicit _ d ('Newtype _ _ _) =
+  --   'AdtNewtype (NewtypePayload (GCode d))
   ADTMetaExplicit rep d meta =
     ErrorWithType "ADTMetaExplicit" '(rep, d, meta)
 
@@ -152,12 +153,15 @@ type family ADTMetaAuto (d :: *) (meta :: DatatypeInfo) :: AdtMetadata where
   ADTMetaAuto d ('ADT _ _ _) =
     ADTMetaGen Auto d (AllAuto (GCode d)) (FieldIds d) (GCode d) (FieldIds d)
 #endif
-  ADTMetaAuto d ('Newtype _ _ _) =
-    'AdtNewtype (NewtypePayload (GCode d))
+  -- ADTMetaAuto d ('Newtype _ _ _) =
+  --   'AdtNewtype (NewtypePayload (GCode d))
   ADTMetaAuto d _ =
     ErrorWithType "ADTMetaAuto" d
 
+type family NoAdt :: AdtMetadata where
+
 type family ADTMetaAutoOrExplicit (rep :: *) (d :: *) :: AdtMetadata where
+  ADTMetaAutoOrExplicit Auto () = NoAdt
   ADTMetaAutoOrExplicit Auto d = ADTMetaAuto d (GDatatypeInfoOf d)
   ADTMetaAutoOrExplicit rep d = ADTMetaExplicit rep d (GDatatypeInfoOf d)
 
@@ -168,7 +172,7 @@ type family ForceADTMeta (meta :: AdtMetadata) :: MaybeADT where
   ForceADTMeta ('AdtSum cols) = 'MaybeADT ('AdtSum cols)
   ForceADTMeta ('AdtProd cols) = 'MaybeADT ('AdtProd cols)
   ForceADTMeta 'AdtEnum = 'MaybeADT 'AdtEnum
-  ForceADTMeta ('AdtNewtype d) = 'MaybeADT ('AdtNewtype d)
+  -- ForceADTMeta ('AdtNewtype d) = 'MaybeADT ('AdtNewtype d)
 
 type family ADTMeta (rep :: *) (d :: *) :: MaybeADT where
   ADTMeta rep d =

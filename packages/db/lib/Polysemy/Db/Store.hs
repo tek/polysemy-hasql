@@ -4,14 +4,13 @@ import Control.Lens (view, views)
 import Polysemy.AtomicState (atomicState')
 
 import Polysemy.Db.Atomic (interpretAtomic)
-import Polysemy.Db.Data.Partial (Partial (Partial), getPartial, wrapPartial)
+import Polysemy.Db.Data.Partial (getPartial)
 import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store (..), UidStore)
+import Polysemy.Db.Data.Store (Store (..))
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Data.Uid (Uid (Uid))
 import Polysemy.Db.Tree.Data (GenDataTree, ReifyDataTree)
-import Polysemy.Db.Tree.Merge (MergePayload, payloadPatch)
-import Polysemy.Db.Tree.Partial (Partially, UpdatePartialTree, updatePartial)
+import Polysemy.Db.Tree.Partial (UpdatePartialTree, updatePartial)
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths)
 
 type StrictStoreUpdate d fields tree dataTree =
@@ -30,48 +29,50 @@ newtype StrictStore a =
     _records :: [a]
   }
   deriving (Eq, Show, Generic)
-  deriving newtype (Default, Functor, Applicative, Semigroup, Monoid)
+  deriving newtype (Default, Semigroup, Monoid)
 
 makeClassy ''StrictStore
+
+type StrictUidStore i d =
+  StrictStore (Uid i d)
 
 interpretStoreAtomicState ::
   ∀ i d e r tree dataTree .
   Eq i =>
   StrictStoreUpdate d '[] tree dataTree =>
-  (d -> i) ->
-  Member (AtomicState (StrictStore d)) r =>
+  Member (AtomicState (StrictUidStore i d)) r =>
   InterpreterFor (Store i d !! e) r
-interpretStoreAtomicState getId =
+interpretStoreAtomicState =
   interpretResumable \case
     Insert d ->
-      atomicModify' @(StrictStore d) (over records (d :))
+      atomicModify' @(StrictUidStore i d) (over records (d :))
     Upsert d ->
-      atomicModify' @(StrictStore d) (over records mod')
+      atomicModify' @(StrictUidStore i d) (over records mod')
       where
         mod' a =
-          d : filter (\ d' -> getId d /= getId d') a
+          d : filter (\ d' -> Uid._id d /= Uid._id d') a
     Delete id' -> do
-      result <- atomicGets @(StrictStore d) (views records (filter ((id' ==) . getId)))
-      nonEmpty result <$ atomicModify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+      result <- atomicGets @(StrictUidStore i d) (views records (filter ((id' ==) . Uid._id)))
+      nonEmpty result <$ atomicModify' @(StrictUidStore i d) (records %~ (filter ((id' /=) . Uid._id)))
     DeleteAll -> do
-      atomicState' @(StrictStore d) \ (StrictStore ds) -> (mempty, nonEmpty ds)
+      atomicState' @(StrictUidStore i d) \ (StrictStore ds) -> (mempty, nonEmpty ds)
     Fetch id' ->
-      atomicGets @(StrictStore d) (views records (find ((id' ==) . getId)))
+      atomicGets @(StrictUidStore i d) (views records (find ((id' ==) . Uid._id)))
     FetchAll ->
-      atomicGets @(StrictStore d) (nonEmpty . view records)
+      atomicGets @(StrictUidStore i d) (nonEmpty . view records)
     Update i patch ->
-      atomicGets @(StrictStore d) (views records (find ((i ==) . getId))) >>= \case
+      atomicGets @(StrictUidStore i d) (views records (find ((i ==) . Uid._id))) >>= \case
         Just d ->
-          Just updated <$ atomicModify' @(StrictStore d) (over records mod')
+          Just updated <$ atomicModify' @(StrictUidStore i d) (over records mod')
           where
             mod' a =
-              updated : filter (\ d' -> getId d /= getId d') a
+              updated : filter (\ d' -> Uid._id d /= Uid._id d') a
             updated =
-              updatePartial (getPartial patch) d
+              fmap (updatePartial (getPartial patch)) d
         Nothing -> pure Nothing
 
 -- |This is a blackbox interpreter that takes an initial list of records and stores them in an 'AtomicState'.
--- The @getId@ parameter is used to extract the query id from the record type.
+-- The @Uid._id@ parameter is used to extract the query id from the record type.
 --
 -- This interpreter uses 'Resumable', which is a more restrictive version of 'Polysemy.Error'.
 --
@@ -84,68 +85,55 @@ interpretStoreAtomic ::
   Eq i =>
   Member (Embed IO) r =>
   StrictStoreUpdate d '[] tree dataTree =>
-  (d -> i) ->
-  StrictStore d ->
+  StrictUidStore i d ->
   InterpreterFor (Store i d !! e) r
-interpretStoreAtomic getId init' =
-  interpretAtomic init' . interpretStoreAtomicState getId . raiseUnder
-
-interpretStoreUidAtomic ::
-  ∀ i d e r tree dataTree .
-  Eq i =>
-  StrictStoreUpdate (Uid i d) '[] tree dataTree =>
-  Member (Embed IO) r =>
-  StrictStore (Uid i d) ->
-  InterpreterFor (Store i (Uid i d) !! e) r
-interpretStoreUidAtomic =
-  interpretStoreAtomic Uid._id
+interpretStoreAtomic init' =
+  interpretAtomic init' . interpretStoreAtomicState . raiseUnder
 
 interpretStoreStrictState ::
   ∀ i d e r tree dataTree .
   Eq i =>
   StrictStoreUpdate d '[] tree dataTree =>
-  Member (State (StrictStore d)) r =>
-  (d -> i) ->
+  Member (State (StrictUidStore i d)) r =>
   InterpreterFor (Store i d !! e) r
-interpretStoreStrictState getId =
+interpretStoreStrictState =
   interpretResumable \case
     Insert d ->
-      modify' @(StrictStore d) (over records (d :))
+      modify' @(StrictUidStore i d) (over records (d :))
     Upsert d ->
-      modify' @(StrictStore d) (over records mod')
+      modify' @(StrictUidStore i d) (over records mod')
       where
         mod' a =
-          d : filter (\ d' -> getId d /= getId d') a
+          d : filter (\ d' -> Uid._id d /= Uid._id d') a
     Delete id' -> do
-      result <- gets @(StrictStore d) (views records (filter ((id' ==) . getId)))
-      nonEmpty result <$ modify' @(StrictStore d) (records %~ (filter ((id' /=) . getId)))
+      result <- gets @(StrictUidStore i d) (views records (filter ((id' ==) . Uid._id)))
+      nonEmpty result <$ modify' @(StrictUidStore i d) (records %~ (filter ((id' /=) . Uid._id)))
     DeleteAll -> do
-      gets @(StrictStore d) (nonEmpty . _records) <* put @(StrictStore d) mempty
+      gets @(StrictUidStore i d) (nonEmpty . _records) <* put @(StrictUidStore i d) mempty
     Fetch id' ->
-      gets @(StrictStore d) (views records (find ((id' ==) . getId)))
+      gets @(StrictUidStore i d) (views records (find ((id' ==) . Uid._id)))
     FetchAll ->
-      gets @(StrictStore d) $ nonEmpty . view records
+      gets @(StrictUidStore i d) $ nonEmpty . view records
     Update i patch ->
-      gets @(StrictStore d) (views records (find ((i ==) . getId))) >>= \case
+      gets @(StrictUidStore i d) (views records (find ((i ==) . Uid._id))) >>= \case
         Just d ->
-          Just updated <$ modify' @(StrictStore d) (over records mod')
+          Just updated <$ modify' @(StrictUidStore i d) (over records mod')
           where
             mod' a =
-              updated : filter (\ d' -> getId d /= getId d') a
+              updated : filter (\ d' -> Uid._id d /= Uid._id d') a
             updated =
-              updatePartial (getPartial patch) d
+              fmap (updatePartial (getPartial patch)) d
         Nothing -> pure Nothing
 
 interpretStoreTVar ::
   Eq i =>
   Member (Embed IO) r =>
   StrictStoreUpdate d '[] tree dataTree =>
-  (d -> i) ->
-  TVar (StrictStore d) ->
+  TVar (StrictUidStore i d) ->
   InterpreterFor (Store i d !! e) r
-interpretStoreTVar getId tvar =
+interpretStoreTVar tvar =
   runAtomicStateTVar tvar .
-  interpretStoreAtomicState getId .
+  interpretStoreAtomicState .
   raiseUnder
 
 interpretStoreStrict ::
@@ -153,23 +141,12 @@ interpretStoreStrict ::
   Eq i =>
   Member (Embed IO) r =>
   StrictStoreUpdate d '[] tree dataTree =>
-  (d -> i) ->
-  StrictStore d ->
+  StrictUidStore i d ->
   InterpreterFor (Store i d !! e) r
-interpretStoreStrict getId init' =
+interpretStoreStrict init' =
   evalState init' .
-  interpretStoreStrictState getId .
+  interpretStoreStrictState .
   raiseUnder
-
-interpretStoreUidStrict ::
-  ∀ i d e r tree dataTree .
-  Eq i =>
-  Member (Embed IO) r =>
-  StrictStoreUpdate (Uid i d) '[] tree dataTree =>
-  StrictStore (Uid i d) ->
-  InterpreterFor (Store i (Uid i d) !! e) r
-interpretStoreUidStrict =
-  interpretStoreStrict Uid._id
 
 interpretStoreNull ::
   InterpreterFor (Store i d !! e) r
@@ -200,21 +177,21 @@ elem id' =
 
 fetchPayload ::
   ∀ i d r .
-  Member (UidStore i d) r =>
+  Member (Store i d) r =>
   i ->
   Sem r (Maybe d)
 fetchPayload id' =
-  fmap Uid._payload <$> Store.fetch @i @(Uid i d) id'
+  fmap Uid._payload <$> Store.fetch @i @d id'
 
 fetchPayloadShow ::
   ∀ i e' e d r .
   Show e' =>
-  Members [UidStore i d !! e', Stop e] r =>
+  Members [Store i d !! e', Stop e] r =>
   (Text -> e) ->
   i ->
   Sem r (Maybe d)
 fetchPayloadShow liftError id' =
-  fmap Uid._payload <$> (resumeHoist @e' @(UidStore i d) (liftError . show) (Store.fetch @i @(Uid i d) id'))
+  fmap Uid._payload <$> (resumeHoist @e' @(Store i d) (liftError . show) (Store.fetch @i @d id'))
 
 alter ::
   ∀ i d r .
@@ -223,8 +200,8 @@ alter ::
   (d -> d) ->
   Sem r ()
 alter id' f = do
-  cur <- Store.fetch @i id'
-  traverse_ (Store.upsert @i . f) cur
+  cur <- Store.fetch @i @d id'
+  traverse_ (Store.upsert @i . (Uid.payload %~ f)) cur
 
 alterOr ::
   ∀ i d r .
@@ -235,7 +212,7 @@ alterOr ::
   Sem r ()
 alterOr fallback id' f = do
   cur <- Store.fetch @i id'
-  Store.upsert @i (f (fromMaybe fallback cur))
+  Store.upsert @i ((Uid.payload %~ f) (fromMaybe (Uid id' fallback) cur))
 
 alterDefault ::
   ∀ i d r .
@@ -246,15 +223,3 @@ alterDefault ::
   Sem r ()
 alterDefault =
   alterOr @i def
-
-updatePayload ::
-  ∀ i d patch tree r .
-  Partially d patch =>
-  Partially (Uid i d) tree =>
-  MergePayload patch tree =>
-  Member (UidStore i d) r =>
-  i ->
-  Partial d ->
-  Sem r (Maybe (Uid i d))
-updatePayload i (Partial patch) =
-  Store.update i (wrapPartial (payloadPatch @i @d patch))

@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-redundant-constraints #-}
 
-module Polysemy.Hasql.Test.Tree.DeriveSum where
+module Polysemy.Hasql.Test.Tree.DeriveSumTest where
 
 import Generics.SOP (K)
 import Polysemy.Db.Data.Rep (Auto)

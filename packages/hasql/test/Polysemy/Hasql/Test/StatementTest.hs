@@ -2,8 +2,7 @@ module Polysemy.Hasql.Test.StatementTest where
 
 import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
-import Polysemy.Db.Data.IdQuery (IdQuery)
-import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
+import Polysemy.Db.Data.Rep (Auto, IdQuery, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
@@ -208,12 +207,11 @@ data SumUnaExt =
 test_createStatement_Sum :: UnitTest
 test_createStatement_Sum =
   runTestAuto do
-    target === unSqlCode stmtText
+    target === stmtText
   where
     target =
       [text|create table "sum_data" ("sum__index" bigint not null, "sum_data1" ph_type__sum_data1 not null, "sum_data2" ph_type__sum_data2 not null)|]
-    stmtText :: SqlCode
-    stmtText =
+    SqlCode stmtText =
       Statement.createTableSql (tableStructure @Auto @SumData)
 
 test_queryWhere_Sum :: UnitTest
@@ -277,8 +275,7 @@ type IDQTestType =
     'Kind.Tree ('NamedField "number") '[] ('Kind.Prim Double)
   ])
 
-test_IdQuery ::
-  UnitTest
+test_IdQuery :: UnitTest
 test_IdQuery =
   runTestAuto do
     target === unSqlCode qw
@@ -286,7 +283,17 @@ test_IdQuery =
     target =
       [text|"id" = $1|]
     QueryTable _ _ (Where qw _) =
-      schema @Auto @(UidRep Auto Auto) @(IdQuery Int) @(Uid Int IDQTest)
+      schema @IdQuery @(UidRep Auto Auto) @Int @(Uid Int IDQTest)
+
+test_unitColumn :: UnitTest
+test_unitColumn =
+  runTestAuto do
+    target === stmtText
+  where
+    target =
+      [text|create table "idq_test" ("payload" ph_type__idq_test not null)|]
+    SqlCode stmtText =
+      Statement.createTableSql (tableStructure @Auto @(Uid () IDQTest))
 
 -- test_updateStatement :: UnitTest
 -- test_updateStatement =
@@ -312,5 +319,6 @@ statementTests =
     unitTest "derive a where fragment for a sum with a prim query" test_queryWhere_Sum_Prim,
     unitTest "derive a where fragment for a sum with a unary constructors" test_queryWhere_Sum_Unary,
     unitTest "derive a where fragment for a sum with a query with a unary constructors" test_queryWhere_Sum_UnaryQ,
-    unitTest "derive an IdQuery assignment" test_IdQuery
+    unitTest "derive an IdQuery assignment" test_IdQuery,
+    unitTest "derive a unit column" test_unitColumn
   ]

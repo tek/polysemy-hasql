@@ -1,9 +1,9 @@
 module Polysemy.Hasql.Queue.Output where
 
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.Rep (PrimQuery)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
+import Polysemy.Db.Data.Uid (Uid (Uid))
 import Polysemy.Db.Random (Random, random)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import qualified Polysemy.Log as Log
@@ -34,7 +34,7 @@ interpretOutputDbQueue =
       id' <- random
       created <- Time.now
       resumeHoist QueueOutputError.Insert do
-        Store.insert (Queued id' created d)
+        Store.insert (Uid id' (Queued created d))
       Log.debug [text|executing `notify` for queue #{symbolText @queue}|]
       resumeHoist QueueOutputError.Notify do
         Database.retryingSql (Seconds 3) (sql id')
@@ -60,7 +60,7 @@ interpretOutputDbQueueFullGen ::
   Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =
-  interpretStoreDbFullGen @(PrimQuery "queue_id") @QueuedRep .
+  interpretStoreDbFullGen @QueuedRep .
   raiseUnder2 .
   interpretOutputDbQueueFull @queue .
   raiseUnder

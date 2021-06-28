@@ -1,17 +1,16 @@
 module Polysemy.Hasql.Test.UnarySumTest where
 
-import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidNestRep)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField, NumberedField))
-import qualified Polysemy.Db.Data.Store as Store
-import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Data.Uid (Uid(Uid))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
+import qualified Polysemy.Db.Data.QueryStore as QueryStore
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimQuery, PrimaryKey, Product, Sum, UidNestRep)
+import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest, assertJust)
 
-import Polysemy.Hasql.Test.Database (withTestStoreGen)
+import Polysemy.Hasql.Test.QueryStore (withTestQueryStore)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
@@ -123,7 +122,8 @@ data QRep =
 test_unarySum :: UnitTest
 test_unarySum =
   integrationTest do
-    result <- withTestStoreGen @QRep @MainRep @Q @(Uid Int UnaSum) do
-      restop @DbError (Store.upsert (Uid 1 specimen))
-      fmap Uid._payload <$> restop @DbError (Store.fetch (Q (QP 1.9)))
-    assertJust specimen result
+    result <- withTestQueryStore @(Product QRep) @(PrimQuery "id") @(UidNestRep PrimaryKey (Sum UnaSumRep)) @Int @(Uid Int UnaSum) @Q @UnaSum do
+      restop @DbError do
+        QueryStore.upsert (Uid 1 specimen)
+        QueryStore.query (Q (QP 1.9))
+    assertJust [Uid 1 specimen] result

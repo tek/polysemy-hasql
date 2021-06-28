@@ -67,10 +67,10 @@ class Partially d tree | d -> tree where
   partially :: PartialTree tree
 
 instance (
-    Root Auto PartialParams d tree
+    Root PartialParams Auto d tree
   ) => Partially d tree where
   partially =
-    root @Auto @PartialParams @d Keep
+    root @PartialParams @Auto @d Keep
 
 type UidPartially i d tree =
   Partially (Uid i d) tree

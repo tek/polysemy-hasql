@@ -3,17 +3,17 @@
 module Polysemy.Hasql.Test.DeriveQuery.UnaSumNumberedTest where
 
 import Fcf (Eval)
-import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
+import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest)
 
-import Polysemy.Hasql.Tree.Table (TableRoot)
+import Polysemy.Hasql.Tree.Table (DbQueryRoot)
 import Polysemy.Hasql.Where.Cond (MatchTable, QCond (SumPrimCond))
-import Polysemy.Hasql.Where.FlatFields (FieldPath(FieldPath), FlatRoot)
-import Polysemy.Hasql.Where.Segment (Segment (FieldSegment, ConSegment))
+import Polysemy.Hasql.Where.FlatFields (FieldPath (FieldPath), FlatRoot)
+import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment))
 
 data Sum1 =
   Sum1 {
@@ -66,10 +66,10 @@ derive ::
   dTree ~ UnaSumType =>
   dCons ~ UnaCons =>
   qn ~ 'NamedField "double" =>
-  e ~ '[Prim] =>
+  e ~ '[PrimQuery "double", Prim] =>
   t ~ Double =>
   qTree ~ 'Kind.Tree qn e ('Kind.Prim t) =>
-  TableRoot (PrimQuery "double") Double qTree =>
+  DbQueryRoot (PrimQuery "double") Double UnaSum qTree =>
   qFlat ~ Eval (FlatRoot qTree) =>
   qFlat ~ '[ 'FieldPath '[ 'FieldSegment ('NamedField "double") ] Double ] =>
   dFlat ~ Eval (FlatRoot dTree) =>

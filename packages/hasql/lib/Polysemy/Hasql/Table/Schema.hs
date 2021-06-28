@@ -1,13 +1,13 @@
 module Polysemy.Hasql.Table.Schema where
 
-import Polysemy.Db.Data.Rep (Auto, PrimQuery, UidRep, PrimaryKey)
+import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import Polysemy.Db.Data.Uid (Uid)
 
 import qualified Polysemy.Hasql.Data.QueryTable as Data
-import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
-import Polysemy.Hasql.Table.BasicSchema (BasicSchema(basicSchema))
-import Polysemy.Hasql.Tree.Table (TableRoot)
-import Polysemy.Hasql.Where (Where(queryWhere))
+import Polysemy.Hasql.QueryParams (QueryParams (queryParams))
+import Polysemy.Hasql.Table.BasicSchema (BasicSchema (basicSchema))
+import Polysemy.Hasql.Tree.Table (DbQueryRoot, TableRoot)
+import Polysemy.Hasql.Where (Where (queryWhere))
 
 -- |Derives a full 'QueryTable' using a represenation type.
 -- Given a record type:
@@ -31,7 +31,7 @@ class (
 
 instance (
     TableRoot rep d dTree,
-    TableRoot qrep q qTree,
+    DbQueryRoot qrep q d qTree,
     BasicSchema rep d,
     QueryParams qTree q,
     Where qrep qTree q dTree d
@@ -46,8 +46,11 @@ schemaAuto ::
 schemaAuto =
   schema @Auto @Auto
 
-type UidQuerySchema qrep rep i q d =
-  Schema qrep (UidRep PrimaryKey rep) q (Uid i d)
+type UidQuerySchema qrep irep rep q i d =
+  Schema qrep (UidRep irep rep) q (Uid i d)
 
 type UidSchema rep i d =
-  UidQuerySchema (PrimQuery "id") rep i i d
+  UidQuerySchema (PrimQuery "id") PrimaryKey rep i i d
+
+type UuidSchema rep d =
+  UidSchema rep UUID d

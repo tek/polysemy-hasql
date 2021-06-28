@@ -2,19 +2,26 @@ module Polysemy.Db.Tree where
 
 import Generics.SOP (HTrans (htrans), NP (Nil, (:*)), NS (S, Z), POP (POP), SOP, unSOP)
 
-import Polysemy.Db.Data.Rep (NewtypeQuery, Prim, PrimQuery, Rep)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.SOP.Constraint (DataNameF, NewtypeCoded, symbolText)
+import Polysemy.Db.SOP.Constraint (DataNameF, symbolText)
 import Polysemy.Db.SOP.Fundeps (Fundep, Fundeps)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Api (TreePayload (..), TreePrim (..), TreeSOP (..))
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
-import Polysemy.Db.Tree.Data.Params (NodeParam, Params (Params), PayloadM, TCon, TNode, TTree)
-import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), ConMetaTypes, ConMetas, ConsMetas, TM (TM), TreeMeta (TreeMeta))
+import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Params (NodeParam, Params (Params), PayloadM, TCon, TNode, TTree, Tag)
+import Polysemy.Db.Tree.Data.TreeMeta (
+  ConMeta (ConMeta),
+  ConMetaTypes,
+  ConMetas,
+  ConsMetas,
+  TM (TM),
+  TreeMeta (TreeMeta),
+  )
 import Polysemy.Db.Tree.Effect (TreeEffects)
 import Polysemy.Db.Tree.Meta (AdtMetadata (AdtProd, AdtSum), ProdDefaultRep)
+import Polysemy.Db.Tree.QueryName (QueryName)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 class ProdTrees (p :: Params) (metas :: [TreeMeta]) (trees :: [Kind.Tree]) | p metas -> trees where
@@ -194,21 +201,35 @@ instance {-# overlappable #-} (
     meta ~ 'TreeMeta ('NamedField name) (ProdDefaultRep rep) d
   ) => RootMeta rep d meta
 
-instance RootMeta (PrimQuery name) d ('TreeMeta ('NamedField name) (Rep '[Prim]) d)
-
-instance (
-    NewtypeCoded nt d
-  ) => RootMeta (NewtypeQuery name) nt ('TreeMeta ('NamedField name) (Rep '[Newtype nt d, Prim]) nt)
-
 ------------------------------------------------------------------------------------------------------------------------
 
-class Root (rep :: Type) (p :: Params) (d :: Type) (tree :: Kind.Tree) | rep p d -> tree where
+class Root (p :: Params) (rep :: Type) (d :: Type) (tree :: Kind.Tree) | rep p d -> tree where
   root :: NodeParam p d -> TTree p tree
 
 instance (
     meta ~ 'TreeMeta name r d,
     RootMeta rep d meta,
     Tree p meta tree
-  ) => Root rep p d tree where
+  ) => Root p rep d tree where
   root =
+    tree @p @meta . TM
+
+------------------------------------------------------------------------------------------------------------------------
+
+class QueryMeta (p :: Params) (rep :: Type) (q :: Type) (d :: Type) (name :: Symbol) | p rep q d -> name where
+
+instance (
+    TreeEffects (Tag p) rep q effs,
+    name ~ QueryName effs q d
+  ) => QueryMeta p rep q d name where
+
+class QueryRoot (p :: Params) (rep :: Type) (q :: Type) (d :: Type) (tree :: Kind.Tree) | p rep q d -> tree where
+  queryRoot :: NodeParam p q -> TTree p tree
+
+instance (
+    QueryMeta p rep q d name,
+    Tree p meta tree,
+    meta ~ 'TreeMeta ('NamedField name) rep q
+  ) => QueryRoot p rep q d tree where
+  queryRoot =
     tree @p @meta . TM

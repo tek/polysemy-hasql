@@ -16,7 +16,7 @@ import Prelude hiding (Enum)
 import Type.Errors (ErrorMessage(ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
-class ColumnType (d :: *) where
+class ColumnType (d :: Type) where
   columnType :: Text
   type ColumnTypeDefined d :: Bool
 #if MIN_VERSION_GLASGOW_HASKELL(8,10,0,0)
@@ -41,15 +41,16 @@ instance ColumnType Chronos.Date where columnType = "date"
 instance ColumnType Chronos.Time where columnType = "bigint"
 instance ColumnType Chronos.Datetime where columnType = "timestamp without time zone"
 instance ColumnType (Path b t) where columnType = "text"
+instance ColumnType () where columnType = "unit"
 
-type family NoColumnType (d :: *) :: ErrorMessage where
+type family NoColumnType (d :: Type) :: ErrorMessage where
   NoColumnType d =
     "Cannot use '" <> 'ShowType d <> "' as a database column." %
     "If this type should be used as a primitive column, implement:" % "" %
     "  instance ColumnType (" <> 'ShowType d <> ") where" % "    columnType = \"postgrestype\"" % "" %
     "If it is supposed to be used as structural type, it is probably lacking an instance of 'Generic'."
 
-class ColumnTypeOrError (defined :: Bool) (d :: *) where
+class ColumnTypeOrError (defined :: Bool) (d :: Type) where
   columnTypeOrError :: Text
 
 instance ColumnType d => ColumnTypeOrError 'True d where
@@ -62,14 +63,14 @@ instance {-# incoherent #-} (
     columnTypeOrError =
       "error"
 
-class CheckedColumnType (d :: *) where
+class CheckedColumnType (d :: Type) where
   checkedColumnType :: Text
 
 instance ColumnTypeOrError (ColumnTypeDefined d) d => CheckedColumnType d where
   checkedColumnType =
     columnTypeOrError @(ColumnTypeDefined d) @d
 
-class EffectfulColumnType (field :: FieldId) (effs :: [*]) (d :: *) where
+class EffectfulColumnType (field :: FieldId) (effs :: [Type]) (d :: Type) where
   effectfulColumnType :: Text
 
 instance (
@@ -84,7 +85,7 @@ instance (
 
 instance {-# overlappable #-} (
     EffectfulColumnType field effs d
-  ) => EffectfulColumnType field (eff : effs) (d :: *) where
+  ) => EffectfulColumnType field (eff : effs) (d :: Type) where
     effectfulColumnType =
       effectfulColumnType @field @effs @d
 

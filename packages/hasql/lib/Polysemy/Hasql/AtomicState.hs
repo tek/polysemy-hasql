@@ -4,12 +4,13 @@ import Polysemy.Db.AtomicState (interpretAtomicStateStore)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Rep (Auto)
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Log (Log)
 
 import Polysemy.Hasql.Crud (interpretCrudSingleton)
 import Polysemy.Hasql.Data.Database (Database)
-import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
-import Polysemy.Hasql.Data.Query (Query)
+import Polysemy.Hasql.Data.ManagedTable (ManagedTableUid)
+import Polysemy.Hasql.Data.Query (UidQuery)
 import Polysemy.Hasql.ManagedTable (interpretManagedTableAuto)
 import Polysemy.Hasql.Query (interpretQueryAuto)
 import Polysemy.Hasql.Store (interpretStoreDb)
@@ -22,7 +23,7 @@ import Polysemy.Hasql.Table.Schema (Schema)
 interpretAtomicStateDb ::
   Show e =>
   BuildPartialSql d tree =>
-  Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
+  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateDb initial =
@@ -38,7 +39,7 @@ interpretAtomicStateDb initial =
 --
 -- Uses the automatic derivation strategy.
 interpretAtomicStateDbAuto ::
-  Schema Auto Auto () d =>
+  Schema Auto Auto () (Uid () d) =>
   BuildPartialSql d tree =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->

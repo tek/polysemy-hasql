@@ -3,13 +3,14 @@ module Polysemy.Hasql.Reader where
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Rep (Auto)
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Reader (interpretReaderStore)
 import Polysemy.Log (Log)
 
 import Polysemy.Hasql.Crud (interpretCrudSingleton)
 import Polysemy.Hasql.Data.Database (Database)
-import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
-import Polysemy.Hasql.Data.Query (Query)
+import Polysemy.Hasql.Data.ManagedTable (ManagedTableUid)
+import Polysemy.Hasql.Data.Query (UidQuery)
 import Polysemy.Hasql.ManagedTable (interpretManagedTableAuto)
 import Polysemy.Hasql.Query (interpretQueryAuto)
 import Polysemy.Hasql.Store (interpretStoreDb)
@@ -23,7 +24,7 @@ interpretReaderDb ::
   ∀ d e r tree .
   Show e =>
   BuildPartialSql d tree =>
-  Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
+  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
   d ->
   InterpreterFor (Reader d !! e) r
 interpretReaderDb initial =
@@ -40,7 +41,7 @@ interpretReaderDb initial =
 -- Uses the automatic derivation strategy.
 interpretReaderDbAuto ::
   ∀ d r tree .
-  Schema Auto Auto () d =>
+  Schema Auto Auto () (Uid () d) =>
   BuildPartialSql d tree =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
