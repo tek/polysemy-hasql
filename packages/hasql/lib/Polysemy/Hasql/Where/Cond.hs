@@ -11,7 +11,7 @@ import Type.Errors (ErrorMessage (ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Hasql.Where.FlatFields (FieldPath (FieldPath), FlatRoot)
-import Polysemy.Hasql.Where.Segment (FormatSegments, IsSum, MatchFieldIds, Segment (ConSegment, FieldSegment, SumSegment), SegmentId)
+import Polysemy.Hasql.Where.Segment (FormatSegments, IsSum, MatchFieldIds, Segment (ConSegment, FieldSegment, SumIndexSegment, SumSegment), SegmentId)
 
 data PrimCond =
   PrimCond {
@@ -83,6 +83,12 @@ type family MatchSegment (full :: [Segment]) (match :: Bool) (q :: [Segment]) (d
     'Nothing
 
 type family MatchNames (q :: Segment) (d :: Segment) :: Bool where
+  MatchNames ('SumIndexSegment _) ('SumIndexSegment _) =
+    'True
+  MatchNames _ ('SumIndexSegment _) =
+    'False
+  MatchNames ('SumIndexSegment _) _ =
+    'False
   MatchNames q d =
     MatchFieldIds (Eval (SegmentId q)) (Eval (SegmentId d))
 

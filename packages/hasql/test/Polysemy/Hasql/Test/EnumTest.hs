@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.EnumTest where
 import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
-import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod), TypeName (CompositeTypeName))
 
 data En =

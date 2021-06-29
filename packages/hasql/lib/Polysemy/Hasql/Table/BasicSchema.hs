@@ -2,7 +2,7 @@ module Polysemy.Hasql.Table.BasicSchema where
 
 import Polysemy.Db.Data.Rep (Auto)
 
-import Polysemy.Hasql.Column.DataColumn (DataTable, dataTable)
+import Polysemy.Hasql.Table.DataColumn (DataTable, dataTable)
 import Polysemy.Hasql.Data.Table (Table(Table))
 import Polysemy.Hasql.QueryParams (QueryParams(queryParams))
 import Polysemy.Hasql.QueryRows (QueryRows(queryRows))

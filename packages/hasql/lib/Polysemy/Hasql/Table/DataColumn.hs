@@ -1,15 +1,17 @@
-module Polysemy.Hasql.Column.DataColumn where
+module Polysemy.Hasql.Table.DataColumn where
 
 import Generics.SOP (All, AllN, CollapseTo, HAp, HCollapse (hcollapse), K (K), NP, Prod, hcmap)
 import Generics.SOP.Constraint (SListIN)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
+import Polysemy.Db.SOP.Constraint (DataName)
 import Polysemy.Db.Text.DbIdentifier (dbIdentifierT, quotedDbId)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Name (Name), Selector (Selector), TypeName (CompositeTypeName, PrimTypeName))
+import Polysemy.Hasql.Table.SumIndex (sumIndexIdentifier)
 import Polysemy.Hasql.Tree.Table (ColumnData (ColumnData), TableCon, TableNode, TableRoot, TableTree, tableRoot)
 
 data ColumnPrefix =
@@ -51,16 +53,27 @@ mapColumns ::
 mapColumns f trees =
   hcollapse @_ @_ @f @_ @a (hcmap (Proxy @cls) (K . f) trees)
 
+sumProd ::
+  ∀ d trees name .
+  DataName d name =>
+  All DataDbCon trees =>
+  ColumnPrefix ->
+  TableNode ('Kind.SumProd d trees) ->
+  [Data.Column]
+sumProd prefix (Type.SumProd _ trees) =
+  indexColumn : mapColumns @_ @NP @_ @trees @DataDbCon (dataDbCon prefix) trees
+  where
+    indexColumn =
+      Data.Column (Name indexName) (Selector (prefixed indexName prefix)) (PrimTypeName "bigint") def Data.Prim
+    indexName =
+      sumIndexIdentifier @d
+
 class ColumnTypeName (node :: Kind.Node) where
   columnTypeName :: Text -> TypeName
 
-instance {-# overlappable #-} ColumnTypeName ('Kind.Prim d) where
+instance ColumnTypeName ('Kind.Prim d) where
   columnTypeName =
     PrimTypeName
-
-instance ColumnTypeName ('Kind.Prim ()) where
-  columnTypeName =
-    CompositeTypeName
 
 instance ColumnTypeName ('Kind.Prod tpe sub) where
   columnTypeName =
@@ -78,6 +91,13 @@ instance (
   ) => DataProduct 'True ('Kind.Tree name effs ('Kind.Prod d trees)) where
     dataProduct prefix (Type.Tree _ (Type.Prod _ trees)) =
       join (mapColumns @_ @NP @_ @trees @DataProductOrFlatten (dataProductOrFlatten prefix) trees)
+
+instance (
+    DataName d dname,
+    All DataDbCon trees
+  ) => DataProduct 'True ('Kind.Tree name effs ('Kind.SumProd d trees)) where
+    dataProduct prefix (Type.Tree _ node) =
+      sumProd prefix node
 
 instance DataProduct 'False ('Kind.Tree name effs ('Kind.Prim ())) where
     dataProduct =
@@ -151,15 +171,11 @@ instance (
     Data.Prod (join (mapColumns @_ @NP @_ @trees @DataProductOrFlatten (dataProductOrFlatten prefix) trees))
 
 instance (
+    DataName d name,
     All DataDbCon trees
   ) => DataDbNode ('Kind.SumProd d trees) where
-  dataDbNode prefix (Type.SumProd _ trees) =
-    Data.Prod (indexColumn : mapColumns @_ @NP @_ @trees @DataDbCon (dataDbCon prefix) trees)
-    where
-      indexColumn =
-        Data.Column (Name indexName) (Selector (prefixed indexName prefix)) (PrimTypeName "bigint") def Data.Prim
-      indexName =
-        "sum__index"
+  dataDbNode prefix node =
+    Data.Prod (sumProd prefix node)
 
 instance DataDbNode ('Kind.Prim d) where
     dataDbNode _ (Type.Prim _) =

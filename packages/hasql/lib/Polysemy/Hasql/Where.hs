@@ -9,11 +9,13 @@ import Hasql.DynamicStatements.Snippet (Snippet)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdText, quotedFieldId)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.SOP.Constraint (slugString_, symbolString)
+import Polysemy.Db.SOP.Constraint (DataName, slugString_, symbolString)
+import Polysemy.Db.Text.Quote (dquote)
 
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import qualified Polysemy.Hasql.Data.Where as Data (Where (Where))
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN)
+import Polysemy.Hasql.Table.SumIndex (sumIndexIdentifier)
 import Polysemy.Hasql.Where.Cond (
   MatchTable,
   PrimCond (PrimCond),
@@ -21,7 +23,7 @@ import Polysemy.Hasql.Where.Cond (
   )
 import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery, field)
 import Polysemy.Hasql.Where.Prepared (QueryWhereColumn (..), concatWhereFields)
-import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment), SegmentId)
+import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment, SumIndexSegment), SegmentId)
 
 type family AsSimple (q :: Type) (d :: Type) (ns :: [[Segment]]) :: [QCond] where
   AsSimple q d ns =
@@ -59,6 +61,12 @@ instance {-# overlappable #-} (
   ) => ReifySegments (s : ss) where
   reifySegments =
     quotedFieldId @id : reifySegments @ss
+
+instance (
+    DataName d name
+  ) => ReifySegments '[ 'SumIndexSegment d] where
+    reifySegments =
+      [dquote (sumIndexIdentifier @d)]
 
 instance (
     FieldIdText ('NamedField id),

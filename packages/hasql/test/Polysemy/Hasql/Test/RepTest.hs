@@ -13,7 +13,7 @@ import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata (AdtProd))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
 
-import Polysemy.Hasql.Column.DataColumn (dataTable)
+import Polysemy.Hasql.Table.DataColumn (dataTable)
 import Polysemy.Hasql.ColumnType (ColumnType (..))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
@@ -240,7 +240,7 @@ datTargetWith flattyColumns =
       Data.Column "pr_int" "(\"proddo\").\"pr_int\"" "bigint" def Data.Prim
     ]),
     Data.Column "summer" "\"summer\"" (CompositeTypeName "summer") def (Data.Prod [
-      Data.Column "sum__index" "(\"summer\").\"sum__index\"" "bigint" def (Data.Prim),
+      Data.Column "ph_sum_index__summer" "(\"summer\").\"ph_sum_index__summer\"" "bigint" def (Data.Prim),
       Data.Column "txt" "(\"summer\").\"txt\"" "text" def Data.Prim,
       Data.Column "summer2" "(\"summer\").\"summer2\"" (CompositeTypeName "summer2") def (Data.Prod [
         Data.Column "int" "(\"summer\").\"summer2\".\"int\"" "bigint" def Data.Prim,

@@ -17,7 +17,7 @@ import Polysemy.Db.Tree.Effect (TreeEffects)
 import Polysemy.Db.Tree.Meta (ADTMeta')
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
-import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
 import Polysemy.Hasql.Data.QueryTable (QueryTable)

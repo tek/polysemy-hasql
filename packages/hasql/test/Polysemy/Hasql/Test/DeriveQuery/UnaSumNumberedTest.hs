@@ -13,7 +13,7 @@ import Polysemy.Test (UnitTest)
 import Polysemy.Hasql.Tree.Table (DbQueryRoot)
 import Polysemy.Hasql.Where.Cond (MatchTable, QCond (SumPrimCond))
 import Polysemy.Hasql.Where.FlatFields (FieldPath (FieldPath), FlatRoot)
-import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment))
+import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment, SumIndexSegment))
 
 data Sum1 =
   Sum1 {
@@ -74,7 +74,7 @@ derive ::
   qFlat ~ '[ 'FieldPath '[ 'FieldSegment ('NamedField "double") ] Double ] =>
   dFlat ~ Eval (FlatRoot dTree) =>
   dFlat ~ '[
-    'FieldPath '[ 'FieldSegment ('NamedField "sum__index") ] Int,
+    'FieldPath '[ 'SumIndexSegment UnaSum] Int,
     'FieldPath '[
       'ConSegment 0 ('NamedField "UnaSum1") 'True,
       'FieldSegment ('NumberedField "UnaSum1" 1),

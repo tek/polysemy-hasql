@@ -29,7 +29,6 @@ library
   exposed-modules:
       Polysemy.Hasql
       Polysemy.Hasql.AtomicState
-      Polysemy.Hasql.Column.DataColumn
       Polysemy.Hasql.ColumnOptions
       Polysemy.Hasql.ColumnType
       Polysemy.Hasql.Crud
@@ -77,6 +76,7 @@ library
       Polysemy.Hasql.Table
       Polysemy.Hasql.Table.BasicSchema
       Polysemy.Hasql.Table.ColumnOptions
+      Polysemy.Hasql.Table.DataColumn
       Polysemy.Hasql.Table.DecoderValue
       Polysemy.Hasql.Table.EncoderValue
       Polysemy.Hasql.Table.Enum
@@ -95,6 +95,7 @@ library
       Polysemy.Hasql.Table.ReadNull
       Polysemy.Hasql.Table.ResultShape
       Polysemy.Hasql.Table.Schema
+      Polysemy.Hasql.Table.SumIndex
       Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
       Polysemy.Hasql.Test.Error.Column.E1

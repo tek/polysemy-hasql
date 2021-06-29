@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.UnarySumTest where
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import qualified Polysemy.Db.Data.QueryStore as QueryStore
-import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimQuery, PrimaryKey, Product, Sum, UidNestRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimQuery, PrimaryKey, Product, Sum, UidNestRep, UidRep)
 import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (ADT)
@@ -122,8 +122,8 @@ data QRep =
 test_unarySum :: UnitTest
 test_unarySum =
   integrationTest do
-    result <- withTestQueryStore @(Product QRep) @(PrimQuery "id") @(UidNestRep PrimaryKey (Sum UnaSumRep)) @Int @(Uid Int UnaSum) @Q @UnaSum do
+    result <- withTestQueryStore @(Product Auto) @(PrimQuery "id") @(UidRep PrimaryKey UnaSumRep) @Int @(Uid Int UnaSum) @QP @UnaSum do
       restop @DbError do
         QueryStore.upsert (Uid 1 specimen)
-        QueryStore.query (Q (QP 1.9))
+        QueryStore.query (QP 1.9)
     assertJust [Uid 1 specimen] result

@@ -25,7 +25,7 @@ import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
 import Polysemy.Time (GhcTime, mkDatetime)
 
-import Polysemy.Hasql.Column.DataColumn (dataTable)
+import Polysemy.Hasql.Table.DataColumn (dataTable)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.Query (interpretQuery)

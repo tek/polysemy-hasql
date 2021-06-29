@@ -13,7 +13,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Log as Log
 import Polysemy.Log (Log)
 
-import Polysemy.Hasql.Column.DataColumn (TableStructure, tableStructure)
+import Polysemy.Hasql.Table.DataColumn (TableStructure, tableStructure)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName), unName)
 import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn

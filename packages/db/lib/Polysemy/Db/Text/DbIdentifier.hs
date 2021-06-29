@@ -1,6 +1,6 @@
 module Polysemy.Db.Text.DbIdentifier where
 
-import Polysemy.Db.SOP.Constraint (symbolString)
+import Polysemy.Db.SOP.Constraint (symbolString, DataName (dataNameString))
 import Polysemy.Db.Text.Case (unCamelCase)
 import Polysemy.Db.Text.Quote (dquote)
 
@@ -29,3 +29,10 @@ dbSymbolBS ::
   ByteString
 dbSymbolBS =
   encodeUtf8 (dbSymbol @name)
+
+dbDataName ::
+  ∀ d name .
+  DataName d name =>
+  Text
+dbDataName =
+  dbIdentifier (dataNameString @d)

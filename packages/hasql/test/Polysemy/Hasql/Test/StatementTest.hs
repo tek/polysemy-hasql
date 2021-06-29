@@ -8,7 +8,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
-import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable))
 import Polysemy.Hasql.Data.SqlCode (SqlCode (..))
 import Polysemy.Hasql.Data.Where (Where (Where))
@@ -71,7 +71,7 @@ test_selectStatement =
     target === stmtText
   where
     target =
-      [text|select "a", "b", "c", ("sum_field")."sum__index", ("sum_field")."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
+      [text|select "a", "b", "c", ("sum_field")."ph_sum_index__sum_rec", ("sum_field")."d", ("sum_field")."r"."e", ("sum_field")."r"."f" from "rec" where "a" = $1 and "c" = $2|]
     SqlCode stmtText =
       Statement.selectWhereSql (schemaAuto @Q1 @Rec)
 
@@ -210,7 +210,7 @@ test_createStatement_Sum =
     target === stmtText
   where
     target =
-      [text|create table "sum_data" ("sum__index" bigint not null, "sum_data1" ph_type__sum_data1 not null, "sum_data2" ph_type__sum_data2 not null)|]
+      [text|create table "sum_data" ("ph_sum_index__sum_data" bigint not null, "sum_data1" ph_type__sum_data1 not null, "sum_data2" ph_type__sum_data2 not null)|]
     SqlCode stmtText =
       Statement.createTableSql (tableStructure @Auto @SumData)
 
@@ -220,7 +220,7 @@ test_queryWhere_Sum =
     target === unSqlCode qw
   where
     target =
-      [text|($1 is null or ("sum")."sum__index" = $1) and ($2 is null or ("sum")."sum_data1"."int" = $2) and ($3 is null or ("sum")."sum_data1"."double" = $3) and ($4 is null or ("sum")."sum_data2"."txt" = $4) and ($5 is null or ("sum")."sum_data2"."tixxt" = $5)|]
+      [text|($1 is null or ("sum")."ph_sum_index__sum_data" = $1) and ($2 is null or ("sum")."sum_data1"."int" = $2) and ($3 is null or ("sum")."sum_data1"."double" = $3) and ($4 is null or ("sum")."sum_data2"."txt" = $4) and ($5 is null or ("sum")."sum_data2"."tixxt" = $5)|]
     QueryTable _ _ (Where qw _) =
       schemaAuto @SumTableQ @SumTable
 
@@ -230,7 +230,7 @@ test_queryWhere_Sum_Table =
     target === unSqlCode qw
   where
     target =
-      [text|"sum__index" = $1 and ($2 is null or ("sum_data1")."int" = $2) and ($3 is null or ("sum_data1")."double" = $3) and ($4 is null or ("sum_data2")."txt" = $4) and ($5 is null or ("sum_data2")."tixxt" = $5)|]
+      [text|"ph_sum_index__sum_data" = $1 and ($2 is null or ("sum_data1")."int" = $2) and ($3 is null or ("sum_data1")."double" = $3) and ($4 is null or ("sum_data2")."txt" = $4) and ($5 is null or ("sum_data2")."tixxt" = $5)|]
     QueryTable _ _ (Where qw _) =
       schemaAuto @SumQ @SumData
 
@@ -250,7 +250,7 @@ test_queryWhere_Sum_Unary =
     target === unSqlCode qw
   where
     target =
-      [text|"sum__index" = $1 and ($2 is null or "una_l" = $2) and ($3 is null or "una_r" = $3)|]
+      [text|"ph_sum_index__sum_una" = $1 and ($2 is null or "una_l" = $2) and ($3 is null or "una_r" = $3)|]
     QueryTable _ _ (Where qw _) =
       schemaAuto @SumUna @SumUna
 
@@ -260,7 +260,7 @@ test_queryWhere_Sum_UnaryQ =
     target === unSqlCode qw
   where
     target =
-      [text|"sum__index" = $1 and ($2 is null or ("sum_una_ext_l")."una_l" = $2) and ($3 is null or "una_r" = $3)|]
+      [text|"ph_sum_index__sum_una_ext" = $1 and ($2 is null or ("sum_una_ext_l")."una_l" = $2) and ($3 is null or "una_r" = $3)|]
     QueryTable _ _ (Where qw _) =
       schemaAuto @SumUna @SumUnaExt
 

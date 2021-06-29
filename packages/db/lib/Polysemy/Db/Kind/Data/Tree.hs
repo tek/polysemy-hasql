@@ -20,6 +20,8 @@ data Con =
     tree :: Tree
   }
 
+-- TODO SumProd should not be necessary anymore, we can now offload the distinction to the implementation, i.e.
+-- Tree/Table
 data Node =
   Prim {
     tpe :: *

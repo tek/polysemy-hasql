@@ -6,7 +6,7 @@ import Fcf.Class.Functor (FMap)
 import GHC.TypeLits (AppendSymbol)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Error (JoinError)
-import Type.Errors (ErrorMessage (Text))
+import Type.Errors (ErrorMessage (Text), TypeError)
 
 data Segment =
   FieldSegment FieldId
@@ -18,16 +18,20 @@ data Segment =
     conId :: FieldId,
     unary :: Bool
   }
+  |
+  SumIndexSegment Type
 
 data SegmentId :: Segment -> Exp FieldId
 type instance Eval (SegmentId ('FieldSegment id)) = id
 type instance Eval (SegmentId ('SumSegment id)) = id
 type instance Eval (SegmentId ('ConSegment _ id _)) = id
+type instance Eval (SegmentId ('SumIndexSegment _)) = TypeError ('Text "internal: SegmentId SumIndexSegment")
 
 data IsSum :: Segment -> Exp Bool
 type instance Eval (IsSum ('SumSegment _)) = 'True
 type instance Eval (IsSum ('ConSegment _ _ _)) = 'True
 type instance Eval (IsSum ('FieldSegment _)) = 'False
+type instance Eval (IsSum ('SumIndexSegment _)) = 'False
 
 type family MatchFieldIds (q :: FieldId) (d :: FieldId) :: Bool where
   MatchFieldIds ('NamedField q) ('NamedField d) =

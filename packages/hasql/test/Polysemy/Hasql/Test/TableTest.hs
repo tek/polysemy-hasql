@@ -5,7 +5,7 @@ import Polysemy.Db.Text.DbIdentifier (dbIdentifier)
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
-import Polysemy.Hasql.Column.DataColumn (tableStructure)
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod), TypeName (CompositeTypeName))
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
 import Polysemy.Hasql.Table (missingColumns)
