@@ -4,7 +4,7 @@ import Polysemy.Db.Data.Rep (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (DataTree, dataTree)
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (Adt)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
 import Polysemy.Db.Tree.Partial (PartialTree, field, partially, updatePartial, (+>))
@@ -21,7 +21,7 @@ data Dat =
 
 type TreeEffs =
   '[
-    ADT ('AdtProd '[
+    Adt ('AdtProd '[
       'TreeMeta ('NamedField "int") Auto Int,
       'TreeMeta ('NamedField "double") Auto Double
     ]) Auto

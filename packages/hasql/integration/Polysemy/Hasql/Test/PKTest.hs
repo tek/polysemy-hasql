@@ -11,10 +11,10 @@ import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Tree as Tree
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
+import Polysemy.Db.Tree.Data.Effect (Adt, Newtype)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Effect (TreeEffects)
-import Polysemy.Db.Tree.Meta (ADTMeta')
+import Polysemy.Db.Tree.Meta (AdtMeta')
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
 import Polysemy.Hasql.Table.DataColumn (tableStructure)
@@ -59,9 +59,9 @@ table =
   schema @(PrimQuery "id") @Auto
 
 type RecType =
-  'Kind.Tree ('NamedField "Rec") '[ADT (ADTMeta' (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) (Product (UidRep PrimaryKey Auto))] ('Kind.Prod (Uid Id Rec) '[
+  'Kind.Tree ('NamedField "Rec") '[Adt (AdtMeta' (Product (UidRep PrimaryKey Auto)) (Uid Id Rec)) (Product (UidRep PrimaryKey Auto))] ('Kind.Prod (Uid Id Rec) '[
     'Kind.Tree ('NamedField "id") '[Newtype Id Int, PrimaryKey, Prim] ('Kind.Prim Id),
-    'Kind.Tree ('NamedField "payload") '[ADT (ADTMeta' (Flatten Auto) Rec) (Flatten Auto)] (
+    'Kind.Tree ('NamedField "payload") '[Adt (AdtMeta' (Flatten Auto) Rec) (Flatten Auto)] (
       'Kind.Prod Rec '[
         'Kind.Tree ('NamedField "a") '[Prim] ('Kind.Prim Int),
         'Kind.Tree ('NamedField "b") '[Prim] ('Kind.Prim Text)

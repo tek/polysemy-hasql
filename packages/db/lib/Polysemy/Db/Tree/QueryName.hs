@@ -11,7 +11,7 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import Polysemy.Db.Data.Rep (Prim, PrimQuery)
 import Polysemy.Db.SOP.Constraint (DataNameF)
 import Polysemy.Db.SOP.FieldNames (FieldIds)
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype)
+import Polysemy.Db.Tree.Data.Effect (Adt, Newtype)
 
 type Result =
   Either Symbol Symbol
@@ -58,7 +58,7 @@ type family QueryName' (effs :: [Type]) (q :: Type) (d :: Type) :: Result where
     PrimName q d
   QueryName' (Newtype nt inner : effs) nt d =
     UnEither (ConstFn (QueryName' effs inner d)) (Pure1 'Right) @@ PrimName nt d
-  QueryName' (ADT _ _ : _) q _ =
+  QueryName' (Adt _ _ : _) q _ =
     'Right (DataNameF q)
   QueryName' (_ : effs) q d =
     QueryName' effs q d

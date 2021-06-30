@@ -8,8 +8,8 @@ import Prelude hiding (Enum)
 
 import Polysemy.Db.Data.Rep (Auto, Enum, Flatten, ForcePrim, ForceRep, Json, JsonB, Prim, Product, Rep, Sum)
 import Polysemy.Db.SOP.HasGeneric (IsNewtype)
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, NoEffect, Tycon)
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtEnum), MaybeADT (MaybeADT))
+import Polysemy.Db.Tree.Data.Effect (Adt, Newtype, NoEffect, Tycon)
+import Polysemy.Db.Tree.Meta (AdtMeta, AdtMetadata (AdtEnum), MaybeAdt (MaybeAdt))
 
 newtype D =
   D Type
@@ -32,17 +32,17 @@ instance EffectfulTree (Vector d) (Tycon Vector d) d
 
 ----------------------------------------------------------------------------------------------------
 
-class MaybeADTResolves (adt :: MaybeADT) (meta :: Maybe AdtMetadata) | adt -> meta
+class MaybeAdtResolves (adt :: MaybeAdt) (meta :: Maybe AdtMetadata) | adt -> meta
 
-instance {-# incoherent #-} meta ~ 'Nothing => MaybeADTResolves adt meta
+instance {-# incoherent #-} meta ~ 'Nothing => MaybeAdtResolves adt meta
 
-instance meta ~ 'Just m => MaybeADTResolves ('MaybeADT m) meta
+instance meta ~ 'Just m => MaybeAdtResolves ('MaybeAdt m) meta
 
 ----------------------------------------------------------------------------------------------------
 
 class IsAdt (rep :: Type) (d :: Type) (meta :: Maybe AdtMetadata) | rep d -> meta
 
-instance MaybeADTResolves (ADTMeta rep d) meta => IsAdt rep d meta
+instance MaybeAdtResolves (AdtMeta rep d) meta => IsAdt rep d meta
 
 ----------------------------------------------------------------------------------------------------
 
@@ -61,18 +61,18 @@ type MatchedAdt =
   Either (Type, [Type]) [Type]
 
 type family ExtractAdtRep (effs :: [Type]) :: Type where
-  ExtractAdtRep (ADT _ rep : _) = rep
+  ExtractAdtRep (Adt _ rep : _) = rep
   ExtractAdtRep (_ : effs) = ExtractAdtRep effs
 
 type family RegularAdt (meta :: AdtMetadata) (pre :: [Type]) (reps :: [Type]) (rep :: Type) :: Either a [Type] where
   RegularAdt meta pre reps rep =
-    'Right (pre ++ reps ++ '[ADT meta rep])
+    'Right (pre ++ reps ++ '[Adt meta rep])
 
 type family MatchAdt (meta :: Maybe AdtMetadata) (pre :: [Type]) (reps :: [Type]) :: MatchedAdt where
   MatchAdt ('Just 'AdtEnum) '[] reps =
     'Right (Enum : reps)
   MatchAdt ('Just meta) pre '[] =
-    'Right (ADT meta Auto : pre)
+    'Right (Adt meta Auto : pre)
   MatchAdt 'Nothing pre '[] =
     'Left '(Prim, pre)
   MatchAdt ('Just meta) pre (Product rep : reps) =

@@ -17,9 +17,9 @@ import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid (Uid), Uuid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
+import Polysemy.Db.Tree.Data.Effect (Adt, Newtype, Tycon)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
-import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata (AdtProd, AdtSum))
+import Polysemy.Db.Tree.Meta (AdtMeta', AdtMetadata (AdtProd, AdtSum))
 import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
@@ -131,13 +131,13 @@ type ContentNumberMeta =
   ]
 
 type XXorCol =
-  'Kind.Tree ('NamedField "xxor") '[ADT XXorMeta (Sum XXorRep)] (XXorType (Sum XXorRep))
+  'Kind.Tree ('NamedField "xxor") '[Adt XXorMeta (Sum XXorRep)] (XXorType (Sum XXorRep))
 
 type XXorColAuto =
-  'Kind.Tree ('NamedField "xxor") '[ADT XXorMeta Auto] (XXorType Auto)
+  'Kind.Tree ('NamedField "xxor") '[Adt XXorMeta Auto] (XXorType Auto)
 
 type ContentNumberType =
-  'Kind.Tree ('NamedField "ContentNumber") '[ADT ContentNumberMeta Auto] (
+  'Kind.Tree ('NamedField "ContentNumber") '[Adt ContentNumberMeta Auto] (
     'Kind.Prod ContentNumber '[
       'Kind.Tree ('NamedField "content") '[Newtype Content Text, Prim] ('Kind.Prim Content),
       'Kind.Tree ('NamedField "otherNumber") '[Tycon Maybe Int, Prim] ('Kind.Prim (Maybe Int)),
@@ -147,11 +147,11 @@ type ContentNumberType =
   )
 
 type DatType name rep sumRep =
-  'Kind.Tree name '[ADT (ADTMeta' rep Dat) rep] ('Kind.Prod Dat '[
+  'Kind.Tree name '[Adt (AdtMeta' rep Dat) rep] ('Kind.Prod Dat '[
     'Kind.Tree ('NamedField "content") '[Newtype Content Text, Prim] ('Kind.Prim Content),
-    'Kind.Tree ('NamedField "number") '[ADT (ADTMeta' (Flatten NumberWrapRep) NumberWrap) (Flatten NumberWrapRep)] (
+    'Kind.Tree ('NamedField "number") '[Adt (AdtMeta' (Flatten NumberWrapRep) NumberWrap) (Flatten NumberWrapRep)] (
       'Kind.Prod NumberWrap '[
-        'Kind.Tree ('NamedField "numberWrap") '[ADT (ADTMeta' (Flatten NumberRep) Number) (Flatten NumberRep)] (
+        'Kind.Tree ('NamedField "numberWrap") '[Adt (AdtMeta' (Flatten NumberRep) Number) (Flatten NumberRep)] (
           'Kind.Prod Number '[
             'Kind.Tree ('NamedField "number") '[Prim] ('Kind.Prim Int),
             'Kind.Tree ('NamedField "otherNumber") '[Prim] ('Kind.Prim Int)
@@ -159,7 +159,7 @@ type DatType name rep sumRep =
         )
       ]
     ),
-    'Kind.Tree ('NamedField "xxor") '[ADT (ADTMeta' sumRep XXor) sumRep] ('Kind.SumProd XXor XXorCols),
+    'Kind.Tree ('NamedField "xxor") '[Adt (AdtMeta' sumRep XXor) sumRep] ('Kind.SumProd XXor XXorCols),
     'Kind.Tree ('NamedField "created") '[Newtype CreationTime UTCTime, Prim] ('Kind.Prim CreationTime)
   ])
 
@@ -167,7 +167,7 @@ type DatTable =
   DatType ('NamedField "Dat") (Product DatRep) (Sum XXorRep)
 
 type UidDatType =
-  'Kind.Tree ('NamedField "Dat") '[ADT (ADTMeta' (Product (UidRep PrimaryKey DatRep)) (Uuid Dat)) (Product (UidRep PrimaryKey DatRep))] (
+  'Kind.Tree ('NamedField "Dat") '[Adt (AdtMeta' (Product (UidRep PrimaryKey DatRep)) (Uuid Dat)) (Product (UidRep PrimaryKey DatRep))] (
     'Kind.Prod (Uuid Dat) [
       'Kind.Tree ('NamedField "id") '[PrimaryKey, Prim] ('Kind.Prim UUID),
       DatType ('NamedField "payload") (Flatten DatRep) (Sum XXorRep)

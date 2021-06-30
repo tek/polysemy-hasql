@@ -5,7 +5,7 @@ import Hasql.Encoders (Params)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, Product, Sum)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
+import Polysemy.Db.Tree.Data.Effect (Adt, Newtype, Tycon)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Meta
 import Polysemy.Test (UnitTest, runTestAuto)
@@ -104,14 +104,14 @@ type ProddoMeta =
   'AdtProd '[ 'TreeMeta ('NamedField "prInt") Prim Int]
 
 type SummerMeta =
-  ADTMeta' (Sum SummerRep) Summer
+  AdtMeta' (Sum SummerRep) Summer
 
 type DatType =
-  'Kind.Tree ('NamedField "Dat") '[ADT (ADTMeta' (Product DatRep) Dat) (Product DatRep)] ('Kind.Prod Dat [
+  'Kind.Tree ('NamedField "Dat") '[Adt (AdtMeta' (Product DatRep) Dat) (Product DatRep)] ('Kind.Prod Dat [
     'Kind.Tree ('NamedField "double") [Tycon Maybe Double, Prim] PrimMaybeDouble,
     'Kind.Tree ('NamedField "newt") [Tycon [] Newt, Newtype Newt Text, Prim] ('Kind.Prim [Newt]),
-    'Kind.Tree ('NamedField "proddo") '[ADT ProddoMeta (Product ProddoRep)] ProddoType,
-    'Kind.Tree ('NamedField "summer") '[ADT SummerMeta (Sum SummerRep)] SummerType
+    'Kind.Tree ('NamedField "proddo") '[Adt ProddoMeta (Product ProddoRep)] ProddoType,
+    'Kind.Tree ('NamedField "summer") '[Adt SummerMeta (Sum SummerRep)] SummerType
   ])
 
 columns_Dat_explicit ::

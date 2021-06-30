@@ -7,13 +7,13 @@ import Data.Time (Day, DiffTime, LocalTime, TimeOfDay, TimeZone, UTCTime)
 import Data.Vector (Vector)
 import Fcf (type (@@))
 import Path (Path)
-import Polysemy.Db.Data.Rep (Enum, Json, JsonB, Prim)
 import Polysemy.Db.Data.FieldId (FieldId, FieldIdSymbol)
+import Polysemy.Db.Data.Rep (Enum, Json, JsonB, Prim)
 import Polysemy.Db.SOP.Constraint (DataName)
 import Polysemy.Db.Text.DbIdentifier (dbSymbol)
-import Polysemy.Db.Tree.Data.Effect (ADT, CustomType, Newtype, Tycon)
+import Polysemy.Db.Tree.Data.Effect (Adt, CustomType, Newtype, Tycon)
 import Prelude hiding (Enum)
-import Type.Errors (ErrorMessage(ShowType), TypeError)
+import Type.Errors (ErrorMessage (ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
 class ColumnType (d :: Type) where
@@ -92,7 +92,7 @@ instance {-# overlappable #-} (
 instance (
     KnownSymbol name,
     DataName d name
-  ) => EffectfulColumnType field (ADT meta rep : effs) d where
+  ) => EffectfulColumnType field (Adt meta rep : effs) d where
     effectfulColumnType =
       dbSymbol @name
 

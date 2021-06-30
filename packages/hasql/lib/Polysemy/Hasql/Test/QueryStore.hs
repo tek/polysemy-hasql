@@ -46,14 +46,24 @@ withTestQueryStore prog =
   withTestQueryStoreTable @qrep @iqrep @rep (const prog)
 
 withTestQueryStoreUid ::
-  ∀ qrep rep i d q p r tree .
-  BuildPartialSql p tree =>
+  ∀ qrep rep i d q r tree .
+  BuildPartialSql d tree =>
   Members TestStoreDeps r =>
   UidQuerySchema qrep PrimaryKey rep q i d =>
   UidSchema rep i d =>
-  InterpretersFor (QueryStoreStack i (Uid i d) q p) r
+  InterpretersFor (QueryStoreStack i (Uid i d) q d) r
 withTestQueryStoreUid =
   withTestQueryStore @qrep @(PrimQuery "id") @(UidRep PrimaryKey rep)
+
+withTestQueryStoreUidAuto ::
+  ∀ i d q r tree .
+  BuildPartialSql d tree =>
+  Members TestStoreDeps r =>
+  UidQuerySchema Auto PrimaryKey Auto q i d =>
+  UidSchema Auto i d =>
+  InterpretersFor (QueryStoreStack i (Uid i d) q d) r
+withTestQueryStoreUidAuto =
+  withTestQueryStoreUid @Auto @Auto
 
 withTestQueryStoreAuto ::
   ∀ i d q p r tree a .

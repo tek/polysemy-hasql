@@ -3,14 +3,14 @@ module Polysemy.Hasql.Test.UnarySumTest where
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import qualified Polysemy.Db.Data.QueryStore as QueryStore
-import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimQuery, PrimaryKey, Product, Sum, UidNestRep, UidRep)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidNestRep)
 import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta')
+import Polysemy.Db.Tree.Data.Effect (Adt)
+import Polysemy.Db.Tree.Meta (AdtMeta')
 import Polysemy.Test (UnitTest, assertJust)
 
-import Polysemy.Hasql.Test.QueryStore (withTestQueryStore)
+import Polysemy.Hasql.Test.QueryStore (withTestQueryStoreUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
@@ -55,41 +55,42 @@ data UnaSumRep =
   deriving (Eq, Show, Generic)
 
 type FlattyMeta =
-  ADTMeta' (Flatten Auto) Flatty
+  AdtMeta' (Flatten Auto) Flatty
 
 type Sum1Meta =
-  ADTMeta' (Product Sum1Rep) Sum1
+  AdtMeta' (Product Sum1Rep) Sum1
 
 type Sum2Meta =
-  ADTMeta' (Product Auto) Sum2
+  AdtMeta' (Product Auto) Sum2
 
 type UnaSumMeta =
-  ADTMeta' (Sum UnaSumRep) UnaSum
+  AdtMeta' (Sum UnaSumRep) UnaSum
 
 type UnaSumType =
-  'Kind.Tree ('NamedField "payload") '[ADT UnaSumMeta (Sum UnaSumRep)] ('Kind.SumProd UnaSum '[
+  'Kind.Tree ('NamedField "payload") '[Adt UnaSumMeta (Sum UnaSumRep)] ('Kind.SumProd UnaSum '[
     'Kind.ConUna 0 ('NamedField "UnaSum1") (
-      'Kind.Tree ('NumberedField "UnaSum1" 1) '[ADT Sum1Meta (Product Sum1Rep)] ('Kind.Prod Sum1 '[
+      'Kind.Tree ('NumberedField "UnaSum1" 1) '[Adt Sum1Meta (Product Sum1Rep)] ('Kind.Prod Sum1 '[
         'Kind.Tree ('NamedField "int1") '[Prim] ('Kind.Prim Int),
-        'Kind.Tree ('NamedField "flatty") '[ADT FlattyMeta (Flatten Auto)] ('Kind.Prod Flatty '[
+        'Kind.Tree ('NamedField "flatty") '[Adt FlattyMeta (Flatten Auto)] ('Kind.Prod Flatty '[
           'Kind.Tree ('NamedField "txt") '[Prim] ('Kind.Prim Text),
           'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
         ])
       ])
     ),
     'Kind.ConUna 1 ('NamedField "UnaSum2") (
-      'Kind.Tree ('NumberedField "UnaSum2" 1) '[ADT Sum2Meta Auto] ('Kind.Prod Sum2 '[
+      'Kind.Tree ('NumberedField "UnaSum2" 1) '[Adt Sum2Meta Auto] ('Kind.Prod Sum2 '[
         'Kind.Tree ('NamedField "int2") '[Prim] ('Kind.Prim Int),
         'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
       ])
     )
   ])
 
+
 type MainRep =
-  Product (UidNestRep PrimaryKey (Sum UnaSumRep))
+  UidNestRep PrimaryKey (Sum UnaSumRep)
 
 type UidUnaSumType =
-  'Kind.Tree ('NamedField "UnaSum") '[ADT (ADTMeta' MainRep (Uid Int UnaSum)) MainRep] (
+  'Kind.Tree ('NamedField "UnaSum") '[Adt (AdtMeta' (Product MainRep) (Uid Int UnaSum)) (Product MainRep)] (
     'Kind.Prod (Uid Int UnaSum) '[
       'Kind.Tree ('NamedField "id") '[PrimaryKey, Prim] ('Kind.Prim Int),
       UnaSumType
@@ -122,7 +123,7 @@ data QRep =
 test_unarySum :: UnitTest
 test_unarySum =
   integrationTest do
-    result <- withTestQueryStore @(Product Auto) @(PrimQuery "id") @(UidRep PrimaryKey UnaSumRep) @Int @(Uid Int UnaSum) @QP @UnaSum do
+    result <- withTestQueryStoreUid @Auto @UnaSumRep @Int do
       restop @DbError do
         QueryStore.upsert (Uid 1 specimen)
         QueryStore.query (QP 1.9)

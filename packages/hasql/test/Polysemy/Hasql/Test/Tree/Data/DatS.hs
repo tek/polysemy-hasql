@@ -3,7 +3,7 @@ module Polysemy.Hasql.Test.Tree.Data.DatS where
 import Polysemy.Db.Data.Rep (Auto, Prim)
 import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (Adt)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata (AdtSum))
 
@@ -35,7 +35,7 @@ type DatSAdtMeta =
   'AdtSum DatSAdtMetas
 
 type DatSTreeEffs =
-  '[ADT DatSAdtMeta Auto]
+  '[Adt DatSAdtMeta Auto]
 
 type DatSCons =
   '[

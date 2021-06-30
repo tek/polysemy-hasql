@@ -9,7 +9,7 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (AdtNode, Node, ProdTrees, Tree)
 import Polysemy.Db.Tree.Api (TreeSOP)
 import Polysemy.Db.Tree.Data (DataParams, DataTag)
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (Adt)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
 import Polysemy.Test (UnitTest)
@@ -33,7 +33,7 @@ type DatAdtMeta =
   'AdtProd DatAdtMetas
 
 type DatTreeEffs =
-  '[ADT DatAdtMeta Auto]
+  '[Adt DatAdtMeta Auto]
 
 type DatTrees =
   '[

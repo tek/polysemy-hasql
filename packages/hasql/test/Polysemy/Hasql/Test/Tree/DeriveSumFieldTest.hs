@@ -7,9 +7,9 @@ import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (Tree)
 import Polysemy.Db.Tree.Data (DataParams)
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (Adt)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta(ConMeta), TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtSum, AdtProd), MaybeADT(MaybeADT))
+import Polysemy.Db.Tree.Meta (AdtMeta, AdtMetadata (AdtSum, AdtProd), MaybeAdt(MaybeAdt))
 import Polysemy.Test (UnitTest)
 
 data Summy =
@@ -89,12 +89,12 @@ type DatSFMeta =
   ]
 
 type DatSFEffs =
-  ADT DatSFMeta Auto
+  Adt DatSFMeta Auto
 
 type DatSFTrees =
   '[
     'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "summy") '[ADT SummyMeta Auto] ('Kind.Sum Summy SummyCons)
+    'Kind.Tree ('NamedField "summy") '[Adt SummyMeta Auto] ('Kind.Sum Summy SummyCons)
   ]
 
 type DatSFDataNode =
@@ -106,7 +106,7 @@ type DatSDataTree =
 datSDerivation ::
   p ~ DataParams =>
   d ~ DatSF =>
-  'MaybeADT DatSFMeta ~ ADTMeta Auto DatSF =>
+  'MaybeAdt DatSFMeta ~ AdtMeta Auto DatSF =>
   meta ~ 'TreeMeta ('NamedField "DatSF") Auto d =>
   Tree p meta DatSDataTree =>
   ()

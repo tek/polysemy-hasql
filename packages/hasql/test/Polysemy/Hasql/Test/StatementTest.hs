@@ -2,17 +2,17 @@ module Polysemy.Hasql.Test.StatementTest where
 
 import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
-import Polysemy.Db.Data.Rep (Auto, IdQuery, Prim, PrimQuery, PrimaryKey, Sum, UidRep, Unique)
+import Polysemy.Db.Data.Rep (Auto, Flatten, IdQuery, Prim, PrimQuery, PrimaryKey, Product, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
-import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable))
 import Polysemy.Hasql.Data.SqlCode (SqlCode (..))
 import Polysemy.Hasql.Data.Where (Where (Where))
 import qualified Polysemy.Hasql.Statement as Statement
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import qualified Polysemy.Hasql.Table.Query.Insert as Query
 import Polysemy.Hasql.Table.Schema (schema, schemaAuto)
 import Polysemy.Hasql.Where (queryWhere)
@@ -304,6 +304,60 @@ test_unitColumn =
 --     SqlCode stmtText =
 --       Statement.updateSql (schema @(PrimQuery "id") @(UidRep Auto RecRep) @Int @(Uid Int Rec))
 
+data Flatty =
+  Flatty {
+    txt :: Text,
+    double :: Double
+  }
+  deriving (Eq, Show, Generic)
+
+data Sum1 =
+  Sum1 {
+    int1 :: Int,
+    flatty :: Flatty
+  }
+  deriving (Eq, Show, Generic)
+
+data Sum1Rep =
+  Sum1Rep {
+    int1 :: Auto,
+    flatty :: Flatten Auto
+  }
+  deriving (Eq, Show, Generic)
+
+data Sum2 =
+  Sum2 {
+    int2 :: Int,
+    double :: Double
+  }
+  deriving (Eq, Show, Generic)
+
+data UnaSum =
+  UnaSum1 Sum1
+  |
+  UnaSum2 Sum2
+  deriving (Eq, Show, Generic)
+
+data UnaSumRep =
+  UnaSumRep1 (Product Sum1Rep)
+  |
+  UnaSumRep2 Auto
+  deriving (Eq, Show, Generic)
+
+data FP =
+  FP { double :: Double }
+  deriving (Eq, Show, Generic)
+
+test_queryWhere_Sum_Flatten :: UnitTest
+test_queryWhere_Sum_Flatten =
+  runTestAuto do
+    target === unSqlCode qw
+  where
+    target =
+      [text|($1 is null or ("una_sum1")."double" = $1) or ($1 is null or ("una_sum2")."double" = $1)|]
+    QueryTable _ _ (Where qw _) =
+      schema @Auto @UnaSumRep @FP @UnaSum
+
 statementTests :: TestTree
 statementTests =
   testGroup "statements" [
@@ -320,5 +374,6 @@ statementTests =
     unitTest "derive a where fragment for a sum with a unary constructors" test_queryWhere_Sum_Unary,
     unitTest "derive a where fragment for a sum with a query with a unary constructors" test_queryWhere_Sum_UnaryQ,
     unitTest "derive an IdQuery assignment" test_IdQuery,
-    unitTest "derive a unit column" test_unitColumn
+    unitTest "derive a unit column" test_unitColumn,
+    unitTest "derive a where fragment for a sum and a nested flattened type" test_queryWhere_Sum_Flatten
   ]

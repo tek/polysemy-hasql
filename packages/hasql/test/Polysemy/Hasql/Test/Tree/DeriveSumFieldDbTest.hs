@@ -6,10 +6,10 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.Rep (Auto, Prim)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (Tree)
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (Adt)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Effect (TreeEffectsFor)
-import Polysemy.Db.Tree.Meta (ADTMeta, AdtMetadata (AdtProd, AdtSum), MaybeADT (MaybeADT))
+import Polysemy.Db.Tree.Meta (AdtMeta, AdtMetadata (AdtProd, AdtSum), MaybeAdt (MaybeAdt))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.QueryParams (QueryParams)
@@ -76,12 +76,12 @@ type DatSFMeta =
   ]
 
 type DatSFEffs =
-  ADT DatSFMeta Auto
+  Adt DatSFMeta Auto
 
 type DatSFTrees =
   '[
     'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
-    'Kind.Tree ('NamedField "summy") '[ADT SummyMeta Auto] ('Kind.SumProd Summy SummyCons)
+    'Kind.Tree ('NamedField "summy") '[Adt SummyMeta Auto] ('Kind.SumProd Summy SummyCons)
   ]
 
 type DatSFTree =
@@ -94,7 +94,7 @@ data Q =
   deriving (Eq, Show, Generic)
 
 type QEffs =
-  ADT ('AdtProd '[ 'TreeMeta ('NamedField "id") Auto Int]) Auto
+  Adt ('AdtProd '[ 'TreeMeta ('NamedField "id") Auto Int]) Auto
 
 type QTree =
   'Kind.Tree ('NamedField "Q") '[QEffs] ('Kind.Prod Q '[ 'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int)])
@@ -105,7 +105,7 @@ type IdQueryTree =
 datSDerivation ::
   p ~ TableParams =>
   d ~ DatSF =>
-  'MaybeADT DatSFMeta ~ ADTMeta Auto DatSF =>
+  'MaybeAdt DatSFMeta ~ AdtMeta Auto DatSF =>
   meta ~ 'TreeMeta ('NamedField "DatSF") Auto d =>
   Tree p meta DatSFTree =>
   Where Auto QTree Q DatSFTree DatSF =>

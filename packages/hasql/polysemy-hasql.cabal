@@ -369,6 +369,7 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.Tree.LookupPartialTest
       Polysemy.Hasql.Test.Tree.MergePartialTest
       Polysemy.Hasql.Test.UidSumFlattenTest
+      Polysemy.Hasql.Test.WhereTest
       Paths_polysemy_hasql
   hs-source-dirs:
       test

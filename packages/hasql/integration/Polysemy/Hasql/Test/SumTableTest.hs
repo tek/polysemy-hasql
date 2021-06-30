@@ -5,8 +5,8 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Data.QueryStore as QueryStore
 import Polysemy.Db.Data.Rep (Auto, IdQuery, Prim, Product, Sum)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
-import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta')
+import Polysemy.Db.Tree.Data.Effect (Adt)
+import Polysemy.Db.Tree.Meta (AdtMeta')
 import Polysemy.Test (UnitTest, assertJust)
 
 import Polysemy.Hasql.Test.QueryStore (withTestQueryStore)
@@ -20,10 +20,10 @@ data SumTab =
   deriving (Eq, Show, Generic)
 
 type SumTabMeta =
-  ADTMeta' (Product Auto) SumTab
+  AdtMeta' (Product Auto) SumTab
 
 type SumTabType =
-  'Kind.Tree ('NamedField "SumTab") '[ADT SumTabMeta (Sum Auto)] ('Kind.SumProd SumTab '[
+  'Kind.Tree ('NamedField "SumTab") '[Adt SumTabMeta (Sum Auto)] ('Kind.SumProd SumTab '[
     'Kind.Con 0 ('NamedField "SumTabOne") '[
       'Kind.Tree ('NamedField "id") '[Prim] ('Kind.Prim Int),
       'Kind.Tree ('NamedField "text") '[Prim] ('Kind.Prim Text)

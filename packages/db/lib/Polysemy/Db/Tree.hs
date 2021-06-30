@@ -9,7 +9,7 @@ import Polysemy.Db.SOP.Constraint (DataNameF, symbolText)
 import Polysemy.Db.SOP.Fundeps (Fundep, Fundeps)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Api (TreePayload (..), TreePrim (..), TreeSOP (..))
-import Polysemy.Db.Tree.Data.Effect (ADT)
+import Polysemy.Db.Tree.Data.Effect (Adt)
 import Polysemy.Db.Tree.Data.Params (NodeParam, Params (Params), PayloadM, TCon, TNode, TTree, Tag)
 import Polysemy.Db.Tree.Data.TreeMeta (
   ConMeta (ConMeta),
@@ -145,7 +145,7 @@ class Node (p :: Params) (name :: FieldId) (d :: Type) (eff :: [Type]) (node :: 
 
 instance (
     AdtNode p d meta effs node
-  ) => Node p name d (ADT meta rep : effs) node where
+  ) => Node p name d (Adt meta rep : effs) node where
     node =
       adtTree @p @d @meta @effs
 

@@ -3,9 +3,10 @@ module Polysemy.Db.Kind.Data.Tree where
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Data.Rep as Rep
 import Polysemy.Db.Data.Rep (Auto)
+import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.SOP.Constraint (DataNameF)
-import Polysemy.Db.Tree.Data.Effect (ADT)
-import Polysemy.Db.Tree.Meta (ADTMeta')
+import Polysemy.Db.Tree.Data.Effect (Adt)
+import Polysemy.Db.Tree.Meta (AdtMeta')
 
 data Con =
   Con {
@@ -60,7 +61,7 @@ type family TreeDataType (tree :: Tree) :: * where
 
 type family AdtTree (field :: Symbol) (d :: Type) (node :: Node) :: Tree where
   AdtTree field d node =
-    'Tree ('NamedField field) '[ADT (ADTMeta' Auto d) Auto] node
+    'Tree ('NamedField field) '[Adt (AdtMeta' Auto d) Auto] node
 
 type family AdtRoot (d :: Type) (node :: Node) :: Tree where
   AdtRoot d node =
@@ -81,3 +82,14 @@ type family PrimTreeWith (field :: Symbol) (rep :: [Type]) (d :: Type) :: Tree w
 type family PrimTree (field :: Symbol) (d :: Type) :: Tree where
   PrimTree field d =
     PrimTreeWith field '[Rep.Prim] d
+
+type family UidTree (field :: Symbol) (i :: Type) (d :: Type) (rep :: Type) (node :: Node) :: Tree where
+  UidTree field i d rep node =
+    ProdTree field (Uid i d) '[
+      PrimTree "_id" i,
+      'Tree ('NamedField "_payload") '[Adt (AdtMeta' rep d) rep] node
+    ]
+
+type family UidRoot (i :: Type) (d :: Type) (rep :: Type) (node :: Node) :: Tree where
+  UidRoot i d rep node =
+    UidTree (DataNameF d) i d rep node

@@ -9,7 +9,7 @@ import Polysemy.Db.Tree.Meta (AdtMetadata)
 
 data Tycon (f :: Type -> Type) (d :: Type)
 data Newtype (nt :: Type) (d :: Type)
-data ADT (meta :: AdtMetadata) (rep :: Type)
+data Adt (meta :: AdtMetadata) (rep :: Type)
 data CustomType (t :: Symbol)
 data NoEffect
 
@@ -18,7 +18,7 @@ type family ContainsEffect (match :: Type -> Exp Bool) (effs :: [Type]) :: Bool 
     Eval (Any match effs)
 
 type family IsADTRep (f :: Type -> Type) (eff :: Type) :: Bool where
-  IsADTRep f (ADT _ (f _)) = 'True
+  IsADTRep f (Adt _ (f _)) = 'True
   IsADTRep _ _ = 'False
 
 data IsADTRepExp :: (Type -> Type) -> Type -> Exp Bool
@@ -34,7 +34,7 @@ type family FindEffect (match :: Type -> Exp (Maybe a)) (effs :: [Type]) :: Mayb
     FirstJust match @@ effs
 
 type family GetADTRep (f :: Type -> a) (eff :: Type) :: Maybe a where
-  GetADTRep f (ADT _ (f a)) = 'Just a
+  GetADTRep f (Adt _ (f a)) = 'Just a
   GetADTRep _ _ = 'Nothing
 
 data GetADTRepF :: (Type -> a) -> Type -> Exp (Maybe a)

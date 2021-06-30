@@ -7,9 +7,9 @@ import Polysemy.Db.Data.ColumnOptions (notNull)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (tree)
-import Polysemy.Db.Tree.Data.Effect (ADT, Newtype, Tycon)
+import Polysemy.Db.Tree.Data.Effect (Adt, Newtype, Tycon)
 import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
-import Polysemy.Db.Tree.Meta (ADTMeta', AdtMetadata (AdtProd))
+import Polysemy.Db.Tree.Meta (AdtMeta', AdtMetadata (AdtProd))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Prelude hiding (Enum)
 
@@ -141,7 +141,7 @@ type PrimText name =
   'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Text)
 
 type ProddoType name =
-  'Kind.Tree ('NamedField name) '[ADT ProddoMeta (Product ProddoRep)] ('Kind.Prod Proddo '[PrimInt "prInt"])
+  'Kind.Tree ('NamedField name) '[Adt ProddoMeta (Product ProddoRep)] ('Kind.Prod Proddo '[PrimInt "prInt"])
 
 type NewtType =
   'Kind.Tree ('NamedField "newt") [Tycon Maybe Newt, Newtype Newt Text, Prim] ('Kind.Prim (Maybe Newt))
@@ -156,16 +156,16 @@ type SummerConssType =
   ]
 
 type SummerMeta =
-  ADTMeta' (Sum SummerRep) Summer
+  AdtMeta' (Sum SummerRep) Summer
 
 type DatType =
-  'Kind.Tree ('NamedField "Dat") '[ ADT (ADTMeta' (Rep '[Product DatRep]) Dat) (Product DatRep)] (
+  'Kind.Tree ('NamedField "Dat") '[ Adt (AdtMeta' (Rep '[Product DatRep]) Dat) (Product DatRep)] (
     'Kind.Prod Dat '[
       PrimMaybeDouble "double"
       ,
       ProddoType "proddo"
       ,
-      'Kind.Tree ('NamedField "summer") '[ ADT SummerMeta (Sum SummerRep)] ('Kind.SumProd Summer SummerConssType)
+      'Kind.Tree ('NamedField "summer") '[ Adt SummerMeta (Sum SummerRep)] ('Kind.SumProd Summer SummerConssType)
       ,
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom)
       ,
@@ -173,7 +173,7 @@ type DatType =
       ,
       'Kind.Tree ('NamedField "nummo") '[Tycon [] Nummo, Enum] ('Kind.Prim [Nummo])
       ,
-      'Kind.Tree ('NamedField "flatty") '[ADT FlattyMeta (Flatten FlattyRep)] ('Kind.Prod Flatty [
+      'Kind.Tree ('NamedField "flatty") '[Adt FlattyMeta (Flatten FlattyRep)] ('Kind.Prod Flatty [
         PrimInt "flat1",
         PrimText "flat2"
       ])
@@ -184,18 +184,18 @@ type ProddoTypeAuto =
   'Kind.Prod Proddo '[PrimInt "prInt"]
 
 type SummerMetaAuto =
-  ADTMeta' Auto Summer
+  AdtMeta' Auto Summer
 
 type DatTypeAuto =
-  'Kind.Tree ('NamedField "Dat") '[ ADT (ADTMeta' Auto Dat) Auto] (
+  'Kind.Tree ('NamedField "Dat") '[ Adt (AdtMeta' Auto Dat) Auto] (
     'Kind.Prod Dat [
       PrimMaybeDouble "double",
-      'Kind.Tree ('NamedField "proddo") '[ ADT ProddoMeta Auto] ProddoTypeAuto,
-      'Kind.Tree ('NamedField "summer") '[ ADT SummerMetaAuto Auto] ('Kind.SumProd Summer SummerConssType),
+      'Kind.Tree ('NamedField "proddo") '[ Adt ProddoMeta Auto] ProddoTypeAuto,
+      'Kind.Tree ('NamedField "summer") '[ Adt SummerMetaAuto Auto] ('Kind.SumProd Summer SummerConssType),
       'Kind.Tree ('NamedField "custom") '[Prim] ('Kind.Prim Custom),
       NewtType,
       'Kind.Tree ('NamedField "nummo") '[Tycon [] Nummo, Enum] ('Kind.Prim [Nummo]),
-      'Kind.Tree ('NamedField "flatty") '[ADT FlattyMetaAuto Auto] ('Kind.Prod Flatty [PrimInt "flat1", PrimText "flat2"])
+      'Kind.Tree ('NamedField "flatty") '[Adt FlattyMetaAuto Auto] ('Kind.Prod Flatty [PrimInt "flat1", PrimText "flat2"])
     ]
   )
 
