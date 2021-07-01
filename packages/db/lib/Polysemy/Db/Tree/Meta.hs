@@ -165,7 +165,6 @@ type family ForceAdtMeta (meta :: AdtMetadata) :: MaybeAdt where
   ForceAdtMeta ('AdtSum cols) = 'MaybeAdt ('AdtSum cols)
   ForceAdtMeta ('AdtProd cols) = 'MaybeAdt ('AdtProd cols)
   ForceAdtMeta 'AdtEnum = 'MaybeAdt 'AdtEnum
-  -- ForceAdtMeta ('AdtNewtype d) = 'MaybeAdt ('AdtNewtype d)
 
 type family AdtMeta (rep :: *) (d :: *) :: MaybeAdt where
   AdtMeta rep d =

@@ -4,7 +4,7 @@ module Polysemy.Hasql.Test.WhereTest where
 
 import Fcf (Eval)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
-import Polysemy.Db.Data.Rep (Auto, Flatten)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Product)
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Tree.Table (DbQueryRoot, TableRoot)
@@ -47,6 +47,12 @@ data UnaSum =
   UnaSum2 Sum2
   deriving (Eq, Show, Generic)
 
+data UnaSumRep =
+  UnaSum1Rep (Product Sum1Rep)
+  |
+  UnaSum2Rep Auto
+  deriving (Eq, Show, Generic)
+
 data FP =
   FP { double :: Double }
   deriving (Eq, Show, Generic)
@@ -71,7 +77,7 @@ type Seg2 =
   Seg2With ('FieldSegment ('NamedField "double"))
 
 derivation ::
-  TableRoot Auto UnaSum dTree =>
+  TableRoot UnaSumRep UnaSum dTree =>
   DbQueryRoot Auto FP UnaSum qTree =>
   dFlat ~ Eval (FlatRoot dTree) =>
   dFlat ~ '[

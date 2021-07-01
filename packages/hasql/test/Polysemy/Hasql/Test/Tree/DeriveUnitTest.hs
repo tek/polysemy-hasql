@@ -33,7 +33,7 @@ type DatAdtMeta =
   'AdtProd DatAdtMetas
 
 type DatTreeEffs =
-  '[ADT DatAdtMeta Auto]
+  '[Adt DatAdtMeta Auto]
 
 type DatTrees =
   '[
