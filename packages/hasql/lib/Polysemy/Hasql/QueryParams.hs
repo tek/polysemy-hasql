@@ -30,7 +30,7 @@ import Polysemy.Db.SOP.Contravariant (sequenceContravariantNP)
 import Polysemy.Hasql.Table.QueryParam (QueryParam(queryParam))
 import Polysemy.Hasql.Table.WriteNull (WriteNullCon(writeNullCon), WriteNullCons(writeNullCons))
 
-class ProductParams (trees :: [Kind.Tree]) (ds :: [*]) | trees -> ds where
+class ProductParams (trees :: [Kind.Tree]) (ds :: [Type]) | trees -> ds where
   productParams :: NP Params ds
 
 instance ProductParams '[] '[] where
@@ -42,7 +42,7 @@ instance (
     ProductParams trees ds
   ) => ProductParams (tree : trees) (d : ds) where
   productParams =
-    queryParams @tree :* productParams @trees
+    queryParams @tree :Type productParams @trees
 
 unconsNS ::
   NS (NP I) (ds : dss) ->
@@ -51,7 +51,7 @@ unconsNS = \case
   Z x -> Left x
   S x -> Right x
 
-class ConParams (tree :: Kind.Con) (ds :: [*]) | tree -> ds where
+class ConParams (tree :: Kind.Con) (ds :: [Type]) | tree -> ds where
   conParams :: Params (NP I ds)
 
 instance (
@@ -67,7 +67,7 @@ instance (
   conParams =
     unI . hd >$< queryParams @tree
 
-class SumParams (trees :: [Kind.Con]) (dss :: [[*]]) | trees -> dss where
+class SumParams (trees :: [Kind.Con]) (dss :: [[Type]]) | trees -> dss where
   sumParams :: Params (NS (NP I) dss)
 
 instance SumParams '[] '[] where
@@ -109,7 +109,7 @@ sumIndex ::
 sumIndex =
   contramap hindex (queryParam @'[Prim])
 
-class QueryParams (tree :: Kind.Tree) (d :: *) | tree -> d where
+class QueryParams (tree :: Kind.Tree) (d :: Type) | tree -> d where
   queryParams :: Params d
 
 instance (

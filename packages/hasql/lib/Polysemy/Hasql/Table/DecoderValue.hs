@@ -11,7 +11,7 @@ import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 import Polysemy.Hasql.Table.PrimDecoder (PrimDecoder, primDecoder)
 import Polysemy.Db.Tree.Data.Effect (Newtype)
 
-class DecoderValue (effs :: [*]) (a :: *) where
+class DecoderValue (effs :: [Type]) (a :: Type) where
   decoderValue :: Value a
 
 instance {-# overlappable #-} DecoderValue effs d => DecoderValue (eff : effs) d where

@@ -208,7 +208,7 @@ instance (
   dataTable =
     dataColumn @tree InitPrefix
 
-class TableStructure (rep :: *) (d :: *) where
+class TableStructure (rep :: Type) (d :: Type) where
   tableStructure :: Data.Column
 
 instance (

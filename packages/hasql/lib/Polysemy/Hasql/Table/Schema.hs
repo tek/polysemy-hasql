@@ -26,7 +26,7 @@ import Polysemy.Hasql.Where (Where (queryWhere))
 -- ordinary primitive.
 class (
     BasicSchema rep d
-  ) => Schema (qrep :: *) (rep :: *) (q :: *) (d :: *) where
+  ) => Schema (qrep :: Type) (rep :: Type) (q :: Type) (d :: Type) where
     schema :: Data.QueryTable q d
 
 instance (

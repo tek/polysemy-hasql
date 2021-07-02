@@ -22,7 +22,7 @@ foldable =
   element .
   nonNullable
 
-class QueryValueNoN (effs :: [*]) (d :: *) where
+class QueryValueNoN (effs :: [Type]) (d :: Type) where
   queryValueNoN :: NullableOrNot Value d
 
 instance (
@@ -55,7 +55,7 @@ instance {-# overlappable #-} (
   queryValueNoN =
     nonNullable (encoderValue @effs)
 
-class QueryParam (effs :: [*]) (d :: *) where
+class QueryParam (effs :: [Type]) (d :: Type) where
   queryParam :: Params d
 
 instance {-# overlappable #-} (

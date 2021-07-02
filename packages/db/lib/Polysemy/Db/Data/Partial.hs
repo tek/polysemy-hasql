@@ -16,8 +16,8 @@ getPartial ::
   Partially d tree =>
   Partial d ->
   PartialTree tree
-getPartial =
-  unsafeCoerce . unPartial
+getPartial p =
+  unsafeCoerce (unPartial p)
 
 wrapPartial ::
   ∀ d tree .
