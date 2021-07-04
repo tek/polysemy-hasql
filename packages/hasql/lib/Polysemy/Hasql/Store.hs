@@ -11,7 +11,7 @@ import Polysemy.Log (Log)
 import Polysemy.Resource (Resource)
 import Polysemy.Time (Time, interpretTimeGhc)
 
-import Polysemy.Hasql.Crud (interpretCrudUidWith)
+import Polysemy.Hasql.Crud (interpretCrudUidNoUpdateWith, interpretCrudUidWith)
 import Polysemy.Hasql.Data.Crud (Crud (..))
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.ManagedTable (ManagedTableUid)
@@ -102,3 +102,36 @@ interpretStoreDbSingle name host =
   raise3Under .
   raise3Under .
   raise3Under
+
+interpretStoreDbFullNoUpdate ::
+  Members (StoreDeps t dt) r =>
+  QueryTable i (Uid i d) ->
+  InterpretersFor (StoreStack i d) r
+interpretStoreDbFullNoUpdate table =
+  interpretManagedTable (table ^. QueryTable.table) .
+  interpretCrudUidNoUpdateWith table (table ^. QueryTable.qparams) (table ^. QueryTable.qwhere) .
+  interpretStoreDb
+
+interpretStoreDbFullNoUpdateGenAs ::
+  ∀ qrep irep rep i d t dt r .
+  UidQuerySchema qrep irep rep i i d =>
+  Members (StoreDeps t dt) r =>
+  InterpretersFor (StoreStack i d) r
+interpretStoreDbFullNoUpdateGenAs =
+  interpretStoreDbFullNoUpdate (schema @qrep @(UidRep irep rep))
+
+-- |Out-of-the box interpreter for 'Store' that generically derives a table and delegates queries to 'Crud' and table
+-- housekeeping to 'ManagedTable'.
+--
+-- @
+-- runM $ resourceToIO $ interpretTimeGhc $ interpretDbConnection $ interpretDatabase $ interpretStoreDbFullGen @Auto do
+--   Store.insert (User 1 "admin")
+--   Store.fetchAll
+-- @
+interpretStoreDbFullNoUpdateGen ::
+  ∀ rep i d t dt r .
+  UidSchema rep i d =>
+  Members (StoreDeps t dt) r =>
+  InterpretersFor (StoreStack i d) r
+interpretStoreDbFullNoUpdateGen =
+  interpretStoreDbFullNoUpdateGenAs @(PrimQuery "id") @PrimaryKey @rep

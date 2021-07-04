@@ -33,7 +33,7 @@ import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (InputQueueConnection, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (Queued, QueuedRep)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
-import Polysemy.Hasql.Store (interpretStoreDbFullGen)
+import Polysemy.Hasql.Store (interpretStoreDbFullNoUpdateGen)
 
 tryDequeue ::
   LibPQ.Connection ->
@@ -198,7 +198,7 @@ interpretInputDbQueueFullGen ::
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueFullGen errorDelay errorHandler =
-  interpretStoreDbFullGen @QueuedRep .
+  interpretStoreDbFullNoUpdateGen @QueuedRep .
   raiseUnder2 .
   interpretInputDbQueueFull @queue errorDelay (raise . errorHandler) .
   raiseUnder

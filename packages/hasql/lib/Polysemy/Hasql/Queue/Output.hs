@@ -21,7 +21,7 @@ import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (OutputQueueConnection, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (Queued (Queued), QueuedRep)
-import Polysemy.Hasql.Store (interpretStoreDbFullGen)
+import Polysemy.Hasql.Store (interpretStoreDbFullNoUpdateGen)
 
 interpretOutputDbQueue ::
   ∀ (queue :: Symbol) d t dt r .
@@ -60,7 +60,7 @@ interpretOutputDbQueueFullGen ::
   Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =
-  interpretStoreDbFullGen @QueuedRep .
+  interpretStoreDbFullNoUpdateGen @QueuedRep .
   raiseUnder2 .
   interpretOutputDbQueueFull @queue .
   raiseUnder

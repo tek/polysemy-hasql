@@ -16,6 +16,8 @@ import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
+import Hasql.Statement (Statement(Statement))
+import Hasql.Decoders (singleRow)
 
 interpretCrudWith ::
   BuildPartialSql p tree =>
@@ -91,6 +93,36 @@ interpretCrudUidWith qTable@(QueryTable table@(Table structure row _) _ _) iPara
     uidQueryTable =
       qTable { _qparams = iParams, _qwhere = iWhere }
 {-# inline interpretCrudUidWith #-}
+
+interpretCrudUidNoUpdateWith ::
+  QueryTable q (Uid i d) ->
+  Params i ->
+  Where i (Uid i d) ->
+  InterpreterFor (Crud i (Uid i d) q p !! e) r
+interpretCrudUidNoUpdateWith qTable@(QueryTable table@(Table structure row _) _ _) iParams iWhere =
+  interpretResumable $ pure . \case
+    Fetch ->
+      Statement.selectWhere uidQueryTable
+    FetchAll ->
+      Statement.select structure row
+    FetchQ ->
+      Statement.selectWhere qTable
+    Insert ->
+      Statement.insert table
+    Upsert ->
+      Statement.upsert table
+    Delete ->
+      Statement.deleteWhere uidQueryTable
+    DeleteAll ->
+      Statement.deleteAll table
+    Update _ _ ->
+      Statement "select 1" mempty (singleRow (pure Nothing)) True
+    UpdateQ _ _ ->
+      Statement "select 1" mempty (singleRow (pure Nothing)) True
+  where
+    uidQueryTable =
+      qTable { _qparams = iParams, _qwhere = iWhere }
+{-# inline interpretCrudUidNoUpdateWith #-}
 
 interpretCrudUid ::
   ∀ i d q p e r tree .
