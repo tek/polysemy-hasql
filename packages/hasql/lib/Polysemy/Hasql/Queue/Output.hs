@@ -55,8 +55,8 @@ interpretOutputDbQueueFull =
   raiseUnder2
 
 interpretOutputDbQueueFullGen ::
-  ∀ (queue :: Symbol) d tree t dt r .
-  Queue queue t d tree =>
+  ∀ (queue :: Symbol) d t dt r .
+  Queue queue t d =>
   Members [OutputQueueConnection queue, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFullGen =
