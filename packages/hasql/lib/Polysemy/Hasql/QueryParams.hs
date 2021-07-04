@@ -42,7 +42,7 @@ instance (
     ProductParams trees ds
   ) => ProductParams (tree : trees) (d : ds) where
   productParams =
-    queryParams @tree :Type productParams @trees
+    queryParams @tree :* productParams @trees
 
 unconsNS ::
   NS (NP I) (ds : dss) ->

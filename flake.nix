@@ -5,7 +5,7 @@
   inputs = {
     hix.url = github:tek/hix;
     polysemy.url = github:polysemy-research/polysemy;
-    chronos = { url = github:andrewthad/chronos; flake = false; };
+    chronos = { url = github:andrewthad/chronos/aa6d2b0969c4c5216ff9e45da1574e194fafefc1; flake = false; };
   };
 
   outputs = { hix, polysemy, chronos, ... }:
@@ -38,10 +38,6 @@
     };
 
     main = { hackage, source, minimal, jailbreak, ... }: {
-      bytebuild = hackage "0.3.8.0" "0xlisy3qhqy1ps69md3ccj85jmq4kmnihm1hjf97b63irwvk7nax";
-      byteslice = hackage "0.2.5.2" "0gkc1b9s65bacw9waqgbmf0b4ackaya29w612hclv2inn7jj38wp";
-      bytesmith = hackage "0.3.7.0" "04089zzhd8bj6dacjirspy0lf3nvfdcjp913a5jn1qac1p06b2yh";
-      contiguous = hackage "0.5.1" "014wha9mv75db9nm0z44rls2msg6vpkgnay0kyyr53c3mvi9y3bz";
       chronos = minimal (source.root chronos);
       path = hackage "0.9.0" "14symzl1rszvk5zivv85k79anz7xyl5gaxy0sm4vhhzsgxc59msv";
       path-io = jailbreak (hackage "1.6.3" "05hcxgyf6kkz36mazd0fqwb6mjy2049gx3vh8qq9h93gfjkpp2vc");
@@ -60,6 +56,9 @@
     base = ./.;
     main = "polysemy-hasql";
     overrides = [common main];
+    # overrides = [common compat901];
+    # compiler = "ghc901";
+    # ghcid.easy-hls = false;
     compat = false;
     compatOverrides = { all = common; ghc901 = compat901; };
     packages = {

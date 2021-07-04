@@ -31,7 +31,7 @@ type family MkFieldPath (path :: k) :: FieldPath where
     'FieldName p
 
 field ::
-  ∀ path (a :: *) .
+  ∀ path (a :: Type) .
   a ->
   FieldUpdate (MkFieldPath path) a
 field =

@@ -31,10 +31,10 @@ data AdtMetadata =
 data MaybeAdt =
   MaybeAdt AdtMetadata
 
-type family NewtypePayload (dss :: [[*]]) :: * where
+type family NewtypePayload (dss :: [[Type]]) :: Type where
   NewtypePayload '[ '[d]] = d
 
-type family FieldNameMismatch (d :: *) (rn :: ErrorMessage) (dn :: ErrorMessage) :: k where
+type family FieldNameMismatch (d :: Type) (rn :: ErrorMessage) (dn :: ErrorMessage) :: k where
   FieldNameMismatch d rn dn =
     TypeError (
       "column name mismatch in rep for column of type " <> 'ShowType d %
@@ -42,7 +42,7 @@ type family FieldNameMismatch (d :: *) (rn :: ErrorMessage) (dn :: ErrorMessage)
       "rep field is named '" <> rn <> "'"
     )
 
-type family MatchName (d :: *) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) :: Symbol where
+type family MatchName (d :: Type) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) :: Symbol where
   MatchName _ rn rn _ =
     rn
   MatchName _ rn dn dn =
@@ -50,7 +50,7 @@ type family MatchName (d :: *) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) :: 
   MatchName d rn dn _ =
     FieldNameMismatch d ('Text rn) ('Text dn)
 
-type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [FieldId]) :: [TreeMeta] where
+type family ZipFields (reps :: [Type]) (rns :: [FieldId]) (ds :: [Type]) (dns :: [FieldId]) :: [TreeMeta] where
   ZipFields '[] '[] '[] '[] = '[]
   ZipFields (rep : reps) ('NumberedField _ n : rns) (d : ds) ('NumberedField name n : dns) =
     'TreeMeta ('NumberedField name n) rep d : ZipFields reps rns ds dns
@@ -65,13 +65,13 @@ type family ZipFields (reps :: [*]) (rns :: [FieldId]) (ds :: [*]) (dns :: [Fiel
   ZipFields reps rns ds dns =
     ErrorWithType "internal: ZipFields" '(reps, rns, ds, dns)
 
-type family ADTConsGen (index :: Nat) (names :: [Symbol]) (repss :: [[*]]) (rnss :: Ids)  (dss :: [[*]]) (dnss :: Ids) :: [ConMeta] where
+type family ADTConsGen (index :: Nat) (names :: [Symbol]) (repss :: [[Type]]) (rnss :: Ids)  (dss :: [[Type]]) (dnss :: Ids) :: [ConMeta] where
   ADTConsGen _ '[] '[] '[] '[] '[] =
     '[]
   ADTConsGen index (name : names) (reps : repss) (rns : rnss) (ds : dss) (dns : dnss) =
     'ConMeta index ('NamedField name) (ZipFields reps rns ds dns) : ADTConsGen (index + 1) names repss rnss dss dnss
 
-type family AdtEnumGen (rep :: *) (d :: *) (dss :: [[*]]) :: Maybe AdtMetadata where
+type family AdtEnumGen (rep :: Type) (d :: Type) (dss :: [[Type]]) :: Maybe AdtMetadata where
   AdtEnumGen _ _ '[] =
     'Just 'AdtEnum
   AdtEnumGen rep d ('[] : dss) =
@@ -79,26 +79,26 @@ type family AdtEnumGen (rep :: *) (d :: *) (dss :: [[*]]) :: Maybe AdtMetadata w
   AdtEnumGen _ _ _ =
     'Nothing
 
-type family AdtSumGen (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: AdtMetadata where
+type family AdtSumGen (rep :: Type) (d :: Type) (repss :: [[Type]]) (rnss :: Ids) (dss :: [[Type]]) (dnss :: Ids) :: AdtMetadata where
   AdtSumGen _ d repss rnss dss dnss =
     'AdtSum (ADTConsGen 0 (ConstructorNames d) repss rnss dss dnss)
 
-type family AdtEnumOrSum (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: AdtMetadata where
+type family AdtEnumOrSum (rep :: Type) (d :: Type) (repss :: [[Type]]) (rnss :: Ids) (dss :: [[Type]]) (dnss :: Ids) :: AdtMetadata where
   AdtEnumOrSum rep d repss rnss dss dnss =
     Eval (FromMaybe (AdtSumGen rep d repss rnss dss dnss) (AdtEnumGen rep d dss))
 
-type family AdtMetaGen (rep :: *) (d :: *) (repss :: [[*]]) (rnss :: Ids) (dss :: [[*]]) (dnss :: Ids) :: AdtMetadata where
+type family AdtMetaGen (rep :: Type) (d :: Type) (repss :: [[Type]]) (rnss :: Ids) (dss :: [[Type]]) (dnss :: Ids) :: AdtMetadata where
   AdtMetaGen _ _ '[reps] '[rns] '[ds] '[dns] =
     'AdtProd (ZipFields reps rns ds dns)
   AdtMetaGen rep d repss rnss dss dnss =
     AdtEnumOrSum rep d repss rnss dss dnss
 
 data ADTWrap =
-  ADTWrapped (* -> *) *
+  ADTWrapped (Type -> Type) Type
   |
-  ADTPlain *
+  ADTPlain Type
 
-type family ADTRep (rep :: *) :: * where
+type family ADTRep (rep :: Type) :: Type where
   ADTRep (Rep '[]) = Auto
   ADTRep Auto = Auto
   ADTRep (Rep (Product rep : _)) = rep
@@ -107,7 +107,7 @@ type family ADTRep (rep :: *) :: * where
   ADTRep (Rep (_ : reps)) = ADTRep (Rep reps)
   ADTRep rep = ADTRep (Rep '[rep])
 
-type family ProdDefaultRep (rep :: *) :: * where
+type family ProdDefaultRep (rep :: Type) :: Type where
   ProdDefaultRep Auto =
     Auto
   ProdDefaultRep (Rep rep) =
@@ -121,7 +121,7 @@ type family ProdDefaultRep (rep :: *) :: * where
   ProdDefaultRep rep =
     Rep '[Product rep]
 
-type family AdtMetaExplicit (rep :: *) (d :: *) (meta :: DatatypeInfo) :: AdtMetadata where
+type family AdtMetaExplicit (rep :: Type) (d :: Type) (meta :: DatatypeInfo) :: AdtMetadata where
 #if sop5
   AdtMetaExplicit rep d ('ADT _ _ _ _) =
     AdtMetaGen rep d (GCode rep) (FieldIds rep) (GCode d) (FieldIds d)
@@ -132,15 +132,15 @@ type family AdtMetaExplicit (rep :: *) (d :: *) (meta :: DatatypeInfo) :: AdtMet
   AdtMetaExplicit rep d meta =
     ErrorWithType "AdtMetaExplicit" '(rep, d, meta)
 
-type family AsAutoCon (ds :: [*]) :: [*] where
+type family AsAutoCon (ds :: [Type]) :: [Type] where
   AsAutoCon '[] = '[]
   AsAutoCon (_ : ds) = Auto : AsAutoCon ds
 
-type family AllAuto (dss :: [[*]]) :: [[*]] where
+type family AllAuto (dss :: [[Type]]) :: [[Type]] where
   AllAuto '[] = '[]
   AllAuto (ds : dss) = AsAutoCon ds : AllAuto dss
 
-type family AdtMetaAuto (d :: *) (meta :: DatatypeInfo) :: AdtMetadata where
+type family AdtMetaAuto (d :: Type) (meta :: DatatypeInfo) :: AdtMetadata where
 #if sop5
   AdtMetaAuto d ('ADT _ _ _ _) =
     AdtMetaGen Auto d (AllAuto (GCode d)) (FieldIds d) (GCode d) (FieldIds d)
@@ -153,12 +153,12 @@ type family AdtMetaAuto (d :: *) (meta :: DatatypeInfo) :: AdtMetadata where
 
 type family NoAdt :: AdtMetadata where
 
-type family AdtMetaAutoOrExplicit (rep :: *) (d :: *) :: AdtMetadata where
+type family AdtMetaAutoOrExplicit (rep :: Type) (d :: Type) :: AdtMetadata where
   AdtMetaAutoOrExplicit Auto () = NoAdt
   AdtMetaAutoOrExplicit Auto d = AdtMetaAuto d (GDatatypeInfoOf d)
   AdtMetaAutoOrExplicit rep d = AdtMetaExplicit rep d (GDatatypeInfoOf d)
 
-type family AdtMeta' (rep :: *) (d :: *) :: AdtMetadata where
+type family AdtMeta' (rep :: Type) (d :: Type) :: AdtMetadata where
   AdtMeta' rep d = AdtMetaAutoOrExplicit (ADTRep rep) d
 
 type family ForceAdtMeta (meta :: AdtMetadata) :: MaybeAdt where
@@ -166,6 +166,6 @@ type family ForceAdtMeta (meta :: AdtMetadata) :: MaybeAdt where
   ForceAdtMeta ('AdtProd cols) = 'MaybeAdt ('AdtProd cols)
   ForceAdtMeta 'AdtEnum = 'MaybeAdt 'AdtEnum
 
-type family AdtMeta (rep :: *) (d :: *) :: MaybeAdt where
+type family AdtMeta (rep :: Type) (d :: Type) :: MaybeAdt where
   AdtMeta rep d =
     ForceAdtMeta (AdtMeta' rep d)

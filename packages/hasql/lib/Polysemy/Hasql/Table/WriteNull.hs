@@ -6,7 +6,7 @@ import Polysemy.Db.Tree.Data.Effect (Tycon)
 
 import Polysemy.Hasql.Table.QueryParam (QueryParam, queryParam)
 
-type family NullParam a :: * where
+type family NullParam a :: Type where
   NullParam (Maybe a) = Maybe a
   NullParam a = Maybe a
 
@@ -25,7 +25,7 @@ instance NullColumns '[] where
   nullColumns =
     mempty
 
-type family WithMaybe (d :: *) (init :: [*]) (effs :: [*]) :: [*] where
+type family WithMaybe (d :: Type) (init :: [Type]) (effs :: [Type]) :: [Type] where
   WithMaybe d init '[] = Tycon Maybe d : init
   WithMaybe _ init (Tycon Maybe _ : _) = init
   WithMaybe d init (_ : effs) = WithMaybe d init effs

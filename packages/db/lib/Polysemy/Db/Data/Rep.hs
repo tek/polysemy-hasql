@@ -1,14 +1,14 @@
 module Polysemy.Db.Data.Rep where
 
-data Rep (r :: [*]) =
+data Rep (r :: [Type]) =
   Rep
   deriving (Eq, Show)
 
-data ForceRep (r :: [*]) =
+data ForceRep (r :: [Type]) =
   ForceRep
   deriving (Eq, Show)
 
-type family ConsRep (h :: *) (t :: *) :: * where
+type family ConsRep (h :: Type) (t :: Type) :: Type where
   ConsRep (Rep h) (Rep t) = (Rep (h ++ t))
   ConsRep h (Rep t) = Rep (h : t)
   ConsRep h t = Rep [h, t]

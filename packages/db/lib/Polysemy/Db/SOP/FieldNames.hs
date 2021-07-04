@@ -15,12 +15,12 @@ type family RecordFieldSymbols (fs :: [FieldInfo]) :: [FieldId] where
   RecordFieldSymbols '[] = '[]
   RecordFieldSymbols ('FieldInfo name : fs) = 'NamedField name : RecordFieldSymbols fs
 
-type family CtorFieldSymbols (con :: Symbol) (index :: Nat) (ds :: [*]) :: [FieldId] where
+type family CtorFieldSymbols (con :: Symbol) (index :: Nat) (ds :: [Type]) :: [FieldId] where
   CtorFieldSymbols _ _ '[] = '[]
   CtorFieldSymbols con index (_ : ds) =
     'NumberedField con index : CtorFieldSymbols con (index + 1) ds
 
-type family CtorsFields (cs :: [ConstructorInfo]) (dss :: [[*]]) :: [[FieldId]] where
+type family CtorsFields (cs :: [ConstructorInfo]) (dss :: [[Type]]) :: [[FieldId]] where
   CtorsFields '[] '[] =
     '[]
   CtorsFields ('Record _ fields : cs) (_ : dss) =
@@ -28,7 +28,7 @@ type family CtorsFields (cs :: [ConstructorInfo]) (dss :: [[*]]) :: [[FieldId]] 
   CtorsFields ('Constructor name : cs) (ds : dss) =
     CtorFieldSymbols name 1 ds : CtorsFields cs dss
 
-type family ADTCtorsFields (adt :: DatatypeInfo) (dss :: [[*]]) :: [[FieldId]] where
+type family ADTCtorsFields (adt :: DatatypeInfo) (dss :: [[Type]]) :: [[FieldId]] where
 #if sop5
   ADTCtorsFields ('ADT _ _ ctors _) dss =
     CtorsFields ctors dss
@@ -39,7 +39,7 @@ type family ADTCtorsFields (adt :: DatatypeInfo) (dss :: [[*]]) :: [[FieldId]] w
 
 #endif
 
-class DemoteFieldNames (d :: *) where
+class DemoteFieldNames (d :: Type) where
   type FieldIds d :: [[FieldId]]
 
 instance DemoteFieldNames d where

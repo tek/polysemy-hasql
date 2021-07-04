@@ -6,10 +6,10 @@ import Polysemy.Db.Data.FieldId (FieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
-class UnfoldTreePrim (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [*]) (d :: Type) where
+class UnfoldTreePrim (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [Type]) (d :: Type) where
   unfoldTreePrim :: env -> f (n d)
 
-class UnfoldTreeExtract (t :: Type) (n :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [*]) where
+class UnfoldTreeExtract (t :: Type) (n :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [Type]) where
   unfoldTreeExtract :: env -> env
 
 unfoldTrees ::

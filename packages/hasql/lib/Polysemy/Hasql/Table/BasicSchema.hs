@@ -21,7 +21,7 @@ instance (
       Table (dataTable (tableRoot @rep @d)) (queryRows @tree @d) (queryParams @tree @d)
 
 table ::
-  ∀ (d :: *) .
+  ∀ (d :: Type) .
   BasicSchema Auto d =>
   Table d
 table = do

@@ -21,7 +21,7 @@ type family ADTCtorNames dt :: [Symbol] where
   ADTCtorNames ('ADT _ _ ctors) = CtorNames ctors
 #endif
 
-class DemoteConstructorNames (d :: *) where
+class DemoteConstructorNames (d :: Type) where
   type ConstructorNames d :: [Symbol]
 
 instance DemoteConstructorNames d where

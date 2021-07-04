@@ -25,38 +25,38 @@ data Con =
 -- Tree/Table
 data Node =
   Prim {
-    tpe :: *
+    tpe :: Type
   }
   |
   Prod {
-    tpe :: *,
+    tpe :: Type,
     sub :: [Tree]
   }
   |
   Sum {
-    tpe :: *,
+    tpe :: Type,
     cons :: [Con]
   }
   |
   SumProd {
-    tpe :: *,
+    tpe :: Type,
     cons :: [Con]
   }
 
 data Tree =
   Tree {
     name :: FieldId,
-    eff :: [*],
+    eff :: [Type],
     node :: Node
   }
 
-type family NodeDataType (node :: Node) :: * where
+type family NodeDataType (node :: Node) :: Type where
   NodeDataType ('Prim d) = d
   NodeDataType ('Prod d _) = d
   NodeDataType ('Sum d _) = d
   NodeDataType ('SumProd d _) = d
 
-type family TreeDataType (tree :: Tree) :: * where
+type family TreeDataType (tree :: Tree) :: Type where
   TreeDataType ('Tree _ _ node) = NodeDataType node
 
 type family AdtTree (field :: Symbol) (d :: Type) (node :: Node) :: Tree where

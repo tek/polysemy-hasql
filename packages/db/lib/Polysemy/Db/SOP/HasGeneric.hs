@@ -14,14 +14,14 @@ instance BoolVal 'False where
   boolVal =
     False
 
-class GDatatypeInfoIsNewtype (dss :: [[*]]) (info :: DatatypeInfo) (wrapped :: Maybe *) | dss info -> wrapped
+class GDatatypeInfoIsNewtype (dss :: [[Type]]) (info :: DatatypeInfo) (wrapped :: Maybe Type) | dss info -> wrapped
 instance {-# incoherent #-} wrapped ~ 'Nothing => GDatatypeInfoIsNewtype dss info wrapped
 instance wrapped ~ 'Just d => GDatatypeInfoIsNewtype '[ '[d]] ('Newtype m n c) wrapped
 
-class IsNewtype d (wrapped :: Maybe *) | d -> wrapped
+class IsNewtype d (wrapped :: Maybe Type) | d -> wrapped
 instance GDatatypeInfoIsNewtype (GCode d) (GDatatypeInfoOf d) wrapped => IsNewtype d wrapped
 
-class GCodeResolves (d :: [[*]]) (flag :: Bool) | d -> flag
+class GCodeResolves (d :: [[Type]]) (flag :: Bool) | d -> flag
 instance {-# incoherent #-} flag ~ 'False => GCodeResolves d flag
 instance flag ~ 'True => GCodeResolves (d : ds) flag
 instance flag ~ 'True => GCodeResolves '[] flag
@@ -29,7 +29,7 @@ instance flag ~ 'True => GCodeResolves '[] flag
 class HasGeneric d (flag :: Bool) | d -> flag where
 instance GCodeResolves (GCode d) flag => HasGeneric d flag where
 
-class GCodeResolvesNot (d :: [[*]]) (flag :: Bool) | d -> flag where
+class GCodeResolvesNot (d :: [[Type]]) (flag :: Bool) | d -> flag where
   gcodeResolvesNot :: Bool
 instance {-# incoherent #-} flag ~ 'True => GCodeResolvesNot d flag where
   gcodeResolvesNot =

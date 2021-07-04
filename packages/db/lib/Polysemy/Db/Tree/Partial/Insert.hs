@@ -29,7 +29,7 @@ type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
 type PartialCon = Type.Con () PartialField
 
-class InsertFieldCon (path :: FieldPath) (a :: *) (con :: Kind.Con) where
+class InsertFieldCon (path :: FieldPath) (a :: Type) (con :: Kind.Con) where
   insertFieldCon :: FieldUpdate path a -> PartialCon con -> PartialCon con
 
 instance (
@@ -44,7 +44,7 @@ instance (
     insertFieldCon update (Type.ConUna tree) =
       Type.ConUna (insertFieldTree update tree)
 
-class InsertFieldNode (path :: FieldPath) (a :: *) (n :: Kind.Node) where
+class InsertFieldNode (path :: FieldPath) (a :: Type) (n :: Kind.Node) where
   insertFieldNode :: FieldUpdate path a -> PartialNode n -> PartialNode n
 
 instance (
@@ -65,7 +65,7 @@ instance (
     insertFieldNode update (Type.SumProd n sub) =
       Type.SumProd n (hcmap (Proxy @(InsertFieldCon path a)) (insertFieldCon update) sub)
 
-class InsertMatchingName (path :: FieldPath) (a :: *) (effs :: [*]) (node :: Kind.Node) where
+class InsertMatchingName (path :: FieldPath) (a :: Type) (effs :: [Type]) (node :: Kind.Node) where
   insertMatchingName :: FieldUpdate path a -> PartialNode node -> PartialNode node
 
 instance (
@@ -86,7 +86,7 @@ instance (
   insertMatchingName (FieldUpdate d) (Type.Prim _) =
     Type.Prim (PartialField.Update (symbolText @name) d)
 
-class InsertNonmatchingName (path :: FieldPath) (a :: *) (effs :: [*]) (node :: Kind.Node) where
+class InsertNonmatchingName (path :: FieldPath) (a :: Type) (effs :: [Type]) (node :: Kind.Node) where
   insertNonmatchingName :: FieldUpdate path a -> PartialNode node -> PartialNode node
 
 instance InsertNonmatchingName path a effs ('Kind.Prim d) where
@@ -105,7 +105,7 @@ instance (
   insertNonmatchingName update (Type.SumProd n trees) =
     Type.SumProd n (hcmap (Proxy @(InsertFieldCon path a)) (insertFieldCon update) trees)
 
-class InsertFieldTree (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
+class InsertFieldTree (path :: FieldPath) (a :: Type) (t :: Kind.Tree) where
   insertFieldTree :: FieldUpdate path a -> PartialTree t -> PartialTree t
 
 instance (
@@ -120,7 +120,7 @@ instance {-# overlappable #-} (
   insertFieldTree update (Type.Tree t nd) =
     Type.Tree t (insertNonmatchingName @('FieldName name) @a @effs @node update nd)
 
-class InsertField (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
+class InsertField (path :: FieldPath) (a :: Type) (t :: Kind.Tree) where
   insertField :: FieldUpdate path a -> PartialTree t -> PartialTree t
 
 instance (
@@ -129,7 +129,7 @@ instance (
   insertField update (Type.Tree t n) =
     Type.Tree t (insertFieldNode @path @a @n update n)
 
-class InsertFieldOrError (err :: Maybe ErrorMessage) (path :: FieldPath) (a :: *) (t :: Kind.Tree) where
+class InsertFieldOrError (err :: Maybe ErrorMessage) (path :: FieldPath) (a :: Type) (t :: Kind.Tree) where
   insertFieldOrError :: FieldUpdate path a -> PartialTree t -> PartialTree t
 
 instance TypeError err => InsertFieldOrError ('Just err) path a t where

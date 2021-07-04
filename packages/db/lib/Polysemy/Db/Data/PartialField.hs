@@ -44,7 +44,7 @@ data FieldPath =
   |
   FieldName Symbol
 
-data FieldUpdate (path :: FieldPath) (a :: *) =
+data FieldUpdate (path :: FieldPath) (a :: Type) =
   FieldUpdate a
   deriving (Eq, Show)
 

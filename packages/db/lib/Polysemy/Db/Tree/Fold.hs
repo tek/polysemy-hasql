@@ -6,10 +6,10 @@ import Polysemy.Db.Data.FieldId (FieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
-class FoldTreePrim (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) (d :: Type) where
+class FoldTreePrim (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [Type]) (d :: Type) where
   foldTreePrim :: n d -> m
 
-class FoldTreeConcat (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [*]) where
+class FoldTreeConcat (root :: Bool) (t :: Type) (n :: Type -> Type) (m :: Type) (name :: FieldId) (effs :: [Type]) where
   foldTreeConcat :: [m] -> m
 
 instance {-# overlappable #-} (

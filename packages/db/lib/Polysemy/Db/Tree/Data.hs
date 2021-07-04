@@ -4,8 +4,8 @@ import Generics.SOP (AllZip, I (I), NP (Nil, (:*)), NS (Z), SOP (SOP), htrans)
 import Generics.SOP.Constraint (SListI)
 import Generics.SOP.GGP (GCode, gto)
 
-import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.Rep (Auto)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ReifySOP)
 import Polysemy.Db.Tree (RootName, Tree (..))
@@ -45,7 +45,7 @@ instance (
 
 instance TreeEffects DefaultEffects rep d effs => TreeEffects DataTag rep d effs where
 
-type family NPMaybes (ds :: [*]) :: [*] where
+type family NPMaybes (ds :: [Type]) :: [Type] where
   NPMaybes '[] = '[]
   NPMaybes (d : ds) = Maybe d : NPMaybes ds
 
@@ -72,7 +72,7 @@ instance (
   reifyDataProd t =
     I (reifyDataTree t)
 
-class ReifyDataSum (tree :: Kind.Con) (ds :: [*]) where
+class ReifyDataSum (tree :: Kind.Con) (ds :: [Type]) where
   reifyDataSum :: DataCon tree -> NP I ds
 
 instance (

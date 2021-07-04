@@ -11,22 +11,22 @@ import Generics.SOP.Type.Metadata (ConstructorInfo(Record), DatatypeInfo(ADT, Ne
 
 import Polysemy.Db.Text.Case (unCamelCase, unCamelCaseString)
 
-type Coded (d :: *) (dss :: [[*]]) =
+type Coded (d :: Type) (dss :: [[Type]]) =
   GCode d ~ dss
 
 type ProductGCode d =
   Head (GCode d)
 
-type ProductCoded (d :: *) (ds :: [*]) =
+type ProductCoded (d :: Type) (ds :: [Type]) =
   Coded d '[ds]
 
-type NewtypeCoded (d :: *) (a :: *) =
+type NewtypeCoded (d :: Type) (a :: Type) =
   (Coercible d a, ProductCoded d '[a])
 
-type ReifySOP (d :: *) (dss :: [[*]]) =
+type ReifySOP (d :: Type) (dss :: [[Type]]) =
   (Generic d, GTo d, GCode d ~ dss, All2 Top dss)
 
-type ConstructSOP (d :: *) (dss :: [[*]]) =
+type ConstructSOP (d :: Type) (dss :: [[Type]]) =
   (Generic d, GFrom d, GCode d ~ dss, All2 Top dss)
 
 type IsNullary =
@@ -45,7 +45,7 @@ instance IsDataT ('ADT mod name ctors strictness) name where
 instance IsDataT ('ADT mod name ctors) name where
 #endif
 
-class IsData (a :: *) (types :: [*]) (name :: Symbol) | a -> types name where
+class IsData (a :: Type) (types :: [Type]) (name :: Symbol) | a -> types name where
 
 instance (
     ProductCoded a types,
@@ -65,7 +65,7 @@ instance IsRecordT ('ADT mod name '[ 'Record ctor names]) name names where
 
 #endif
 
-class IsRecord (a :: *) (types :: [*]) (name :: Symbol) (fields :: [FieldInfo]) | a -> types name fields where
+class IsRecord (a :: Type) (types :: [Type]) (name :: Symbol) (fields :: [FieldInfo]) | a -> types name fields where
 
 instance (
     ProductCoded a types,
@@ -83,7 +83,7 @@ instance CtorsT ('ADT mod name ctors) ctors where
 
 #endif
 
-class Ctors (d :: *) (ctors :: [ConstructorInfo]) (types :: [[*]]) | d -> ctors types where
+class Ctors (d :: Type) (ctors :: [ConstructorInfo]) (types :: [[Type]]) | d -> ctors types where
 
 instance (CtorsT (GDatatypeInfoOf d) ctors, types ~ GCode d) => Ctors d ctors types where
 
@@ -91,10 +91,10 @@ type family DataNameF' (dt :: DatatypeInfo) :: Symbol where
   DataNameF' ('ADT _ name _ _) = name
   DataNameF' ('Newtype _ name _) = name
 
-type family DataNameF (d :: *) :: Symbol where
+type family DataNameF (d :: Type) :: Symbol where
   DataNameF d = DataNameF' (GDatatypeInfoOf d)
 
-class DataName (d :: *) (name :: Symbol) | d -> name where
+class DataName (d :: Type) (name :: Symbol) | d -> name where
   dataNameString :: String
 
 instance (

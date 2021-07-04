@@ -16,7 +16,7 @@ import Generics.SOP (SListI,
   )
 
 sequenceContravariantNPF ::
-  ∀ (ds :: [*]) (cv :: * -> *) (f :: * -> *) .
+  ∀ (ds :: [Type]) (cv :: Type -> Type) (f :: Type -> Type) .
   SListI ds =>
   Contravariant cv =>
   (∀ a . Monoid (cv a)) =>
@@ -32,7 +32,7 @@ sequenceContravariantNPF contrs =
       K (contramap (proj . K . hmap (unI . unComp)) par)
 
 sequenceContravariantNP ::
-  ∀ (ds :: [*]) (cv :: * -> *) .
+  ∀ (ds :: [Type]) (cv :: Type -> Type) .
   SListI ds =>
   Contravariant cv =>
   (∀ a . Monoid (cv a)) =>

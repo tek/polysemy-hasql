@@ -8,7 +8,7 @@ import Prelude hiding (Enum, bool)
 
 import Polysemy.Hasql.Table.PrimEncoder (PrimEncoder, primEncoder)
 
-class EncoderValue (effs :: [*]) (d :: *) where
+class EncoderValue (effs :: [Type]) (d :: Type) where
   encoderValue :: Value d
 
 instance {-# overlappable #-} EncoderValue effs d => EncoderValue (eff : effs) d where

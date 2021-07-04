@@ -1,14 +1,14 @@
 module Polysemy.Hasql.QueryRows where
 
-import Generics.SOP (I, NP((:Type), Nil), NS(Z, S), SListI, SOP(SOP), hsequence)
+import Generics.SOP (I, NP (Nil, (:*)), NS (S, Z), SListI, SOP (SOP), hsequence)
 import Generics.SOP.GGP (gto)
 import Hasql.Decoders (Row)
 import Polysemy.Db.Data.Rep (Prim)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (ProductCoded, ReifySOP)
 
-import Polysemy.Hasql.Table.QueryRow (QueryRow(queryRow))
-import Polysemy.Hasql.Table.ReadNull (ReadNullCon(readNullCon), ReadNullCons(readNullCons))
+import Polysemy.Hasql.Table.QueryRow (QueryRow (queryRow))
+import Polysemy.Hasql.Table.ReadNull (ReadNullCon (readNullCon), ReadNullCons (readNullCons))
 
 class ProductRows (trees :: [Kind.Tree]) (ds :: [Type]) | trees -> ds where
   productRows :: NP Row ds
@@ -22,7 +22,7 @@ instance (
     ProductRows trees ds
   ) => ProductRows (tree : trees) (d : ds) where
     productRows =
-      queryRows @tree :Type productRows @trees
+      queryRows @tree :* productRows @trees
 
 class ConRow (tree :: Kind.Con) (ds :: [Type]) | tree -> ds where
   conRow :: NP Row ds
@@ -37,7 +37,7 @@ instance (
     QueryRows tree d
   ) => ConRow ('Kind.ConUna num n tree) '[d] where
   conRow =
-    queryRows @tree @d :Type Nil
+    queryRows @tree @d :* Nil
 
 class SumRows (trees :: [Kind.Con]) (dss :: [[Type]]) | trees -> dss where
   sumRows :: Int -> Row (NS (NP I) dss)
@@ -55,7 +55,7 @@ instance (
   ) => SumRows (tree : trees) (ds : dss) where
   sumRows = \case
     0 ->
-      Z <$> hsequence (conRow @tree) <Type readNullCons @trees
+      Z <$> hsequence (conRow @tree) <* readNullCons @trees
     index -> do
       readNullCon @tree
       S <$> sumRows @trees @dss (index - 1)

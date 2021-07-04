@@ -15,7 +15,7 @@ values :: Array a -> Row a
 values =
   value . array
 
-class QueryRow (eff :: [*]) (d :: *) where
+class QueryRow (eff :: [Type]) (d :: Type) where
   queryRow :: Row d
 
 instance (
