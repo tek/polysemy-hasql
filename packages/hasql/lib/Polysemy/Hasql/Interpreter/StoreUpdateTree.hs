@@ -2,7 +2,6 @@ module Polysemy.Hasql.Interpreter.StoreUpdateTree where
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
-import qualified Polysemy.Db.Data.Uid as Uid
 import qualified Polysemy.Db.Effect.StoreUpdateTree as StoreUpdateTree
 import Polysemy.Db.Effect.StoreUpdateTree (StoreUpdateTree)
 
@@ -26,7 +25,7 @@ interpretStoreUpdateTreeDbWith ::
 interpretStoreUpdateTreeDbWith table =
   interpretResumable \case
     StoreUpdateTree.Partial i t ->
-      fmap Uid._payload <$> restop (ManagedTable.runStatement () (Statement.update table i t))
+      restop (ManagedTable.runStatement () (Statement.update table i t))
 {-# inline interpretStoreUpdateTreeDbWith #-}
 
 interpretStoreUpdateTreeDb ::

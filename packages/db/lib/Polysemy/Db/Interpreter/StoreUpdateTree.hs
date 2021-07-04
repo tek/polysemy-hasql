@@ -1,7 +1,7 @@
 module Polysemy.Db.Interpreter.StoreUpdateTree where
 
+import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Effect.StoreUpdateTree as StoreUpdateTree
 import Polysemy.Db.Effect.StoreUpdateTree (StoreUpdateTree)
 import qualified Polysemy.Db.Store as Store
@@ -15,9 +15,6 @@ type StrictStoreUpdateTree d tree dataTree =
     UpdatePartialTree dataTree tree
   )
 
-type UidStrictStoreUpdateTree i d tree dataTree =
-  StrictStoreUpdateTree (Uid i d) tree dataTree
-
 interpretStoreUpdateTreeStore ::
   ∀ i d e tree dataTree r .
   StrictStoreUpdateTree d tree dataTree =>
@@ -28,7 +25,7 @@ interpretStoreUpdateTreeStore =
     StoreUpdateTree.Partial i t -> do
       restop @e @(Store i d) do
         (Store.alter i (updatePartial @d t))
-        Store.fetchPayload i
+        Store.fetch i
 {-# inline interpretStoreUpdateTreeStore #-}
 
 interpretStoreUpdateTreeNull ::
