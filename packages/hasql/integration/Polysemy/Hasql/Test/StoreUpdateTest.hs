@@ -5,6 +5,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Partial (partial)
 import Polysemy.Db.Data.PartialField (PartialTree, partially)
+import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
 import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, UidRep)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
@@ -13,7 +14,7 @@ import Polysemy.Db.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
 import Polysemy.Db.Tree.Partial (field, (++>), (+>))
-import Polysemy.Db.Tree.Partial.Insert (InsertPaths, PartialUpdate (PartialUpdate), type (@>))
+import Polysemy.Db.Tree.Partial.Insert (InsertPaths, type (@>))
 import Polysemy.Test (UnitTest, assertJust)
 
 import Polysemy.Hasql.Interpreter.StoreUpdate (interpretStoreUpdateDb)

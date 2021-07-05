@@ -2,11 +2,12 @@ module Polysemy.Hasql.Interpreter.StoreUpdate where
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
 import Polysemy.Db.Data.Rep (UidRep)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
 import Polysemy.Db.Tree.Partial (Partial (Partial))
-import Polysemy.Db.Tree.Partial.Insert (InsertPaths, PartialUpdate (PartialUpdate))
+import Polysemy.Db.Tree.Partial.Insert (InsertPaths)
 
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTableUid)

@@ -1,6 +1,7 @@
 module Polysemy.Db.Interpreter.StoreUpdate where
 
 import Polysemy.Db.Data.Partial (Partial (Partial))
+import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
@@ -8,7 +9,6 @@ import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
 import qualified Polysemy.Db.Store as Store
 import Polysemy.Db.Store (StrictStoreUpdate)
 import Polysemy.Db.Tree.Partial (updatePartial)
-import Polysemy.Db.Tree.Partial.Insert (PartialUpdate (PartialUpdate))
 
 interpretStoreUpdateStore ::
   ∀ i d e fields tree dataTree r .

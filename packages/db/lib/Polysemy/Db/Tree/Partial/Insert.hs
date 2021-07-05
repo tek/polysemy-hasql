@@ -6,10 +6,8 @@ import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 import GHC.TypeLits (ErrorMessage)
 import Generics.SOP (All, hcmap)
-import qualified Text.Show as Show
 import Type.Errors (TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
-import Unsafe.Coerce (unsafeCoerce)
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import qualified Polysemy.Db.Data.PartialField as PartialField
@@ -219,21 +217,9 @@ type family InsertPaths' (d :: Type) (paths :: [FieldSpec]) (tree :: Kind.Tree) 
 class (
     Partially d tree,
     InsertPaths' d paths tree
-  ) => InsertPaths (d :: Type) (paths :: [FieldSpec]) (tree :: Kind.Tree) | d -> tree where
+  ) => InsertPaths (d :: Type) (paths :: [FieldSpec]) (tree :: Kind.Tree) | d paths -> tree where
 
 instance (
     Partially d tree,
     InsertPaths' d paths tree
   ) => InsertPaths d paths tree where
-
-newtype PartialUpdate (d :: Type) (fields :: [FieldSpec]) =
-  PartialUpdate { unPartialUpdate :: ∀ tree . InsertPaths d fields tree => PartialTree tree }
-
-instance (InsertPaths d fields tree, Show (PartialTree tree)) => Show (PartialUpdate d fields) where
-  show (PartialUpdate tree) =
-    show tree
-
-instance (InsertPaths d fields tree, FromJSON (PartialTree tree)) => FromJSON (PartialUpdate d fields) where
-  parseJSON value =
-    parseJSON @(PartialTree tree) value <&> \case
-      tree -> PartialUpdate (unsafeCoerce tree)
