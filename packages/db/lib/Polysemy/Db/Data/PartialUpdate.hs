@@ -18,12 +18,12 @@ getPartialUpdate ::
 getPartialUpdate p =
   unsafeCoerce (unPartialUpdate p)
 
-wrapPartial ::
+wrapPartialUpdate ::
   ∀ d paths tree .
   InsertPaths d paths tree =>
   PartialTree tree ->
   PartialUpdate d paths
-wrapPartial t =
+wrapPartialUpdate t =
   PartialUpdate (unsafeCoerce t)
 
 instance (InsertPaths d paths tree, Show (PartialTree tree)) => Show (PartialUpdate d paths) where
