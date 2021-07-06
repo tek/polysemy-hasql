@@ -2,6 +2,7 @@ module Polysemy.Hasql.Data.Crud where
 
 import Hasql.Statement (Statement)
 import Polysemy.Db.Data.Partial (Partial)
+import Polysemy.Db.Data.Uid (Uid)
 
 import Polysemy.Hasql.Table.ResultShape (ResultShape)
 
@@ -17,3 +18,6 @@ data Crud i d q p :: Effect where
   UpdateQ :: q -> Partial p -> Crud i d q p m (Statement () (Maybe d))
 
 makeSem ''Crud
+
+type UidCrud i d =
+  Crud i (Uid i d) i d
