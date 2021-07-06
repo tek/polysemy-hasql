@@ -137,6 +137,19 @@ interpretCrudUid sem = do
   interpretCrudUidWith table iParams iWhere sem
 {-# inline interpretCrudUid #-}
 
+interpretCrudUidId ::
+  ∀ i d p e r tree .
+  Show e =>
+  BuildPartialSql p tree =>
+  Members [UidQuery i d, ManagedTableUid i d !! e, Error InitDbError] r =>
+  InterpreterFor (Crud i (Uid i d) i p !! e) r
+interpretCrudUidId sem = do
+  table <- queryTable
+  iParams <- Query.params @i @(Uid i d)
+  iWhere <- Query.query
+  interpretCrudUidWith table iParams iWhere sem
+{-# inline interpretCrudUidId #-}
+
 interpretCrudSingletonWith ::
   BuildPartialSql p tree =>
   Table d ->
