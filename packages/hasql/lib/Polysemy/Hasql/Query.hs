@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Query where
 
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Rep (Auto, UidRep)
+import Polysemy.Db.Data.Rep (Auto, IdQuery, PrimaryKey, UidRep)
 
 import qualified Polysemy.Hasql.Data.Query as Query
 import Polysemy.Hasql.Data.Query (Query, UidQuery)
@@ -37,6 +37,14 @@ interpretQueryUid ::
 interpretQueryUid =
   interpretQuery @qrep @(UidRep irep rep)
 {-# inline interpretQueryUid #-}
+
+interpretQueryPrim ::
+  ∀ rep i d r .
+  UidQuerySchema IdQuery PrimaryKey rep i i d =>
+  InterpreterFor (UidQuery i d) r
+interpretQueryPrim =
+  interpretQueryUid @IdQuery @PrimaryKey @rep
+{-# inline interpretQueryPrim #-}
 
 interpretQueryAuto ::
   ∀ q d r .
