@@ -57,8 +57,8 @@ interpretManagedTableAuto =
 {-# inline interpretManagedTableAuto #-}
 
 interpretManagedTableUnmanaged ::
-  ∀ d e r .
-  BasicSchema Auto d =>
+  ∀ rep d e r .
+  BasicSchema rep d =>
   Member (Database !! e) r =>
   InterpreterFor (ManagedTable d !! e) r
 interpretManagedTableUnmanaged =
@@ -71,7 +71,15 @@ interpretManagedTableUnmanaged =
       restop (Database.runStatementRetrying interval q stmt)
   where
     table =
-      basicSchema @Auto @d
+      basicSchema @rep @d
+
+interpretManagedTableUnmanagedAuto ::
+  ∀ d e r .
+  BasicSchema Auto d =>
+  Member (Database !! e) r =>
+  InterpreterFor (ManagedTable d !! e) r
+interpretManagedTableUnmanagedAuto =
+  interpretManagedTableUnmanaged @Auto
 
 queryTable ::
   ∀ q d e r .
