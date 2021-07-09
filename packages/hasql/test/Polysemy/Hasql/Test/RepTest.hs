@@ -17,7 +17,6 @@ import Polysemy.Hasql.Table.DataColumn (dataTable)
 import Polysemy.Hasql.ColumnType (ColumnType (..))
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
-import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Hasql.Tree.Table (TableParams, TableTree, tableRoot)
 
 newtype Newt =

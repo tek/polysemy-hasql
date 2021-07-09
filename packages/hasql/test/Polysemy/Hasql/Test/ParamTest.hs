@@ -14,7 +14,6 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.QueryParams (queryParams)
 import Polysemy.Hasql.QueryRows (queryRows)
 import Polysemy.Hasql.Table.Schema (schema, schemaAuto)
-import Polysemy.Hasql.Test.Error.Column.E1 ()
 import Polysemy.Hasql.Tree.Table (TableTree, tableRoot)
 
 data Summer =

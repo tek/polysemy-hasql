@@ -98,7 +98,6 @@ library
       Polysemy.Hasql.Table.SumIndex
       Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
-      Polysemy.Hasql.Test.Error.Column.E1
       Polysemy.Hasql.Test.QueryStore
       Polysemy.Hasql.Tree.Table
       Polysemy.Hasql.Tree.Value
