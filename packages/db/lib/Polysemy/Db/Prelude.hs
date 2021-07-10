@@ -28,10 +28,10 @@ module Polysemy.Db.Prelude (
 import Control.Exception (throwIO, try)
 import Control.Lens (at, makeClassy, over, (%~), (.~), (<>~), (?~), (^.))
 import qualified Data.Aeson as Aeson
-import Data.Aeson (FromJSON(parseJSON), ToJSON(toJSON))
+import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
 import Data.Aeson.TH (deriveFromJSON, deriveJSON)
 import Data.Composition ((.:), (.:.), (.::))
-import Data.Default (Default(def))
+import Data.Default (Default (def))
 import Data.Either.Combinators (mapLeft)
 import Data.Foldable (foldl, traverse_)
 import Data.Kind (Type)
@@ -70,7 +70,7 @@ import Polysemy (
   )
 import Polysemy.AtomicState (AtomicState, atomicGet, atomicGets, atomicModify', atomicPut, runAtomicStateTVar)
 import Polysemy.Error (Error, fromEither, mapError, note, runError, throw)
-import Polysemy.Internal.Bundle (Append)
+import Polysemy.Internal.Kind (Append)
 import Polysemy.Reader (Reader)
 import Polysemy.Resume
 import Polysemy.State (State, evalState, get, gets, modify, modify', put, runState)
