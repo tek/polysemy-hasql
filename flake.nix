@@ -28,19 +28,19 @@
     common = { hackage, jailbreak, ... }: {
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
-      polysemy = hackage "1.5.0.0" "1xl472xqdxnp4ysyqnackpfn6wbx03rlgwmy9907bklrh557il6d";
       polysemy-conc = hackage "0.1.0.2" "0ijz5l8q53d1s7i100gvjdhzv80dpd140m7a9hyam113ybglc8lg";
       polysemy-log = hackage "0.2.2.1" "1c8kn28a5j9k52jfg5n6nb4ywd76mgrgaqwmf1q0km2kgdi9y40s";
-      polysemy-plugin = hackage "0.3.0.0" "1frz0iksmg8bpm7ybnpz9h75hp6hajd20vpdvmi04aspklmr6hj0";
       polysemy-resume = hackage "0.1.0.3" "0wz3wrib5gj1bgzlis2ixx753nfdw4y601blc82356k4mi1lp138";
-      polysemy-test = hackage "0.3.1.4" "093vxf6i78a3fghn2fwgxdj9y59272q9i9px0315wg17xrg80kh6";
-      polysemy-time = hackage "0.1.2.3" "039yfmpmy2d7ycs3zdcvg3hw80yrnbmwzfn9rh5a7p9gi4wzdcgd";
+      polysemy-test = hackage "0.3.1.5" "0b8czkn1z27053zw176j6hrpdaw8g31g701v5fp0005wqlngn08x";
+      polysemy-time = hackage "0.1.3.0" "1wdnq49g7g09q0bdp18h90iirzlm65dq77ljnwgagm6imrr7886l";
     };
 
     main = { hackage, source, minimal, jailbreak, ... }: {
       chronos = minimal (source.root chronos);
       path = hackage "0.9.0" "14symzl1rszvk5zivv85k79anz7xyl5gaxy0sm4vhhzsgxc59msv";
       path-io = jailbreak (hackage "1.6.3" "05hcxgyf6kkz36mazd0fqwb6mjy2049gx3vh8qq9h93gfjkpp2vc");
+      polysemy = source.root polysemy;
+      polysemy-plugin = source.sub polysemy "polysemy-plugin";
       relude = hackage "1.0.0.1" "164p21334c3pyfzs839cv90438naxq9pmpyvy87113mwy51gm6xn";
       run-st = hackage "0.1.1.0" "0w1wrbzc7gkgzlyigz3hvxbpb8h2h6bl6rmyrmydxgys9ywn5cwm";
       tasty-hedgehog = hackage "1.1.0.0" "0cs96s7z5csrlwj334v8zl459j5s4ws6gmjh59cv01wwvvrrjwd9";

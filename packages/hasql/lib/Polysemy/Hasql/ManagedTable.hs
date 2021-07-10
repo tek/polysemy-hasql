@@ -56,6 +56,7 @@ interpretManagedTableAuto =
   interpretManagedTable (basicSchema @Auto @d)
 {-# inline interpretManagedTableAuto #-}
 
+-- TODO add effect for this, rename ManagedTable to Table
 interpretManagedTableUnmanaged ::
   ∀ rep d e r .
   BasicSchema rep d =>
