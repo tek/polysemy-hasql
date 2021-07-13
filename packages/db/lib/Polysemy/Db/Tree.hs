@@ -181,8 +181,8 @@ instance Tree p meta tree => Fundep (Tree p) meta tree where
 ------------------------------------------------------------------------------------------------------------------------
 
 class KnownSymbol name => RootName (d :: Type) (name :: Symbol) | d -> name where
-  tableName :: Text
-  tableName =
+  rootName :: Text
+  rootName =
     quotedDbId (symbolText @name)
 
 instance {-# overlappable #-} (
