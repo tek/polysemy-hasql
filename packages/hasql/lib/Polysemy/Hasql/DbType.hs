@@ -13,16 +13,16 @@ import Polysemy.Hasql.Data.DbType (
   )
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 
-quotedName :: Column -> Text
+quotedName :: Column -> SqlCode
 quotedName (Column (Name name) _ _ _ _) =
-  dquote name
+  SqlCode (dquote name)
 
-typeName :: TypeName -> Text
+typeName :: TypeName -> SqlCode
 typeName = \case
   PrimTypeName name ->
-    name
+    SqlCode name
   CompositeTypeName name ->
-    [text|ph_type__#{name}|]
+    [exon|ph_type__#{SqlCode name}|]
 
 baseColumns :: Column -> [Column]
 baseColumns col@(Column _ _ _ _ dbType) =
@@ -39,7 +39,7 @@ columnSpec ::
   Column ->
   SqlCode
 columnSpec (Column _ (Selector selector) tpe (ColumnOptions.format -> params) _) =
-  SqlCode [text|#{selector} #{typeName tpe}#{params}|]
+  [exon|#{selector} #{typeName tpe} #{params}|]
 
 flatColumns :: Column -> [Column]
 flatColumns col@(Column _ _ _ _ dbType) =

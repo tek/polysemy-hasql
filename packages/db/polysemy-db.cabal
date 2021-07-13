@@ -157,6 +157,7 @@ library
     , containers
     , data-default
     , either
+    , exon
     , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop

@@ -21,6 +21,7 @@ dependencies:
   - async
   - chronos
   - contravariant
+  - exon
   - ghc-prim
   - first-class-families
   - fcf-containers ^>= 0.6

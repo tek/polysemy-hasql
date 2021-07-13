@@ -16,6 +16,7 @@ dependencies:
   - composition
   - data-default
   - either
+  - exon
   - first-class-families
   - fcf-containers ^>= 0.6
   - path

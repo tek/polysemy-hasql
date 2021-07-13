@@ -13,26 +13,26 @@ uniqueOrPrimary :: ColumnOptions -> Bool
 uniqueOrPrimary (ColumnOptions u _ p) =
   u || p
 
-pattern UniqueName :: Text -> Column
+pattern UniqueName :: SqlCode -> Column
 pattern UniqueName sel <- Column _ (Selector sel) _ (uniqueOrPrimary -> True) _
 
 fromFragment ::
   Selector ->
   SqlCode
 fromFragment (Selector name) =
-  SqlCode [text|from #{name}|]
+  [exon|from #{name}|]
 
 intoFragment ::
   Selector ->
   SqlCode
 intoFragment (Selector name) =
-  SqlCode [text|into #{name}|]
+  [exon|into #{name}|]
 
 alterFragment ::
   Selector ->
   SqlCode
 alterFragment (Selector name) =
-  SqlCode [text|alter table #{name}|]
+  [exon|alter table #{name}|]
 
 addColumnFragment ::
   Column ->
@@ -44,21 +44,21 @@ conflictFragment ::
   Column ->
   SqlCode ->
   SqlCode
-conflictFragment (baseColumns -> columns) (SqlCode setters) =
-  SqlCode (format uniques)
+conflictFragment (baseColumns -> columns) setters =
+  format uniques
   where
     format Nothing =
       ""
     format (Just (commaSeparated -> cols)) =
-      [text|on conflict (#{cols}) do update #{setters}|]
+      [exon|on conflict (#{cols}) do update #{setters}|]
     uniques =
       nonEmpty [n | UniqueName n <- columns]
 
 selectFragment ::
   Column ->
   SqlCode
-selectFragment (selectColumns -> SqlCode cols) =
-  SqlCode [text|select #{cols}|]
+selectFragment (selectColumns -> cols) =
+  [exon|select #{cols}|]
 
 whereFragment ::
   Where q d ->
@@ -66,5 +66,5 @@ whereFragment ::
 whereFragment = \case
   Where (SqlCode "") _ ->
     mempty
-  Where (SqlCode qw) _ ->
-    SqlCode [text|where #{qw}|]
+  Where qw _ ->
+    [exon|where #{qw}|]

@@ -1,13 +1,15 @@
 module Polysemy.Hasql.ColumnOptions where
 
-import Polysemy.Db.Data.ColumnOptions (ColumnOptions(ColumnOptions))
+import Polysemy.Db.Data.ColumnOptions (ColumnOptions (ColumnOptions))
 
-format :: ColumnOptions -> Text
+import Polysemy.Hasql.Data.SqlCode (SqlCode)
+
+format :: ColumnOptions -> SqlCode
 format (ColumnOptions unique notNull primaryKey) =
-  if primaryKey then " primary key"
-  else u <> nn
+  if primaryKey then "primary key"
+  else [exon|#{u} #{nn}|]
   where
     u =
-      if unique then " unique" else ""
+      if unique then "unique" else ""
     nn =
-      if notNull then " not null" else ""
+      if notNull then "not null" else ""

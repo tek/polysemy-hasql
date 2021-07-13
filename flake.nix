@@ -23,7 +23,8 @@
       typerep-map = jailbreak (hackage "0.3.3.0" "15i0h2xczf4x898vjd4vgbb8n10gbsbvy2s2pfw4b3vzf0a1rayl");
     };
 
-    compat = { hackage, jailbreak, ... }: {
+    compat = { hackage, jailbreak, source, ... }: {
+      exon = source.package exon "exon";
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
       polysemy-conc = hackage "0.1.0.3" "0g4z20il8l2hgg2m6vmc6mk6c1x7rml57q4fg9gnri06vavsxy5n";

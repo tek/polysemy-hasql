@@ -13,7 +13,6 @@ import Polysemy.Db.Data.DbName (DbName (DbName))
 import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Random (Random, random, runRandomIO)
-import Polysemy.Db.Text.Quote (dquote)
 import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Time (GhcTime, Time)
@@ -34,6 +33,7 @@ import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Store (StoreStack, interpretStoreDbFull)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.BasicSchema (BasicSchema, basicSchema)
+import Polysemy.Hasql.Table.Query.Text (sqlQuote)
 import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (Schema, UidQuerySchema, UidSchema, schema)
 
@@ -46,7 +46,7 @@ suffixedTable lens suffix =
   lens . Table.structure %~ applySuffix
   where
     applySuffix (Column (Name name) _ tpe opt dbTpe) =
-      Column (Name suffixed) (Selector (dquote suffixed)) tpe opt dbTpe
+      Column (Name suffixed) (Selector (sqlQuote suffixed)) tpe opt dbTpe
       where
         suffixed =
           [text|#{name}-#{suffix}|]

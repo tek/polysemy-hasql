@@ -13,6 +13,7 @@ module Polysemy.Db.Prelude (
   module Data.List.NonEmpty,
   module Data.Map.Strict,
   module Data.UUID,
+  module Exon,
   module GHC.Err,
   module GHC.TypeLits,
   module Polysemy,
@@ -40,6 +41,7 @@ import Data.Map.Strict (Map, lookup)
 import Data.String.Interpolate (i)
 import qualified Data.Text as Text
 import Data.UUID (UUID)
+import Exon (exon)
 import GHC.Err (undefined)
 import GHC.IO.Unsafe (unsafePerformIO)
 import GHC.TypeLits (KnownSymbol, Symbol)

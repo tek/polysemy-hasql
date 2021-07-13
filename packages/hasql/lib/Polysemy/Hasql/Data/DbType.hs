@@ -3,6 +3,8 @@ module Polysemy.Hasql.Data.DbType where
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Text.Quote (dquote)
 
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+
 data DbType =
   Prim
   |
@@ -17,7 +19,7 @@ newtype Name =
   deriving newtype (IsString)
 
 newtype Selector =
-  Selector { unSelector :: Text }
+  Selector { unSelector :: SqlCode }
   deriving (Eq, Show, Generic, Ord)
   deriving newtype (IsString)
 
@@ -31,9 +33,13 @@ instance IsString TypeName where
   fromString =
     PrimTypeName . toText
 
+textSelector :: Text -> Selector
+textSelector =
+  Selector . SqlCode
+
 nameSelector :: Text -> Selector
 nameSelector =
-  Selector . dquote
+  textSelector . dquote
 
 data Column =
   Column {

@@ -1,45 +1,46 @@
 module Polysemy.Hasql.Where.Prepared where
 
-import qualified Data.Text as Text
+import qualified Exon
 import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
 import Polysemy.Db.SOP.Error (ErrorWithType2)
 
+import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.Table.Query.Prepared (dollar)
 
 fieldWithOp ::
-  Text ->
-  Text ->
+  SqlCode ->
+  SqlCode ->
   Int ->
-  Text
+  SqlCode
 fieldWithOp op name index =
-  [text|#{name} #{op} #{dollar index}|]
+  [exon|#{name} #{op} #{dollar index}|]
 
 regularField ::
-  Text ->
+  SqlCode ->
   Int ->
-  Text
+  SqlCode
 regularField name =
   fieldWithOp "=" name
 
 maybeField ::
   Int ->
-  Text ->
-  Text
+  SqlCode ->
+  SqlCode
 maybeField index cond =
-  [text|(#{dollar index} is null or #{cond})|]
+  [exon|(#{dollar index} is null or #{cond})|]
 
 concatWhereFields ::
-  [Int -> Text] ->
-  Text
+  [Int -> SqlCode] ->
+  SqlCode
 concatWhereFields fields =
-  Text.intercalate " and " (zipWith ($) fields [(1 :: Int)..length fields])
+  Exon.intercalate " and " (zipWith ($) fields [(1 :: Int)..length fields])
 
 trueField :: Int -> Text
 trueField _ =
   "true"
 
 class QueryWhereColumn q d where
-  queryWhereColumn :: Text -> Int -> Text
+  queryWhereColumn :: SqlCode -> Int -> SqlCode
 
 instance {-# overlappable #-} (
   ErrorWithType2 "Cannot query a column of type" d "with a query type" q

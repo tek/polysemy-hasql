@@ -1,12 +1,12 @@
 module Polysemy.Hasql.Table.Query.Select where
 
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod, Sum), Selector (Selector))
-import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.Table.Query.Text (commaSeparated)
 
 foldPrims ::
   Monoid a =>
-  (Text -> a) ->
+  (SqlCode -> a) ->
   Column ->
   a
 foldPrims prim =
@@ -24,4 +24,4 @@ selectColumns ::
   Column ->
   SqlCode
 selectColumns column =
-  SqlCode (commaSeparated @[] (foldPrims pure column))
+  commaSeparated @[] (foldPrims pure column)

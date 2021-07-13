@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Where where
 
 import Data.Foldable (foldl1)
-import qualified Data.Text as Text
+import qualified Exon
 import Fcf (Eval, Pure1, type (<=<), type (@@))
 import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, K (K), NP, hcollapse, hcpure)
@@ -16,11 +16,7 @@ import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import qualified Polysemy.Hasql.Data.Where as Data (Where (Where))
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN)
 import Polysemy.Hasql.Table.SumIndex (sumIndexIdentifier)
-import Polysemy.Hasql.Where.Cond (
-  MatchTable,
-  PrimCond (PrimCond),
-  QCond (SimpleCond, SumPrimCond),
-  )
+import Polysemy.Hasql.Where.Cond (MatchTable, PrimCond (PrimCond), QCond (SimpleCond, SumPrimCond))
 import Polysemy.Hasql.Where.Dynamic (DynamicQuery, dynamicQuery, field)
 import Polysemy.Hasql.Where.Prepared (QueryWhereColumn (..), concatWhereFields)
 import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment, SumIndexSegment), SegmentId)
@@ -41,14 +37,14 @@ simpleSlug =
   [text|"#{slugString_ (dropWhile ('_' ==) (symbolString @name))}"|]
 
 where' ::
-  [Int -> Text] ->
+  [Int -> SqlCode] ->
   (query -> Snippet) ->
   Data.Where query d
 where' fields =
-  Data.Where (SqlCode (concatWhereFields fields))
+  Data.Where (concatWhereFields fields)
 
 class ReifySegments (s :: [Segment]) where
-  reifySegments :: [Text]
+  reifySegments :: [SqlCode]
 
 instance ReifySegments '[] where
   reifySegments =
@@ -60,40 +56,40 @@ instance {-# overlappable #-} (
     ReifySegments ss
   ) => ReifySegments (s : ss) where
   reifySegments =
-    quotedFieldId @id : reifySegments @ss
+    SqlCode (quotedFieldId @id) : reifySegments @ss
 
 instance (
     DataName d name
   ) => ReifySegments '[ 'SumIndexSegment d] where
     reifySegments =
-      [dquote (sumIndexIdentifier @d)]
+      [SqlCode (dquote (sumIndexIdentifier @d))]
 
 instance (
     FieldIdText ('NamedField id),
     ReifySegments ss
   ) => ReifySegments ('ConSegment _num _id 'True : 'FieldSegment ('NamedField id) : ss) where
     reifySegments =
-      quotedFieldId @('NamedField id) : reifySegments @ss
+      SqlCode (quotedFieldId @('NamedField id)) : reifySegments @ss
 
 instance (
     FieldIdText id,
     ReifySegments ss
   ) => ReifySegments ('ConSegment _cnum id 'True : 'FieldSegment ('NumberedField _n _num) : ss) where
     reifySegments =
-      quotedFieldId @id : reifySegments @ss
+      SqlCode (quotedFieldId @id) : reifySegments @ss
 
 reifyPath ::
   ∀ s .
   ReifySegments s =>
-  Text
+  SqlCode
 reifyPath =
   case reifySegments @s of
     [] -> ""
     [prim] -> prim
-    base : rest -> [text|(#{base}).#{Text.intercalate "." rest}|]
+    base : rest -> [exon|(#{base}).#{Exon.intercalate "." rest}|]
 
 class QueryCond (field :: QCond) where
-  queryCond :: K (Int -> Text) field
+  queryCond :: K (Int -> SqlCode) field
 
 instance (
     ReifySegments path,
@@ -105,9 +101,9 @@ instance (
 queryConds ::
   ∀ fields .
   All QueryCond fields =>
-  [Int -> Text]
+  [Int -> SqlCode]
 queryConds =
-  hcollapse (hcpure (Proxy @QueryCond) queryCond :: NP (K (Int -> Text)) fields)
+  hcollapse (hcpure (Proxy @QueryCond) queryCond :: NP (K (Int -> SqlCode)) fields)
 
 instance (
     simple ~ AsSimple q (WithoutMaybe d) ns,

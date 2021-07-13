@@ -10,7 +10,7 @@ import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 import qualified Polysemy.Hasql.Data.DbType as Data
-import Polysemy.Hasql.Data.DbType (Name (Name), Selector (Selector), TypeName (CompositeTypeName, PrimTypeName))
+import Polysemy.Hasql.Data.DbType (Name (Name), TypeName (CompositeTypeName, PrimTypeName), textSelector)
 import Polysemy.Hasql.Table.SumIndex (sumIndexIdentifier)
 import Polysemy.Hasql.Tree.Table (ColumnData (ColumnData), TableCon, TableNode, TableRoot, TableTree, tableRoot)
 
@@ -64,7 +64,7 @@ sumProd prefix (Type.SumProd _ trees) =
   indexColumn : mapColumns @_ @NP @_ @trees @DataDbCon (dataDbCon prefix) trees
   where
     indexColumn =
-      Data.Column (Name indexName) (Selector (prefixed indexName prefix)) (PrimTypeName "bigint") def Data.Prim
+      Data.Column (Name indexName) (textSelector (prefixed indexName prefix)) (PrimTypeName "bigint") def Data.Prim
     indexName =
       sumIndexIdentifier @d
 
@@ -128,7 +128,7 @@ instance (
     FieldIdText name
   ) => DataDbCon ('Kind.Con num name trees) where
     dataDbCon prefix (Type.Con trees) =
-      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) (CompositeTypeName name) def dbType
+      Data.Column (Name (dbIdentifierT name)) (textSelector (prefixed name prefix)) (CompositeTypeName name) def dbType
       where
         name =
           fieldIdText @name
@@ -159,7 +159,7 @@ instance (
         name =
           fieldIdText @name
         selector =
-          Selector (prefixed name prefix)
+          textSelector (prefixed name prefix)
 
 class DataDbNode (t :: Kind.Node) where
   dataDbNode :: ColumnPrefix -> TableNode t -> Data.DbType
@@ -190,7 +190,7 @@ instance (
     FieldIdText name
   ) => DataColumn ('Kind.Tree name effs node) where
     dataColumn prefix (Type.Tree (ColumnData tpe options) dbType) =
-      Data.Column (Name (dbIdentifierT name)) (Selector (prefixed name prefix)) typeName options dataType
+      Data.Column (Name (dbIdentifierT name)) (textSelector (prefixed name prefix)) typeName options dataType
       where
         dataType =
           dataDbNode (addPrefix name prefix) dbType
