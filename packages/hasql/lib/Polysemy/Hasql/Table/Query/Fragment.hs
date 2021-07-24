@@ -38,7 +38,7 @@ addColumnFragment ::
   Column ->
   SqlCode
 addColumnFragment column =
-  SqlCode "add " <> columnSpec column
+  [exon|add #{columnSpec column}|]
 
 conflictFragment ::
   Column ->

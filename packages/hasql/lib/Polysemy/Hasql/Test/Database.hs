@@ -17,7 +17,6 @@ import Polysemy.Log (Log)
 import Polysemy.Resource (Resource, bracket)
 import Polysemy.Time (GhcTime, Time)
 
-import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
@@ -26,7 +25,7 @@ import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable, UidQueryTable)
 import qualified Polysemy.Hasql.Data.Table as Table
 import Polysemy.Hasql.Data.Table (Table)
-import Polysemy.Hasql.Database (interpretDatabase)
+import Polysemy.Hasql.Database (HasqlConnection, interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Session (convertQueryError)
 import qualified Polysemy.Hasql.Statement as Statement

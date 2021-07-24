@@ -27,6 +27,7 @@ class ColumnType (d :: Type) where
 
 instance ColumnType Bool where columnType = "bool"
 instance ColumnType Int where columnType = "bigint"
+instance ColumnType Int64 where columnType = "bigint"
 instance ColumnType Double where columnType = "double precision"
 instance ColumnType Text where columnType = "text"
 instance ColumnType ByteString where columnType = "bytes"
