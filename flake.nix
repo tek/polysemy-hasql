@@ -4,11 +4,10 @@
 
   inputs = {
     chronos = { url = github:andrewthad/chronos/aa6d2b0969c4c5216ff9e45da1574e194fafefc1; flake = false; };
-    exon.url = github:tek/exon;
     hix.url = github:tek/hix;
   };
 
-  outputs = { hix, chronos, exon, ... }:
+  outputs = { chronos, hix, ... }:
   let
     compat901 = { hackage, source, jailbreak, minimal, noHpack, ... }: {
       cryptohash-md5 = jailbreak (hackage "0.11.100.1" "1l9l3c5x4759pa0ah48skzrkakb5738n6cw60ksj8pmzf68f428a");
@@ -24,7 +23,7 @@
     };
 
     compat = { hackage, jailbreak, source, ... }: {
-      exon = source.package exon "exon";
+      exon = hackage "0.1.0.0" "0lwq53zcw6v030yk0v7p6s5cv1gqag2jb56lh3p7xc5qdn06bc6b";
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
       polysemy-conc = hackage "0.1.0.3" "0g4z20il8l2hgg2m6vmc6mk6c1x7rml57q4fg9gnri06vavsxy5n";
@@ -56,9 +55,6 @@
     base = ./.;
     main = "polysemy-hasql";
     overrides = [compat common main];
-    # overrides = [compat compat901];
-    # compiler = "ghc901";
-    # ghcid.easy-hls = false;
     compat = false;
     compatOverrides = { all = compat; ghc901 = [common compat901]; };
     packages = {
