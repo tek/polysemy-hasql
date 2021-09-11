@@ -22,7 +22,7 @@ import Polysemy.Hasql.Table.Schema (Schema)
 -- Given an initial value, every state action reads the value from the database and writes it back.
 interpretAtomicStateDb ::
   Show e =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
@@ -40,7 +40,7 @@ interpretAtomicStateDb initial =
 -- Uses the automatic derivation strategy.
 interpretAtomicStateDbAuto ::
   Schema Auto Auto () (Uid () d) =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! DbError) r

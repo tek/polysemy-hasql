@@ -21,9 +21,9 @@ import Polysemy.Hasql.Table.Schema (Schema)
 --
 -- Given an initial value, every state action reads the value from the database, potentially writing it on first access.
 interpretReaderDb ::
-  ∀ d e r tree .
+  ∀ d e r tree u .
   Show e =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
   d ->
   InterpreterFor (Reader d !! e) r
@@ -40,9 +40,9 @@ interpretReaderDb initial =
 --
 -- Uses the automatic derivation strategy.
 interpretReaderDbAuto ::
-  ∀ d r tree .
+  ∀ d r tree u .
   Schema Auto Auto () (Uid () d) =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
   InterpreterFor (Reader d !! DbError) r

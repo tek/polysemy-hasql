@@ -1,13 +1,14 @@
 module Polysemy.Hasql.Test.PartialTest where
 
+import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.Partial (Partial, partial)
 import Polysemy.Db.Data.Rep (Auto, Prim)
-import Polysemy.Db.Data.FieldId (FieldId(NamedField))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (DataTree, dataTree)
 import Polysemy.Db.Tree.Data.Effect (Adt)
-import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta(TreeMeta))
-import Polysemy.Db.Tree.Meta (AdtMetadata(AdtProd))
-import Polysemy.Db.Tree.Partial (PartialTree, field, partially, updatePartial, (+>))
+import Polysemy.Db.Tree.Data.TreeMeta (TreeMeta (TreeMeta))
+import Polysemy.Db.Tree.Meta (AdtMetadata (AdtProd))
+import Polysemy.Db.Tree.Partial (PartialTree, field, partially, patch, updatePartial, (++>), (+>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 import Polysemy.Hasql.Test.Tree.Data.DatS (DatS (DatS1), DatSDataTree, DatSPartialTree)
@@ -28,7 +29,7 @@ type TreeEffs =
   ]
 
 type DatNode =
-  'Kind.Prod Dat '[
+  'Kind.Prod Dat [
     'Kind.Tree ('NamedField "int") '[Prim] ('Kind.Prim Int),
     'Kind.Tree ('NamedField "double") '[Prim] ('Kind.Prim Double)
   ]
@@ -50,16 +51,25 @@ target =
 
 partialUpdateTree :: PartialTree DatTree
 partialUpdateTree =
-  partially @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
+  partially @Dat ++> field @"int" (5 :: Int) ++> field @"double" (17.5 :: Double)
 
 test_partialTree :: UnitTest
 test_partialTree =
   runTestAuto do
     target === updatePartial partialUpdateTree record
 
+partialUpdate :: Partial Dat
+partialUpdate =
+  partial @Dat +> field @"int" (5 :: Int) +> field @"double" (17.5 :: Double)
+
+test_partial :: UnitTest
+test_partial =
+  runTestAuto do
+    target === patch partialUpdate record
+
 partialUpdateTreeSum :: PartialTree DatSPartialTree
 partialUpdateTreeSum =
-  partially @DatS +> field @"id" (5 :: Int) +> field @"double1" (17.5 :: Double)
+  partially @DatS ++> field @"id" (5 :: Int) ++> field @"double1" (17.5 :: Double)
 
 recordS :: DatS
 recordS =
@@ -118,6 +128,6 @@ test_partialUpdateNestedSum =
   where
     updateTree =
       partially @DatN
-        +> field @"int" (5 :: Int)
-        +> field @"text" ("updated" :: Text)
-        +> field @"n2b" (DatN2a 101 "updated 101")
+        ++> field @"int" (5 :: Int)
+        ++> field @"text" ("updated" :: Text)
+        ++> field @"n2b" (DatN2a 101 "updated 101")

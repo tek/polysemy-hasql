@@ -1,11 +1,12 @@
 module Polysemy.Hasql.Table.Query.Update where
 
 import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
+import Polysemy.Db.Data.Partial (PartialFor)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Text.Quote (dquote)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim (..), foldTree)
-import Polysemy.Db.Tree.Partial (PartialTree, Partially)
+import Polysemy.Db.Tree.Partial (PartialTree)
 
 import Polysemy.Hasql.Data.DbType (Selector (Selector))
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
@@ -19,9 +20,9 @@ newtype PartialSql =
   PartialSql { unPartialSql :: Snippet }
   deriving newtype (Semigroup, Monoid)
 
-type BuildPartialSql d tree =
+type BuildPartialSql d tree u =
   (
-    Partially d tree,
+    PartialFor d tree u,
     FoldTree 'True () PartialField [PartialSql] tree
   )
 

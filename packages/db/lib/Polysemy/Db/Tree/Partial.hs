@@ -10,7 +10,7 @@ module Polysemy.Db.Tree.Partial (
 ) where
 
 
-import Polysemy.Db.Data.Partial (Partial (Partial), wrapPartial)
+import Polysemy.Db.Data.Partial (Partial (Partial), PartialFor, wrapPartial)
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
   FieldUpdate (FieldUpdate),
@@ -19,11 +19,11 @@ import Polysemy.Db.Data.PartialField (
   PartialTree,
   Partially (partially),
   )
+import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data (GenDataTree (..), ReifyDataTree (..))
 import Polysemy.Db.Tree.Partial.Insert (Insert (insert))
 import Polysemy.Db.Tree.Partial.Update (UpdatePartialTree (..))
-import Polysemy.Db.Data.PartialUpdate (PartialUpdate(PartialUpdate))
 
 type family MkFieldPath (path :: k) :: FieldPath where
   MkFieldPath (p : ps) =
@@ -38,24 +38,33 @@ field ::
 field =
   FieldUpdate
 
-(+>) ::
+(++>) ::
   ∀ (path :: FieldPath) (a :: Type) (tree :: Kind.Tree) .
   Insert path a tree =>
   PartialTree tree ->
   FieldUpdate path a ->
   PartialTree tree
-(+>) =
+(++>) =
   flip insert
 
-(++>) ::
-  ∀ (path :: FieldPath) (a :: Type) (d :: Type) (tree :: Kind.Tree) .
-  Partially d tree =>
+(+>) ::
+  ∀ (path :: FieldPath) (a :: Type) (d :: Type) (tree :: Kind.Tree) (dataTree :: Kind.Tree) .
+  PartialFor d tree dataTree =>
   Insert path a tree =>
   Partial d ->
   FieldUpdate path a ->
   Partial d
-(++>) (Partial (tree :: PartialTree tree)) update =
+(+>) (Partial (tree :: PartialTree tree)) update =
   wrapPartial (insert update tree)
+
+patch ::
+  ∀ (d :: Type) (dataTree :: Kind.Tree) (tree :: Kind.Tree) .
+  PartialFor d tree dataTree =>
+  Partial d ->
+  d ->
+  d
+patch (Partial updates) d =
+  reifyDataTree (updatePartialTree (genDataTree d) updates)
 
 updatePartial ::
   ∀ (d :: Type) (dataTree :: Kind.Tree) (updateTree :: Kind.Tree) .

@@ -26,11 +26,11 @@
       exon = hackage "0.1.0.0" "0lwq53zcw6v030yk0v7p6s5cv1gqag2jb56lh3p7xc5qdn06bc6b";
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
-      polysemy-conc = hackage "0.1.0.3" "0g4z20il8l2hgg2m6vmc6mk6c1x7rml57q4fg9gnri06vavsxy5n";
-      polysemy-log = hackage "0.2.2.2" "0dmsyi970ddl3ihvm51cbdmlhnkl2c7lkjhwxgbk8ilf1hhd1r72";
+      polysemy-conc = hackage "0.2.0.0" "17w29sn3rqh78ik1jzwg7kvzlxdahy60s7l0ign4p5bhywhdnj6a";
+      polysemy-log = hackage "0.2.2.3" "1r5iryp70y2r3w6s7p33nwics6640612jzkz18kzz7jn6lp4xwp5";
       polysemy-resume = hackage "0.1.0.4" "0qkq2vpm6vddk86cm0y2f704cq8hwl6h9iqr6znbddjiz67qf9vj";
-      polysemy-test = hackage "0.3.1.6" "0bfh37l68a5chhjfr7gqcffsmvdgg5hqclxi0fc5xnqni2mg81ak";
-      polysemy-time = hackage "0.1.3.1" "1ldg92dmy1nyjhkbmh5k32q94pn2c7qcfjc4yhl4lc1wnfp6r59m";
+      polysemy-test = hackage "0.3.1.7" "0j33f5zh6gyhl86w8kqh6nm02915b4n32xikxc4hwcy7p5l7cl34";
+      polysemy-time = hackage "0.1.4.0" "0hwx89cilmsdjs3gb5w6by87ysy24scgj5zg77vbfnqpzr3ifrwh";
     };
 
     common = { hackage, ... }: {
@@ -65,5 +65,6 @@
     ghci.extraArgs = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances" "-fconstraint-solver-iterations=20"];
     versionFile = "ops/hpack/shared/meta.yaml";
     runConfig = project: { preStartCommand = preStartCommand project; };
+    ghcid.easy-hls = false;
   };
 }

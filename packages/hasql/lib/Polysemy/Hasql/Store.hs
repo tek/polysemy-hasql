@@ -51,7 +51,7 @@ type StoreDeps t dt =
   [Database !! DbError, Time t dt, Log, Embed IO]
 
 interpretStoreDbFull ::
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members (StoreDeps t dt) r =>
   QueryTable i (Uid i d) ->
   InterpretersFor (StoreStack i d) r
@@ -61,9 +61,9 @@ interpretStoreDbFull table =
   interpretStoreDb
 
 interpretStoreDbFullGenAs ::
-  ∀ qrep irep rep i d t dt r tree .
+  ∀ qrep irep rep i d t dt r tree u .
   UidQuerySchema qrep irep rep i i d =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack i d) r
 interpretStoreDbFullGenAs =
@@ -78,18 +78,18 @@ interpretStoreDbFullGenAs =
 --   Store.fetchAll
 -- @
 interpretStoreDbFullGen ::
-  ∀ rep i d t dt r tree .
+  ∀ rep i d t dt r tree u .
   UidSchema rep i d =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack i d) r
 interpretStoreDbFullGen =
   interpretStoreDbFullGenAs @(PrimQuery "id") @PrimaryKey @rep
 
 interpretStoreDbSingle ::
-  ∀ qrep irep rep i d r tree .
+  ∀ qrep irep rep i d r tree u .
   UidQuerySchema qrep irep rep i i d =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [Resource, Log, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->

@@ -2,7 +2,7 @@ module Polysemy.Hasql.Test.Tree.MergePartialTest where
 
 import Polysemy.Db.Kind.Data.Tree (PrimTree, ProdRoot, ProdTree)
 import Polysemy.Db.Tree.Merge (mergeAtNames)
-import Polysemy.Db.Tree.Partial (PartialTree, field, partially, (+>))
+import Polysemy.Db.Tree.Partial (PartialTree, field, partially, (++>))
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Sub1 =
@@ -41,15 +41,15 @@ type DatTree =
 
 tree :: PartialTree DatTree
 tree =
-  partially @Dat +> field @"int" (5 :: Int) +> field @"double" (2.4 :: Double)
+  partially @Dat ++> field @"int" (5 :: Int) ++> field @"double" (2.4 :: Double)
 
 target :: PartialTree DatTree
 target =
-  tree +> field @"int" (11 :: Int)
+  tree ++> field @"int" (11 :: Int)
 
 patch :: PartialTree Sub1Tree
 patch =
-  partially @Sub1 +> field @"int" (11 :: Int)
+  partially @Sub1 ++> field @"int" (11 :: Int)
 
 test_mergePartial :: UnitTest
 test_mergePartial =

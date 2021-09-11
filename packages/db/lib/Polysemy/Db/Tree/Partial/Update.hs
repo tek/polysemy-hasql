@@ -2,9 +2,9 @@ module Polysemy.Db.Tree.Partial.Update where
 
 import Generics.SOP (I (I), NP ((:*)), NS (S, Z))
 
-import Polysemy.Db.Data.Rep (Auto)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Data.Rep (Auto)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree (Tree (tree))
 import Polysemy.Db.Tree.Data (DataCon, DataParams, DataTree)

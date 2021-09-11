@@ -36,16 +36,16 @@ pTree ::
   InsertPaths Dat ["int" @> Int, "nouble" @> Double, "txt" @> Text] tree =>
   PartialTree tree
 pTree =
-  partially @Dat +> field @"int" (10 :: Int) +> field @"nouble" (9.2 :: Double) +> field @"txt" ("update" :: Text)
+  partially @Dat ++> field @"int" (10 :: Int) ++> field @"nouble" (9.2 :: Double) ++> field @"txt" ("update" :: Text)
 
 parTree :: Partial Dat
 parTree =
-  partial @Dat ++> field @"int" (10 :: Int) ++> field @"nouble" (9.2 :: Double) ++> field @"txt" ("update" :: Text)
+  partial @Dat +> field @"int" (10 :: Int) +> field @"nouble" (9.2 :: Double) +> field @"txt" ("update" :: Text)
 
 payload ::
   PartialPayload Dat
 payload =
-  partialPayload (partially @Dat +> field @"int" (10 :: Int) +> field @"nouble" (9.2 :: Double) +> field @"txt" ("update" :: Text))
+  partialPayload (partially @Dat ++> field @"int" (10 :: Int) ++> field @"nouble" (9.2 :: Double) ++> field @"txt" ("update" :: Text))
 
 test_treeJson :: UnitTest
 test_treeJson =

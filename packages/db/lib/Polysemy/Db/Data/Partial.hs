@@ -7,21 +7,35 @@ import Unsafe.Coerce (unsafeCoerce)
 
 import Polysemy.Db.Data.PartialField (PartialTree, Partially (partially))
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Tree.Data (GenDataTree, ReifyDataTree)
+import Polysemy.Db.Tree.Partial.Update (UpdatePartialTree)
 
-data Partial (d :: Type) =
-  Partial { unPartial :: ∀ tree . Partially d tree => PartialTree tree }
+type PartialFor d tree dataTree =
+  (
+      GenDataTree d dataTree,
+      ReifyDataTree dataTree d,
+      UpdatePartialTree dataTree tree,
+      Partially d tree
+  )
+
+newtype Partial (d :: Type) =
+  Partial {
+    unPartial :: ∀ tree dataTree .
+      PartialFor d tree dataTree =>
+      PartialTree tree
+    }
 
 getPartial ::
-  ∀ d tree .
-  Partially d tree =>
+  ∀ d tree dataTree .
+  PartialFor d tree dataTree =>
   Partial d ->
   PartialTree tree
-getPartial p =
-  unsafeCoerce (unPartial p)
+getPartial (Partial p) =
+  unsafeCoerce p
 
 wrapPartial ::
-  ∀ d tree .
-  Partially d tree =>
+  ∀ d tree dataTree .
+  PartialFor d tree dataTree =>
   PartialTree tree ->
   Partial d
 wrapPartial t =
@@ -30,19 +44,19 @@ wrapPartial t =
 type UidPartial i d =
   Partial (Uid i d)
 
-instance (Partially d tree, Show (PartialTree tree)) => Show (Partial d) where
+instance (PartialFor d tree dataTree, Show (PartialTree tree)) => Show (Partial d) where
   show (Partial tree) =
     show tree
 
-instance (Partially d tree, Eq (PartialTree tree)) => Eq (Partial d) where
+instance (PartialFor d tree dataTree, Eq (PartialTree tree)) => Eq (Partial d) where
   Partial l == Partial r =
     l == r
 
-instance (Partially d tree, FromJSON (PartialTree tree)) => FromJSON (Partial d) where
+instance (PartialFor d tree dataTree, FromJSON (PartialTree tree)) => FromJSON (Partial d) where
   parseJSON =
     fmap wrapPartial . parseJSON
 
-instance (Partially d tree, ToJSON (PartialTree tree)) => ToJSON (Partial d) where
+instance (PartialFor d tree dataTree, ToJSON (PartialTree tree)) => ToJSON (Partial d) where
   toJSON (Partial tree) =
     toJSON tree
 

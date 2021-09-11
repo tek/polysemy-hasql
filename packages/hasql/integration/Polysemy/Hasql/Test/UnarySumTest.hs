@@ -1,3 +1,5 @@
+{-# options_ghc -fconstraint-solver-iterations=10 #-}
+
 module Polysemy.Hasql.Test.UnarySumTest where
 
 import Polysemy.Db.Data.DbError (DbError)

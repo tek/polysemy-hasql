@@ -17,8 +17,8 @@ import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (UidQuerySchema)
 
 interpretStoreUpdateTreeDbWith ::
-  ∀ i d e tree r .
-  BuildPartialSql d tree =>
+  ∀ i d e tree u r .
+  BuildPartialSql d tree u =>
   Member (ManagedTableUid i d !! e) r =>
   UidQueryTable i d ->
   InterpreterFor (StoreUpdateTree i d tree !! e) r
@@ -29,9 +29,9 @@ interpretStoreUpdateTreeDbWith table =
 {-# inline interpretStoreUpdateTreeDbWith #-}
 
 interpretStoreUpdateTreeDb ::
-  ∀ i d e tree r .
+  ∀ i d e tree u r .
   Show e =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [UidQuery i d, ManagedTableUid i d !! e, Error InitDbError] r =>
   InterpreterFor (StoreUpdateTree i d tree !! e) r
 interpretStoreUpdateTreeDb sem = do
@@ -40,9 +40,9 @@ interpretStoreUpdateTreeDb sem = do
 {-# inline interpretStoreUpdateTreeDb #-}
 
 interpretStoreUpdateTreeDbFull ::
-  ∀ qrep irep rep i d tree t dt r .
+  ∀ qrep irep rep i d tree u t dt r .
   UidQuerySchema qrep irep rep i i d =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members (Error InitDbError : StoreDeps t dt) r =>
   InterpretersFor (StoreUpdateTree i d tree !! DbError : StoreStack i d) r
 interpretStoreUpdateTreeDbFull =

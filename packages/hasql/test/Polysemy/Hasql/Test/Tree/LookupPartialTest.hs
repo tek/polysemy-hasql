@@ -1,9 +1,9 @@
 module Polysemy.Hasql.Test.Tree.LookupPartialTest where
 
 import Polysemy.Db.Kind.Data.Tree (PrimTree, ProdRoot, ProdTree)
-import Polysemy.Db.Tree.Partial (PartialTree, field, partially, (+>))
-import Polysemy.Test (UnitTest, runTestAuto, (===))
 import Polysemy.Db.Tree.Lookup (lookupNames)
+import Polysemy.Db.Tree.Partial (PartialTree, field, partially, (++>))
+import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Sub1 =
   Sub1 {
@@ -41,11 +41,11 @@ type DatTree =
 
 tree :: PartialTree DatTree
 tree =
-  partially @Dat +> field @"int" (5 :: Int) +> field @"double" (2.4 :: Double)
+  partially @Dat ++> field @"int" (5 :: Int) ++> field @"double" (2.4 :: Double)
 
 target :: PartialTree Sub1Tree
 target =
-  partially @Sub1 +> field @"int" (5 :: Int)
+  partially @Sub1 ++> field @"int" (5 :: Int)
 
 test_lookupPartial :: UnitTest
 test_lookupPartial =

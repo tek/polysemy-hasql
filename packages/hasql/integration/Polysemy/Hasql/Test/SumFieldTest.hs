@@ -123,10 +123,10 @@ prog specimen =
     fmap Uid._payload <$> Store.fetch id'
 
 sumTest ::
-  ∀ rep d tree r .
+  ∀ rep d tree r u .
   Eq d =>
   Show d =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members (Hedgehog IO : TestStoreDeps) r =>
   Schema IdQuery rep UUID (Uuid d) =>
   Uuid d ->

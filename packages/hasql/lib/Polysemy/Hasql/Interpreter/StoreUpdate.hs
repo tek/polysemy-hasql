@@ -2,11 +2,11 @@ module Polysemy.Hasql.Interpreter.StoreUpdate where
 
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Db.Data.Partial (getPartial)
 import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
 import Polysemy.Db.Data.Rep (UidRep)
 import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
 import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
-import Polysemy.Db.Tree.Partial (Partial (Partial))
 import Polysemy.Db.Tree.Partial.Insert (InsertPaths)
 
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
@@ -21,9 +21,9 @@ import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (UidQuerySchema)
 
 interpretStoreUpdateDbWith ::
-  ∀ i d paths e tree r .
+  ∀ i d paths e tree r u .
   InsertPaths d paths tree =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Member (ManagedTableUid i d !! e) r =>
   UidQueryTable i d ->
   InterpreterFor (StoreUpdate i d paths !! e) r
@@ -31,14 +31,14 @@ interpretStoreUpdateDbWith table =
   interpretResumable \case
     StoreUpdate.Create i (PartialUpdate t) ->
       restop (ManagedTable.runStatement () (Statement.update table i t))
-    StoreUpdate.Use i (Partial t) ->
-      restop (ManagedTable.runStatement () (Statement.update table i t))
+    StoreUpdate.Use i p ->
+      restop (ManagedTable.runStatement () (Statement.update table i (getPartial p)))
 
 interpretStoreUpdateDb ::
-  ∀ i d paths e tree r .
+  ∀ i d paths e tree r u .
   Show e =>
   InsertPaths d paths tree =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members [UidQuery i d, ManagedTableUid i d !! e, Error InitDbError] r =>
   InterpreterFor (StoreUpdate i d paths !! e) r
 interpretStoreUpdateDb sem = do
@@ -47,10 +47,10 @@ interpretStoreUpdateDb sem = do
 {-# inline interpretStoreUpdateDb #-}
 
 interpretStoreUpdateDbFull ::
-  ∀ qrep irep rep i d paths tree t dt r .
+  ∀ qrep irep rep i d paths tree t dt r u .
   UidQuerySchema qrep irep rep i i d =>
   InsertPaths d paths tree =>
-  BuildPartialSql d tree =>
+  BuildPartialSql d tree u =>
   Members (Error InitDbError : StoreDeps t dt) r =>
   InterpretersFor (StoreUpdate i d paths !! DbError : StoreStack i d) r
 interpretStoreUpdateDbFull =

@@ -1,6 +1,8 @@
 module Polysemy.Hasql.Crud where
 
+import Hasql.Decoders (singleRow)
 import Hasql.Encoders (Params)
+import Hasql.Statement (Statement (Statement))
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Partial (getPartial)
 import Polysemy.Db.Data.Uid (Uid)
@@ -16,11 +18,9 @@ import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
-import Hasql.Statement (Statement(Statement))
-import Hasql.Decoders (singleRow)
 
 interpretCrudWith ::
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   QueryTable q d ->
   Params i ->
   Where i d ->
@@ -51,9 +51,9 @@ interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) iParams 
 {-# inline interpretCrudWith #-}
 
 interpretCrud ::
-  ∀ i d q p e r tree .
+  ∀ i d q p e r tree u .
   Show e =>
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   Members [Tagged "id" (Query i d), Tagged "main" (Query q d), ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (Crud i d q p !! e) r
 interpretCrud sem = do
@@ -64,7 +64,7 @@ interpretCrud sem = do
 {-# inline interpretCrud #-}
 
 interpretCrudUidWith ::
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   QueryTable q (Uid i d) ->
   Params i ->
   Where i (Uid i d) ->
@@ -125,9 +125,9 @@ interpretCrudUidNoUpdateWith qTable@(QueryTable table@(Table structure row _) _ 
 {-# inline interpretCrudUidNoUpdateWith #-}
 
 interpretCrudUid ::
-  ∀ i d q p e r tree .
+  ∀ i d q p e r tree u .
   Show e =>
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   Members [Tagged "id" (UidQuery i d), Tagged "main" (Query q (Uid i d)), ManagedTableUid i d !! e, Error InitDbError] r =>
   InterpreterFor (Crud i (Uid i d) q p !! e) r
 interpretCrudUid sem = do
@@ -138,9 +138,9 @@ interpretCrudUid sem = do
 {-# inline interpretCrudUid #-}
 
 interpretCrudUidId ::
-  ∀ i d p e r tree .
+  ∀ i d p e r tree u .
   Show e =>
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   Members [UidQuery i d, ManagedTableUid i d !! e, Error InitDbError] r =>
   InterpreterFor (Crud i (Uid i d) i p !! e) r
 interpretCrudUidId sem = do
@@ -151,7 +151,7 @@ interpretCrudUidId sem = do
 {-# inline interpretCrudUidId #-}
 
 interpretCrudSingletonWith ::
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   Table d ->
   InterpreterFor (Crud () d () p !! e) r
 interpretCrudSingletonWith table@(Table structure row _) =
@@ -178,7 +178,7 @@ interpretCrudSingletonWith table@(Table structure row _) =
 
 interpretCrudSingleton ::
   Show e =>
-  BuildPartialSql p tree =>
+  BuildPartialSql p tree u =>
   Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
   InterpreterFor (Crud () d () p !! e) r
 interpretCrudSingleton sem = do
