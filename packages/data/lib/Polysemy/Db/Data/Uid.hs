@@ -61,6 +61,6 @@ intUuid :: Int -> a -> Uuid a
 intUuid i' =
   Uid (uuid i')
 
-uId :: Lens' (Uid i d) i
+uId :: HasUid c i d => Lens' c i
 uId =
   id
