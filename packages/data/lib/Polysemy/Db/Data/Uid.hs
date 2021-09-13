@@ -3,7 +3,7 @@
 module Polysemy.Db.Data.Uid where
 
 import Control.Comonad (Comonad(..))
-import Control.Lens (makeClassy)
+import Control.Lens (makeClassy, Lens')
 import Data.Aeson (FromJSON(..), ToJSON(..), genericParseJSON, object, withObject, (.:), (.=))
 import qualified Data.UUID as UUID
 import Data.UUID (UUID)
@@ -60,3 +60,7 @@ uuid int =
 intUuid :: Int -> a -> Uuid a
 intUuid i' =
   Uid (uuid i')
+
+uId :: Lens' (Uid i d) i
+uId =
+  id
