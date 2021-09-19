@@ -29,6 +29,7 @@ instance EffectfulTree (Maybe d) (Tycon Maybe d) d
 instance EffectfulTree [d] (Tycon [] d) d
 instance EffectfulTree (NonEmpty d) (Tycon NonEmpty d) d
 instance EffectfulTree (Vector d) (Tycon Vector d) d
+instance EffectfulTree (Set d) (Tycon Set d) d
 
 ----------------------------------------------------------------------------------------------------
 

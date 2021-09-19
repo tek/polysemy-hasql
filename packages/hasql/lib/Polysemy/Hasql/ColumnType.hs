@@ -123,6 +123,12 @@ instance (
 
 instance (
     EffectfulColumnType field effs d
+  ) => EffectfulColumnType field (Tycon Set d : effs) (Set d) where
+    effectfulColumnType =
+      effectfulColumnType @field @effs @d <> "[]"
+
+instance (
+    EffectfulColumnType field effs d
   ) => EffectfulColumnType field (Tycon Maybe d : effs) (Maybe d) where
     effectfulColumnType =
       effectfulColumnType @field @effs @d

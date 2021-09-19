@@ -20,17 +20,19 @@ data Flag =
   Off
   |
   Superposition
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Show, Generic, Ord)
 
 data ArrayField =
   ArrayField {
-    f1 :: [Flag]
+    f1 :: [Flag],
+    f2 :: Set Flag
   }
   deriving (Eq, Show, Generic)
 
 data ArrayFieldRep =
   ArrayFieldRep {
-    f1 :: Enum
+    f1 :: Enum,
+    f2 :: Enum
   }
   deriving (Eq, Show, Generic)
 
@@ -40,7 +42,7 @@ id' =
 
 array :: ArrayField
 array =
-  ArrayField [On, Off, Superposition]
+  ArrayField [On, Off, Superposition] [On, Off, Superposition]
 
 prog ::
   Member (UuidStore ArrayField) r =>

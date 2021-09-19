@@ -1,11 +1,12 @@
 module Polysemy.Hasql.Table.QueryRow where
 
 import Data.Vector (Vector)
-import Hasql.Decoders (Array, Row, Value, array, column, listArray, nonNullable, nullable, vectorArray)
+import Hasql.Decoders (Array, Row, Value, array, column, listArray, nonNullable, nullable, vectorArray, element, dimension)
 import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 import Polysemy.Hasql.Table.DecoderValue (DecoderValue, decoderValue)
+import qualified Data.Set as Set
 
 value :: Value a -> Row a
 value =
@@ -37,6 +38,10 @@ instance DecoderValue eff d => QueryRow (Tycon NonEmpty d : eff) (NonEmpty d) wh
   queryRow = do
     result <- nonEmpty <$> value (listArray (nonNullable (decoderValue @eff)))
     maybe (fail "no elements in NonEmpty field") pure result
+
+instance (DecoderValue eff d, Ord d) => QueryRow (Tycon Set d : eff) (Set d) where
+  queryRow =
+    value (array $ dimension (fmap Set.fromList .: replicateM) $ element (nonNullable (decoderValue @eff)))
 
 instance DecoderValue eff d => QueryRow (Tycon Maybe d : eff) (Maybe d) where
   queryRow =

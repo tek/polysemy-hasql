@@ -45,6 +45,12 @@ instance (
 
 instance (
     EncoderValue effs d
+  ) => QueryValueNoN (Tycon Set d : effs) (Set d) where
+  queryValueNoN =
+    foldable (encoderValue @effs)
+
+instance (
+    EncoderValue effs d
   ) => QueryValueNoN (Tycon Maybe d : effs) (Maybe d) where
   queryValueNoN =
     nullable (encoderValue @effs)
