@@ -31,7 +31,7 @@ defaultJson ''Tex
 
 data Dat =
   Dat {
-    int :: Int,
+    intField :: Int,
     double :: Double,
     txt :: Tex
   }
@@ -46,14 +46,14 @@ keepRecord =
   Uid 2 (Dat 1 1 "one")
 
 type DatUpdates =
-  ["int" @> Int, "double" @> Double, "txt" @> Tex]
+  ["intField" @> Int, "double" @> Double, "txt" @> Tex]
 
 update ::
   ∀ tree .
   InsertPaths Dat DatUpdates tree =>
   PartialTree tree
 update =
-  partially @Dat ++> field @"int" (5 :: Int) ++> field @"double" (73.18 :: Double)
+  partially @Dat ++> field @"intField" (5 :: Int) ++> field @"double" (73.18 :: Double)
 
 updateWith ::
   ∀ e r .
@@ -71,7 +71,7 @@ prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith (PartialUpdate update)
-  restop (Store.update 1 (partial @Dat +> field @"int" (99 :: Int)))
+  restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int)))
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll

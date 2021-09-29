@@ -4,7 +4,6 @@ import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
 import Polysemy.Db.Data.Partial (PartialFor)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
-import Polysemy.Db.Text.Quote (dquote)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim (..), foldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
@@ -15,6 +14,7 @@ import Polysemy.Hasql.Data.Where (Where (Where))
 import Polysemy.Hasql.DbType (baseColumns)
 import Polysemy.Hasql.Table.Query.Text (commaColumns)
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
+import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 
 newtype PartialSql =
   PartialSql { unPartialSql :: Snippet }
@@ -38,7 +38,7 @@ instance (
   foldTreePrim = \case
     PartialField.Keep -> mempty
     PartialField.Update name value ->
-      [PartialSql (sql (encodeUtf8 (dquote name)) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
+      [PartialSql (sql (encodeUtf8 (quotedDbId name)) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
 
 update ::
   FoldTree 'True () PartialField [PartialSql] tree =>

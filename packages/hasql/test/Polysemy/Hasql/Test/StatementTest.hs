@@ -295,15 +295,6 @@ test_unitColumn =
     SqlCode stmtText =
       Statement.createTableSql (tableStructure @Auto @(Uid () IDQTest))
 
--- test_updateStatement :: UnitTest
--- test_updateStatement =
---   runTestAuto do target === stmtText
---   where
---     target =
---       [text|update "rec" where "id" = $1 set "a" = $2, "b" = $3, "c" = $4, "sum_field" = row($5, $6, row($7, $8))|]
---     SqlCode stmtText =
---       Statement.updateSql (schema @(PrimQuery "id") @(UidRep Auto RecRep) @Int @(Uid Int Rec))
-
 data Flatty =
   Flatty {
     txt :: Text,
