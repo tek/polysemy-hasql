@@ -15,6 +15,8 @@ import Polysemy.Hasql.DbType (baseColumns)
 import Polysemy.Hasql.Table.Query.Text (commaColumns)
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
+import Polysemy.Hasql.Tree.Table (PrimColumn)
+import Polysemy.Db.Data.Rep (Prim)
 
 newtype PartialSql =
   PartialSql { unPartialSql :: Snippet }
@@ -32,13 +34,36 @@ commaSeparatedSnippet ::
 commaSeparatedSnippet =
   mconcat . intersperse ", "
 
+class ForcePrim d eff prim eff' | d eff prim -> eff' where
+
+instance ForcePrim d eff 'True Prim where
+
+instance ForcePrim d eff 'False eff where
+
+class AdaptPartialEffect eff d eff' | eff d -> eff' where
+
 instance (
-    QueryValueNoN effs d
+    PrimColumn d prim,
+    ForcePrim d eff prim eff'
+  ) => AdaptPartialEffect eff d eff' where
+
+class AdaptPartialEffects (effs :: [Type]) (d :: Type) (effs' :: [Type]) | effs d -> effs' where
+
+instance AdaptPartialEffects '[] d '[] where
+
+instance (
+    AdaptPartialEffect eff d eff',
+    AdaptPartialEffects effs d effs'
+  ) => AdaptPartialEffects (eff : effs) d (eff' : effs') where
+
+instance (
+    AdaptPartialEffects effs d effs',
+    QueryValueNoN effs' d
   ) => FoldTreePrim root () PartialField [PartialSql] name effs d where
-  foldTreePrim = \case
-    PartialField.Keep -> mempty
-    PartialField.Update name value ->
-      [PartialSql (sql (encodeUtf8 (quotedDbId name)) <> " = " <> encoderAndParam (queryValueNoN @effs @d) value)]
+    foldTreePrim = \case
+      PartialField.Keep -> mempty
+      PartialField.Update name value ->
+        [PartialSql (sql (encodeUtf8 (quotedDbId name)) <> " = " <> encoderAndParam (queryValueNoN @effs' @d) value)]
 
 update ::
   FoldTree 'True () PartialField [PartialSql] tree =>
@@ -49,7 +74,7 @@ update ::
   Snippet
 update table qWhere q tree =
   sql [exon|update #{sel} set |] <>
-  commaSeparatedSnippet (unPartialSql <$> (foldTree @'True tree)) <>
+  commaSeparatedSnippet (unPartialSql <$> foldTree @'True tree) <>
   foldMap whereSnippet qWhere <>
   " returning " <>
   sql (encodeUtf8 cols)

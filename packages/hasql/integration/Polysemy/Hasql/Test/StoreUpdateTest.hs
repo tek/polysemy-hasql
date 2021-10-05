@@ -6,7 +6,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Partial (partial)
 import Polysemy.Db.Data.PartialField (PartialTree, partially)
 import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
-import Polysemy.Db.Data.Rep (Auto, Prim, PrimQuery, UidRep)
+import Polysemy.Db.Data.Rep (Prim, PrimQuery, UidRep)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
@@ -33,20 +33,30 @@ data Dat =
   Dat {
     intField :: Int,
     double :: Double,
-    txt :: Tex
+    txt :: Tex,
+    boo :: Bool
+  }
+  deriving (Eq, Show, Generic)
+
+data DatRep =
+  DatRep {
+    intField :: Prim,
+    double :: Prim,
+    txt :: Prim,
+    boo :: Prim
   }
   deriving (Eq, Show, Generic)
 
 updateRecord :: Uid Int Dat
 updateRecord =
-  Uid 1 (Dat 9 12.7 "text")
+  Uid 1 (Dat 9 12.7 "text" True)
 
 keepRecord :: Uid Int Dat
 keepRecord =
-  Uid 2 (Dat 1 1 "one")
+  Uid 2 (Dat 1 1 "one" True)
 
 type DatUpdates =
-  ["intField" @> Int, "double" @> Double, "txt" @> Tex]
+  ["intField" @> Int, "double" @> Double, "txt" @> Tex, "boo" @> Bool]
 
 update ::
   ∀ tree .
@@ -71,18 +81,18 @@ prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith (PartialUpdate update)
-  restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int)))
+  restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int) +> field @"boo" False))
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
 
 target :: NonEmpty (Uid Int Dat)
 target =
-  [Uid 1 (Dat 99 73.18 "updated"), keepRecord]
+  [Uid 1 (Dat 99 73.18 "updated" False), keepRecord]
 
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =
   integrationTest do
     withTestStoreUid do
-      result <- interpretQuery @(PrimQuery "id") @(UidRep Prim Auto) (interpretStoreUpdateDb (prog @DbError))
+      result <- interpretQuery @(PrimQuery "id") @(UidRep Prim DatRep) (interpretStoreUpdateDb (prog @DbError))
       assertJust target (NonEmpty.sortWith Uid._id <$> result)
