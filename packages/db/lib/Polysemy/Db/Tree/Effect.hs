@@ -33,6 +33,15 @@ instance EffectfulTree (Set d) (Tycon Set d) d
 
 ----------------------------------------------------------------------------------------------------
 
+class UnwrapEffect (eff :: Type) (d :: Type) (d' :: Type) | eff d -> d'
+
+instance {-# overlappable #-} d' ~ d => UnwrapEffect eff d d' where
+
+instance UnwrapEffect (Newtype d nt) d nt where
+instance UnwrapEffect (Tycon f d) (f d) d where
+
+----------------------------------------------------------------------------------------------------
+
 class MaybeAdtResolves (adt :: MaybeAdt) (meta :: Maybe AdtMetadata) | adt -> meta
 
 instance {-# incoherent #-} meta ~ 'Nothing => MaybeAdtResolves adt meta

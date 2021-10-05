@@ -4,6 +4,9 @@ import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
 import Polysemy.Db.Data.Partial (PartialFor)
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (PartialField)
+import Polysemy.Db.Data.Rep (Prim)
+import Polysemy.Db.Text.DbIdentifier (quotedDbId)
+import Polysemy.Db.Tree.Effect (UnwrapEffect)
 import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim (..), foldTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
@@ -14,9 +17,7 @@ import Polysemy.Hasql.Data.Where (Where (Where))
 import Polysemy.Hasql.DbType (baseColumns)
 import Polysemy.Hasql.Table.Query.Text (commaColumns)
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
-import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Hasql.Tree.Table (PrimColumn)
-import Polysemy.Db.Data.Rep (Prim)
 
 newtype PartialSql =
   PartialSql { unPartialSql :: Snippet }
@@ -34,27 +35,28 @@ commaSeparatedSnippet ::
 commaSeparatedSnippet =
   mconcat . intersperse ", "
 
-class ForcePrim d eff prim eff' | d eff prim -> eff' where
+class ForcePrim d eff prim eff' | d eff prim -> eff'
 
-instance ForcePrim d eff 'True Prim where
+instance ForcePrim d eff 'True Prim
 
-instance ForcePrim d eff 'False eff where
+instance ForcePrim d eff 'False eff
 
-class AdaptPartialEffect eff d eff' | eff d -> eff' where
+class AdaptPartialEffect eff d eff' | eff d -> eff'
 
 instance (
     PrimColumn d prim,
     ForcePrim d eff prim eff'
-  ) => AdaptPartialEffect eff d eff' where
+  ) => AdaptPartialEffect eff d eff'
 
-class AdaptPartialEffects (effs :: [Type]) (d :: Type) (effs' :: [Type]) | effs d -> effs' where
+class AdaptPartialEffects (effs :: [Type]) (d :: Type) (effs' :: [Type]) | effs d -> effs'
 
-instance AdaptPartialEffects '[] d '[] where
+instance AdaptPartialEffects '[] d '[]
 
 instance (
+    UnwrapEffect eff d d',
     AdaptPartialEffect eff d eff',
-    AdaptPartialEffects effs d effs'
-  ) => AdaptPartialEffects (eff : effs) d (eff' : effs') where
+    AdaptPartialEffects effs d' effs'
+  ) => AdaptPartialEffects (eff : effs) d (eff' : effs')
 
 instance (
     AdaptPartialEffects effs d effs',

@@ -29,12 +29,18 @@ newtype Tex =
 
 defaultJson ''Tex
 
+newtype Buul =
+  Buul { unBuul :: Bool }
+  deriving (Eq, Show, Generic)
+
+defaultJson ''Buul
+
 data Dat =
   Dat {
     intField :: Int,
     double :: Double,
     txt :: Tex,
-    boo :: Bool
+    boo :: Buul
   }
   deriving (Eq, Show, Generic)
 
@@ -49,14 +55,14 @@ data DatRep =
 
 updateRecord :: Uid Int Dat
 updateRecord =
-  Uid 1 (Dat 9 12.7 "text" True)
+  Uid 1 (Dat 9 12.7 "text" (Buul True))
 
 keepRecord :: Uid Int Dat
 keepRecord =
-  Uid 2 (Dat 1 1 "one" True)
+  Uid 2 (Dat 1 1 "one" (Buul True))
 
 type DatUpdates =
-  ["intField" @> Int, "double" @> Double, "txt" @> Tex, "boo" @> Bool]
+  ["intField" @> Int, "double" @> Double, "txt" @> Tex, "boo" @> Buul]
 
 update ::
   ∀ tree .
@@ -81,14 +87,14 @@ prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith (PartialUpdate update)
-  restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int) +> field @"boo" False))
+  restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int) +> field @"boo" (Buul False)))
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
 
 target :: NonEmpty (Uid Int Dat)
 target =
-  [Uid 1 (Dat 99 73.18 "updated" False), keepRecord]
+  [Uid 1 (Dat 99 73.18 "updated" (Buul False)), keepRecord]
 
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =
