@@ -29,7 +29,8 @@ module Polysemy.Hasql (
   HasqlConnection,
   DbConnectionError,
   interpretAtomicStateDb,
-  interpretAtomicStateDbAuto,
+  interpretAtomicStateDbAs,
+  interpretAtomicStateDbAsAuto,
   interpretReaderDb,
   interpretReaderDbAuto,
   interpretQueryWith,
@@ -38,11 +39,11 @@ module Polysemy.Hasql (
   interpretQuerySingleton,
 ) where
 
-import Polysemy.Db.Data.Rep (Auto)
-import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
+import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
+import Polysemy.Db.Data.Rep (Auto)
 
-import Polysemy.Hasql.AtomicState (interpretAtomicStateDb, interpretAtomicStateDbAuto)
+import Polysemy.Hasql.AtomicState (interpretAtomicStateDb, interpretAtomicStateDbAs, interpretAtomicStateDbAsAuto)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
@@ -51,7 +52,7 @@ import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Query (interpretQuery, interpretQueryAuto, interpretQuerySingleton, interpretQueryWith)
 import Polysemy.Hasql.Reader (interpretReaderDb, interpretReaderDbAuto)
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
-import Polysemy.Hasql.Table.Schema (Schema(schema), UidQuerySchema, UidSchema)
+import Polysemy.Hasql.Table.Schema (Schema (schema), UidQuerySchema, UidSchema)
 
 -- $intro
 -- This library provides two independent features as well as their synthesis:
