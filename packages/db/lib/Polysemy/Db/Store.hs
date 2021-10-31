@@ -4,7 +4,7 @@ import Control.Lens (view, views)
 import Polysemy.AtomicState (atomicState')
 
 import Polysemy.Db.Atomic (interpretAtomic)
-import Polysemy.Db.Data.Partial (getPartial)
+import Polysemy.Db.Data.Partial (Partial, getPartial)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store (..))
 import qualified Polysemy.Db.Data.Uid as Uid
@@ -223,3 +223,12 @@ alterDefault ::
   Sem r ()
 alterDefault =
   alterOr @i def
+
+update_ ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  Partial d ->
+  Sem r ()
+update_ =
+  void .: Store.update
