@@ -3,22 +3,16 @@ module Polysemy.Hasql.Test.StoreUpdateTest where
 import qualified Data.Aeson as Aeson
 import qualified Data.List.NonEmpty as NonEmpty
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.Partial (partial)
-import Polysemy.Db.Data.PartialField (PartialTree, partially)
-import Polysemy.Db.Data.PartialUpdate (PartialUpdate (PartialUpdate))
-import Polysemy.Db.Data.Rep (Prim, PrimQuery, UidRep)
+import Polysemy.Db.Data.Partial (Partial, partial)
+import Polysemy.Db.Data.Rep (Prim)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid (Uid))
-import qualified Polysemy.Db.Effect.StoreUpdate as StoreUpdate
-import Polysemy.Db.Effect.StoreUpdate (StoreUpdate)
-import Polysemy.Db.Tree.Partial (field, (++>), (+>))
-import Polysemy.Db.Tree.Partial.Insert (InsertPaths, type (@>))
+import Polysemy.Db.Tree.Partial (field, (+>))
+import Polysemy.Db.Tree.Partial.Insert (type (@>))
 import Polysemy.Test (UnitTest, assertJust)
 
-import Polysemy.Hasql.Interpreter.StoreUpdate (interpretStoreUpdateDb)
-import Polysemy.Hasql.Query (interpretQuery)
 import Polysemy.Hasql.Test.Database (withTestStoreUid)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
@@ -65,28 +59,26 @@ type DatUpdates =
   ["intField" @> Int, "double" @> Double, "txt" @> Tex, "boo" @> Buul]
 
 update ::
-  ∀ tree .
-  InsertPaths Dat DatUpdates tree =>
-  PartialTree tree
+  Partial Dat
 update =
-  partially @Dat ++> field @"intField" (5 :: Int) ++> field @"double" (73.18 :: Double)
+  partial @Dat +> field @"intField" (5 :: Int) +> field @"double" (73.18 :: Double)
 
 updateWith ::
   ∀ e r .
-  Members [StoreUpdate Int Dat DatUpdates !! e, Stop e] r =>
-  PartialUpdate Dat DatUpdates ->
+  Members [Store Int Dat !! e, Stop e] r =>
+  Partial Dat ->
   Sem r ()
 updateWith upd =
-  restop (void (StoreUpdate.create 1 upd))
+  restop (void (Store.update 1 upd))
 
 prog ::
   ∀ e r .
-  Members [Store Int Dat !! e, StoreUpdate Int Dat DatUpdates !! e, Stop e, Error Text] r =>
+  Members [Store Int Dat !! e, Stop e, Error Text] r =>
   Sem r (Maybe (NonEmpty (Uid Int Dat)))
 prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
-  updateWith (PartialUpdate update)
+  updateWith update
   restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int) +> field @"boo" (Buul False)))
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
   updateWith jsonUpdate
@@ -100,5 +92,5 @@ test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =
   integrationTest do
     withTestStoreUid do
-      result <- interpretQuery @(PrimQuery "id") @(UidRep Prim DatRep) (interpretStoreUpdateDb (prog @DbError))
+      result <- prog @DbError
       assertJust target (NonEmpty.sortWith Uid._id <$> result)

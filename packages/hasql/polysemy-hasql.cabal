@@ -52,8 +52,6 @@ library
       Polysemy.Hasql.DeriveStatement
       Polysemy.Hasql.InitDbError
       Polysemy.Hasql.Interpreter.QueryStore
-      Polysemy.Hasql.Interpreter.StoreUpdate
-      Polysemy.Hasql.Interpreter.StoreUpdateTree
       Polysemy.Hasql.ManagedTable
       Polysemy.Hasql.Query
       Polysemy.Hasql.Query.Any
