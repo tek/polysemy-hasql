@@ -14,8 +14,7 @@ import Polysemy.Hasql.Data.DbType (Selector (Selector))
 import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import Polysemy.Hasql.Data.Table (Table, selector, structure)
 import Polysemy.Hasql.Data.Where (Where (Where))
-import Polysemy.Hasql.DbType (baseColumns)
-import Polysemy.Hasql.Table.Query.Text (commaColumns)
+import Polysemy.Hasql.Table.Query.Select (selectColumns)
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))
 import Polysemy.Hasql.Tree.Table (PrimColumn)
 
@@ -86,4 +85,4 @@ update table qWhere q tree =
     whereSnippet (Where _ qw) =
       " where " <> qw q
     SqlCode cols =
-      commaColumns (baseColumns (table ^. structure))
+      selectColumns (table ^. structure)
