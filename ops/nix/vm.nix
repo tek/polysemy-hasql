@@ -41,10 +41,7 @@ let
           create role "${name}" with login password '${name}' createdb;
           grant all privileges on database "${name}" to "${name}";
         '';
-        settings = {
-          log_statement = "all";
-          log_min_messages = "info";
-        };
+        settings = if log then { log_statement = "all"; log_min_messages = "info"; } else {};
       };
     };
   };
