@@ -49,14 +49,12 @@
       tasty-hedgehog = hackage "1.1.0.0" "0cs96s7z5csrlwj334v8zl459j5s4ws6gmjh59cv01wwvvrrjwd9";
     };
 
-    testConfig = project: { type, ... }:
-    with project.pkgs.lib;
-    let
-      isIntegration = type == "integration";
-      vm = import ./ops/nix/vm.nix project {};
-    in {
-      preStartCommand = optional isIntegration vm.integration;
-      exitCommand = optional isIntegration vm.killPostgresVm;
+    testConfig = _: { type, ... }: {
+      preStartCommand = ''
+        export polysemy_db_test_host=localhost
+        export polysemy_db_test_port=10000
+      '';
+      vm = if type == "integration" then { type = "postgres"; name = "polysemy-db"; port = 10000; log = true; } else null;
     };
 
   in hix.flake {

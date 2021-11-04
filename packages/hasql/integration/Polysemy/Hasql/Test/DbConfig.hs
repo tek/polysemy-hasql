@@ -16,7 +16,7 @@ dbConfig = do
   where
     cons host = do
       port <- parsePort =<< (fromMaybe "4321" <$> liftIO (lookupEnv "polysemy_db_test_port"))
-      pure (DbConfig (fromString host) port "polysemy-db-test" "polysemy-db" "polysemy-db")
+      pure (DbConfig (fromString host) port "polysemy-db" "polysemy-db" "polysemy-db")
     parsePort p =
       case readMaybe p of
         Just a -> pure a
