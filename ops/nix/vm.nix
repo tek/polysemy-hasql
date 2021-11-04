@@ -3,7 +3,7 @@
 let
   name = "polysemy-db";
 
-  tmp = "/tmp/polysemy-hasql-integration";
+  tmp = "/tmp/polysemy-hasql-integration/${dbName}";
 
   pidfile = "${tmp}/vm.pid";
 
