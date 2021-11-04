@@ -4,8 +4,7 @@
 
   inputs = {
     chronos = { url = github:andrewthad/chronos/aa6d2b0969c4c5216ff9e45da1574e194fafefc1; flake = false; };
-    # hix.url = github:tek/hix;
-    hix.url = path:/home/tek/code/tek/nix/hix;
+    hix.url = github:tek/hix;
     polysemy-conc.url = github:tek/polysemy-conc;
   };
 
