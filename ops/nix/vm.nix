@@ -1,19 +1,23 @@
 { nixpkgs, pkgs, ... }:
+{ dbName ? "polysemy-db-test", port ? 10000, log ? false }:
 let
-  port = 10000;
-  name = "polysemy-db-test";
+  name = "polysemy-db";
+
   tmp = "/tmp/polysemy-hasql-integration";
+
   pidfile = "${tmp}/vm.pid";
+
   image = "${tmp}/vm.qcow2";
+
   nixos = import "${nixpkgs}/nixos" {
     system = "x86_64-linux";
     configuration = { pkgs, ... }: {
       virtualisation = {
         diskImage = image;
         diskSize = 4096;
-        qemu.networkingOptions = [
-          "-net nic,netdev=user.0,model=virtio"
-          "-netdev user,id=user.0,hostfwd=tcp::${toString port}-:${toString port},hostfwd=tcp::10022-:22"
+        forwardPorts = [
+          { from = "host"; host.port = port + 22; guest.port = 22; }
+          { from = "host"; host.port = port; guest.port = port; }
         ];
       };
       services.openssh = {
@@ -44,7 +48,9 @@ let
       };
     };
   };
+
   postgresVm = nixos.vm;
+
   ensurePostgresVm = pkgs.writeScript "ensure-postgres-vm" ''
     #!${pkgs.zsh}/bin/zsh
     if ${pkgs.procps}/bin/pgrep -F ${pidfile} -L -f ${pidfile} &>/dev/null
@@ -57,6 +63,25 @@ let
       ${postgresVm}/bin/run-nixos-vm -display none -daemonize -pidfile ${pidfile}
     fi
   '';
+
+  killPostgresVm = pkgs.writeScript "kill-postgres-vm" ''
+    #!${pkgs.zsh}/bin/zsh
+    pid=$(${pkgs.procps}/bin/pgrep -F ${pidfile} -L -f ${pidfile})
+    if [[ $? == 0 ]]
+    then
+      print '>>> killing vm' >&2
+      kill $pid
+    else
+      print '>>> vm not running' >&2
+    fi
+  '';
+
+  integration = ''
+    ${ensurePostgresVm}
+    export polysemy_db_test_host=localhost
+    export polysemy_db_test_port=${toString port}
+  '';
+
 in {
-  inherit postgresVm ensurePostgresVm;
+  inherit postgresVm ensurePostgresVm killPostgresVm integration;
 }

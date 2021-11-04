@@ -4,7 +4,8 @@
 
   inputs = {
     chronos = { url = github:andrewthad/chronos/aa6d2b0969c4c5216ff9e45da1574e194fafefc1; flake = false; };
-    hix.url = github:tek/hix;
+    # hix.url = github:tek/hix;
+    hix.url = path:/home/tek/code/tek/nix/hix;
     polysemy-conc.url = github:tek/polysemy-conc;
   };
 
@@ -49,11 +50,16 @@
       tasty-hedgehog = hackage "1.1.0.0" "0cs96s7z5csrlwj334v8zl459j5s4ws6gmjh59cv01wwvvrrjwd9";
     };
 
-    preStartCommand = project: ''
-      ${(import ./ops/nix/integration.nix project).ensurePostgresVm}
-      export polysemy_db_test_host=localhost
-      export polysemy_db_test_port=10000
-    '';
+    testConfig = project: { type, ... }:
+    with project.pkgs.lib;
+    let
+      isIntegration = type == "integration";
+      vm = import ./ops/nix/vm.nix project {};
+    in {
+      preStartCommand = optional isIntegration vm.integration;
+      exitCommand = optional isIntegration vm.killPostgresVm;
+    };
+
   in hix.flake {
     base = ./.;
     main = "polysemy-hasql";
@@ -65,7 +71,7 @@
     };
     ghci.extraArgs = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances" "-fconstraint-solver-iterations=20"];
     versionFile = "ops/hpack/shared/meta.yaml";
-    runConfig = project: { preStartCommand = preStartCommand project; };
+    inherit testConfig;
     compat = false;
   };
 }
