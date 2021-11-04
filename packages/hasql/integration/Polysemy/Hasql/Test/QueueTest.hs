@@ -19,6 +19,7 @@ import Polysemy.Hasql.Database (HasqlConnection)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Queue (interpretInputDbQueueFullGen, interpretOutputDbQueueFullGen)
 import Polysemy.Hasql.Test.Run (integrationTestWithDb)
+import Polysemy.Conc (interpretRace)
 
 data Dat =
   Dat {
@@ -60,11 +61,12 @@ test_queue :: UnitTest
 test_queue =
   integrationTestWithDb \ conf ->
     asyncToIOFinal $
+    interpretRace $
     mapStop @QueueOutputError @Text show $
     interpretTimeGhc $
     interpretLogNull $
     (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
     (interpretDbConnection "test-queue-output" conf . untag @"test-queue-output") $
     interpretOutputDbQueueFullGen @"test-queue" @(Uuid Dat) $
-    interpretInputDbQueueFullGen @"test-queue" (Seconds 0) (const (pure False)) $
+    interpretInputDbQueueFullGen @"test-queue" (Seconds 0) def (const (pure False)) $
     prog

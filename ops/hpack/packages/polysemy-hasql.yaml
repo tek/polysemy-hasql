@@ -30,6 +30,7 @@ dependencies:
   - hasql-implicits
   - path
   - polysemy-db-data
+  - polysemy-conc
   - polysemy-log
   - polysemy-plugin
   - polysemy-resume
@@ -40,6 +41,7 @@ dependencies:
   - stm-chans
   - symbols
   - time
+  - torsor
   - uuid
   - vector
   - name: polysemy-db

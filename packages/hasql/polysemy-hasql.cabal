@@ -188,6 +188,7 @@ library
     , lens
     , path
     , polysemy
+    , polysemy-conc
     , polysemy-db
     , polysemy-db-data
     , polysemy-log
@@ -201,6 +202,7 @@ library
     , symbols
     , text
     , time
+    , torsor
     , type-errors
     , type-errors-pretty
     , uuid
@@ -313,6 +315,7 @@ test-suite polysemy-hasql-integration
     , lens
     , path
     , polysemy
+    , polysemy-conc
     , polysemy-db
     , polysemy-db-data
     , polysemy-hasql
@@ -332,6 +335,7 @@ test-suite polysemy-hasql-integration
     , text
     , th-test-utils
     , time
+    , torsor
     , type-errors
     , type-errors-pretty
     , uuid
@@ -449,6 +453,7 @@ test-suite polysemy-hasql-unit
     , lens
     , path
     , polysemy
+    , polysemy-conc
     , polysemy-db
     , polysemy-db-data
     , polysemy-hasql
@@ -468,6 +473,7 @@ test-suite polysemy-hasql-unit
     , text
     , th-test-utils
     , time
+    , torsor
     , type-errors
     , type-errors-pretty
     , uuid

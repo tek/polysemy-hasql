@@ -9,6 +9,8 @@ import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Hasql.Connection (withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
+import qualified Polysemy.Conc as Monitor
+import Polysemy.Conc (ClockSkewConfig, Monitor, Race, Restart, RestartingMonitor, interpretAtomic, interpretMonitorRestart, monitorClockSkew)
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -25,6 +27,7 @@ import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Time, TimeUnit)
 import Prelude hiding (group)
+import Torsor (Torsor)
 
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb (InitDb))
@@ -51,6 +54,26 @@ tryDequeue connection =
         Just fd -> do
           threadWaitRead fd
           Right Nothing <$ LibPQ.consumeInput connection
+        Nothing ->
+          pure (Left "couldn't connect with LibPQ.socket")
+
+tryDequeueSem ::
+  Members [Monitor Restart, Embed IO] r =>
+  LibPQ.Connection ->
+  Sem r (Either Text (Maybe UUID))
+tryDequeueSem connection =
+  embed (LibPQ.notifies connection) >>= \case
+    Just (LibPQ.Notify _ _ payload) ->
+      case UUID.fromASCIIBytes payload of
+        Just d ->
+          pure (Right (Just d))
+        Nothing ->
+          pure (Left [text|invalid UUID payload: #{payload}|])
+    Nothing ->
+      embed (LibPQ.socket connection) >>= \case
+        Just fd -> do
+          Monitor.monitor (embed (threadWaitRead fd))
+          Right Nothing <$ embed (LibPQ.consumeInput connection)
         Nothing ->
           pure (Left "couldn't connect with LibPQ.socket")
 
@@ -102,20 +125,21 @@ dequeue queue =
       atomically . writeTBMQueue queue
 
 dequeueLoop ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (queue :: Symbol) d t dt u resource r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
+  Member (RestartingMonitor resource) r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   TBMQueue d ->
   Sem r ()
 dequeueLoop errorDelay errorHandler queue =
-  spin
+  Monitor.restart spin
   where
     spin =
-      result =<< bitraverse errorHandler pure =<< runStop (dequeue @queue queue)
+      result =<< bitraverse (raise . errorHandler) pure =<< runStop (dequeue @queue queue)
     result = \case
       Right () -> spin
       Left True -> Time.sleep errorDelay >> spin
@@ -132,10 +156,11 @@ interpretInputDbQueue queue =
       atomically (readTBMQueue queue)
 
 dequeueThread ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (queue :: Symbol) d t dt u resource r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
+  Member (RestartingMonitor resource) r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -158,10 +183,11 @@ releaseInputQueue handle _ = do
   resume_ (Database.retryingSqlDef [text|unlisten "#{symbolText @queue}"|])
 
 interpretInputDbQueueListen ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (queue :: Symbol) d t dt u resource r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
+  Member (RestartingMonitor resource) r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -174,31 +200,41 @@ interpretInputDbQueueListen errorDelay errorHandler sem =
       dequeueThread @queue errorDelay errorHandler
 
 interpretInputDbQueueFull ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (queue :: Symbol) d t diff dt u r .
   Ord t =>
   TimeUnit u =>
+  TimeUnit diff =>
+  Torsor t diff =>
   KnownSymbol queue =>
-  Members [InputQueueConnection queue, Store UUID (Queued t d) !! DbError, Time t dt, Log, Resource, Async] r =>
-  Member (Embed IO) r =>
+  Members [InputQueueConnection queue, Store UUID (Queued t d) !! DbError, Time t dt, Log, Race, Resource, Async] r =>
+  Members [Embed IO, Final IO] r =>
   u ->
+  ClockSkewConfig ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueFull errorDelay errorHandler =
+interpretInputDbQueueFull errorDelay csConfig errorHandler =
   tag .
   interpretDatabase .
-  interpretInputDbQueueListen @queue errorDelay (raise . raise . errorHandler) .
-  raiseUnder2
+  interpretAtomic Nothing .
+  interpretMonitorRestart (monitorClockSkew csConfig) .
+  raiseUnder .
+  interpretInputDbQueueListen @queue errorDelay (raise . raise . raise . errorHandler) .
+  raiseUnder3
 
 interpretInputDbQueueFullGen ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (queue :: Symbol) d t diff dt u r .
   TimeUnit u =>
+  TimeUnit diff =>
+  Torsor t diff =>
   Queue queue t d =>
-  Members [InputQueueConnection queue, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
+  Members [InputQueueConnection queue, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO, Final IO] r =>
+  Member Race r =>
   u ->
+  ClockSkewConfig ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueFullGen errorDelay errorHandler =
+interpretInputDbQueueFullGen errorDelay csConfig errorHandler =
   interpretStoreDbFullNoUpdateGen @QueuedRep .
   raiseUnder2 .
-  interpretInputDbQueueFull @queue errorDelay (raise . errorHandler) .
+  interpretInputDbQueueFull @queue errorDelay csConfig (raise . errorHandler) .
   raiseUnder

@@ -5,9 +5,10 @@
   inputs = {
     chronos = { url = github:andrewthad/chronos/aa6d2b0969c4c5216ff9e45da1574e194fafefc1; flake = false; };
     hix.url = github:tek/hix;
+    polysemy-conc.url = github:tek/polysemy-conc;
   };
 
-  outputs = { chronos, hix, ... }:
+  outputs = { chronos, hix, polysemy-conc, ... }:
   let
     compat901 = { hackage, source, jailbreak, minimal, noHpack, ... }: {
       cryptohash-md5 = jailbreak (hackage "0.11.100.1" "1l9l3c5x4759pa0ah48skzrkakb5738n6cw60ksj8pmzf68f428a");
@@ -26,9 +27,9 @@
       exon = hackage "0.1.0.0" "0lwq53zcw6v030yk0v7p6s5cv1gqag2jb56lh3p7xc5qdn06bc6b";
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
-      polysemy-conc = hackage "0.2.0.0" "17w29sn3rqh78ik1jzwg7kvzlxdahy60s7l0ign4p5bhywhdnj6a";
-      polysemy-log = hackage "0.2.2.3" "1r5iryp70y2r3w6s7p33nwics6640612jzkz18kzz7jn6lp4xwp5";
-      polysemy-resume = hackage "0.1.0.4" "0qkq2vpm6vddk86cm0y2f704cq8hwl6h9iqr6znbddjiz67qf9vj";
+      polysemy-conc = source.package polysemy-conc "conc";
+      polysemy-log = hackage "0.2.2.4" "1fgn7ywifbp02lz2wyaixvp43vnrff8n5nkczxmq1r5bzqbs6f45";
+      polysemy-resume = hackage "0.2.0.0" "0kh7cwqkr5w69zkm68l6q4d8nkai7fc29n48p3f8skqw638x4w9p";
       polysemy-test = hackage "0.3.1.7" "0j33f5zh6gyhl86w8kqh6nm02915b4n32xikxc4hwcy7p5l7cl34";
       polysemy-time = hackage "0.1.4.0" "0hwx89cilmsdjs3gb5w6by87ysy24scgj5zg77vbfnqpzr3ifrwh";
     };
@@ -40,6 +41,8 @@
 
     main = { hackage, source, minimal, jailbreak, ... }: {
       chronos = minimal (source.root chronos);
+      exon = hackage "0.2.0.1" "0hs0xrh1v64l1n4zqx3rqfjdh6czxm7av85kj1awya9zxcfcy5cl";
+      flatparse = hackage "0.3.1.0" "15nx2p08pqka0136xfppw344a60rn3fvsx4adiz15k37cyj25zi2";
       path = hackage "0.9.0" "14symzl1rszvk5zivv85k79anz7xyl5gaxy0sm4vhhzsgxc59msv";
       path-io = jailbreak (hackage "1.6.3" "05hcxgyf6kkz36mazd0fqwb6mjy2049gx3vh8qq9h93gfjkpp2vc");
       relude = hackage "1.0.0.1" "164p21334c3pyfzs839cv90438naxq9pmpyvy87113mwy51gm6xn";
@@ -54,9 +57,7 @@
   in hix.flake {
     base = ./.;
     main = "polysemy-hasql";
-    overrides = [compat common main];
-    compat = false;
-    compatOverrides = { all = compat; ghc901 = [common compat901]; };
+    overrides = { all = compat; ghc901 = [common compat901]; dev = [common main]; };
     packages = {
       polysemy-db = ./packages/db;
       polysemy-db-data = ./packages/data;
@@ -65,6 +66,6 @@
     ghci.extraArgs = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances" "-fconstraint-solver-iterations=20"];
     versionFile = "ops/hpack/shared/meta.yaml";
     runConfig = project: { preStartCommand = preStartCommand project; };
-    ghcid.easy-hls = false;
+    compat = false;
   };
 }

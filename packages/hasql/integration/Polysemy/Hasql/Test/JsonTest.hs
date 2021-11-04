@@ -41,7 +41,7 @@ data DatRep =
   deriving (Eq, Show, Generic)
 
 test_json :: UnitTest
-test_json =
+test_json = do
   integrationTest do
     interpretStoreDbFullGen @DatRep @Int @Dat do
       restop @DbError $ Store.insert dat
