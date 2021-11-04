@@ -38,7 +38,7 @@ let
           host all all ::/0 md5
         '';
         initialScript = pkgs.writeText "polysemy-db-postgresql-init" ''
-          create role "${name}" with login password '${name}' createdb;
+          create role "${name}" with login password "${name}" createdb;
           grant all privileges on database "${name}" to "${name}";
         '';
         settings = if log then { log_statement = "all"; log_min_messages = "info"; } else {};
