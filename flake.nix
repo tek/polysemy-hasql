@@ -27,7 +27,7 @@
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
       polysemy-conc = hackage "0.5.0.0" "0dv3naixsv8fbwqdfa4j2wg1xjlrk1w80v6wclg96rlaisxgsxlg";
-      polysemy-log = hackage "0.3.0.1" "0xjz5wqashhyr2didmdxg69mbk6jgmq6wwgj7w82mj8bdwdvbkm0";
+      polysemy-log = hackage "0.3.0.2" "075psivybvv2vjgna43nhc53w7ick68y1ycsc6qr45nwignjakfq";
       polysemy-resume = hackage "0.2.0.0" "0kh7cwqkr5w69zkm68l6q4d8nkai7fc29n48p3f8skqw638x4w9p";
       polysemy-test = hackage "0.3.1.7" "0j33f5zh6gyhl86w8kqh6nm02915b4n32xikxc4hwcy7p5l7cl34";
       polysemy-time = hackage "0.1.4.0" "0hwx89cilmsdjs3gb5w6by87ysy24scgj5zg77vbfnqpzr3ifrwh";
