@@ -5,10 +5,9 @@
   inputs = {
     chronos = { url = github:andrewthad/chronos/aa6d2b0969c4c5216ff9e45da1574e194fafefc1; flake = false; };
     hix.url = github:tek/hix;
-    polysemy-conc.url = github:tek/polysemy-conc;
   };
 
-  outputs = { chronos, hix, polysemy-conc, ... }:
+  outputs = { chronos, hix, ... }:
   let
     compat901 = { hackage, source, jailbreak, minimal, noHpack, ... }: {
       cryptohash-md5 = jailbreak (hackage "0.11.100.1" "1l9l3c5x4759pa0ah48skzrkakb5738n6cw60ksj8pmzf68f428a");
@@ -27,8 +26,8 @@
       exon = hackage "0.1.0.0" "0lwq53zcw6v030yk0v7p6s5cv1gqag2jb56lh3p7xc5qdn06bc6b";
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
-      polysemy-conc = source.package polysemy-conc "conc";
-      polysemy-log = hackage "0.2.2.4" "1fgn7ywifbp02lz2wyaixvp43vnrff8n5nkczxmq1r5bzqbs6f45";
+      polysemy-conc = hackage "0.5.0.0" "0dv3naixsv8fbwqdfa4j2wg1xjlrk1w80v6wclg96rlaisxgsxlg";
+      polysemy-log = hackage "0.3.0.1" "0xjz5wqashhyr2didmdxg69mbk6jgmq6wwgj7w82mj8bdwdvbkm0";
       polysemy-resume = hackage "0.2.0.0" "0kh7cwqkr5w69zkm68l6q4d8nkai7fc29n48p3f8skqw638x4w9p";
       polysemy-test = hackage "0.3.1.7" "0j33f5zh6gyhl86w8kqh6nm02915b4n32xikxc4hwcy7p5l7cl34";
       polysemy-time = hackage "0.1.4.0" "0hwx89cilmsdjs3gb5w6by87ysy24scgj5zg77vbfnqpzr3ifrwh";
