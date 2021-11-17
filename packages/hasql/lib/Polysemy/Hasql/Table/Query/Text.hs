@@ -35,7 +35,7 @@ escape ::
   ByteString ->
   Sem r (Maybe ByteString)
 escape payload = do
-  restop do
+  restop @_ @Database do
     Database.connect (traverseLeft (stop . connError) <=< run)
   where
     run connection =
