@@ -13,10 +13,10 @@ import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Internal.Tactics (liftT)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (Seconds(Seconds), Time, TimeUnit)
+import Polysemy.Time (Seconds (Seconds), Time, TimeUnit)
 
 import qualified Polysemy.Hasql.Data.Database as Database
-import Polysemy.Hasql.Data.Database (Database(..), InitDb(InitDb), hoistInitDb)
+import Polysemy.Hasql.Data.Database (Database (..), InitDb (InitDb), hoistInitDb)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)

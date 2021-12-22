@@ -139,7 +139,6 @@ interpretStoreTVar tvar =
 interpretStoreStrict ::
   ∀ i d e r tree dataTree .
   Eq i =>
-  Member (Embed IO) r =>
   StrictStoreUpdate d '[] tree dataTree =>
   StrictUidStore i d ->
   InterpreterFor (Store i d !! e) r

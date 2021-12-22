@@ -8,7 +8,7 @@ dependencies:
   - containers
   - generics-sop
   - lens
-  - polysemy
+  - polysemy >= 1.7.1
   - text
   - type-errors
   - type-errors-pretty

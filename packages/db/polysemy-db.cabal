@@ -159,7 +159,7 @@ library
     , generics-sop
     , lens
     , path
-    , polysemy
+    , polysemy >=1.7.1
     , polysemy-db-data
     , polysemy-resume
     , random
