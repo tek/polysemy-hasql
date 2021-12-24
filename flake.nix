@@ -9,7 +9,7 @@
 
   outputs = { chronos, hix, ... }:
   let
-    compat901 = { hackage, source, jailbreak, minimal, noHpack, ... }: {
+    ghc901 = { hackage, source, jailbreak, minimal, noHpack, ... }: {
       cryptohash-md5 = jailbreak (hackage "0.11.100.1" "1l9l3c5x4759pa0ah48skzrkakb5738n6cw60ksj8pmzf68f428a");
       cryptohash-sha1 = jailbreak (hackage "0.11.100.1" "0k3q9sraq7s5y8i01p5a2b3cvbdvslz9kv494vh83jrvsamj7dcx");
       path = hackage "0.9.0" "14symzl1rszvk5zivv85k79anz7xyl5gaxy0sm4vhhzsgxc59msv";
@@ -22,7 +22,7 @@
       typerep-map = jailbreak (hackage "0.3.3.0" "15i0h2xczf4x898vjd4vgbb8n10gbsbvy2s2pfw4b3vzf0a1rayl");
     };
 
-    compat = { hackage, jailbreak, source, ... }: {
+    all = { hackage, jailbreak, source, ... }: {
       exon = hackage "0.1.0.0" "0lwq53zcw6v030yk0v7p6s5cv1gqag2jb56lh3p7xc5qdn06bc6b";
       fcf-containers = jailbreak (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
       hasql-dynamic-statements = hackage "0.3.1" "1zjv91xlfkyxwq6mhzj7rsfm4kjvs9ygkgbl6jbbg19jihcn2kiy";
@@ -31,14 +31,11 @@
       polysemy-resume = hackage "0.2.0.0" "0kh7cwqkr5w69zkm68l6q4d8nkai7fc29n48p3f8skqw638x4w9p";
       polysemy-test = hackage "0.3.1.7" "0j33f5zh6gyhl86w8kqh6nm02915b4n32xikxc4hwcy7p5l7cl34";
       polysemy-time = hackage "0.1.4.0" "0hwx89cilmsdjs3gb5w6by87ysy24scgj5zg77vbfnqpzr3ifrwh";
-    };
-
-    common = { hackage, ... }: {
       polysemy = hackage "1.7.1.0" "0qwli1kx3hk68hqsgw65mk81bx0djw1wlk17v8ggym7mf3lailyc";
       polysemy-plugin = hackage "0.4.3.0" "1r7j1ffsd6z2q2fgpg78brl2gb0dg8r5ywfiwdrsjd2fxkinjcg1";
     };
 
-    main = { hackage, source, minimal, jailbreak, ... }: {
+    dev = { hackage, source, minimal, jailbreak, ... }: {
       chronos = minimal (source.root chronos);
       exon = hackage "0.2.0.1" "0hs0xrh1v64l1n4zqx3rqfjdh6czxm7av85kj1awya9zxcfcy5cl";
       flatparse = hackage "0.3.1.0" "15nx2p08pqka0136xfppw344a60rn3fvsx4adiz15k37cyj25zi2";
@@ -59,7 +56,7 @@
   in hix.flake {
     base = ./.;
     main = "polysemy-hasql";
-    overrides = { all = compat; ghc901 = [common compat901]; dev = [common main]; };
+    overrides = { inherit all dev ghc901; };
     packages = {
       polysemy-db = ./packages/db;
       polysemy-db-data = ./packages/data;
