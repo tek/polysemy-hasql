@@ -6,11 +6,20 @@ import Control.Concurrent.STM.TBMQueue (TBMQueue, closeTBMQueue, newTBMQueueIO, 
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.UUID as UUID
 import qualified Database.PostgreSQL.LibPQ as LibPQ
-import Hasql.Connection (withLibPQConnection)
+import Hasql.Connection (Connection, withLibPQConnection)
 import qualified Polysemy.Async as Async
 import Polysemy.Async (Async, async)
 import qualified Polysemy.Conc as Monitor
-import Polysemy.Conc (ClockSkewConfig, Monitor, Race, Restart, RestartingMonitor, interpretAtomic, interpretMonitorRestart, monitorClockSkew)
+import Polysemy.Conc (
+  ClockSkewConfig,
+  Monitor,
+  Race,
+  Restart,
+  RestartingMonitor,
+  interpretAtomic,
+  interpretMonitorRestart,
+  monitorClockSkew,
+  )
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -78,13 +87,22 @@ tryDequeueSem connection =
           pure (Left "couldn't connect with LibPQ.socket")
 
 listen ::
-  ∀ (queue :: Symbol) e r .
+  ∀ (queue :: Symbol) r .
   KnownSymbol queue =>
-  Members [Database !! e, Stop e, Log, Embed IO] r =>
+  Members [Database, Log, Embed IO] r =>
   Sem r ()
 listen = do
   Log.debug [text|executing `listen` for queue #{symbolText @queue}|]
-  restop (Database.retryingSqlDef [text|listen "#{symbolText @queue}"|])
+  Database.retryingSqlDef [text|listen "#{symbolText @queue}"|]
+
+unlisten ::
+  ∀ (queue :: Symbol) e r .
+  KnownSymbol queue =>
+  Members [Database !! e, Log] r =>
+  Sem r ()
+unlisten = do
+  Log.debug [text|executing `unlisten` for queue `#{symbolText @queue}`|]
+  resume_ (Database.retryingSqlDef [text|unlisten "#{symbolText @queue}"|])
 
 processMessages ::
   Ord t =>
@@ -97,7 +115,7 @@ initQueue ::
   ∀ (queue :: Symbol) e d t r .
   Ord t =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! e, Database !! e, Log, Stop e, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! e, Database, Log, Embed IO] r =>
   (d -> Sem r ()) ->
   Sem r ()
 initQueue write = do
@@ -105,24 +123,35 @@ initQueue write = do
   traverse_ (traverse_ write . processMessages) waiting
   listen @queue
 
+dequeueAndProcess ::
+  ∀ d t dt r .
+  Ord t =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Stop DbError, Log, Embed IO] r =>
+  TBMQueue d ->
+  Connection ->
+  Sem r ()
+dequeueAndProcess queue connection = do
+  result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
+  void $ runMaybeT do
+    id' <- MaybeT (stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result)
+    messages <- MaybeT (restop (Store.delete id'))
+    lift (traverse_ (atomically . writeTBMQueue queue) (processMessages messages))
+
 dequeue ::
   ∀ (queue :: Symbol) d t dt r .
   Ord t =>
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Stop DbError, Time t dt, Log, Embed IO] r =>
   TBMQueue d ->
-  Sem (Stop DbError : r) ()
+  Sem r ()
 dequeue queue =
-  restop @_ @Database $ Database.withInit (InitDb [text|dequeue-#{symbolText @queue}|] (\ _ -> initQueue @queue write)) do
-    Database.connect \ connection -> do
-      result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
-      void $ runMaybeT do
-        id' <- MaybeT (stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result)
-        messages <- MaybeT (restop (Store.delete id'))
-        lift (traverse_ write (processMessages messages))
+  restop @_ @Database (Database.withInit initDb (Database.connect (dequeueAndProcess queue)))
   where
-    write =
-      atomically . writeTBMQueue queue
+    initDb =
+      InitDb [text|dequeue-#{name}|] \ _ ->
+        initQueue @queue (atomically . writeTBMQueue queue)
+    name =
+      symbolText @queue
 
 dequeueLoop ::
   ∀ (queue :: Symbol) d t dt u resource r .
@@ -139,11 +168,12 @@ dequeueLoop errorDelay errorHandler queue =
   Monitor.restart spin
   where
     spin =
-      result =<< bitraverse (raise . errorHandler) pure =<< runStop (dequeue @queue queue)
+      either (result <=< raise . errorHandler) (const spin) =<< runStop (dequeue @queue queue)
     result = \case
-      Right () -> spin
-      Left True -> Time.sleep errorDelay >> spin
-      Left False -> atomically (closeTBMQueue queue)
+      True -> disconnect *> Time.sleep errorDelay *> spin
+      False -> atomically (closeTBMQueue queue)
+    disconnect =
+      unlisten @queue *> resume_ Database.disconnect
 
 interpretInputDbQueue ::
   ∀ d r .

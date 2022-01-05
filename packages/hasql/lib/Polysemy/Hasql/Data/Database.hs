@@ -57,6 +57,7 @@ data Database :: Effect where
   Name :: Name -> Database m Name
   WithInit :: InitDb m -> m a -> Database m a
   Connect :: (Connection -> m a) -> Database m a
+  Disconnect :: Database m ()
   RunStatement :: p -> Statement p o -> Database m o
   RunStatementRetrying :: TimeUnit t => t -> p -> Statement p o -> Database m o
   Sql :: DeriveQuery p r => p -> SqlCode -> Database m r

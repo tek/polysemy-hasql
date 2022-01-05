@@ -6,7 +6,7 @@ import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session (statement)
 import Hasql.Statement (Statement)
-import Polysemy (bindT, getInitialStateT, getInspectorT, inspect, runT)
+import Polysemy (bindT, getInitialStateT, getInspectorT, insertAt, inspect, runT)
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
@@ -77,7 +77,7 @@ connect (InitDb clientId initDb) =
   resumeHoist DbError.Connection do
     DbConnection.use \ count connection -> do
       whenM (reconnected count <$> atomicGets (Map.lookup clientId)) do
-        raise (initDb connection)
+        insertAt @0 (initDb connection)
         atomicModify' (at clientId ?~ count)
       pure connection
   where
@@ -142,6 +142,8 @@ interpretDatabaseState initDb =
     Connect f -> do
       connection <- liftT (connect (hoistInitDb raise initDb))
       bindTSimple f connection
+    Disconnect ->
+      liftT (resumeHoist DbError.Connection DbConnection.disconnect)
     RunStatement q statement ->
       pureT =<< connectWithReset (hoistInitDb (raise . raise) initDb) q statement
     RunStatementRetrying interval q statement ->
