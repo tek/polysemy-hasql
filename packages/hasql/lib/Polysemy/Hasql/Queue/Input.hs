@@ -28,6 +28,8 @@ import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uuid)
 import Polysemy.Db.SOP.Constraint (symbolText)
+import Polysemy.Error (errorToIOFinal, fromExceptionSemVia)
+import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
 import qualified Polysemy.Log as Log
 import Polysemy.Log (Log)
@@ -40,31 +42,13 @@ import Torsor (Torsor)
 
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database, InitDb (InitDb))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (InputQueueConnection, Queue)
 import Polysemy.Hasql.Queue.Data.Queued (Queued, QueuedRep)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
 import Polysemy.Hasql.Store (interpretStoreDbFullNoUpdateGen)
-
-tryDequeue ::
-  LibPQ.Connection ->
-  IO (Either Text (Maybe UUID))
-tryDequeue connection =
-  LibPQ.notifies connection >>= \case
-    Just (LibPQ.Notify _ _ payload) ->
-      case UUID.fromASCIIBytes payload of
-        Just d ->
-          pure (Right (Just d))
-        Nothing ->
-          pure (Left [text|invalid UUID payload: #{payload}|])
-    Nothing ->
-      LibPQ.socket connection >>= \case
-        Just fd -> do
-          threadWaitRead fd
-          Right Nothing <$ LibPQ.consumeInput connection
-        Nothing ->
-          pure (Left "couldn't connect with LibPQ.socket")
 
 tryDequeueSem ::
   Members [Monitor Restart, Embed IO] r =>
@@ -101,8 +85,8 @@ unlisten ::
   Members [Database !! e, Log] r =>
   Sem r ()
 unlisten = do
-  Log.debug [text|executing `unlisten` for queue `#{symbolText @queue}`|]
-  resume_ (Database.retryingSqlDef [text|unlisten "#{symbolText @queue}"|])
+  Log.debug [exon|executing `unlisten` for queue `#{symbolText @queue}`|]
+  resume_ (Database.retryingSqlDef [exon|unlisten "#{SqlCode (symbolText @queue)}"|])
 
 processMessages ::
   Ord t =>
@@ -123,15 +107,25 @@ initQueue write = do
   traverse_ (traverse_ write . processMessages) waiting
   listen @queue
 
+withPqConn ::
+  Member (Final IO) r =>
+  Connection ->
+  (LibPQ.Connection -> Sem r a) ->
+  Sem r (Either Text a)
+withPqConn connection use =
+  errorToIOFinal $ fromExceptionSemVia @SomeException show $ withWeavingToFinal \ s lower _ -> do
+      withLibPQConnection connection \ c -> lower (raise (use c) <$ s)
+
 dequeueAndProcess ::
   ∀ d t dt r .
   Ord t =>
+  Members [Monitor Restart, Final IO] r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Stop DbError, Log, Embed IO] r =>
   TBMQueue d ->
   Connection ->
   Sem r ()
 dequeueAndProcess queue connection = do
-  result <- join <$> tryAny (withLibPQConnection connection tryDequeue)
+  result <- join <$> withPqConn connection tryDequeueSem
   void $ runMaybeT do
     id' <- MaybeT (stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result)
     messages <- MaybeT (restop (Store.delete id'))
@@ -141,6 +135,7 @@ dequeue ::
   ∀ (queue :: Symbol) d t dt r .
   Ord t =>
   KnownSymbol queue =>
+  Members [Monitor Restart, Final IO] r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Stop DbError, Time t dt, Log, Embed IO] r =>
   TBMQueue d ->
   Sem r ()
@@ -159,7 +154,7 @@ dequeueLoop ::
   TimeUnit u =>
   KnownSymbol queue =>
   Member (RestartingMonitor resource) r =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO, Final IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   TBMQueue d ->
@@ -191,7 +186,7 @@ dequeueThread ::
   TimeUnit u =>
   KnownSymbol queue =>
   Member (RestartingMonitor resource) r =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Async, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Async, Embed IO, Final IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   Sem r (Concurrent.Async (Maybe ()), TBMQueue d)
@@ -217,7 +212,7 @@ interpretInputDbQueueListen ::
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Member (RestartingMonitor resource) r =>
+  Members [RestartingMonitor resource, Final IO] r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
