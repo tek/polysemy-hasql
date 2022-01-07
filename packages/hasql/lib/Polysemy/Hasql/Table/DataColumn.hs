@@ -2,10 +2,11 @@ module Polysemy.Hasql.Table.DataColumn where
 
 import Generics.SOP (All, AllN, CollapseTo, HAp, HCollapse (hcollapse), K (K), NP, Prod, hcmap)
 import Generics.SOP.Constraint (SListIN)
+import Polysemy.Db.Data.ColumnPrefix (ColumnPrefix (InitPrefix), addPrefix, prefixed)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdText, fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName)
-import Polysemy.Db.Text.DbIdentifier (dbIdentifierT, quotedDbId)
+import Polysemy.Db.Text.DbIdentifier (dbIdentifierT)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten)
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
@@ -13,33 +14,6 @@ import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Name (Name), TypeName (CompositeTypeName, PrimTypeName), textSelector)
 import Polysemy.Hasql.Table.SumIndex (sumIndexIdentifier)
 import Polysemy.Hasql.Tree.Table (ColumnData (ColumnData), TableCon, TableNode, TableRoot, TableTree, tableRoot)
-
-data ColumnPrefix =
-  InitPrefix
-  |
-  TablePrefix
-  |
-  BasePrefix Text
-  |
-  TypePrefix Text
-  deriving (Eq, Show)
-
-addPrefix ::
-  Text ->
-  ColumnPrefix ->
-  ColumnPrefix
-addPrefix segment = \case
-  InitPrefix -> TablePrefix
-  TablePrefix -> BasePrefix (quotedDbId segment)
-  BasePrefix name -> TypePrefix [text|(#{name}).#{quotedDbId segment}|]
-  TypePrefix prefix -> TypePrefix [text|#{prefix}.#{quotedDbId segment}|]
-
-prefixed :: Text -> ColumnPrefix -> Text
-prefixed name = \case
-  InitPrefix -> quotedDbId name
-  TablePrefix -> quotedDbId name
-  BasePrefix prefix -> [text|(#{prefix}).#{quotedDbId name}|]
-  TypePrefix prefix -> [text|#{prefix}.#{quotedDbId name}|]
 
 mapColumns ::
   ∀ k (f :: (k -> Type) -> [k] -> Type) (a :: Type) (trees :: [k]) (cls :: k -> Constraint) n .

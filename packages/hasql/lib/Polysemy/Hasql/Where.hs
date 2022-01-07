@@ -98,19 +98,19 @@ instance (
   queryCond =
     K (queryWhereColumn @q @d (reifyPath @path))
 
-queryConds ::
-  ∀ fields .
-  All QueryCond fields =>
-  [Int -> SqlCode]
-queryConds =
-  hcollapse (hcpure (Proxy @QueryCond) queryCond :: NP (K (Int -> SqlCode)) fields)
-
 instance (
     simple ~ AsSimple q (WithoutMaybe d) ns,
     All QueryCond simple
   ) => QueryCond ('SumPrimCond q d ns) where
   queryCond =
     K (fromMaybe (const "") (foldl1 (\ z a -> \ i -> z i <> " or " <> a i) <$> nonEmpty (queryConds @simple)))
+
+queryConds ::
+  ∀ fields .
+  All QueryCond fields =>
+  [Int -> SqlCode]
+queryConds =
+  hcollapse (hcpure (Proxy @QueryCond) queryCond :: NP (K (Int -> SqlCode)) fields)
 
 -- Construct a @where@ fragment from two types, validating that all fields of the query record and their types are
 -- present and matching in the data record
@@ -130,4 +130,4 @@ uidWhere ::
   QueryValueNoN effs i =>
   Data.Where i (Uid i d)
 uidWhere =
-  Data.Where (SqlCode "id = $1") (field @"id" @effs)
+  Data.Where (SqlCode "id = $1") (field @effs "id")

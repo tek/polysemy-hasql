@@ -2,14 +2,12 @@ module Polysemy.Hasql.Statement where
 
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, int8, noResult, nullable)
-import Hasql.DynamicStatements.Snippet (Snippet)
 import Hasql.DynamicStatements.Statement (dynamicallyParameterized)
 import Hasql.Encoders (Params, noParams)
 import Hasql.Statement (Statement (Statement))
 import Polysemy.Db.Data.DbName (DbName)
-import Polysemy.Db.Data.PartialField (PartialField)
-import Polysemy.Db.Tree.Fold (FoldTree)
-import Polysemy.Db.Tree.Partial (PartialTree)
+import Polysemy.Db.Data.PartialField (PartialField, PartialTree)
+import Polysemy.Db.Tree.FoldMap (FoldMapTree)
 
 import qualified Polysemy.Hasql.Data.DbType as Column
 import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector, TypeName)
@@ -176,37 +174,27 @@ deleteAll ::
 deleteAll table@(Table _ row _) =
   prepared (deleteWhereSql table mempty) row noParams
 
-updateSql ::
-  FoldTree 'True () PartialField [PartialSql] tree =>
-  Table d ->
-  Maybe (Where query d) ->
-  query ->
-  PartialTree tree ->
-  Snippet
-updateSql table qw q tree =
-  Query.update table qw q tree
-
 update ::
-  FoldTree 'True () PartialField [PartialSql] tree =>
+  FoldMapTree 'True () PartialField [PartialSql] tree =>
   QueryTable query d ->
   query ->
   PartialTree tree ->
   Statement () (Maybe d)
 update (QueryTable tbl@Table {_row} _ qw) q t =
-  dynamicallyParameterized (updateSql tbl (Just qw) q t) (resultShape _row) False
+  dynamicallyParameterized (Query.update tbl (Just qw) q t) (resultShape _row) False
 
 updateSingle ::
-  FoldTree 'True () PartialField [PartialSql] tree =>
+  FoldMapTree 'True () PartialField [PartialSql] tree =>
   Table d ->
   PartialTree tree ->
   Statement () (Maybe d)
 updateSingle tbl@Table {_row} t =
-  dynamicallyParameterized (updateSql tbl Nothing () t) (resultShape _row) False
+  dynamicallyParameterized (Query.update tbl Nothing () t) (resultShape _row) False
 
 createTableSql ::
   Column ->
   SqlCode
-createTableSql column@(Column _ _ _ _ _) =
+createTableSql column =
   [exon|create table #{quotedName column} (#{formattedColumns})|]
   where
     formattedColumns =

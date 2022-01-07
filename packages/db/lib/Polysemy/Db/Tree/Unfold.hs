@@ -9,8 +9,8 @@ import qualified Polysemy.Db.Type.Data.Tree as Type
 class UnfoldTreePrim (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [Type]) (d :: Type) where
   unfoldTreePrim :: env -> f (n d)
 
-class UnfoldTreeExtract (t :: Type) (n :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [Type]) where
-  unfoldTreeExtract :: env -> env
+class UnfoldTreeLocal (t :: Type) (n :: Type -> Type) (env :: Type) (name :: FieldId) (effs :: [Type]) where
+  unfoldTreeLocal :: env -> env
 
 unfoldTrees ::
   ∀ t n f env trees .
@@ -38,25 +38,25 @@ class UnfoldCon (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type
 
 instance (
     Applicative f,
-    UnfoldTreeExtract t n env name '[],
+    UnfoldTreeLocal t n env name '[],
     All (UnfoldTree t n f env) trees
   ) => UnfoldCon t n f env ('Kind.Con num name trees) where
   unfoldCon env (Type.Con trees) =
     Type.Con <$> unfoldTrees @t @n @f @env @trees subEnv trees
     where
       subEnv =
-        unfoldTreeExtract @t @n @env @name @'[] env
+        unfoldTreeLocal @t @n @env @name @'[] env
 
 instance (
     Functor f,
-    UnfoldTreeExtract t n env name '[],
+    UnfoldTreeLocal t n env name '[],
     UnfoldTree t n f env tree
   ) => UnfoldCon t n f env ('Kind.ConUna num name tree) where
   unfoldCon env (Type.ConUna tree) =
     Type.ConUna <$> unfoldTree @t @n @f @env @tree subEnv tree
     where
       subEnv =
-        unfoldTreeExtract @t @n @env @name @'[] env
+        unfoldTreeLocal @t @n @env @name @'[] env
 
 class UnfoldTree (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (tree :: Kind.Tree) where
   unfoldTree :: env -> Type.Tree t n tree -> f (Type.Tree t n tree)
@@ -75,38 +75,38 @@ instance (
 instance (
     Applicative f,
     tree ~ 'Kind.Tree name effs ('Kind.Prod d trees),
-    UnfoldTreeExtract t n env name effs,
+    UnfoldTreeLocal t n env name effs,
     All (UnfoldTree t n f env) trees
   ) => UnfoldTree t n f env ('Kind.Tree name effs ('Kind.Prod d trees)) where
   unfoldTree env (Type.Tree t (Type.Prod n trees)) =
     Type.Tree t . Type.Prod n <$> unfoldTrees @t @n @f subEnv trees
     where
       subEnv =
-        unfoldTreeExtract @t @n @env @name @effs env
+        unfoldTreeLocal @t @n @env @name @effs env
 
 instance (
     Applicative f,
     tree ~ 'Kind.Tree name effs ('Kind.SumProd d cons),
-    UnfoldTreeExtract t n env name effs,
+    UnfoldTreeLocal t n env name effs,
     All (UnfoldCon t n f env) cons
   ) => UnfoldTree t n f env ('Kind.Tree name effs ('Kind.SumProd d cons)) where
   unfoldTree env (Type.Tree t (Type.SumProd n cons)) =
     Type.Tree t . Type.SumProd n <$> unfoldCons @t @n @f subEnv cons
     where
       subEnv =
-        unfoldTreeExtract @t @n @env @name @effs env
+        unfoldTreeLocal @t @n @env @name @effs env
 
 instance (
     Applicative f,
     tree ~ 'Kind.Tree name effs ('Kind.Sum d cons),
-    UnfoldTreeExtract t n env name effs,
+    UnfoldTreeLocal t n env name effs,
     All (UnfoldCon t n f env) cons
   ) => UnfoldTree t n f env ('Kind.Tree name effs ('Kind.Sum d cons)) where
   unfoldTree env (Type.Tree t (Type.Sum n cons)) =
     Type.Tree t . Type.Sum n <$> unfoldCons subEnv cons
     where
       subEnv =
-        unfoldTreeExtract @t @n @env @name @effs env
+        unfoldTreeLocal @t @n @env @name @effs env
 
 class UnfoldRoot (t :: Type) (n :: Type -> Type) (f :: Type -> Type) (env :: Type) (tree :: Kind.Tree) where
   unfoldRoot :: env -> Type.Tree t n tree -> f (Type.Tree t n tree)

@@ -11,7 +11,13 @@ import Type.Errors (ErrorMessage (ShowType), TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Hasql.Where.FlatFields (FieldPath (FieldPath), FlatRoot)
-import Polysemy.Hasql.Where.Segment (FormatSegments, IsSum, MatchFieldIds, Segment (ConSegment, FieldSegment, SumIndexSegment, SumSegment), SegmentId)
+import Polysemy.Hasql.Where.Segment (
+  FormatSegments,
+  IsSum,
+  MatchFieldIds,
+  Segment (ConSegment, FieldSegment, SumIndexSegment, SumSegment),
+  SegmentId,
+  )
 
 data PrimCond =
   PrimCond {

@@ -1,14 +1,13 @@
-{-# options_ghc -Wno-all -Wno-redundant-constraints #-}
 module Polysemy.Db.Tree.QueryName where
 
 import Fcf (ConstFn, Eval, Exp, Pure1, UnEither, Zip, type (@@))
 import Fcf.Class.Foldable (ConcatMap)
 import Generics.SOP.GGP (GCode)
-import Type.Errors (ErrorMessage (ShowType), IfStuck, Pure, ShowTypeQuoted, TypeError)
+import Type.Errors (IfStuck, Pure, ShowTypeQuoted, TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
-import Polysemy.Db.Data.Rep (Prim, PrimQuery)
+import Polysemy.Db.Data.Rep (Prim, PrimQuery, PrimQueryAs)
 import Polysemy.Db.SOP.Constraint (DataNameF)
 import Polysemy.Db.SOP.FieldNames (FieldIds)
 import Polysemy.Db.Tree.Data.Effect (Adt, Newtype)
@@ -68,6 +67,7 @@ type family QueryName' (effs :: [Type]) (q :: Type) (d :: Type) :: Result where
 type family FindPrimQuery (effs :: [Type]) :: Maybe Symbol where
   FindPrimQuery '[] = 'Nothing
   FindPrimQuery (PrimQuery name : _) = 'Just name
+  FindPrimQuery (PrimQueryAs name _ : _) = 'Just name
   FindPrimQuery (_ : effs) = FindPrimQuery effs
 
 type family PrimQueryOrResolve (prim :: Maybe Symbol) (effs :: [Type]) (q :: Type) (d :: Type) :: Result where

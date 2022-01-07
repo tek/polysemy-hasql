@@ -13,8 +13,8 @@ import Polysemy.Db.Tree (Root (..))
 import Polysemy.Db.Tree.Api (TreePrim (..))
 import Polysemy.Db.Tree.Data.Params (Params (Params))
 import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
-import Polysemy.Db.Tree.Fold (FoldTree, FoldTreeConcat (..), FoldTreePrim (..), foldTree)
-import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeExtract (..), UnfoldTreePrim (..))
+import Polysemy.Db.Tree.FoldMap (FoldMapTree, FoldMapTreeConcat (..), FoldMapTreePrim (..), foldMapTree)
+import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeLocal (..), UnfoldTreePrim (..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data PartialField (a :: Type) =
@@ -77,8 +77,8 @@ type UidPartially i d tree =
 
 instance (
     ToJSON d
-  ) => FoldTreePrim root () PartialField Object name effs d where
-    foldTreePrim = \case
+  ) => FoldMapTreePrim root () PartialField Object name effs d where
+    foldMapTreePrim = \case
       Keep ->
         mempty
       Update key value ->
@@ -90,24 +90,24 @@ filterNulls =
 
 instance (
     KnownSymbol name
-  ) => FoldTreeConcat 'False () PartialField Object ('NamedField name) effs where
-  foldTreeConcat = \case
+  ) => FoldMapTreeConcat 'False () PartialField Object ('NamedField name) effs where
+  foldMapTreeConcat = \case
     [] -> mempty
     os -> HashMap.singleton (symbolText @name) (Object (filterNulls os))
 
-instance FoldTreeConcat 'False () PartialField Object ('NumberedField name num) effs where
-  foldTreeConcat =
+instance FoldMapTreeConcat 'False () PartialField Object ('NumberedField name num) effs where
+  foldMapTreeConcat =
     filterNulls
 
-instance FoldTreeConcat 'True () PartialField Object ('NamedField name) effs where
-  foldTreeConcat =
+instance FoldMapTreeConcat 'True () PartialField Object ('NamedField name) effs where
+  foldMapTreeConcat =
     filterNulls
 
 instance (
-    FoldTree 'True () PartialField Object tree
+    FoldMapTree 'True () PartialField Object tree
   ) => ToJSON (Type.Tree () PartialField tree) where
     toJSON =
-      Object . foldTree @'True @_ @_ @Object
+      Object . foldMapTree @'True @_ @_ @Object
 
 instance (
     KnownSymbol name,
@@ -126,13 +126,13 @@ instance (
 
 instance (
     KnownSymbol name
-  ) => UnfoldTreeExtract () PartialField Value ('NamedField name) effs where
-  unfoldTreeExtract = \case
+  ) => UnfoldTreeLocal () PartialField Value ('NamedField name) effs where
+  unfoldTreeLocal = \case
     Object o -> fromMaybe Null (HashMap.lookup (symbolText @name) o)
     _ -> Null
 
-instance UnfoldTreeExtract () PartialField Value ('NumberedField name num) effs where
-  unfoldTreeExtract =
+instance UnfoldTreeLocal () PartialField Value ('NumberedField name num) effs where
+  unfoldTreeLocal =
     id
 
 instance (

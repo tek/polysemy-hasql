@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# options_ghc -Wno-redundant-constraints #-}
 {-# language CPP #-}
 #define sop5 MIN_VERSION_generics_sop(0,5,0)
 

@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+{-# options_ghc -Wno-redundant-constraints #-}
 
 module Polysemy.Hasql.Test.PKTest where
 

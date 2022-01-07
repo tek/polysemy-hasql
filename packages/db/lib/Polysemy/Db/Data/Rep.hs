@@ -68,6 +68,13 @@ data PrimQuery (field :: Symbol) =
 type IdQuery =
   PrimQuery "id"
 
+data PrimQueryAs (field :: Symbol) (rep :: Type) =
+  IdQueryAs
+  deriving (Eq, Show)
+
+type IdQueryAs (rep :: Type) =
+  PrimQueryAs "id" rep
+
 data UidRep i a =
   UidRep {
      id :: i,

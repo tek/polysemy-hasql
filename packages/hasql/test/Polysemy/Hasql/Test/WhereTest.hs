@@ -102,3 +102,30 @@ derivation =
 test_where_Flatten_Sum :: UnitTest
 test_where_Flatten_Sum =
   pure derivation
+
+sumQueryDerivation ::
+  TableRoot UnaSumRep UnaSum dTree =>
+  DbQueryRoot Auto FP UnaSum qTree =>
+  dFlat ~ Eval (FlatRoot dTree) =>
+  dFlat ~ '[
+    'FieldPath '[ 'SumIndexSegment UnaSum ] Int,
+    'FieldPath (Seg1With '[ 'FieldSegment ('NamedField "int1")]) Int,
+    'FieldPath (Seg1With '[ 'FieldSegment ('NamedField "txt")]) Text,
+    'FieldPath (Seg1With '[ 'FieldSegment ('NamedField "double")]) Double,
+    'FieldPath (Seg2With ('FieldSegment ('NamedField "int2"))) Int,
+    'FieldPath (Seg2With ('FieldSegment ('NamedField "double"))) Double
+  ] =>
+  qFlat ~ Eval (FlatRoot qTree) =>
+  qFlat ~ '[
+    'FieldPath '[ 'FieldSegment ('NamedField "double")] Double
+  ] =>
+  fields ~ MatchTable qTree dTree =>
+  fields ~ '[ 'SumPrimCond (Maybe Double) Double '[Seg1, Seg2]] =>
+  Where Auto qTree FP dTree UnaSum =>
+  ()
+sumQueryDerivation =
+  ()
+
+test_where_sumQuery :: UnitTest
+test_where_sumQuery =
+  pure sumQueryDerivation

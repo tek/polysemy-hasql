@@ -127,14 +127,14 @@ instance (
     TreePrim tag n prodName d,
     ProdTrees p metas trees,
     p ~ 'Params tag t n sfp
-  ) => AdtNode p d ('AdtProd metas) '[] ('Kind.Prod d trees) where
+  ) => AdtNode p d ('AdtProd metas) eff ('Kind.Prod d trees) where
   adtTree fd =
     Type.Prod (treePrim @tag @n @prodName @d fd) (prodTrees @p @metas (treeSOP @TreeMeta @tag @metas fd))
 
 instance (
     p ~ 'Params tag t n sfp,
     SumNode p d metas node
-  ) => AdtNode p d ('AdtSum metas) '[] node where
+  ) => AdtNode p d ('AdtSum metas) eff node where
   adtTree =
     sumNode @p @d @metas
 

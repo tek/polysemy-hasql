@@ -58,6 +58,7 @@ library
       DeriveGeneric
       DeriveTraversable
       DerivingStrategies
+      DerivingVia
       DisambiguateRecordFields
       DoAndIfThenElse
       DuplicateRecordFields

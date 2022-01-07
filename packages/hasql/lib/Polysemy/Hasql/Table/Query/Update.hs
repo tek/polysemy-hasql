@@ -7,7 +7,7 @@ import Polysemy.Db.Data.PartialField (PartialField)
 import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 import Polysemy.Db.Tree.Effect (UnwrapEffect)
-import Polysemy.Db.Tree.Fold (FoldTree, FoldTreePrim (..), foldTree)
+import Polysemy.Db.Tree.FoldMap (FoldMapTree, FoldMapTreePrim (..), foldMapTree)
 import Polysemy.Db.Tree.Partial (PartialTree)
 
 import Polysemy.Hasql.Data.DbType (Selector (Selector))
@@ -25,7 +25,7 @@ newtype PartialSql =
 type BuildPartialSql d tree u =
   (
     PartialFor d tree u,
-    FoldTree 'True () PartialField [PartialSql] tree
+    FoldMapTree 'True () PartialField [PartialSql] tree
   )
 
 commaSeparatedSnippet ::
@@ -60,14 +60,14 @@ instance (
 instance (
     AdaptPartialEffects effs d effs',
     QueryValueNoN effs' d
-  ) => FoldTreePrim root () PartialField [PartialSql] name effs d where
-    foldTreePrim = \case
+  ) => FoldMapTreePrim root () PartialField [PartialSql] name effs d where
+    foldMapTreePrim = \case
       PartialField.Keep -> mempty
       PartialField.Update name value ->
         [PartialSql (sql (encodeUtf8 (quotedDbId name)) <> " = " <> encoderAndParam (queryValueNoN @effs' @d) value)]
 
 update ::
-  FoldTree 'True () PartialField [PartialSql] tree =>
+  FoldMapTree 'True () PartialField [PartialSql] tree =>
   Table d ->
   Maybe (Where query d) ->
   query ->
@@ -75,7 +75,7 @@ update ::
   Snippet
 update table qWhere q tree =
   sql [exon|update #{sel} set |] <>
-  commaSeparatedSnippet (unPartialSql <$> foldTree @'True tree) <>
+  commaSeparatedSnippet (unPartialSql <$> foldMapTree @'True tree) <>
   foldMap whereSnippet qWhere <>
   " returning " <>
   sql (encodeUtf8 cols)

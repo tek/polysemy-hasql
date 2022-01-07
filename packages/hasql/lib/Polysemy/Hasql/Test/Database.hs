@@ -234,6 +234,17 @@ withTestStoreAuto ::
 withTestStoreAuto =
   withTestStoreGen @Auto
 
+withTestStoreUidAs ::
+  ∀ qrep irep i d r tree a u .
+  Members TestStoreDeps r =>
+  BuildPartialSql d tree u =>
+  Schema qrep (UidRep irep Auto) i (Uid i d) =>
+  Sem (StoreStack i d ++ r) a ->
+  Sem r a
+withTestStoreUidAs prog =
+  withTestQueryTableGen @qrep @(UidRep irep Auto) \ table ->
+    interpretStoreDbFull table prog
+
 withTestStoreUid ::
   ∀ i d r tree a u .
   Members TestStoreDeps r =>

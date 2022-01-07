@@ -4,7 +4,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.List.NonEmpty as NonEmpty
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Partial (Partial, partial)
-import Polysemy.Db.Data.Rep (Prim)
+import Polysemy.Db.Data.Rep (Auto, IdQueryAs, Prim, PrimaryKey, Rep, Sum)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
@@ -13,7 +13,7 @@ import Polysemy.Db.Tree.Partial (field, (+>))
 import Polysemy.Db.Tree.Partial.Insert (type (@>))
 import Polysemy.Test (UnitTest, assertJust)
 
-import Polysemy.Hasql.Test.Database (withTestStoreUid)
+import Polysemy.Hasql.Test.Database (withTestStoreUidAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 newtype Tex =
@@ -34,7 +34,7 @@ data Dat =
     intField :: Int,
     double :: Double,
     txt :: Tex,
-    boo :: Buul
+    _boo :: Buul
   }
   deriving (Eq, Show, Generic)
 
@@ -43,17 +43,29 @@ data DatRep =
     intField :: Prim,
     double :: Prim,
     txt :: Prim,
-    boo :: Prim
+    _boo :: Prim
   }
   deriving (Eq, Show, Generic)
 
-updateRecord :: Uid Int Dat
-updateRecord =
-  Uid 1 (Dat 9 12.7 "text" (Buul True))
+data SumId =
+  S1 { sid1 :: Int }
+  |
+  S2 { sid2 :: Int }
+  deriving (Eq, Show, Generic, Ord)
 
-keepRecord :: Uid Int Dat
+data SumIdRep =
+  S1Rep { sid1 :: Prim } 
+  |
+  S2Rep { sid2 :: Prim }
+  deriving (Eq, Show, Generic)
+
+updateRecord :: Uid SumId Dat
+updateRecord =
+  Uid (S1 1) (Dat 9 12.7 "text" (Buul True))
+
+keepRecord :: Uid SumId Dat
 keepRecord =
-  Uid 2 (Dat 1 1 "one" (Buul True))
+  Uid (S1 2) (Dat 1 1 "one" (Buul True))
 
 type DatUpdates =
   ["intField" @> Int, "double" @> Double, "txt" @> Tex, "boo" @> Buul]
@@ -65,32 +77,32 @@ update =
 
 updateWith ::
   ∀ e r .
-  Members [Store Int Dat !! e, Stop e] r =>
+  Members [Store SumId Dat !! e, Stop e] r =>
   Partial Dat ->
   Sem r ()
 updateWith upd =
-  restop (void (Store.update 1 upd))
+  restop (void (Store.update (S1 1) upd))
 
 prog ::
   ∀ e r .
-  Members [Store Int Dat !! e, Stop e, Error Text] r =>
-  Sem r (Maybe (NonEmpty (Uid Int Dat)))
+  Members [Store SumId Dat !! e, Stop e, Error Text] r =>
+  Sem r (Maybe (NonEmpty (Uid SumId Dat)))
 prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith update
-  restop (Store.update 1 (partial @Dat +> field @"intField" (99 :: Int) +> field @"boo" (Buul False)))
+  restop (Store.update (S1 1) (partial @Dat +> field @"intField" (99 :: Int) +> field @"_boo" (Buul False)))
   jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
 
-target :: NonEmpty (Uid Int Dat)
+target :: NonEmpty (Uid SumId Dat)
 target =
-  [Uid 1 (Dat 99 73.18 "updated" (Buul False)), keepRecord]
+  [Uid (S1 1) (Dat 99 73.18 "updated" (Buul False)), keepRecord]
 
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =
   integrationTest do
-    withTestStoreUid do
+    withTestStoreUidAs @(IdQueryAs (Sum SumIdRep)) @(Rep [PrimaryKey, Sum Auto]) do
       result <- prog @DbError
       assertJust target (NonEmpty.sortWith Uid._id <$> result)

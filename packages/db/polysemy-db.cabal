@@ -31,6 +31,7 @@ library
       Polysemy.Db.Atomic
       Polysemy.Db.AtomicState
       Polysemy.Db.Data.ColumnOptions
+      Polysemy.Db.Data.ColumnPrefix
       Polysemy.Db.Data.Cond
       Polysemy.Db.Data.CreationTime
       Polysemy.Db.Data.DbConnectionError
@@ -71,6 +72,7 @@ library
       Polysemy.Db.Tree.Data.TreeMeta
       Polysemy.Db.Tree.Effect
       Polysemy.Db.Tree.Fold
+      Polysemy.Db.Tree.FoldMap
       Polysemy.Db.Tree.Lookup
       Polysemy.Db.Tree.Merge
       Polysemy.Db.Tree.Meta
@@ -103,6 +105,7 @@ library
       DeriveGeneric
       DeriveTraversable
       DerivingStrategies
+      DerivingVia
       DisambiguateRecordFields
       DoAndIfThenElse
       DuplicateRecordFields
