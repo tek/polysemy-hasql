@@ -9,7 +9,7 @@ import Generics.SOP (All, hcmap)
 import Type.Errors (TypeError)
 import Type.Errors.Pretty (type (%), type (<>))
 
-import Polysemy.Db.Data.FieldId (FieldId (NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import qualified Polysemy.Db.Data.PartialField as PartialField
 import Polysemy.Db.Data.PartialField (
   FieldPath (FieldName, FieldPath),
@@ -118,6 +118,12 @@ instance {-# overlappable #-} (
   insertFieldTree update (Type.Tree t nd) =
     Type.Tree t (insertNonmatchingName @('FieldName name) @a @effs @node update nd)
 
+instance (
+    InsertNonmatchingName path a effs node
+  ) => InsertFieldTree path a ('Kind.Tree ('NumberedField con num) effs node) where
+  insertFieldTree update (Type.Tree t nd) =
+    Type.Tree t (insertNonmatchingName @path @a @effs @node update nd)
+
 class InsertField (path :: FieldPath) (a :: Type) (t :: Kind.Tree) where
   insertField :: FieldUpdate path a -> PartialTree t -> PartialTree t
 
@@ -144,6 +150,10 @@ type family MatchNodeType (a :: Type) (node :: Type) :: Bool where
   MatchNodeType _ _ =
     'False
 
+data InsertableNameExp (a :: Type) (name :: Symbol) :: Kind.Tree -> Exp Bool
+type instance Eval (InsertableNameExp a name tree) =
+  InsertableName a name tree
+
 type family InsertableConName (a :: Type) (name :: Symbol) (con :: Kind.Con) :: Bool where
   InsertableConName a name ('Kind.Con _ _ sub) =
     Any (InsertableNameExp a name) @@ sub
@@ -165,10 +175,6 @@ type family InsertableName (a :: Type) (name :: Symbol) (tree :: Kind.Tree) :: B
     Any (InsertableConNameExp a name) @@ sub
   InsertableName _ _ ('Kind.Tree _ _ ('Kind.Prim _)) =
     'False
-
-data InsertableNameExp (a :: Type) (name :: Symbol) :: Kind.Tree -> Exp Bool
-type instance Eval (InsertableNameExp a name tree) =
-  InsertableName a name tree
 
 -- TODO also use WhenStuck?
 type family InsertableResult (d :: Type) (a :: Type) (path :: FieldPath) (found :: Bool) :: Maybe ErrorMessage where
