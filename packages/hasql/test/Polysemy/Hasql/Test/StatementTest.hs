@@ -147,6 +147,14 @@ data QueryTestQ =
   }
   deriving (Eq, Show, Generic)
 
+data QueryTest1Q =
+  QueryTest1Q {
+    field2 :: LessOrEq Int,
+    field3 :: Maybe Double,
+    field4 :: Int
+  }
+  deriving (Eq, Show, Generic)
+
 type QueryTestType =
   'Kind.Tree ('NamedField "QueryTest") '[] ('Kind.Prod QueryTest [
     'Kind.Tree ('NamedField "field1") '[] ('Kind.Prim Text),
@@ -162,15 +170,37 @@ type QueryTestQType =
     'Kind.Tree ('NamedField "field4") '[] ('Kind.Prim Int)
   ])
 
+type QueryTest1QType =
+  'Kind.Tree ('NamedField "QueryTest") '[] ('Kind.Prod QueryTest [
+    'Kind.Tree ('NamedField "field2") '[] ('Kind.Prim (LessOrEq Int)),
+    'Kind.Tree ('NamedField "field3") '[] ('Kind.Prim (Maybe Double)),
+    'Kind.Tree ('NamedField "field4") '[] ('Kind.Prim Int)
+  ])
+
 test_queryWhereStatement :: UnitTest
 test_queryWhereStatement =
   runTestAuto do
     target === unSqlCode qw
+    target1 === unSqlCode qw1
   where
     target =
       [text|($1 is null or "field2" <= $1) and ($2 is null or "field3" = $2) and "field4" = $3|]
+    target1 =
+      [text|"field2" <= $1 and ($2 is null or "field3" = $2) and "field4" = $3|]
     Where qw _ =
       queryWhere @Auto @QueryTestQType @QueryTestQ @QueryTestType @QueryTest
+    Where qw1 _ =
+      queryWhere @Auto @QueryTest1QType @QueryTest1Q @QueryTestType @QueryTest
+
+test_queryWhereStatementInf :: UnitTest
+test_queryWhereStatementInf =
+  runTestAuto do
+    target === unSqlCode qw
+  where
+    target =
+      [text|"field2" <= $1 and ($2 is null or "field3" = $2) and "field4" = $3|]
+    QueryTable _ _ (Where qw _) =
+      schema @Auto @Auto @QueryTest1Q @QueryTest
 
 data SumData =
   SumData1 { int :: Int, double :: Double }

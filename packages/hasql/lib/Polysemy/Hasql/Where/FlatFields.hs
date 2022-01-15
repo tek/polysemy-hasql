@@ -5,6 +5,7 @@ module Polysemy.Hasql.Where.FlatFields where
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (ConcatMap)
 import Fcf.Data.List (Reverse)
+import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
 import Polysemy.Db.Data.FieldId (FieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Error (ErrorWithType)
@@ -43,6 +44,14 @@ type instance Eval (FlatCon prefix ('Kind.ConUna num conId ('Kind.Tree fieldId e
 type family UnwrapNewtype (a :: Type) (effs :: [Type]) :: Type where
   UnwrapNewtype a '[] =
     a
+  UnwrapNewtype (Greater a) _ =
+    Greater a
+  UnwrapNewtype (GreaterOrEq a) _ =
+    GreaterOrEq a
+  UnwrapNewtype (Less a) _ =
+    Less a
+  UnwrapNewtype (LessOrEq a) _ =
+    LessOrEq a
   UnwrapNewtype a (Newtype a d : effs) =
     UnwrapNewtype d effs
   UnwrapNewtype a (_ : effs) =

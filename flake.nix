@@ -30,7 +30,7 @@
       polysemy-log = hackage "0.3.0.2" "075psivybvv2vjgna43nhc53w7ick68y1ycsc6qr45nwignjakfq";
       polysemy-resume = hackage "0.2.0.0" "0kh7cwqkr5w69zkm68l6q4d8nkai7fc29n48p3f8skqw638x4w9p";
       polysemy-test = hackage "0.3.1.7" "0j33f5zh6gyhl86w8kqh6nm02915b4n32xikxc4hwcy7p5l7cl34";
-      polysemy-time = hackage "0.1.4.0" "0hwx89cilmsdjs3gb5w6by87ysy24scgj5zg77vbfnqpzr3ifrwh";
+      polysemy-time = hackage "0.2.0.2" "00skn50hp591rp6py3169y0nl6p18i1ip4igw666d9hdqgwwc8g5";
       polysemy = hackage "1.7.1.0" "0qwli1kx3hk68hqsgw65mk81bx0djw1wlk17v8ggym7mf3lailyc";
       polysemy-plugin = hackage "0.4.3.0" "1r7j1ffsd6z2q2fgpg78brl2gb0dg8r5ywfiwdrsjd2fxkinjcg1";
     };
