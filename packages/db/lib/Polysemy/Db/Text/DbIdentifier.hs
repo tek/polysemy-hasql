@@ -3,10 +3,11 @@ module Polysemy.Db.Text.DbIdentifier where
 import Polysemy.Db.SOP.Constraint (symbolString, DataName (dataNameString))
 import Polysemy.Db.Text.Case (unCamelCase)
 import Polysemy.Db.Text.Quote (dquote)
+import Data.List (dropWhileEnd)
 
 dbIdentifier :: String -> Text
 dbIdentifier =
-  unCamelCase '_' . dropWhile ('_' ==)
+  unCamelCase '_' . dropWhile ('_' ==) . dropWhileEnd ('_' ==)
 
 dbIdentifierT :: Text -> Text
 dbIdentifierT =

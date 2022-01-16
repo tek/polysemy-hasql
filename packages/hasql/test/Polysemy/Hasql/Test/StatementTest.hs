@@ -42,7 +42,7 @@ data SumRecRep =
 
 data Rec =
   Rec {
-    a :: Text,
+    a_ :: Text,
     b :: NT,
     _c :: Maybe Double,
     sumField :: SumRec
@@ -51,7 +51,7 @@ data Rec =
 
 data RecRep =
   RecRep {
-    a :: Unique,
+    a_ :: Unique,
     b :: Auto,
     c :: Prim,
     sumField :: Sum SumRecRep
@@ -60,7 +60,7 @@ data RecRep =
 
 data Q1 =
   Q1 {
-    a :: Text,
+    a_ :: Text,
     c :: Double
   }
   deriving (Eq, Show, Generic)

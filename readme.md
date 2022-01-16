@@ -14,13 +14,11 @@ At this time, two use cases for schemas are addressed:
 # Basic Example
 
 ```haskell
-import Generics.SOP.TH (deriveGeneric)
 import Polysemy (runM, resourceToIO)
 import Polysemy.Db
 import Polysemy.Hasql
 
-data Dat = Dat { number :: Int }
-deriveGeneric ''Dat
+data Dat = Dat { number :: Int } deriving (Generic)
 
 prog :: Member (Store Int e Dat) r => Sem r (Either e (Maybe Dat))
 prog = do
@@ -75,14 +73,14 @@ data Nested =
     elems :: [Text],
     num :: Double
   }
-deriveGeneric ''Nested
+  deriving (Generic)
 
 data Record =
   Record {
     id :: Int,
     nested :: Nested
   }
-deriveGeneric ''Record
+  deriving (Generic)
 ```
 
 we define a database representation type:
@@ -92,14 +90,14 @@ data NestedRep {
   elems :: Prim Auto,
   num :: Prim Auto
 }
-deriveGeneric ''NestedRep
+  deriving (Generic)
 
 data RecordRep =
   RecordRep {
     id :: Prim PrimaryKey,
     nested :: Flatten
   }
-deriveGeneric ''RecordRep
+  deriving (Generic)
 ```
 
 and then pass it explicitly to a generic constructor:
@@ -108,7 +106,7 @@ and then pass it explicitly to a generic constructor:
 table = basicSchema @RecordRep
 queryTable = schema @RecordRep @Int
 -- TODO
-basicSchema @Auto
+schema @Auto
 ```
 
 or use one of the interpreters:

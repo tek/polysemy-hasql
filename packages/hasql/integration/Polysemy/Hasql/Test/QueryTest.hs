@@ -56,14 +56,14 @@ data XXorRep =
 
 data Number =
   Number {
-    number :: Int,
+    number_ :: Int,
     otherNumber :: Int
   }
   deriving (Eq, Show, Generic)
 
 data NumberRep =
   NumberRep {
-    number :: Auto,
+    number_ :: Auto,
     otherNumber :: Auto
   }
   deriving (Eq, Show, Generic)
@@ -102,7 +102,7 @@ data ContentNumber =
   ContentNumber {
     content :: Content,
     otherNumber :: Maybe Int,
-    number :: Maybe (LessOrEq Int),
+    number_ :: Maybe (LessOrEq Int),
     xxor :: XXor
   }
   deriving (Eq, Show, Generic)
@@ -126,7 +126,7 @@ type ContentNumberMeta =
   'AdtProd '[
     'TreeMeta ('NamedField "content") Auto Content,
     'TreeMeta ('NamedField "otherNumber") Auto (Maybe Int),
-    'TreeMeta ('NamedField "number") Auto (Maybe (LessOrEq Int)),
+    'TreeMeta ('NamedField "number_") Auto (Maybe (LessOrEq Int)),
     'TreeMeta ('NamedField "xxor") Auto XXor
   ]
 
@@ -141,7 +141,7 @@ type ContentNumberType =
     'Kind.Prod ContentNumber '[
       'Kind.Tree ('NamedField "content") '[Newtype Content Text, Prim] ('Kind.Prim Content),
       'Kind.Tree ('NamedField "otherNumber") '[Tycon Maybe Int, Prim] ('Kind.Prim (Maybe Int)),
-      'Kind.Tree ('NamedField "number") '[Tycon Maybe (LessOrEq Int), Newtype (LessOrEq Int) Int, Prim] ('Kind.Prim (Maybe (LessOrEq Int))),
+      'Kind.Tree ('NamedField "number_") '[Tycon Maybe (LessOrEq Int), Newtype (LessOrEq Int) Int, Prim] ('Kind.Prim (Maybe (LessOrEq Int))),
       XXorColAuto
     ]
   )
@@ -153,7 +153,7 @@ type DatType name rep sumRep =
       'Kind.Prod NumberWrap '[
         'Kind.Tree ('NamedField "numberWrap") '[Adt (AdtMeta' (Flatten NumberRep) Number) (Flatten NumberRep)] (
           'Kind.Prod Number '[
-            'Kind.Tree ('NamedField "number") '[Prim] ('Kind.Prim Int),
+            'Kind.Tree ('NamedField "number_") '[Prim] ('Kind.Prim Int),
             'Kind.Tree ('NamedField "otherNumber") '[Prim] ('Kind.Prim Int)
           ]
         )
