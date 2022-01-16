@@ -35,7 +35,7 @@ type instance Eval (IsSum ('SumIndexSegment _)) = 'False
 
 type family MatchFieldIds (q :: FieldId) (d :: FieldId) :: Bool where
   MatchFieldIds ('NamedField q) ('NamedField d) =
-    Eval (Eval (q == d) || Eval (AppendSymbol "_" q == d))
+    Eval (Eval (Eval (q == d) || Eval (AppendSymbol "_" q == d)) || Eval (AppendSymbol q "_" == d))
   MatchFieldIds ('NumberedField _ d) ('NumberedField _ d) =
     'True
   MatchFieldIds _  _ =

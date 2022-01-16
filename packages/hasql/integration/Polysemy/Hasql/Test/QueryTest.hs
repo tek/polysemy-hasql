@@ -102,7 +102,7 @@ data ContentNumber =
   ContentNumber {
     content :: Content,
     otherNumber :: Maybe Int,
-    number_ :: Maybe (LessOrEq Int),
+    number :: Maybe (LessOrEq Int),
     xxor :: XXor
   }
   deriving (Eq, Show, Generic)

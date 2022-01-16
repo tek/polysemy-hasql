@@ -42,12 +42,14 @@ type family FieldNameMismatch (d :: Type) (rn :: ErrorMessage) (dn :: ErrorMessa
       "rep field is named '" <> rn <> "'"
     )
 
-type family MatchName (d :: Type) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) :: Symbol where
-  MatchName _ rn rn _ =
+type family MatchName (d :: Type) (rn :: Symbol) (dn :: Symbol) (rn_ :: Symbol) (rn_post :: Symbol) :: Symbol where
+  MatchName _ rn rn _ _ =
     rn
-  MatchName _ rn dn dn =
+  MatchName _ rn dn dn _ =
     rn
-  MatchName d rn dn _ =
+  MatchName _ rn dn _ dn =
+    rn
+  MatchName d rn dn _ _ =
     FieldNameMismatch d ('Text rn) ('Text dn)
 
 type family ZipFields (reps :: [Type]) (rns :: [FieldId]) (ds :: [Type]) (dns :: [FieldId]) :: [TreeMeta] where
@@ -55,7 +57,7 @@ type family ZipFields (reps :: [Type]) (rns :: [FieldId]) (ds :: [Type]) (dns ::
   ZipFields (rep : reps) ('NumberedField _ n : rns) (d : ds) ('NumberedField name n : dns) =
     'TreeMeta ('NumberedField name n) rep d : ZipFields reps rns ds dns
   ZipFields (rep : reps) ('NamedField rn : rns) (d : ds) ('NamedField dn : dns) =
-    'TreeMeta ('NamedField (MatchName d rn dn (AppendSymbol "_" rn))) rep d : ZipFields reps rns ds dns
+    'TreeMeta ('NamedField (MatchName d rn dn (AppendSymbol "_" rn) (AppendSymbol rn "_"))) rep d : ZipFields reps rns ds dns
   ZipFields _ (rn : _) (d : _) (dn : _) =
     FieldNameMismatch d (FieldIdSymbol @@ rn) (FieldIdSymbol @@ dn)
   ZipFields (rep : _) (rn : _) '[] '[] =

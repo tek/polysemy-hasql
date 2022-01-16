@@ -51,7 +51,7 @@ data Rec =
 
 data RecRep =
   RecRep {
-    a_ :: Unique,
+    a :: Unique,
     b :: Auto,
     c :: Prim,
     sumField :: Sum SumRecRep
