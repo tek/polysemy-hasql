@@ -103,6 +103,7 @@ library
       Polysemy.Hasql.Where.Cond
       Polysemy.Hasql.Where.Dynamic
       Polysemy.Hasql.Where.Error
+      Polysemy.Hasql.Where.FieldSelector
       Polysemy.Hasql.Where.FlatFields
       Polysemy.Hasql.Where.Prepared
       Polysemy.Hasql.Where.Segment
