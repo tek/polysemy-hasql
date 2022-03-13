@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Test.JsonTest where
 
 import qualified Data.Aeson as Aeson
+import Exon (exon)
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (column, jsonBytes)
 import qualified Hasql.Encoders as Encoders
@@ -9,6 +10,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Rep (Json, Prim)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Uid (Uid (Uid))
+import Polysemy.Db.Json (defaultJson)
 import Polysemy.Test (UnitTest, assertRight, evalMaybe)
 
 import qualified Polysemy.Hasql.Database as Database
@@ -20,7 +22,7 @@ data Field3 =
     int :: Int,
     txt :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 defaultJson ''Field3
 
@@ -30,7 +32,7 @@ data Dat =
     field2 :: Int,
     field3 :: Field3
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
@@ -38,7 +40,7 @@ data DatRep =
     field2 :: Prim,
     field3 :: Json
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 test_json :: UnitTest
 test_json = do
@@ -49,7 +51,7 @@ test_json = do
     assertRight f3 (Aeson.eitherDecodeStrict' result)
   where
     query =
-      [text|select field3 from dat where id = $1|]
+      [exon|select field3 from dat where id = $1|]
     enc =
       column (Decoders.nonNullable (jsonBytes pure))
     dec =

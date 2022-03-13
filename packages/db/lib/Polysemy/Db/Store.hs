@@ -1,7 +1,8 @@
 module Polysemy.Db.Store where
 
-import Control.Lens (view, views)
-import Polysemy.AtomicState (atomicState')
+import Control.Concurrent.STM.TVar (TVar)
+import Control.Lens (makeClassy, view, views, (%~))
+import Data.Composition ((.:))
 
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.Partial (Partial, getPartial)
@@ -28,7 +29,7 @@ newtype StrictStore a =
   StrictStore {
     _records :: [a]
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (Default, Semigroup, Monoid)
 
 makeClassy ''StrictStore
@@ -45,11 +46,11 @@ interpretStoreAtomicState ::
 interpretStoreAtomicState =
   interpretResumable \case
     Insert d ->
-      atomicModify' @(StrictUidStore i d) (over records (d :))
+      atomicModify' @(StrictUidStore i d) (records %~ (d :))
     Upsert d ->
-      atomicModify' @(StrictUidStore i d) (over records mod')
+      atomicModify' @(StrictUidStore i d) (records %~ updateRecords)
       where
-        mod' a =
+        updateRecords a =
           d : filter (\ d' -> Uid._id d /= Uid._id d') a
     Delete id' -> do
       result <- atomicGets @(StrictUidStore i d) (views records (filter ((id' ==) . Uid._id)))
@@ -63,9 +64,9 @@ interpretStoreAtomicState =
     Update i patch ->
       atomicGets @(StrictUidStore i d) (views records (find ((i ==) . Uid._id))) >>= \case
         Just d ->
-          Just updated <$ atomicModify' @(StrictUidStore i d) (over records mod')
+          Just updated <$ atomicModify' @(StrictUidStore i d) (records %~ updateRecords)
           where
-            mod' a =
+            updateRecords a =
               updated : filter (\ d' -> Uid._id d /= Uid._id d') a
             updated =
               fmap (updatePartial (getPartial patch)) d
@@ -99,11 +100,11 @@ interpretStoreStrictState ::
 interpretStoreStrictState =
   interpretResumable \case
     Insert d ->
-      modify' @(StrictUidStore i d) (over records (d :))
+      modify' @(StrictUidStore i d) (records %~ (d :))
     Upsert d ->
-      modify' @(StrictUidStore i d) (over records mod')
+      modify' @(StrictUidStore i d) (records %~ updateRecords)
       where
-        mod' a =
+        updateRecords a =
           d : filter (\ d' -> Uid._id d /= Uid._id d') a
     Delete id' -> do
       result <- gets @(StrictUidStore i d) (views records (filter ((id' ==) . Uid._id)))
@@ -117,9 +118,9 @@ interpretStoreStrictState =
     Update i patch ->
       gets @(StrictUidStore i d) (views records (find ((i ==) . Uid._id))) >>= \case
         Just d ->
-          Just updated <$ modify' @(StrictUidStore i d) (over records mod')
+          Just updated <$ modify' @(StrictUidStore i d) (records %~ updateRecords)
           where
-            mod' a =
+            updateRecords a =
               updated : filter (\ d' -> Uid._id d /= Uid._id d') a
             updated =
               fmap (updatePartial (getPartial patch)) d

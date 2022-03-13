@@ -1,19 +1,19 @@
 module Polysemy.Hasql.Database where
 
+import Control.Lens (at, (?~))
 import qualified Data.Map.Strict as Map
 import Hasql.Connection (Connection)
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session (statement)
 import Hasql.Statement (Statement)
-import Polysemy (bindT, getInitialStateT, getInspectorT, insertAt, inspect, runT)
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Internal.Tactics (liftT)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (Seconds (Seconds), Time, TimeUnit)
+import Polysemy.Time (Seconds (Seconds))
 
 import qualified Polysemy.Hasql.Data.Database as Database
 import Polysemy.Hasql.Data.Database (Database (..), InitDb (InitDb), hoistInitDb)
@@ -101,7 +101,7 @@ connectWithReset ::
   Sem r o
 connectWithReset initDb q statement = do
   connection <- connect initDb
-  traverseLeft resetConnection =<< runSession connection (Session.statement q statement)
+  either resetConnection pure =<< runSession connection (Session.statement q statement)
 
 retrying ::
   TimeUnit u =>
@@ -112,7 +112,7 @@ retrying ::
   Statement q o ->
   Sem r o
 retrying initDb interval q statement =
-  traverseLeft recurseOnConnectionError =<< runStop (connectWithReset (hoistInitDb raise initDb) q statement)
+  either recurseOnConnectionError pure =<< runStop (connectWithReset (hoistInitDb raise initDb) q statement)
   where
     recurseOnConnectionError = \case
       DbError.Connection _ -> do

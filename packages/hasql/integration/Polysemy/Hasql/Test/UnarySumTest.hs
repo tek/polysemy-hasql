@@ -21,40 +21,40 @@ data Flatty =
     txt :: Text,
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Sum1 =
   Sum1 {
     int1 :: Int,
     flatty :: Flatty
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Sum1Rep =
   Sum1Rep {
     int1 :: Auto,
     flatty :: Flatten Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Sum2 =
   Sum2 {
     int2 :: Int,
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data UnaSum =
   UnaSum1 Sum1
   |
   UnaSum2 Sum2
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data UnaSumRep =
   UnaSum1Rep (Product Sum1Rep)
   |
   UnaSum2Rep Auto
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type FlattyMeta =
   AdtMeta' (Flatten Auto) Flatty
@@ -110,17 +110,17 @@ specimen =
 
 data QP =
   QP { double :: Double }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Q =
   Q { payload :: QP }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data QRep =
   QRep {
     payload :: Product Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 test_unarySum :: UnitTest
 test_unarySum =

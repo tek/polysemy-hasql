@@ -1,5 +1,6 @@
 module Polysemy.Db.StoreQuery where
 
+import Control.Concurrent.STM.TVar (TVar, newTVarIO)
 import Control.Lens (view)
 import qualified Data.Map.Strict as Map
 
@@ -79,7 +80,7 @@ interpretStoreQueryAtomicWith ::
   [d] ->
   InterpreterFor (StoreQuery q (f d) !! e) r
 interpretStoreQueryAtomicWith filter' match initial sem = do
-  tvar <- newTVarIO (StrictStore initial)
+  tvar <- embed (newTVarIO (StrictStore initial))
   interpretStoreQueryAtomicTVar tvar filter' match sem
 
 interpretStoreQueryAtomicOneWith ::
@@ -88,7 +89,7 @@ interpretStoreQueryAtomicOneWith ::
   [d] ->
   InterpreterFor (StoreQuery q (Maybe d) !! e) r
 interpretStoreQueryAtomicOneWith match initial sem = do
-  tvar <- newTVarIO (StrictStore initial)
+  tvar <- embed (newTVarIO (StrictStore initial))
   interpretStoreQueryAtomicTVar tvar single match sem
 
 interpretStoreQueryAtomicMultiWith ::
@@ -97,7 +98,7 @@ interpretStoreQueryAtomicMultiWith ::
   [d] ->
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretStoreQueryAtomicMultiWith match initial sem = do
-  tvar <- newTVarIO (StrictStore initial)
+  tvar <- embed (newTVarIO (StrictStore initial))
   interpretStoreQueryAtomicTVar tvar id match sem
 
 interpretStoreQueryAtomicOne ::

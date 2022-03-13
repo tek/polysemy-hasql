@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.Run where
 
+import GHC.Stack (withFrozenCallStack)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
 import Polysemy.Db.Data.DbConfig (DbConfig)
@@ -7,8 +8,7 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Random (Random, runRandomIO)
-import Polysemy.Fail (Fail)
-import Polysemy.Resource (Resource)
+import Polysemy.Log (interpretLogNull)
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
@@ -18,7 +18,6 @@ import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Test.Database (withTestConnection)
 import Polysemy.Hasql.Test.DbConfig (dbConfig)
-import Polysemy.Log (interpretLogNull, Log)
 
 type TestEffects =
   [

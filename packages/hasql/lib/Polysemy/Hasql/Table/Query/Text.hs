@@ -36,7 +36,7 @@ escape ::
   Sem r (Maybe ByteString)
 escape payload = do
   restop @_ @Database do
-    Database.connect (traverseLeft (stop . connError) <=< run)
+    Database.connect (either (stop . connError) pure <=< run)
   where
     run connection =
       tryAny (withLibPQConnection connection (flip LibPQ.escapeStringConn payload))

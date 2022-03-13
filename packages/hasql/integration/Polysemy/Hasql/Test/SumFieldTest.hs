@@ -2,6 +2,7 @@
 
 module Polysemy.Hasql.Test.SumFieldTest where
 
+import Data.UUID (UUID)
 import Hasql.Decoders (Row)
 import Path (Abs, File, Path, absfile)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions (unique))
@@ -16,7 +17,6 @@ import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
 import Polysemy.Db.Data.StoreQuery (StoreQuery)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid (Uid), Uuid)
-import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
 import Polysemy.Time (GhcTime, mkDatetime)
 import Prelude hiding (Enum)
@@ -42,11 +42,11 @@ data Nume =
   Two
   |
   Three
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 newtype Newt =
   Newt Int
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (Num)
 
 data Sinister =
@@ -54,26 +54,26 @@ data Sinister =
      sId :: UUID,
      sNewt :: Maybe Newt
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SinisterRep =
   SinisterRep {
     sId :: Auto,
     sNewt :: Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Summy =
   Laevus { lInt :: Int, lSinister :: Sinister }
   |
   Dexter { rPath :: Path Abs File, rNewt :: Newt, rNume :: Nume }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SummyRep =
   LaevusRep { lInt :: Auto, lSinister :: Flatten SinisterRep }
   |
   DexterRep { rPath :: Auto, rNewt :: Auto, rNume :: Auto }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 instance ExplicitColumnOptions SummyRep where
   explicitColumnOptions =
@@ -152,27 +152,27 @@ data Two =
   TwoA { twoA :: Int }
   |
   TwoB { twoB :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Simple =
   Simple {
     two :: Two,
     other :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data TwoRep =
   TwoARep { twoA :: Prim }
   |
   TwoBRep { twoB :: Prim }
-  deriving (Generic)
+  deriving stock (Generic)
 
 data SimpleRep =
   SimpleRep {
     two :: Sum TwoRep,
     other :: Auto
   }
-  deriving (Generic)
+  deriving stock (Generic)
 
 test_simpleSumField :: UnitTest
 test_simpleSumField =
@@ -183,27 +183,27 @@ data SumPK =
   SumPKL { l :: Int }
   |
   SumPKR { r :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumPKRep =
   SumPKLRep { l :: Prim }
   |
   SumPKRRep { r :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumId =
   SumId { number :: CreationTime }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumIdRep =
   SumIdRep { number :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumPKQ =
   SumPKQ {
     number :: Maybe (LessOrEq CreationTime)
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type SumIdRecRep =
   UidRep (Sum SumPKRep) SumIdRep
@@ -246,25 +246,25 @@ data Dat1 =
   Dat1 {
     dat1_Int :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat1Rep =
   Dat1Rep {
     dat1_Int :: Prim
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat2 =
   Dat2 {
     dat2_Text :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat2Rep =
   Dat2Rep {
     dat2_Text :: Prim
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 test_multiSum :: UnitTest
 test_multiSum =
@@ -284,23 +284,23 @@ data NumericFields =
   NumericOne Int Text
   |
   NumericTwo Double (Maybe Int)
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data NumericFieldsRep =
   NumericOneRep Prim Prim
   |
   NumericTwoRep Prim Prim
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data NumericDat =
   NumericDat { numeric :: NumericFields }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data NumericDatRep =
   NumericDatRep {
     numeric :: Sum NumericFieldsRep
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 test_numericFieldSum :: UnitTest
 test_numericFieldSum =

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 
@@ -107,10 +107,6 @@ library
       Polysemy.Hasql.Where.FlatFields
       Polysemy.Hasql.Where.Prepared
       Polysemy.Hasql.Where.Segment
-  other-modules:
-      Paths_polysemy_hasql
-  autogen-modules:
-      Paths_polysemy_hasql
   hs-source-dirs:
       lib
   default-extensions:
@@ -171,22 +167,21 @@ library
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -Wunused-type-patterns -fplugin=Polysemy.Plugin
+  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin
   build-depends:
       aeson
     , async
     , base
     , chronos
-    , containers
+    , composition
     , contravariant
     , exon
     , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
-    , ghc-prim
     , hasql >=1.4.3 && <1.5
     , hasql-dynamic-statements
-    , hasql-implicits
+    , incipit >=0.2
     , lens
     , path
     , polysemy >=1.7.1
@@ -195,24 +190,19 @@ library
     , polysemy-db-data
     , polysemy-log
     , polysemy-plugin
-    , polysemy-resume
     , polysemy-time
     , postgresql-libpq
-    , relude
     , scientific
     , stm-chans
-    , symbols
-    , text
     , time
     , torsor
+    , transformers
     , type-errors
     , type-errors-pretty
     , uuid
     , vector
   mixins:
       base hiding (Prelude)
-    , polysemy-db hiding (Polysemy.Db.Prelude)
-    , polysemy-db (Polysemy.Db.Prelude as Prelude)
   default-language: Haskell2010
 
 test-suite polysemy-hasql-integration
@@ -237,7 +227,6 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.UnarySumTest
       Polysemy.Hasql.Test.UpsertTest
       Polysemy.Hasql.Test.WithInitTest
-      Paths_polysemy_hasql
   hs-source-dirs:
       integration
   default-extensions:
@@ -298,23 +287,14 @@ test-suite polysemy-hasql-integration
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -Wunused-type-patterns -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , async
     , base
-    , chronos
-    , containers
-    , contravariant
     , exon
-    , fcf-containers ==0.6.*
-    , first-class-families
-    , generics-sop
-    , ghc-prim
     , hasql >=1.4.3 && <1.5
-    , hasql-dynamic-statements
-    , hasql-implicits
     , hedgehog
+    , incipit >=0.2
     , lens
     , path
     , polysemy >=1.7.1
@@ -324,29 +304,13 @@ test-suite polysemy-hasql-integration
     , polysemy-hasql
     , polysemy-log
     , polysemy-plugin
-    , polysemy-resume
     , polysemy-test
     , polysemy-time
-    , postgresql-libpq
-    , relude
-    , scientific
-    , stm-chans
-    , symbols
     , tasty
-    , tasty-hedgehog
-    , template-haskell
-    , text
-    , th-test-utils
     , time
-    , torsor
-    , type-errors
-    , type-errors-pretty
     , uuid
-    , vector
   mixins:
       base hiding (Prelude)
-    , polysemy-db hiding (Polysemy.Db.Prelude)
-    , polysemy-db (Polysemy.Db.Prelude as Prelude)
   default-language: Haskell2010
 
 test-suite polysemy-hasql-unit
@@ -376,7 +340,6 @@ test-suite polysemy-hasql-unit
       Polysemy.Hasql.Test.Tree.MergePartialTest
       Polysemy.Hasql.Test.UidSumFlattenTest
       Polysemy.Hasql.Test.WhereTest
-      Paths_polysemy_hasql
   hs-source-dirs:
       test
   default-extensions:
@@ -437,53 +400,25 @@ test-suite polysemy-hasql-unit
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -Wunused-type-patterns -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , async
     , base
     , chronos
-    , containers
-    , contravariant
     , exon
-    , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
-    , ghc-prim
     , hasql >=1.4.3 && <1.5
-    , hasql-dynamic-statements
-    , hasql-implicits
-    , hedgehog
-    , lens
+    , incipit >=0.2
     , path
     , polysemy >=1.7.1
-    , polysemy-conc
     , polysemy-db
     , polysemy-db-data
     , polysemy-hasql
-    , polysemy-log
     , polysemy-plugin
-    , polysemy-resume
     , polysemy-test
-    , polysemy-time
-    , postgresql-libpq
-    , relude
-    , scientific
-    , stm-chans
-    , symbols
     , tasty
-    , tasty-hedgehog
-    , template-haskell
-    , text
-    , th-test-utils
-    , time
-    , torsor
-    , type-errors
-    , type-errors-pretty
     , uuid
-    , vector
   mixins:
       base hiding (Prelude)
-    , polysemy-db hiding (Polysemy.Db.Prelude)
-    , polysemy-db (Polysemy.Db.Prelude as Prelude)
   default-language: Haskell2010

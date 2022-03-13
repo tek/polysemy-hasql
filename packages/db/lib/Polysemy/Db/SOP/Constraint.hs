@@ -1,13 +1,13 @@
 {-# language CPP #-}
+
 #define sop5 MIN_VERSION_generics_sop(0,5,0)
 
 module Polysemy.Db.SOP.Constraint where
 
-import GHC.TypeLits (symbolVal)
 import Generics.SOP (All, All2, Top)
 import Generics.SOP.Constraint (Head)
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo)
-import Generics.SOP.Type.Metadata (ConstructorInfo(Record), DatatypeInfo(ADT, Newtype), FieldInfo)
+import Generics.SOP.Type.Metadata (ConstructorInfo (Record), DatatypeInfo (ADT, Newtype), FieldInfo)
 
 import Polysemy.Db.Text.Case (unCamelCase, unCamelCaseString)
 

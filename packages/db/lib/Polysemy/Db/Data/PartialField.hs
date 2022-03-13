@@ -1,8 +1,9 @@
 module Polysemy.Db.Data.PartialField where
 
-import Data.Aeson (Object, Value (Null))
+import Data.Aeson (FromJSON (parseJSON), Object, ToJSON (toJSON), Value (Null))
 import Data.Aeson.Types (Parser, Value (Object))
 import qualified Data.HashMap.Strict as HashMap
+import Exon (exon)
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 import Polysemy.Db.Data.Rep (Auto)
@@ -21,7 +22,7 @@ data PartialField (a :: Type) =
   Update Text a
   |
   Keep
-  deriving (Eq, Show, Functor)
+  deriving stock (Eq, Show, Functor)
 
 instance Applicative PartialField where
   pure = Update "pure"
@@ -46,11 +47,11 @@ data FieldPath =
 
 data FieldUpdate (path :: FieldPath) (a :: Type) =
   FieldUpdate a
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data PartialTag =
   PartialTag
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type PartialTree = Type.Tree () PartialField
 type PartialNode = Type.Node () PartialField
@@ -119,7 +120,7 @@ instance (
     Null ->
       pure Keep
     value ->
-      fail [text|invalid json type for partially update of field '#{name}': #{value}|]
+      fail [exon|invalid json type for partially update of field '#{toString name}': #{show value}|]
     where
       name =
         symbolText @name

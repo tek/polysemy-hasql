@@ -18,7 +18,7 @@ data Dat =
     int :: Int,
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type TreeEffs =
   '[
@@ -98,20 +98,20 @@ data DatN2 =
     int2 :: Int,
     text :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatN1 =
   DatN1a { n2 :: DatN2, text :: Text }
   |
   DatN1b { n2 :: DatN2, n2b :: DatN2, text :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatN =
   DatN {
     int :: Int,
     n1 :: DatN1
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 recordN :: DatN
 recordN =

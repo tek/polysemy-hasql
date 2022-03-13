@@ -1,7 +1,6 @@
 module Polysemy.Db.Tree.Lookup where
 
 import Generics.SOP (NP, hd, tl)
-import Prelude hiding (lookup)
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField), NamedFields)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind

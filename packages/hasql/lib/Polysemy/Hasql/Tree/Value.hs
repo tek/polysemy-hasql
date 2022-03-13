@@ -17,14 +17,14 @@ import Polysemy.Hasql.Tree.Table (DbTag, MatchPrim, PrimColumn)
 
 data DbValueTag =
   DbValueTag
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ColumnData =
   ColumnData {
     name :: Text,
     options :: ColumnOptions
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type DbValueParams = 'Params DbValueTag () I 'False
 

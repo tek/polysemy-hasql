@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.Schema where
 
+import Data.UUID (UUID)
 import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import Polysemy.Db.Data.Uid (Uid)
 

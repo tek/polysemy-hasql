@@ -2,18 +2,20 @@ module Polysemy.Hasql.Queue.Input where
 
 import Control.Concurrent (threadWaitRead)
 import qualified Control.Concurrent.Async as Concurrent
+import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TBMQueue (TBMQueue, closeTBMQueue, newTBMQueueIO, readTBMQueue, writeTBMQueue)
+import Control.Monad.Trans.Maybe (MaybeT (MaybeT), runMaybeT)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.UUID as UUID
+import Data.UUID (UUID)
 import qualified Database.PostgreSQL.LibPQ as LibPQ
+import Exon (exon)
 import Hasql.Connection (Connection, withLibPQConnection)
 import qualified Polysemy.Async as Async
-import Polysemy.Async (Async, async)
 import qualified Polysemy.Conc as Monitor
 import Polysemy.Conc (
   ClockSkewConfig,
   Monitor,
-  Race,
   Restart,
   RestartingMonitor,
   interpretAtomic,
@@ -28,16 +30,11 @@ import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uuid)
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Error (errorToIOFinal, fromExceptionSemVia)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
 import qualified Polysemy.Log as Log
-import Polysemy.Log (Log)
-import Polysemy.Resource (Resource, bracket)
-import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (Time, TimeUnit)
-import Prelude hiding (group)
+import Prelude hiding (Queue, group, listen)
 import Torsor (Torsor)
 
 import qualified Polysemy.Hasql.Data.Database as Database
@@ -61,7 +58,7 @@ tryDequeueSem connection =
         Just d ->
           pure (Right (Just d))
         Nothing ->
-          pure (Left [text|invalid UUID payload: #{payload}|])
+          pure (Left [exon|invalid UUID payload: #{decodeUtf8 payload}|])
     Nothing ->
       embed (LibPQ.socket connection) >>= \case
         Just fd -> do
@@ -76,8 +73,8 @@ listen ::
   Members [Database, Log, Embed IO] r =>
   Sem r ()
 listen = do
-  Log.debug [text|executing `listen` for queue #{symbolText @queue}|]
-  Database.retryingSqlDef [text|listen "#{symbolText @queue}"|]
+  Log.debug [exon|executing `listen` for queue #{symbolText @queue}|]
+  Database.retryingSqlDef [exon|listen "#{SqlCode (symbolText @queue)}"|]
 
 unlisten ::
   ∀ (queue :: Symbol) e r .
@@ -129,7 +126,7 @@ dequeueAndProcess queue connection = do
   void $ runMaybeT do
     id' <- MaybeT (stopEitherWith (DbError.Connection . DbConnectionError.Acquire) result)
     messages <- MaybeT (restop (Store.delete id'))
-    lift (traverse_ (atomically . writeTBMQueue queue) (processMessages messages))
+    liftIO (traverse_ (atomically . writeTBMQueue queue) (processMessages messages))
 
 dequeue ::
   ∀ (queue :: Symbol) d t dt r .
@@ -143,8 +140,8 @@ dequeue queue =
   restop @_ @Database (Database.withInit initDb (Database.connect (dequeueAndProcess queue)))
   where
     initDb =
-      InitDb [text|dequeue-#{name}|] \ _ ->
-        initQueue @queue (atomically . writeTBMQueue queue)
+      InitDb [exon|dequeue-#{name}|] \ _ ->
+        initQueue @queue (embed . atomically . writeTBMQueue queue)
     name =
       symbolText @queue
 
@@ -166,7 +163,7 @@ dequeueLoop errorDelay errorHandler queue =
       either (result <=< raise . errorHandler) (const spin) =<< runStop (dequeue @queue queue)
     result = \case
       True -> disconnect *> Time.sleep errorDelay *> spin
-      False -> atomically (closeTBMQueue queue)
+      False -> embed (atomically (closeTBMQueue queue))
     disconnect =
       unlisten @queue *> resume_ Database.disconnect
 
@@ -178,7 +175,7 @@ interpretInputDbQueue ::
 interpretInputDbQueue queue =
   interpret \case
     Input ->
-      atomically (readTBMQueue queue)
+      embed (atomically (readTBMQueue queue))
 
 dequeueThread ::
   ∀ (queue :: Symbol) d t dt u resource r .
@@ -203,9 +200,9 @@ releaseInputQueue ::
   TBMQueue d ->
   Sem r ()
 releaseInputQueue handle _ = do
-  Log.debug [text|executing `unlisten` for queue `#{symbolText @queue}`|]
+  Log.debug [exon|executing `unlisten` for queue `#{symbolText @queue}`|]
   Async.cancel handle
-  resume_ (Database.retryingSqlDef [text|unlisten "#{symbolText @queue}"|])
+  resume_ (Database.retryingSqlDef [exon|unlisten "#{SqlCode (symbolText @queue)}"|])
 
 interpretInputDbQueueListen ::
   ∀ (queue :: Symbol) d t dt u resource r .

@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.Query.Insert where
 
+import Exon (exon)
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod, Sum))
 import Polysemy.Hasql.Data.SqlCode (SqlCode (..))
 import Polysemy.Hasql.DbType (baseColumns)

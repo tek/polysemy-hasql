@@ -1,20 +1,17 @@
 <<: !include extensions.yaml
 
 dependencies:
-  - aeson
   - name: base
     mixin:
       - hiding (Prelude)
-  - containers
-  - generics-sop
-  - lens
+  - incipit >= 0.2
   - polysemy >= 1.7.1
-  - text
-  - type-errors
-  - type-errors-pretty
+  - polysemy-plugin
 
 ghc-options:
   - -Wall
   - -Wredundant-constraints
-  - -Wsimplifiable-class-constraints
-  - -Wunused-type-patterns
+  - -Wincomplete-uni-patterns
+  - -Wmissing-deriving-strategies
+  - -Widentities
+  - -Wunused-packages

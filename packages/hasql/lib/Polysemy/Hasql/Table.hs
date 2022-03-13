@@ -2,6 +2,7 @@ module Polysemy.Hasql.Table where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
+import Exon (exon)
 import Hasql.Connection (Connection)
 import qualified Hasql.Decoders as Decoders
 import qualified Hasql.Encoders as Encoders
@@ -11,7 +12,6 @@ import Hasql.Statement (Statement)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Log as Log
-import Polysemy.Log (Log)
 
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName), unName)
@@ -38,7 +38,7 @@ dbColumnsStatement sql =
   Statement.prepared sql decoder encoder
   where
     decoder =
-      tuple text' text'
+      (,) <$> text' <*> text'
     text' =
       Decoders.column (Decoders.nonNullable Decoders.text)
     encoder =
@@ -65,7 +65,7 @@ tableColumns =
   dbColumnsFor code
   where
     code =
-      [text|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
+      [exon|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
 
 typeColumns ::
   Members [Embed IO, Stop QueryError] r =>
@@ -76,7 +76,7 @@ typeColumns connection =
   dbColumnsFor code connection . Name . unSqlCode . typeName
   where
     code =
-      [text|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
+      [exon|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
 
 -- TODO
 updateType ::
@@ -202,12 +202,12 @@ reportMismatchedColumns ::
   NonEmpty (Name, Column) ->
   Sem r ()
 reportMismatchedColumns (Name name) columns =
-  stop (DbError.Table [text|mismatched columns in table `#{name}`: #{columnsDescription}|])
+  stop (DbError.Table [exon|mismatched columns in table `#{name}`: #{columnsDescription}|])
   where
     columnsDescription =
       Text.intercalate ";" (toList (columnDescription <$> columns))
     columnDescription (dbType, Column colName _ tpe _ _) =
-      [text|db: #{colName} :: #{dbType}, app: #{colName} :: #{tpe}|]
+      [exon|db: #{show colName} :: #{show dbType}, app: #{show colName} :: #{show tpe}|]
 
 updateTable ::
   Members [Embed IO, Stop DbError] r =>
@@ -232,7 +232,7 @@ initTable ::
   Column ->
   Sem r ()
 initTable connection t@(Column name _ _ _ _) = do
-  Log.debug [text|initializing table `#{unName name}`|]
+  Log.debug [exon|initializing table `#{unName name}`|]
   process =<< liftError (tableColumns connection name)
   where
     process (Just existing) =

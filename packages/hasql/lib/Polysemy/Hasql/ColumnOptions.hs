@@ -1,5 +1,6 @@
 module Polysemy.Hasql.ColumnOptions where
 
+import Exon (exon)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions (ColumnOptions))
 
 import Polysemy.Hasql.Data.SqlCode (SqlCode)

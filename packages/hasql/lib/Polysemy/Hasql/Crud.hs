@@ -6,7 +6,6 @@ import Hasql.Statement (Statement (Statement))
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Partial (getPartial)
 import Polysemy.Db.Data.Uid (Uid)
-import Polysemy.Tagged (Tagged, tag)
 
 import Polysemy.Hasql.Data.Crud (Crud (..))
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable, ManagedTableUid)

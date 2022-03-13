@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.SingletonTest where
 
+import Data.UUID (UUID)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.QueryStore as QueryStore
 import Polysemy.Db.Data.QueryStore (QueryStore)
@@ -19,14 +20,14 @@ data Dat =
      id :: UUID,
      content :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
     id :: Prim,
     content :: Prim
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 prog ::
   Members [QueryStore () Dat () Dat !! DbError, Stop DbError] r =>

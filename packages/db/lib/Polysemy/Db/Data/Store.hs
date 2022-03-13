@@ -1,5 +1,6 @@
 module Polysemy.Db.Data.Store where
 
+import Data.UUID (UUID)
 import Polysemy.Db.Data.Partial (Partial)
 import Polysemy.Db.Data.Uid (Uid)
 

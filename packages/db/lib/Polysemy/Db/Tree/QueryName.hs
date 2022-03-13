@@ -3,7 +3,7 @@ module Polysemy.Db.Tree.QueryName where
 import Fcf (ConstFn, Eval, Exp, Pure1, UnEither, Zip, type (@@))
 import Fcf.Class.Foldable (ConcatMap)
 import Generics.SOP.GGP (GCode)
-import Type.Errors (IfStuck, Pure, ShowTypeQuoted, TypeError)
+import Type.Errors (IfStuck, Pure, ShowTypeQuoted)
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
@@ -43,7 +43,7 @@ data MatchQueryType (q :: Type) :: (FieldId, Type) -> Exp [FieldId]
 type instance Eval (MatchQueryType q f) =
   MatchQueryType' q f
 
-type family PrimNameProd (q :: Type) (fss :: [[FieldId]]) (dss :: [[*]]) :: Result where
+type family PrimNameProd (q :: Type) (fss :: [[FieldId]]) (dss :: [[Type]]) :: Result where
   PrimNameProd q (fs : _) (ds : _) =
     PrimNameProdNames (ConcatMap (MatchQueryType q) @@ (Zip fs @@ ds))
   PrimNameProd _ _ _ =

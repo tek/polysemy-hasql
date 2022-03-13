@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Where.Prepared where
 
 import qualified Exon
+import Exon (exon)
 import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
 import Polysemy.Db.SOP.Error (ErrorWithType2)
 

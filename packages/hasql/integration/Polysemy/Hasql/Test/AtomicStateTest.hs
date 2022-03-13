@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.AtomicStateTest where
 
+import Exon (exon)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (UnitTest, (===))
 
@@ -11,13 +12,13 @@ data Cat =
     number :: Int,
     name :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 test_atomicStateDb :: UnitTest
 test_atomicStateDb =
   integrationTest do
     r <- interpretAtomicStateDbAsAuto (Cat 5 "fuzzyboots") do
       restop @DbError do
-        atomicModify' \ (Cat _ nam) -> Cat 200 [text|mr. #{nam}|]
+        atomicModify' \ (Cat _ nam) -> Cat 200 [exon|mr. #{nam}|]
         atomicGet
     Cat 200 "mr. fuzzyboots" === r

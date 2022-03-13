@@ -1,31 +1,38 @@
 module Polysemy.Hasql.DbConnection where
 
 import Control.Concurrent (myThreadId, throwTo)
+import Control.Lens ((.~))
 import Hasql.Connection (Connection, Settings)
 import qualified Hasql.Connection as Connection (acquire, release, settings)
-import Polysemy (interpretH)
 import Polysemy.Db.Atomic (interpretAtomic)
-import Polysemy.Db.Data.DbConfig (DbConfig(DbConfig))
+import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
-import Polysemy.Db.Data.DbHost (DbHost(DbHost))
-import Polysemy.Db.Data.DbName (DbName(DbName))
-import Polysemy.Db.Data.DbPassword (DbPassword(DbPassword))
-import Polysemy.Db.Data.DbPort (DbPort(DbPort))
-import Polysemy.Db.Data.DbUser (DbUser(DbUser))
-import Polysemy.Error (fromExceptionSem)
+import Polysemy.Db.Data.DbHost (DbHost (DbHost))
+import Polysemy.Db.Data.DbName (DbName (DbName))
+import Polysemy.Db.Data.DbPassword (DbPassword (DbPassword))
+import Polysemy.Db.Data.DbPort (DbPort (DbPort))
+import Polysemy.Db.Data.DbUser (DbUser (DbUser))
 import Polysemy.Internal.Tactics (liftT)
-import Polysemy.Resource (Resource, bracket_, finally)
 
 import qualified Polysemy.Hasql.Data.ConnectionState as ConnectionState
-import Polysemy.Hasql.Data.ConnectionState (ConnectionState(ConnectionState))
+import Polysemy.Hasql.Data.ConnectionState (ConnectionState (ConnectionState))
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.DbConnection (DbConnection)
 import Polysemy.Hasql.Database (HasqlConnection)
 
 data KillCommand =
   KillCommand
-  deriving (Show, Exception)
+  deriving stock (Show)
+  deriving anyclass (Exception)
+
+callT ::
+  Functor f =>
+  (a -> m b) ->
+  a ->
+  Sem (WithTactics e f m r) (f b)
+callT f =
+  bindTSimple f <=< pureT
 
 connectionSettings ::
   DbHost ->

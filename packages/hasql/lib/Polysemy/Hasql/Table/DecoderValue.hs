@@ -1,15 +1,15 @@
 module Polysemy.Hasql.Table.DecoderValue where
 
+import qualified Data.Aeson as Aeson
+import Data.Aeson (FromJSON)
 import Hasql.Decoders (Value, jsonBytes)
-import Polysemy.Db.Data.Rep (Enum, Json)
+import Polysemy.Db.Data.Rep (Enum, Json, Prim)
+import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Prelude hiding (Enum, bool)
 
-import qualified Data.Aeson as Aeson
-import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Hasql.SOP.Enum (EnumTable)
 import Polysemy.Hasql.Table.Enum (enumDecodeValue)
 import Polysemy.Hasql.Table.PrimDecoder (PrimDecoder, primDecoder)
-import Polysemy.Db.Tree.Data.Effect (Newtype)
 
 class DecoderValue (effs :: [Type]) (a :: Type) where
   decoderValue :: Value a
@@ -36,7 +36,7 @@ instance EnumTable a => DecoderValue '[Enum] a where
 
 instance FromJSON a => DecoderValue '[Json] a where
   decoderValue =
-    jsonBytes (mapLeft toText . Aeson.eitherDecodeStrict')
+    jsonBytes (first toText . Aeson.eitherDecodeStrict')
 
 instance (
     Coercible n d,

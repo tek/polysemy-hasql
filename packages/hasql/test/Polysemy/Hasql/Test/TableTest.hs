@@ -1,21 +1,23 @@
 module Polysemy.Hasql.Test.TableTest where
 
+import Data.UUID (UUID)
+import Exon (exon)
 import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Text.DbIdentifier (dbIdentifier)
 import Polysemy.Test (UnitTest, runTestAuto, unitTest, (===))
 import Test.Tasty (TestTree, testGroup)
 
-import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod), TypeName (CompositeTypeName))
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
 import Polysemy.Hasql.Table (missingColumns)
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 
 data Rec =
   Rec {
     field1 :: Text,
     field2 :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 recTable :: Column
 recTable =
@@ -27,14 +29,14 @@ test_recColumns =
     target === recTable
   where
     target =
-      Column "rec" [text|"rec"|] (CompositeTypeName "rec") def (Prod [
-        Column "field1" [text|"field1"|] "text" def Prim,
-        Column "field2" [text|"field2"|] "bigint" def Prim
+      Column "rec" [exon|"rec"|] (CompositeTypeName "rec") def (Prod [
+        Column "field1" [exon|"field1"|] "text" def Prim,
+        Column "field2" [exon|"field2"|] "bigint" def Prim
       ])
 
 data UuidCol =
   UuidCol { uuid :: UUID }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 uuidColTable :: Column
 uuidColTable =
@@ -46,7 +48,7 @@ test_uuidColTable =
     target === uuidColTable
   where
     target =
-      Column "uuid_col" [text|"uuid_col"|] (CompositeTypeName "uuid_col") def (Prod [Column "uuid" [text|"uuid"|] "uuid" def Prim])
+      Column "uuid_col" [exon|"uuid_col"|] (CompositeTypeName "uuid_col") def (Prod [Column "uuid" [exon|"uuid"|] "uuid" def Prim])
 
 test_tableName :: UnitTest
 test_tableName =
@@ -56,7 +58,7 @@ test_tableName =
 
 targetMissing :: [Column]
 targetMissing =
-  [Column "f4" [text|"f4"|] "text" def Prim]
+  [Column "f4" [exon|"f4"|] "text" def Prim]
 
 updateColumnsExisting :: [ExistingColumn]
 updateColumnsExisting =
@@ -69,9 +71,9 @@ updateColumnsExisting =
 updateColumnsTarget :: [Column]
 updateColumnsTarget =
   [
-    Column "f1" [text|"f1"|] "bigint" def Prim,
-    Column "f2" [text|"f2"|] "text" def Prim,
-    Column "f4" [text|"f4"|] "text" def Prim
+    Column "f1" [exon|"f1"|] "bigint" def Prim,
+    Column "f2" [exon|"f2"|] "text" def Prim,
+    Column "f4" [exon|"f4"|] "text" def Prim
   ]
 
 test_updateTasks :: UnitTest

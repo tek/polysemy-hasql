@@ -17,7 +17,7 @@ data SumTab =
   SumTabOne { id :: Int, text :: Text }
   |
   SumTabTwo { id :: Int, double :: Double }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type SumTabMeta =
   AdtMeta' (Product Auto) SumTab

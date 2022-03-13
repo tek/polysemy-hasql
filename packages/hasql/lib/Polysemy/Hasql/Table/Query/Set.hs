@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.Query.Set where
 
+import Exon (exon)
 import Polysemy.Hasql.Data.DbType (Column)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 import Polysemy.Hasql.DbType (baseColumnSelectors)

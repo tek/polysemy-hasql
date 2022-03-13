@@ -20,29 +20,29 @@ data Summer =
   Summer1 { txt :: Text }
   |
   Summer2 { int :: Int, dubble :: Double }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SummerRep =
   SummerRep1 { txt :: Prim }
   |
   SummerRep2 { int :: Prim, dubble :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Proddo =
   Proddo {
     prInt :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data ProddoRep =
   ProddoRep {
     prInt :: Prim
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 newtype Newt =
   Newt { unNewt :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (IsString)
 
 data Dat =
@@ -55,7 +55,7 @@ data Dat =
     ,
     summer :: Summer
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
@@ -67,13 +67,13 @@ data DatRep =
     ,
     summer :: Sum SummerRep
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Simple =
   Simple {
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type PrimInt name =
   'Kind.Tree ('NamedField name) '[Prim] ('Kind.Prim Int)
@@ -134,7 +134,7 @@ data DoubleQ =
   DoubleQ {
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 queryTable_Simple_Auto :: QueryTable DoubleQ Simple
 queryTable_Simple_Auto =
@@ -146,7 +146,7 @@ queryTable_Dat_Auto =
 
 newtype NtId =
   NtId { unNtId :: Double }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (Num, Ord, Enum, Real, Fractional)
 
 queryTable_Newtype_PrimQuery :: QueryTable NtId Simple

@@ -1,5 +1,6 @@
 module Polysemy.Hasql.QueryRows where
 
+import Exon (exon)
 import Generics.SOP (I, NP (Nil, (:*)), NS (S, Z), SListI, SOP (SOP), hsequence)
 import Generics.SOP.GGP (gto)
 import Hasql.Decoders (Row)
@@ -44,7 +45,7 @@ class SumRows (trees :: [Kind.Con]) (dss :: [[Type]]) | trees -> dss where
 
 instance SumRows '[] '[] where
   sumRows index =
-    fail [text|invalid index into sum type in database: #{index}|]
+    fail [exon|invalid index into sum type in database: #{show index}|]
 
 instance (
     SListI ds,

@@ -2,7 +2,6 @@ module Polysemy.Hasql.Data.Database where
 
 import Hasql.Connection (Connection)
 import Hasql.Statement (Statement)
-import Polysemy.Time (TimeUnit)
 
 import Polysemy.Hasql.Data.DbType (Name)
 import Polysemy.Hasql.Data.SqlCode (SqlCode)

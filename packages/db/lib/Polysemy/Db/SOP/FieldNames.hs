@@ -5,11 +5,10 @@ module Polysemy.Db.SOP.FieldNames where
 
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Functor (FMap)
-import GHC.TypeLits (type (+))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
-import Generics.SOP.Type.Metadata (ConstructorInfo(Constructor, Record), DatatypeInfo(ADT), FieldInfo(FieldInfo))
+import Generics.SOP.Type.Metadata (ConstructorInfo (Constructor, Record), DatatypeInfo (ADT), FieldInfo (FieldInfo))
 
-import Polysemy.Db.Data.FieldId (FieldId(NumberedField, NamedField))
+import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
 
 type family RecordFieldSymbols (fs :: [FieldInfo]) :: [FieldId] where
   RecordFieldSymbols '[] = '[]

@@ -1,15 +1,13 @@
 module Polysemy.Hasql.Store where
 
-import Polysemy (raise3Under)
+import Control.Lens ((^.))
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Rep (PrimQuery, PrimaryKey, UidRep)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid)
-import Polysemy.Log (Log)
-import Polysemy.Resource (Resource)
-import Polysemy.Time (Time, interpretTimeGhc)
+import Polysemy.Time (interpretTimeGhc)
 
 import Polysemy.Hasql.Crud (interpretCrudUidNoUpdateWith, interpretCrudUidWith)
 import Polysemy.Hasql.Data.Crud (Crud (..))

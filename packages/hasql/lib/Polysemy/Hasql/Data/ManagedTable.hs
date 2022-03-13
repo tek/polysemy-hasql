@@ -2,7 +2,6 @@ module Polysemy.Hasql.Data.ManagedTable where
 
 import Hasql.Statement (Statement)
 import Polysemy.Db.Data.Uid (Uid)
-import Polysemy.Time (TimeUnit)
 
 import Polysemy.Hasql.Data.Table (Table)
 

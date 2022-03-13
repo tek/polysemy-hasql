@@ -7,7 +7,7 @@ import Prelude (Text, Eq, Show, IsString)
 
 newtype DbUser =
   DbUser Text
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
   deriving newtype (IsString)
 
 defaultJson ''DbUser

@@ -2,8 +2,10 @@ module Polysemy.Db.Data.CreationTime where
 
 import Data.Time (UTCTime)
 
+import Polysemy.Db.Json (defaultJson)
+
 newtype CreationTime =
   CreationTime { unCreationTime :: UTCTime }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 defaultJson ''CreationTime

@@ -2,11 +2,11 @@ module Polysemy.Db.Data.Rep where
 
 data Rep (r :: [Type]) =
   Rep
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ForceRep (r :: [Type]) =
   ForceRep
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type family ConsRep (h :: Type) (t :: Type) :: Type where
   ConsRep (Rep h) (Rep t) = (Rep (h ++ t))
@@ -15,62 +15,62 @@ type family ConsRep (h :: Type) (t :: Type) :: Type where
 
 data PrimaryKey =
   PrimaryKey
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ForeignKey =
   ForeignKey
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Flatten adt =
   Flatten
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Product adt =
   Product
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Auto =
   Auto
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Unique =
   Unique
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Prim =
   Prim
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ForcePrim a =
   ForcePrim
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Sum adt =
   Sum
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Enum =
   Enum
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data Json =
   Json
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data JsonB =
   JsonB
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data PrimQuery (field :: Symbol) =
   PrimQuery
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type IdQuery =
   PrimQuery "id"
 
 data PrimQueryAs (field :: Symbol) (rep :: Type) =
   IdQueryAs
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type IdQueryAs (rep :: Type) =
   PrimQueryAs "id" rep
@@ -80,14 +80,14 @@ data UidRep i a =
      id :: i,
      payload :: Flatten a
   }
-  deriving (Generic)
+  deriving stock (Generic)
 
 data UidNestRep i a =
   UidNestRep {
      id :: i,
      payload :: a
   }
-  deriving (Generic)
+  deriving stock (Generic)
 
 type UuidRep a =
   UidRep Auto a

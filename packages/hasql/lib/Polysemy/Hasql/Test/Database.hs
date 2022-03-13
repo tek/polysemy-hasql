@@ -1,7 +1,8 @@
 module Polysemy.Hasql.Test.Database where
 
-import Control.Lens (Lens', view)
+import Control.Lens (Lens', view, (%~), (.~))
 import qualified Data.UUID as UUID
+import Exon (exon)
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
 import qualified Polysemy.Db.Data.DbConfig as DbConfig
@@ -13,9 +14,7 @@ import Polysemy.Db.Data.DbName (DbName (DbName))
 import Polysemy.Db.Data.Rep (Auto, PrimQuery, PrimaryKey, UidRep)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Random (Random, random, runRandomIO)
-import Polysemy.Log (Log)
-import Polysemy.Resource (Resource, bracket)
-import Polysemy.Time (GhcTime, Time)
+import Polysemy.Time (GhcTime)
 
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
@@ -48,7 +47,7 @@ suffixedTable lens suffix =
       Column (Name suffixed) (Selector (sqlQuote suffixed)) tpe opt dbTpe
       where
         suffixed =
-          [text|#{name}-#{suffix}|]
+          [exon|#{name}-#{suffix}|]
 
 bracketTestTable ::
   Members [Resource, Embed IO, DbConnection Connection !! DbConnectionError, Random, Stop QueryError, Stop DbError] r =>
@@ -120,7 +119,7 @@ createTestDb ::
 createTestDb dbConfig@(DbConfig _ _ (DbName name) _ _) connection = do
   suffix <- UUID.toText <$> random
   let
-    suffixedName = [text|#{name}-#{suffix}|]
+    suffixedName = DbName [exon|#{name}-#{suffix}|]
     suffixed = dbConfig & DbConfig.name .~ suffixedName
   mapStop convertQueryError (runStatement connection () (Statement.createDb suffixedName))
   pure suffixed

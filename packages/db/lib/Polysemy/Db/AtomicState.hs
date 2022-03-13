@@ -51,6 +51,6 @@ interpretAtomicStateStoreAs ::
   Member (Store () d !! e) r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
-interpretAtomicStateStoreAs =
-  interpretAtomicStateStore . pure
+interpretAtomicStateStoreAs value =
+  interpretAtomicStateStore (pure value)
 {-# inline interpretAtomicStateStoreAs #-}

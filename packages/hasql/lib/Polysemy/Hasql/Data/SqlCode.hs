@@ -5,7 +5,7 @@ import Exon (Exon (..), ExonDefault, Result (Empty, Result))
 
 newtype SqlCode =
   SqlCode { unSqlCode :: Text }
-  deriving (Show, Eq, Generic, Ord)
+  deriving stock (Show, Eq, Generic, Ord)
   deriving newtype (IsString, Semigroup, Monoid)
 
 instance ConvertUtf8 Text bs => ConvertUtf8 SqlCode bs where

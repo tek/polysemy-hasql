@@ -1,7 +1,9 @@
 module Polysemy.Db.Type.Data.Tree where
 
 import qualified Data.Text as Text
-import Generics.SOP (All, Compose, K(K), NP, NS, hcmap, hcollapse)
+import Exon (exon)
+import Generics.SOP (All, Compose, K (K), NP, NS, hcmap, hcollapse)
+import Prelude hiding (Compose)
 import qualified Text.Show as Show
 
 import Polysemy.Db.Data.FieldId (FieldIdText, fieldIdTextRaw)
@@ -16,7 +18,7 @@ instance (
     All (Compose Show (Tree t n)) sub
   ) => Show (Con t n ('Kind.Con num name sub)) where
   show (Con sub) =
-    [text|Con #{natVal (Proxy @num)} [#{Text.intercalate ", " trees}]|]
+    toString [exon|Con #{show (natVal (Proxy @num))} [#{Text.intercalate ", " trees}]|]
     where
       trees =
         hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub)
@@ -26,7 +28,7 @@ instance (
     Show (Tree t n tree)
   ) => Show (Con t n ('Kind.ConUna num name tree)) where
   show (ConUna sub) =
-    [text|Con (#{sub})|]
+    [exon|Con (#{show sub})|]
 
 instance (
     Eq (Tree t n tree)
@@ -55,21 +57,21 @@ instance (
     All (Compose Show (Tree t n)) sub
   ) => Show (Node t n ('Kind.Prod d sub)) where
   show (Prod n sub) =
-    [text|Prod #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @Text) sub))}]|]
+    [exon|Prod #{show @String n} [#{intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @String) sub))}]|]
 
 instance (
     Show (n d),
     All (Compose Show (Con t n)) cons
   ) => Show (Node t n ('Kind.Sum d cons)) where
   show (Sum n sub) =
-    [text|Sum #{show @Text n} [#{hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @Text) sub)}]|]
+    [exon|Sum #{show @String n} [#{hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @String) sub)}]|]
 
 instance (
     Show (n d),
     All (Compose Show (Con t n)) sub
   ) => Show (Node t n ('Kind.SumProd d sub)) where
   show (SumProd n sub) =
-    [text|SumProd #{show @Text n} [#{Text.intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @Text) sub))}]|]
+    [exon|SumProd #{show @String n} [#{intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @String) sub))}]|]
 
 instance Eq (n d) => Eq (Node t n ('Kind.Prim d)) where
   Prim l == Prim r =
@@ -105,9 +107,9 @@ instance (
     Show (Node t n node)
   ) => Show (Tree t n ('Kind.Tree name eff node)) where
   show (Tree t dbType) =
-    [text|Tree "#{fieldIdTextRaw @name}" #{t} (#{dbType})|]
+    toString [exon|Tree "#{fieldIdTextRaw @name}" #{show t} (#{show dbType})|]
 
-deriving instance (
+deriving stock instance (
     Eq t,
     Eq (Node t n node)
   ) => Eq (Tree t n ('Kind.Tree name eff node))

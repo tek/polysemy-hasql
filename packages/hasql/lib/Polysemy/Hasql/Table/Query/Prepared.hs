@@ -1,5 +1,7 @@
 module Polysemy.Hasql.Table.Query.Prepared where
 
+import Exon (exon)
+
 import Polysemy.Hasql.Data.DbType (Selector (Selector))
 import Polysemy.Hasql.Data.SqlCode (SqlCode)
 

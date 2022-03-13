@@ -17,13 +17,13 @@ import Polysemy.Hasql.Where.Dynamic (DynamicQuery)
 
 newtype NtId =
   NtId { id :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat =
   Dat {
     number :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 newtypeQueryDerivation ::
   q ~ NtId =>

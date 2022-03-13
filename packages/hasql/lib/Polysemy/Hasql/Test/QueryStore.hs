@@ -21,7 +21,7 @@ withTestQueryStoreTable ::
   Sem r a
 withTestQueryStoreTable prog =
   withTestQueryTableGen @qrep @rep @q @d \ table -> do
-    (iParams, iWhere) <- interpretQuery @iqrep @rep (tuple (Query.params @i @d) Query.query)
+    (iParams, iWhere) <- interpretQuery @iqrep @rep ((,) <$> (Query.params @i @d) <*> Query.query)
     interpretQueryStoreDbFullWith table iParams iWhere (prog table)
 
 withTestQueryStoreTableUid ::

@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.SumIndex where
 
+import Exon (exon)
 import Polysemy.Db.SOP.Constraint (DataName)
 import Polysemy.Db.Text.DbIdentifier (dbDataName)
 
@@ -8,4 +9,4 @@ sumIndexIdentifier ::
   DataName d name =>
   Text
 sumIndexIdentifier =
-  [text|ph_sum_index__#{dbDataName @d}|]
+  [exon|ph_sum_index__#{dbDataName @d}|]

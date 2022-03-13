@@ -13,7 +13,7 @@ data Dat =
   Dat {
     name :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 prog ::
   Member (Store () Dat) r =>

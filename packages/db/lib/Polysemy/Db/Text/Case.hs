@@ -1,6 +1,7 @@
 module Polysemy.Db.Text.Case where
 
 import Data.Char (isLower, isUpper, toLower)
+import Data.Composition ((.:))
 
 unCamelCaseString :: Char -> String -> String
 unCamelCaseString sep =

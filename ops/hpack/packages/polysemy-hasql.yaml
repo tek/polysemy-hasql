@@ -6,48 +6,88 @@ defaults:
 
 library:
   source-dirs: lib
-  generated-other-modules:
-    - Paths_polysemy_hasql
+  when:
+    condition: false
+    generated-other-modules:
+      - Paths_polysemy_hasql
+  dependencies:
+    - aeson
+    - async
+    - chronos
+    - composition
+    - contravariant
+    - exon
+    - fcf-containers ^>= 0.6
+    - first-class-families
+    - generics-sop
+    - hasql ^>= 1.4.3
+    - hasql-dynamic-statements
+    - lens
+    - path
+    - polysemy-conc
+    - polysemy-db
+    - polysemy-db-data
+    - polysemy-log
+    - polysemy-time
+    - postgresql-libpq
+    - scientific
+    - stm-chans
+    - time
+    - torsor
+    - transformers
+    - type-errors
+    - type-errors-pretty
+    - uuid
+    - vector
 
 tests:
   polysemy-hasql-unit:
     <<: !include shared/test.yaml
     source-dirs: test
+    dependencies:
+      - aeson
+      - chronos
+      - exon
+      - first-class-families
+      - generics-sop
+      - hasql ^>= 1.4.3
+      - path
+      - polysemy-db
+      - polysemy-db-data
+      - polysemy-hasql
+      - polysemy-plugin
+      - polysemy-test
+      - tasty
+      - uuid
+    when:
+      condition: false
+      generated-other-modules:
+        - Paths_polysemy_hasql
   polysemy-hasql-integration:
     <<: !include shared/test.yaml
     source-dirs: integration
-
-dependencies:
-  - async
-  - chronos
-  - contravariant
-  - exon
-  - ghc-prim
-  - first-class-families
-  - fcf-containers ^>= 0.6
-  - hasql ^>= 1.4.3
-  - hasql-dynamic-statements
-  - hasql-implicits
-  - path
-  - polysemy-db-data
-  - polysemy-conc
-  - polysemy-log
-  - polysemy-plugin
-  - polysemy-resume
-  - polysemy-time
-  - postgresql-libpq
-  - relude
-  - scientific
-  - stm-chans
-  - symbols
-  - time
-  - torsor
-  - uuid
-  - vector
-  - name: polysemy-db
-    mixin:
-      - hiding (Polysemy.Db.Prelude)
-      - (Polysemy.Db.Prelude as Prelude)
+    dependencies:
+      - aeson
+      - exon
+      - hasql ^>= 1.4.3
+      - hedgehog
+      - lens
+      - path
+      - polysemy-conc
+      - polysemy-db
+      - polysemy-db-data
+      - polysemy-hasql
+      - polysemy-log
+      - polysemy-plugin
+      - polysemy-test
+      - polysemy-time
+      - tasty
+      - time
+      - uuid
+    when:
+      condition: false
+      generated-other-modules:
+        - Paths_polysemy_hasql
 
 ghc-options:
   - -fplugin=Polysemy.Plugin

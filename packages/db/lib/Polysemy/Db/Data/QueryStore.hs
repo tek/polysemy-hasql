@@ -1,5 +1,6 @@
 module Polysemy.Db.Data.QueryStore where
 
+import Data.UUID (UUID)
 import Polysemy.Db.Data.Partial (Partial)
 
 -- |A 'QueryStore' is more flexible version of 'Store', allowing an additional query type and a custom record type that

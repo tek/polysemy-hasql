@@ -16,14 +16,14 @@ import Polysemy.Hasql.Table.ColumnOptions (ImplicitColumnOptions (..), RepOption
 
 data DbTag =
   DbTag
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ColumnData =
   ColumnData {
     name :: Text,
     options :: ColumnOptions
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type TableNode = Type.Node ColumnData Proxy
 type TableTree = Type.Tree ColumnData Proxy

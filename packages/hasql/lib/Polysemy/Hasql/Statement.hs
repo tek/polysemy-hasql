@@ -1,5 +1,8 @@
 module Polysemy.Hasql.Statement where
 
+import Control.Lens ((^.))
+import Data.Composition ((.:))
+import Exon (exon)
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, int8, noResult, nullable)
 import Hasql.DynamicStatements.Statement (dynamicallyParameterized)

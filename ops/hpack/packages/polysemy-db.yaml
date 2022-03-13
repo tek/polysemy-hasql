@@ -6,28 +6,23 @@ defaults:
 
 library:
   source-dirs: lib
-  other-modules:
-    - Prelude
-  generated-other-modules:
-    - Paths_polysemy_db
-
-dependencies:
-  - comonad
-  - composition
-  - data-default
-  - either
-  - exon
-  - first-class-families
-  - fcf-containers ^>= 0.6
-  - path
-  - polysemy-db-data
-  - polysemy-resume
-  - random
-  - relude
-  - string-interpolate
-  - symbols
-  - template-haskell
-  - time
-  - unordered-containers
-  - uuid
-  - vector
+  dependencies:
+    - aeson
+    - composition
+    - exon
+    - first-class-families
+    - generics-sop
+    - lens
+    - path
+    - polysemy-db-data
+    - random
+    - time
+    - type-errors
+    - type-errors-pretty
+    - unordered-containers
+    - uuid
+    - vector
+  when:
+    condition: false
+    generated-other-modules:
+      - Paths_polysemy_db

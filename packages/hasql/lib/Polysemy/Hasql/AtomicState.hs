@@ -6,7 +6,6 @@ import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.Uid (Uid)
-import Polysemy.Log (Log)
 
 import Polysemy.Hasql.Crud (interpretCrudSingleton)
 import Polysemy.Hasql.Data.Crud (UidCrud)
@@ -45,8 +44,8 @@ interpretAtomicStateDbAs ::
   Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
-interpretAtomicStateDbAs =
-  interpretAtomicStateDb . pure
+interpretAtomicStateDbAs d =
+  interpretAtomicStateDb (pure d)
 {-# inline interpretAtomicStateDbAs #-}
 
 -- |Interpret 'AtomicState' as a singleton table.

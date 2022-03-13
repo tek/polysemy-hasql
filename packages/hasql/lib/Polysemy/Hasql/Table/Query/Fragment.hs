@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.Query.Fragment where
 
+import Exon (exon)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions (ColumnOptions))
 
 import Polysemy.Hasql.Data.DbType (Column (Column), Selector (Selector))

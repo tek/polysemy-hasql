@@ -1,10 +1,11 @@
 module Polysemy.Hasql.Test.EnumTest where
 
+import Exon (exon)
 import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
-import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod), TypeName (CompositeTypeName))
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 
 data En =
   One
@@ -12,15 +13,15 @@ data En =
   Two
   |
   Three
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data EnumCol =
   EnumCol { e :: En }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data EnumsCol =
   EnumsCol { e :: NonEmpty En }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 enumColTable :: Column
 enumColTable =
@@ -29,7 +30,7 @@ enumColTable =
 test_enumColTable :: UnitTest
 test_enumColTable =
   runTestAuto do
-    Column "enum_col" [text|"enum_col"|] (CompositeTypeName "enum_col") def (Prod [Column "e" [text|"e"|] "text" def Prim]) === enumColTable
+    Column "enum_col" (fromString [exon|"enum_col"|]) (CompositeTypeName "enum_col") def (Prod [Column "e" (fromString [exon|"e"|]) "text" def Prim]) === enumColTable
 
 enumsColTable :: Column
 enumsColTable =
@@ -38,4 +39,4 @@ enumsColTable =
 test_enumsColTable :: UnitTest
 test_enumsColTable =
   runTestAuto do
-    Column "enums_col" [text|"enums_col"|] (CompositeTypeName "enums_col") def (Prod [Column "e" [text|"e"|] "text[]" def Prim]) === enumsColTable
+    Column "enums_col" (fromString [exon|"enums_col"|]) (CompositeTypeName "enums_col") def (Prod [Column "e" (fromString [exon|"e"|]) "text[]" def Prim]) === enumsColTable

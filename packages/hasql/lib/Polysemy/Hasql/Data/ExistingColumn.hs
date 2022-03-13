@@ -7,4 +7,4 @@ data ExistingColumn =
     name :: Name,
     ctype :: Text
   }
-  deriving (Eq, Show, Ord)
+  deriving stock (Eq, Show, Ord)

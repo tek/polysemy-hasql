@@ -5,7 +5,6 @@ import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Rep (Auto)
 import Polysemy.Db.Data.Uid (Uid)
 import Polysemy.Db.Reader (interpretReaderStore)
-import Polysemy.Log (Log)
 
 import Polysemy.Hasql.Crud (interpretCrudSingleton)
 import Polysemy.Hasql.Data.Database (Database)

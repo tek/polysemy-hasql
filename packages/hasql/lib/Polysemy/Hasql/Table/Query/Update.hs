@@ -1,5 +1,7 @@
 module Polysemy.Hasql.Table.Query.Update where
 
+import Control.Lens ((^.))
+import Exon (exon)
 import Hasql.DynamicStatements.Snippet (Snippet, encoderAndParam, sql)
 import Polysemy.Db.Data.Partial (PartialFor)
 import qualified Polysemy.Db.Data.PartialField as PartialField

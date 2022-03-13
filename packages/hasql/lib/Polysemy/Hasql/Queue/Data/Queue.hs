@@ -1,8 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queue where
 
-import GHC.TypeLits (AppendSymbol)
 import Polysemy.Db.SOP.Constraint (symbolText)
-import Polysemy.Tagged (Tagged)
+import Prelude hiding (Queue)
 
 import Polysemy.Hasql (HasqlConnection)
 import Polysemy.Hasql.Queue.Data.Queued (Queued, QueuedRep)

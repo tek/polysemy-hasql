@@ -8,15 +8,16 @@ module Polysemy.Db.Tree.Data.PartialPayload (
   decodePartialPayloadTree,
 ) where
 
-import Data.Aeson (Result (Error, Success), Value, fromJSON)
+import Data.Aeson (FromJSON, Result (Error, Success), ToJSON (toJSON), Value, fromJSON)
 
 import Polysemy.Db.Data.PartialField (PartialTree, Partially)
 import Polysemy.Db.Data.Uid (Uid)
+import Polysemy.Db.Json (defaultJson)
 import Polysemy.Db.Tree.Partial (Partial)
 
 newtype PartialPayload d =
   PartialPayload { unPartialPayload :: Value }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 defaultJson 'PartialPayload
 

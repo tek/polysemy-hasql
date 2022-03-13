@@ -9,20 +9,20 @@ data Sub1 =
   Sub1 {
     int :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Sub =
   Sub {
     double :: Double,
     sub1 :: Sub1
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat =
   Dat {
     sub :: Sub
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type Sub1Tree =
   ProdTree "Sub1" Sub1 '[

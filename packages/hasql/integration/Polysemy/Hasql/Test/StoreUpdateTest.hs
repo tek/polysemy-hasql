@@ -2,6 +2,7 @@ module Polysemy.Hasql.Test.StoreUpdateTest where
 
 import qualified Data.Aeson as Aeson
 import qualified Data.List.NonEmpty as NonEmpty
+import Exon (exon)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Partial (Partial, partial)
 import Polysemy.Db.Data.Rep (Auto, IdQueryAs, Prim, PrimaryKey, Rep, Sum)
@@ -9,6 +10,7 @@ import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Data.Uid as Uid
 import Polysemy.Db.Data.Uid (Uid (Uid))
+import Polysemy.Db.Json (defaultJson)
 import Polysemy.Db.Tree.Partial (field, (+>))
 import Polysemy.Db.Tree.Partial.Insert (type (@>))
 import Polysemy.Test (UnitTest, assertJust)
@@ -18,14 +20,14 @@ import Polysemy.Hasql.Test.Run (integrationTest)
 
 newtype Tex =
   Tex { unTex :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (IsString)
 
 defaultJson ''Tex
 
 newtype Buul =
   Buul { unBuul :: Bool }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 defaultJson ''Buul
 
@@ -36,7 +38,7 @@ data Dat =
     txt :: Tex,
     _boo :: Buul
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
@@ -45,19 +47,19 @@ data DatRep =
     txt :: Prim,
     _boo :: Prim
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumId =
   S1 { sid1 :: Int }
   |
   S2 { sid2 :: Int }
-  deriving (Eq, Show, Generic, Ord)
+  deriving stock (Eq, Show, Generic, Ord)
 
 data SumIdRep =
-  S1Rep { sid1 :: Prim } 
+  S1Rep { sid1 :: Prim }
   |
   S2Rep { sid2 :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 updateRecord :: Uid SumId Dat
 updateRecord =
@@ -92,7 +94,7 @@ prog = do
   restop (Store.insert keepRecord)
   updateWith update
   restop (Store.update (S1 1) (partial @Dat +> field @"intField" (99 :: Int) +> field @"_boo" (Buul False)))
-  jsonUpdate <- fromEither (mapLeft toText (Aeson.eitherDecode [text|{"txt":"updated"}|]))
+  jsonUpdate <- fromEither (first toText (Aeson.eitherDecode [exon|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
 

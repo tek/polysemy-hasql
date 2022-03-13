@@ -21,14 +21,14 @@ instance (
     condSelector =
       reifyPath @path
 
-class FieldSelector a q rep d where
+class FieldSelector qrep q rep d where
   fieldSelector :: Selector
 
 instance (
     TableRoot rep d dTree,
-    DbQueryRoot a q d qTree,
+    DbQueryRoot qrep q d qTree,
     '[cond] ~ MatchTable qTree dTree,
     CondSelector cond
-  ) => FieldSelector a q rep d where
+  ) => FieldSelector qrep q rep d where
     fieldSelector =
       Selector (condSelector @cond)

@@ -7,7 +7,7 @@ import Prelude (Eq, IsString, Show, Text)
 
 newtype DbPassword =
   DbPassword Text
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
   deriving newtype (IsString)
 
 defaultJson ''DbPassword

@@ -1,12 +1,25 @@
 module Polysemy.Hasql.Table.QueryRow where
 
+import Data.Composition ((.:))
+import qualified Data.Set as Set
 import Data.Vector (Vector)
-import Hasql.Decoders (Array, Row, Value, array, column, listArray, nonNullable, nullable, vectorArray, element, dimension)
+import Hasql.Decoders (
+  Array,
+  Row,
+  Value,
+  array,
+  column,
+  dimension,
+  element,
+  listArray,
+  nonNullable,
+  nullable,
+  vectorArray,
+  )
 import Polysemy.Db.Data.Rep (Prim)
 import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 import Polysemy.Hasql.Table.DecoderValue (DecoderValue, decoderValue)
-import qualified Data.Set as Set
 
 value :: Value a -> Row a
 value =

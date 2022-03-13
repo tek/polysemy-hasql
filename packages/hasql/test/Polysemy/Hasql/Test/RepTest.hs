@@ -21,11 +21,11 @@ import Polysemy.Hasql.Tree.Table (TableParams, TableTree, tableRoot)
 
 newtype Newt =
   Newt { unNewt :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 newtype NewtPrim =
   NewtPrim { unNewt :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 instance ColumnType NewtPrim where columnType = "text"
 
@@ -34,7 +34,7 @@ data Custom =
     custInt :: Int,
     custText :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 instance ColumnType Custom where columnType = "text"
 
@@ -42,45 +42,45 @@ data Summer =
   Summer1 { txt :: Text }
   |
   Summer2 { int :: Int, double :: Double }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SummerRep =
   SummerRep1 { txt :: Prim }
   |
   SummerRep2 { int :: Prim, double :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Proddo =
   Proddo {
     prInt :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data ProddoRep =
   ProddoRep {
     prInt :: Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Flatty =
   Flatty {
     flat1 :: Int,
     flat2 :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data FlattyRep =
   FlattyRep {
     flat1 :: Prim,
     flat2 :: Prim
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Nummo =
   Num1
   |
   Num2
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat =
   Dat {
@@ -98,7 +98,7 @@ data Dat =
     ,
     flatty :: Flatty
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
@@ -116,7 +116,7 @@ data DatRep =
     ,
     flatty :: Flatten FlattyRep
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type ProddoMeta =
   'AdtProd '[ 'TreeMeta ('NamedField "prInt") Auto Int]

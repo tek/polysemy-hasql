@@ -16,11 +16,11 @@ import qualified Polysemy.Db.Type.Data.Tree as Type
 
 data DataTag =
   DataTag
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 data ExpandedDataTag =
   ExpandedDataTag
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 type DataTree = Type.Tree () I
 type DataNode = Type.Node () I

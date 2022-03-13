@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Data.Where where
 
+import Exon (exon)
 import Hasql.DynamicStatements.Snippet (Snippet)
 import qualified Text.Show as Show
 
@@ -21,4 +22,4 @@ instance Monoid (Where q d) where
 
 instance Show (Where q d) where
   show (Where p _) =
-    [text|Where #{p}|]
+    [exon|Where #{show p}|]

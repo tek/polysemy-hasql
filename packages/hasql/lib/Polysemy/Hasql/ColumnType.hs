@@ -4,6 +4,7 @@ module Polysemy.Hasql.ColumnType where
 
 import qualified Chronos as Chronos
 import Data.Time (Day, DiffTime, LocalTime, TimeOfDay, TimeZone, UTCTime)
+import Data.UUID (UUID)
 import Data.Vector (Vector)
 import Fcf (type (@@))
 import Path (Path)
@@ -13,7 +14,7 @@ import Polysemy.Db.SOP.Constraint (DataName)
 import Polysemy.Db.Text.DbIdentifier (dbSymbol)
 import Polysemy.Db.Tree.Data.Effect (Adt, CustomType, Newtype, Tycon)
 import Prelude hiding (Enum)
-import Type.Errors (ErrorMessage (ShowType), TypeError)
+import Type.Errors (ErrorMessage)
 import Type.Errors.Pretty (type (%), type (<>))
 
 class ColumnType (d :: Type) where

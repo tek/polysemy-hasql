@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Where where
 
-import Data.Foldable (foldl1)
 import qualified Exon
+import Exon (exon)
 import Fcf (Eval, Pure1, type (<=<), type (@@))
 import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, K (K), NP, hcollapse, hcpure)
@@ -34,7 +34,7 @@ simpleSlug ::
   KnownSymbol name =>
   String
 simpleSlug =
-  [text|"#{slugString_ (dropWhile ('_' ==) (symbolString @name))}"|]
+  [exon|"#{slugString_ (dropWhile ('_' ==) (symbolString @name))}"|]
 
 where' ::
   [Int -> SqlCode] ->

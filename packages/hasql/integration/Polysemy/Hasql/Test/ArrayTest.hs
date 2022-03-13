@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.ArrayTest where
 
+import Data.UUID (UUID)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Rep (Enum)
 import qualified Polysemy.Db.Data.Store as Store
@@ -20,21 +21,21 @@ data Flag =
   Off
   |
   Superposition
-  deriving (Eq, Show, Generic, Ord)
+  deriving stock (Eq, Show, Generic, Ord)
 
 data ArrayField =
   ArrayField {
     f1 :: [Flag],
     f2 :: Set Flag
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data ArrayFieldRep =
   ArrayFieldRep {
     f1 :: Enum,
     f2 :: Enum
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 id' :: UUID
 id' =

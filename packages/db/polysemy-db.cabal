@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 
@@ -44,9 +44,7 @@ library
       Polysemy.Db.Data.Rep
       Polysemy.Db.Data.Store
       Polysemy.Db.Data.StoreQuery
-      Polysemy.Db.Debug
       Polysemy.Db.Kind.Data.Tree
-      Polysemy.Db.Prelude
       Polysemy.Db.Random
       Polysemy.Db.Reader
       Polysemy.Db.SOP.Constraint
@@ -81,11 +79,6 @@ library
       Polysemy.Db.Tree.QueryName
       Polysemy.Db.Tree.Unfold
       Polysemy.Db.Type.Data.Tree
-  other-modules:
-      Prelude
-      Paths_polysemy_db
-  autogen-modules:
-      Paths_polysemy_db
   hs-source-dirs:
       lib
   default-extensions:
@@ -146,30 +139,21 @@ library
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints -Wunused-type-patterns
+  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages
   build-depends:
       aeson
     , base
-    , comonad
     , composition
-    , containers
-    , data-default
-    , either
     , exon
-    , fcf-containers ==0.6.*
     , first-class-families
     , generics-sop
+    , incipit >=0.2
     , lens
     , path
     , polysemy >=1.7.1
     , polysemy-db-data
-    , polysemy-resume
+    , polysemy-plugin
     , random
-    , relude
-    , string-interpolate
-    , symbols
-    , template-haskell
-    , text
     , time
     , type-errors
     , type-errors-pretty

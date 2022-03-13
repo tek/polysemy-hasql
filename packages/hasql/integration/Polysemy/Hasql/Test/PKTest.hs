@@ -2,6 +2,7 @@
 
 module Polysemy.Hasql.Test.PKTest where
 
+import Exon (exon)
 import Polysemy.Db.Data.ColumnOptions (primaryKey)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
@@ -17,12 +18,12 @@ import Polysemy.Db.Tree.Effect (TreeEffects)
 import Polysemy.Db.Tree.Meta (AdtMeta')
 import Polysemy.Test (UnitTest, assertJust, evalEither, (===))
 
-import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (TypeName (CompositeTypeName))
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.QueryParams (QueryParams)
 import Polysemy.Hasql.Table.BasicSchema (BasicSchema)
+import Polysemy.Hasql.Table.DataColumn (tableStructure)
 import Polysemy.Hasql.Table.Schema (Schema, UidQuerySchema, schema)
 import Polysemy.Hasql.Test.Database (withTestStoreGenAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
@@ -31,7 +32,7 @@ import Polysemy.Hasql.Where (Where)
 
 newtype Id =
   Id { unId :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (Num, Real, Enum, Integral, Ord)
 
 data Rec =
@@ -39,7 +40,7 @@ data Rec =
     a :: Int,
     b :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 prog ::
   Member (Store Id Rec) r =>
@@ -92,10 +93,10 @@ testDerivation =
 
 targetStructure :: Data.Column
 targetStructure =
-  Data.Column "rec" [text|"rec"|] (CompositeTypeName "uid") def $ Data.Prod [
-    Data.Column "id" [text|"id"|] "bigint" def { primaryKey = True } Data.Prim,
-    Data.Column "a" [text|"a"|] "bigint" def Data.Prim,
-    Data.Column "b" [text|"b"|] "text" def Data.Prim
+  Data.Column "rec" [exon|"rec"|] (CompositeTypeName "uid") def $ Data.Prod [
+    Data.Column "id" [exon|"id"|] "bigint" def { primaryKey = True } Data.Prim,
+    Data.Column "a" [exon|"a"|] "bigint" def Data.Prim,
+    Data.Column "b" [exon|"b"|] "text" def Data.Prim
   ]
 
 test_pk :: UnitTest

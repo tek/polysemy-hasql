@@ -1,8 +1,9 @@
 module Polysemy.Db.Data.FieldId where
 
-import Fcf (Eval, Exp, type (@@), Pure1)
+import Exon (exon)
+import Fcf (Eval, Exp, Pure1, type (@@))
 import Fcf.Class.Functor (FMap)
-import Type.Errors (ErrorMessage(ShowType, Text))
+import Type.Errors (ErrorMessage (Text))
 import Type.Errors.Pretty (type (<>))
 
 import Polysemy.Db.SOP.Constraint (symbolString, symbolText)
@@ -37,9 +38,9 @@ instance (
     KnownNat index
   ) => FieldIdText ('NumberedField name index) where
   fieldIdTextRaw =
-    [text|#{symbolText @name}_#{natVal (Proxy @index)}|]
+    [exon|#{symbolText @name}_#{show (natVal (Proxy @index))}|]
   fieldIdText =
-    dbIdentifier [text|#{symbolString @name}_#{natVal (Proxy @index)}|]
+    dbIdentifier [exon|#{symbolString @name}_#{show (natVal (Proxy @index))}|]
 
 data FieldIdSymbol :: FieldId -> Exp ErrorMessage
 

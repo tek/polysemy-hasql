@@ -3,13 +3,14 @@
 module Polysemy.Hasql.Test.QueryTest where
 
 import Data.Time (UTCTime)
+import Data.UUID (UUID)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
 import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
 import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (UuidStore)
 import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
@@ -20,12 +21,10 @@ import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Data.Effect (Adt, Newtype, Tycon)
 import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
 import Polysemy.Db.Tree.Meta (AdtMeta', AdtMetadata (AdtProd, AdtSum))
-import Polysemy.Log (Log)
 import Polysemy.Test (Hedgehog, UnitTest, (===))
 import Polysemy.Test.Hedgehog (assertJust)
 import Polysemy.Time (GhcTime, mkDatetime)
 
-import Polysemy.Hasql.Table.DataColumn (dataTable)
 import Polysemy.Hasql.Data.Database (Database)
 import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.Query (interpretQuery)
@@ -33,52 +32,53 @@ import Polysemy.Hasql.Query.Many (interpretMany)
 import Polysemy.Hasql.Query.One (interpretOne)
 import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
 import Polysemy.Hasql.Store (interpretStoreDbFullGen)
+import Polysemy.Hasql.Table.DataColumn (dataTable)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Tree.Table (TableRoot, tableRoot)
 import Polysemy.Hasql.Where (queryWhere)
 
 newtype Content =
   Content { unContent :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (IsString)
 
 data XXor =
   Lef { l :: Double }
   |
   Righ { r :: Bool }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data XXorRep =
   LRep { l :: Prim }
   |
   RRep { r :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Number =
   Number {
     number_ :: Int,
     otherNumber :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data NumberRep =
   NumberRep {
     number_ :: Auto,
     otherNumber :: Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data NumberWrap =
   NumberWrap {
     numberWrap :: Number
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data NumberWrapRep =
   NumberWrapRep {
     numberWrap :: Flatten NumberRep
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Dat =
   Dat {
@@ -87,7 +87,7 @@ data Dat =
      xxor :: XXor,
      created :: CreationTime
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatRep =
   DatRep {
@@ -96,7 +96,7 @@ data DatRep =
     xxor :: Sum XXorRep,
     created :: Auto
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data ContentNumber =
   ContentNumber {
@@ -105,7 +105,7 @@ data ContentNumber =
     number :: Maybe (LessOrEq Int),
     xxor :: XXor
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type XXorMeta =
   'AdtSum '[

@@ -8,7 +8,7 @@ import Polysemy.Db.Json (defaultJson)
 
 newtype DbName =
   DbName { unDbName :: Text }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
   deriving newtype (IsString)
 
 defaultJson ''DbName

@@ -1,6 +1,8 @@
 module Polysemy.Db.Data.ColumnPrefix where
 import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 
+import Exon (exon)
+
 data ColumnPrefix =
   InitPrefix
   |
@@ -9,7 +11,7 @@ data ColumnPrefix =
   BasePrefix Text
   |
   TypePrefix Text
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 addPrefix ::
   Text ->

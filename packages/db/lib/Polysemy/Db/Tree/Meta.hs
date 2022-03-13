@@ -4,12 +4,10 @@
 module Polysemy.Db.Tree.Meta where
 
 import Fcf (Eval, FromMaybe, type (@@))
-import GHC.TypeLits (AppendSymbol)
-import GHC.TypeNats (type (+))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo (ADT))
-import Type.Errors (ErrorMessage (ShowType, Text))
-import Type.Errors.Pretty (TypeError, type (%), type (<>))
+import Type.Errors (ErrorMessage (Text))
+import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
 import Polysemy.Db.Data.Rep (Auto, Flatten, Product, Rep, Sum)

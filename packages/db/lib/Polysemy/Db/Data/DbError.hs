@@ -8,4 +8,4 @@ data DbError =
   Query Text
   |
   Table Text
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)

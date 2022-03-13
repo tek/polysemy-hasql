@@ -1,30 +1,19 @@
 name: polysemy-db-data
 synopsis: Polysemy effects for databases
 <<: !include shared/meta.yaml
-<<: !include shared/extensions.yaml
-
-ghc-options:
-  - -Wall
-  - -Wredundant-constraints
-  - -Wsimplifiable-class-constraints
+defaults:
+  local: shared/defaults.yaml
 
 library:
   source-dirs: lib
-  generated-other-modules:
-    - Paths_polysemy_db_data
-
-dependencies:
-  - name: base
-    mixin:
-      - hiding (Prelude)
-  - aeson
-  - comonad
-  - data-default
-  - lens
-  - name: relude
-    mixin:
-      - hiding (Relude)
-      - (Relude as Prelude)
-  - template-haskell
-  - unordered-containers
-  - uuid
+  dependencies:
+    - aeson
+    - comonad
+    - data-default
+    - lens
+    - template-haskell
+    - uuid
+  when:
+    condition: false
+    generated-other-modules:
+      - Paths_polysemy_db_data

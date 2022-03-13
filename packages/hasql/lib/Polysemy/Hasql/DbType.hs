@@ -1,5 +1,6 @@
 module Polysemy.Hasql.DbType where
 
+import Exon (exon)
 import Polysemy.Db.Text.Quote (dquote)
 
 import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions

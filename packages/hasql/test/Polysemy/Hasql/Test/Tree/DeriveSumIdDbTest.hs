@@ -23,27 +23,27 @@ data SumPK =
   SumPKL { l :: Int }
   |
   SumPKR { r :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumPKRep =
   SumPKLRep { l :: Prim }
   |
   SumPKRRep { r :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumId =
   SumId { number :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumIdRep =
   SumIdRep { number :: Prim }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data SumPKQ =
   SumPKQ {
     number :: Int
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type SumIdRecRep =
   UidRep (Sum SumPKRep) SumIdRep

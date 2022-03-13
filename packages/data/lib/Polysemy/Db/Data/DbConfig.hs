@@ -22,7 +22,7 @@ data DbConfig =
     _user :: DbUser,
     _password :: DbPassword
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 makeClassy ''DbConfig
 defaultJson ''DbConfig

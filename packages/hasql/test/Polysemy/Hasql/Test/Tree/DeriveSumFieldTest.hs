@@ -16,14 +16,14 @@ data Summy =
   Lefty { intL :: Int, doubleL :: Double }
   |
   Righty { intR :: Int, doubleR :: Double }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data DatSF =
   DatSF {
     id :: Int,
     summy :: Summy
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type DatSFSum =
   [

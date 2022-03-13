@@ -1,17 +1,15 @@
 module Polysemy.Hasql.Test.QueueTest where
 
-import Polysemy.Async (asyncToIOFinal)
+import Polysemy.Conc (interpretRace)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Uid (Uuid, intUuid)
-import Polysemy.Input (Input, input)
+import Polysemy.Db.Json (defaultJson)
 import Polysemy.Log (interpretLogNull)
-import Polysemy.Output (Output, output)
-import Polysemy.Tagged (Tagged, tag, untag)
 import Polysemy.Test (UnitTest, assertJust)
 import Polysemy.Test.Data.Hedgehog (Hedgehog)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (MilliSeconds(MilliSeconds), Seconds(Seconds), Time, interpretTimeGhc)
+import Polysemy.Time (MilliSeconds (MilliSeconds), Seconds (Seconds), interpretTimeGhc)
 
 import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
@@ -19,13 +17,12 @@ import Polysemy.Hasql.Database (HasqlConnection)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.Queue (interpretInputDbQueueFullGen, interpretOutputDbQueueFullGen)
 import Polysemy.Hasql.Test.Run (integrationTestWithDb)
-import Polysemy.Conc (interpretRace)
 
 data Dat =
   Dat {
     num :: Text
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 defaultJson ''Dat
 

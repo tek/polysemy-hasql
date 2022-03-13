@@ -15,7 +15,7 @@ import Polysemy.Test (UnitTest)
 
 newtype Tex =
   Tex { unTex :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
   deriving newtype (IsString)
 
 data Dat =
@@ -23,7 +23,7 @@ data Dat =
     txt :: Tex,
     path :: Path Rel File
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 newtypePartialDerivation ::
   tag ~ DefaultEffects =>

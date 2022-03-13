@@ -1,6 +1,6 @@
 module Polysemy.Db.Reader where
 
-import Polysemy.Internal.Tactics (liftT, runT)
+import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Reader (Reader (Ask, Local))
 
 import qualified Polysemy.Db.Data.Store as Store

@@ -3,10 +3,9 @@ module Polysemy.Hasql.Where.Segment where
 import Fcf (Eval, Exp, type (<=<), type (@@), type (||))
 import Fcf.Alg.Symbol (type (==))
 import Fcf.Class.Functor (FMap)
-import GHC.TypeLits (AppendSymbol)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Error (JoinError)
-import Type.Errors (ErrorMessage (Text), TypeError)
+import Type.Errors (ErrorMessage (Text))
 
 data Segment =
   FieldSegment FieldId

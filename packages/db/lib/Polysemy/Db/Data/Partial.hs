@@ -2,6 +2,7 @@
 
 module Polysemy.Db.Data.Partial where
 
+import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
 import qualified Text.Show as Show
 import Unsafe.Coerce (unsafeCoerce)
 

@@ -1,16 +1,13 @@
 module Polysemy.Hasql.Interpreter.QueryStore where
 
+import Control.Lens ((^.))
 import Hasql.Encoders (Params)
-import Polysemy (raise3Under)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import qualified Polysemy.Db.Data.QueryStore as QueryStore
 import Polysemy.Db.Data.QueryStore (QueryStore)
-import Polysemy.Log (Log)
-import Polysemy.Resource (Resource)
-import Polysemy.Tagged (Tagged, untag)
-import Polysemy.Time (Time, interpretTimeGhc)
+import Polysemy.Time (interpretTimeGhc)
 
 import Polysemy.Hasql.Crud (interpretCrud, interpretCrudWith)
 import Polysemy.Hasql.Data.Crud (Crud (..))

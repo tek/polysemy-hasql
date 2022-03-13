@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Data.Table where
 
-import Control.Lens (Lens')
+import Control.Lens (Lens', makeClassy)
+import Exon (exon)
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
 import qualified Text.Show as Show
@@ -27,4 +28,4 @@ selector =
 
 instance Show Column => Show (Table a) where
   show (Table struct _ _) =
-    [text|Table { structure = #{struct} }|]
+    [exon|Table { structure = #{show struct} }|]

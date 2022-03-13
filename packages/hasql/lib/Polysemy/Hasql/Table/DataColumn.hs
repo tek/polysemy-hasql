@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Table.DataColumn where
 
+import Data.Composition ((.:))
 import Generics.SOP (All, AllN, CollapseTo, HAp, HCollapse (hcollapse), K (K), NP, Prod, hcmap)
 import Generics.SOP.Constraint (SListIN)
 import Polysemy.Db.Data.ColumnPrefix (ColumnPrefix (InitPrefix), addPrefix, prefixed)

@@ -9,7 +9,7 @@ import Polysemy.Db.Json (defaultJson)
 
 newtype DbHost =
   DbHost Text
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
   deriving newtype (IsString)
 
 instance Default DbHost where

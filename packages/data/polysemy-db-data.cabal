@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 
@@ -36,10 +36,6 @@ library
       Polysemy.Db.Data.InitDbError
       Polysemy.Db.Data.Uid
       Polysemy.Db.Json
-  other-modules:
-      Paths_polysemy_db_data
-  autogen-modules:
-      Paths_polysemy_db_data
   hs-source-dirs:
       lib
   default-extensions:
@@ -100,19 +96,18 @@ library
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wsimplifiable-class-constraints
+  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages
   build-depends:
       aeson
     , base
     , comonad
     , data-default
+    , incipit >=0.2
     , lens
-    , relude
+    , polysemy >=1.7.1
+    , polysemy-plugin
     , template-haskell
-    , unordered-containers
     , uuid
   mixins:
       base hiding (Prelude)
-    , relude hiding (Relude)
-    , relude (Relude as Prelude)
   default-language: Haskell2010

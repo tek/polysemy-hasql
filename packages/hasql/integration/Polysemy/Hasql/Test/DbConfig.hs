@@ -1,12 +1,8 @@
-{-# language CPP #-}
-
 module Polysemy.Hasql.Test.DbConfig where
 
+import Exon (exon)
 import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
-
-#if !MIN_VERSION_relude(1,0,0)
 import System.Environment (lookupEnv)
-#endif
 
 dbConfig ::
   MonadIO m =>
@@ -20,4 +16,4 @@ dbConfig = do
     parsePort p =
       case readMaybe p of
         Just a -> pure a
-        Nothing -> error [text|invalid port in env var $polysemy_db_test_port: #{p}|]
+        Nothing -> error [exon|invalid port in env var $polysemy_db_test_port: #{p}|]

@@ -16,7 +16,7 @@ data Uid i a =
     _id :: i,
     _payload :: a
   }
-  deriving (Eq, Show, Generic, Functor)
+  deriving stock (Eq, Show, Generic, Functor)
 
 makeClassy ''Uid
 

@@ -5,12 +5,13 @@ import Data.Scientific (Scientific)
 import Data.Time (
   Day,
   DiffTime,
-  LocalTime(LocalTime),
-  TimeOfDay(TimeOfDay),
+  LocalTime (LocalTime),
+  TimeOfDay (TimeOfDay),
   TimeZone,
   UTCTime,
   toModifiedJulianDay,
   )
+import Data.UUID (UUID)
 import Hasql.Decoders (
   Value,
   bool,
@@ -33,7 +34,7 @@ import Hasql.Decoders (
   uuid,
   )
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
-import Prelude hiding (Enum, bool, text)
+import Prelude hiding (Enum, bool)
 
 class PrimDecoder a where
   primDecoder :: Value a
@@ -117,7 +118,7 @@ decodePath ::
   ByteString ->
   Either Text (Path b t)
 decodePath parse _ =
-  mapLeft show . parse . decodeUtf8
+  first show . parse . decodeUtf8
 
 instance PrimDecoder (Path Abs File) where
   primDecoder =

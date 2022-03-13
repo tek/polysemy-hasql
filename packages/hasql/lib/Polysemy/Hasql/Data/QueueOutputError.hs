@@ -6,4 +6,4 @@ data QueueOutputError =
   Insert DbError
   |
   Notify DbError
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)

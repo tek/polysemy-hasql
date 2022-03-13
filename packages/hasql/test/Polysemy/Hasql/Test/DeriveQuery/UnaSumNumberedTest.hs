@@ -20,20 +20,20 @@ data Sum1 =
     int1 :: Int,
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data Sum2 =
   Sum2 {
     int2 :: Int,
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 data UnaSum =
   UnaSum1 Sum1
   |
   UnaSum2 Sum2
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type Sum1Meta =
   AdtMeta' (Product Auto) Sum1

@@ -3,13 +3,14 @@ module Polysemy.Hasql.Table.PrimEncoder where
 import qualified Chronos as Chronos
 import Data.Scientific (Scientific)
 import Data.Time (
-  Day(ModifiedJulianDay),
+  Day (ModifiedJulianDay),
   DiffTime,
-  LocalTime(LocalTime),
-  TimeOfDay(TimeOfDay),
+  LocalTime (LocalTime),
+  TimeOfDay (TimeOfDay),
   TimeZone,
   UTCTime,
   )
+import Data.UUID (UUID)
 import Hasql.Encoders (
   Value,
   bool,
@@ -31,7 +32,7 @@ import Hasql.Encoders (
   uuid,
   )
 import Path (Path, toFilePath)
-import Prelude hiding (Enum, bool, text)
+import Prelude hiding (Enum, bool)
 
 class PrimEncoder d where
   primEncoder :: Value d

@@ -6,7 +6,7 @@ import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Dat =
   Dat { int :: Int }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 test_hasGeneric :: UnitTest
 test_hasGeneric =

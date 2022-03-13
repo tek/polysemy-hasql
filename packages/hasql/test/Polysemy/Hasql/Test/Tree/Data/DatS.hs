@@ -11,7 +11,7 @@ data DatS =
   DatS1 { id :: Int, double1 :: Double }
   |
   DatS2 { id :: Int, text2 :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type DatSSum =
   [

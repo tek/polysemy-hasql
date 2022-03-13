@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Data.DbType where
 
+import Control.Lens (makeClassy)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions)
 import Polysemy.Db.Text.Quote (dquote)
 
@@ -11,23 +12,23 @@ data DbType =
   Prod { cols :: [Column] }
   |
   Sum { sumCols :: Column }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 newtype Name =
   Name { unName :: Text }
-  deriving (Eq, Show, Generic, Ord)
-  deriving newtype (IsString)
+  deriving stock (Eq, Show, Generic, Ord)
+  deriving newtype (IsString, Semigroup, Monoid)
 
 newtype Selector =
   Selector { unSelector :: SqlCode }
-  deriving (Eq, Show, Generic, Ord)
-  deriving newtype (IsString)
+  deriving stock (Eq, Show, Generic, Ord)
+  deriving newtype (IsString, Semigroup, Monoid)
 
 data TypeName =
   PrimTypeName { unTypeName :: Text }
   |
   CompositeTypeName { unTypeName :: Text }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 instance IsString TypeName where
   fromString =
@@ -49,6 +50,6 @@ data Column =
     _options :: ColumnOptions,
     _dbType :: DbType
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 makeClassy ''Column

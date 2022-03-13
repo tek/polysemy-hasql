@@ -21,7 +21,7 @@ data Dat =
     int :: Int,
     double :: Double
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
 
 type DatAdtMetas =
   '[

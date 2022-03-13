@@ -9,7 +9,7 @@ import Polysemy.Db.Json (defaultJson)
 
 newtype DbPort =
   DbPort Int
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
   deriving newtype (Num, Real, Enum, Integral, Ord, Read)
 
 instance Default DbPort where

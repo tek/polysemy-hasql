@@ -1,5 +1,7 @@
 module Polysemy.Hasql.Queue.Output where
 
+import Data.UUID (UUID)
+import Exon (exon)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
@@ -7,16 +9,15 @@ import Polysemy.Db.Data.Uid (Uid (Uid))
 import Polysemy.Db.Random (Random, random)
 import Polysemy.Db.SOP.Constraint (symbolText)
 import qualified Polysemy.Log as Log
-import Polysemy.Log (Log)
 import Polysemy.Output (Output (Output))
-import Polysemy.Tagged (tag)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (Seconds (Seconds), Time)
-import Prelude hiding (group)
+import Polysemy.Time (Seconds (Seconds))
+import Prelude hiding (Queue, group)
 
 import Polysemy.Hasql.Data.Database (Database)
 import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
 import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.Queue.Data.Queue (OutputQueueConnection, Queue)
@@ -35,12 +36,12 @@ interpretOutputDbQueue =
       created <- Time.now
       resumeHoist QueueOutputError.Insert do
         Store.insert (Uid id' (Queued created d))
-      Log.debug [text|executing `notify` for queue #{symbolText @queue}|]
+      Log.debug [exon|executing `notify` for queue #{symbolText @queue}|]
       resumeHoist QueueOutputError.Notify do
         Database.retryingSql (Seconds 3) (sql id')
         where
           sql id' =
-            [text|notify "#{symbolText @queue}", '#{id'}'|]
+            [exon|notify "#{SqlCode (symbolText @queue)}", '#{show id'}'|]
 
 interpretOutputDbQueueFull ::
   ∀ (queue :: Symbol) d t dt r .
