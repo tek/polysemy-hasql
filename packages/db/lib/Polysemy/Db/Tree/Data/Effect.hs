@@ -33,13 +33,14 @@ type family FindEffect (match :: Type -> Exp (Maybe a)) (effs :: [Type]) :: Mayb
   FindEffect match effs =
     FirstJust match @@ effs
 
-type family GetADTRep (f :: Type -> Type) (eff :: Type) :: Maybe Type where
-  GetADTRep f (Adt _ (f a)) = 'Just a
-  GetADTRep _ _ = 'Nothing
+type GetAdtRep :: (Type -> a) -> Type -> Maybe a
+type family GetAdtRep (f :: Type -> a) (eff :: Type) :: Maybe a where
+  GetAdtRep f (Adt _ (f a)) = 'Just a
+  GetAdtRep _ _ = 'Nothing
 
 data GetADTRepF :: (Type -> a) -> Type -> Exp (Maybe a)
 type instance Eval (GetADTRepF f eff) =
-  GetADTRep f eff
+  GetAdtRep f eff
 
 type family FindFlatten (effs :: [Type]) :: Maybe Type where
   FindFlatten effs =
