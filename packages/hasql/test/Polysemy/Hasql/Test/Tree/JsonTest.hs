@@ -58,7 +58,7 @@ test_treeJson =
     assertRight parTree (decodePartialPayload @Dat =<< first toText (Aeson.eitherDecode encodedPayload))
   where
     target =
-      [exon|{"Dat2":{"sub":{"nouble":9.2},"int":10},"Dat1":{"txt":"update","int":10}}|]
+      [exon|{"Dat1":{"int":10,"txt":"update"},"Dat2":{"int":10,"sub":{"nouble":9.2}}}|]
     encoded =
       Aeson.encode pTree
     encodedPayload =
