@@ -25,7 +25,8 @@ import Polysemy.Db.Tree.Data (GenDataTree (..), ReifyDataTree (..))
 import Polysemy.Db.Tree.Partial.Insert (Insert (insert))
 import Polysemy.Db.Tree.Partial.Update (UpdatePartialTree (..))
 
-type family MkFieldPath (path :: k) :: FieldPath where
+type MkFieldPath :: ∀ k . k -> FieldPath
+type family MkFieldPath path :: FieldPath where
   MkFieldPath (p : ps) =
     'FieldPath (p : ps)
   MkFieldPath p =

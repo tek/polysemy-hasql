@@ -33,10 +33,12 @@ type family QueueOutput (queue :: Symbol) t d :: Constraint where
   QueueOutput queue t d =
     (Ord t, KnownSymbol (OutputConn queue), UuidSchema QueuedRep (Queued t d))
 
+type InputQueueConnection :: ∀ symbol . symbol -> Effect
 type family InputQueueConnection (queue :: symbol) :: Effect where
   InputQueueConnection queue =
     Tagged (InputConn queue) HasqlConnection
 
+type OutputQueueConnection :: ∀ symbol . symbol -> Effect
 type family OutputQueueConnection (queue :: symbol) :: Effect where
   OutputQueueConnection queue =
     Tagged (OutputConn queue) HasqlConnection

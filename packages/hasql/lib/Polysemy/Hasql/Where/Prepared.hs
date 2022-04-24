@@ -53,7 +53,9 @@ instance {-# overlappable #-} QueryWhereColumn d d where
   queryWhereColumn =
     regularField
 
-instance QueryWhereColumn q d => QueryWhereColumn (Maybe q) (Maybe d) where
+instance (
+    QueryWhereColumn q d
+  ) => QueryWhereColumn (Maybe q) (Maybe d) where
   queryWhereColumn name i =
     maybeField i (queryWhereColumn @q @d name i)
 

@@ -17,10 +17,10 @@ library:
     - composition
     - contravariant
     - exon
-    - fcf-containers ^>= 0.6
+    - fcf-containers >= 0.6
     - first-class-families
     - generics-sop
-    - hasql ^>= 1.4.3
+    - hasql >= 1.4.3
     - hasql-dynamic-statements
     - lens
     - path
@@ -50,7 +50,7 @@ tests:
       - exon
       - first-class-families
       - generics-sop
-      - hasql ^>= 1.4.3
+      - hasql >= 1.4.3
       - path
       - polysemy-db
       - polysemy-db-data
@@ -69,7 +69,7 @@ tests:
     dependencies:
       - aeson
       - exon
-      - hasql ^>= 1.4.3
+      - hasql >= 1.4.3
       - hedgehog
       - lens
       - path

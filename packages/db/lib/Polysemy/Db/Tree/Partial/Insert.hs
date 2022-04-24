@@ -205,7 +205,8 @@ data FieldSpec =
     tpe :: Type
   }
 
-type family (@>) (path :: k) (tpe :: Type) :: FieldSpec where
+type (@>) :: ∀ k . k -> Type -> FieldSpec
+type family (@>) path tpe :: FieldSpec where
   (path :: Symbol) @> tpe =
     'FieldSpec ('FieldName path) tpe
   (path :: [Symbol]) @> tpe =

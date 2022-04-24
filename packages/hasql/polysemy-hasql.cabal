@@ -157,6 +157,7 @@ library
       RecursiveDo
       ScopedTypeVariables
       StandaloneDeriving
+      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -176,10 +177,10 @@ library
     , composition
     , contravariant
     , exon
-    , fcf-containers ==0.6.*
+    , fcf-containers >=0.6
     , first-class-families
     , generics-sop
-    , hasql >=1.4.3 && <1.5
+    , hasql >=1.4.3
     , hasql-dynamic-statements
     , incipit >=0.2
     , lens
@@ -277,6 +278,7 @@ test-suite polysemy-hasql-integration
       RecursiveDo
       ScopedTypeVariables
       StandaloneDeriving
+      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -292,7 +294,7 @@ test-suite polysemy-hasql-integration
       aeson
     , base
     , exon
-    , hasql >=1.4.3 && <1.5
+    , hasql >=1.4.3
     , hedgehog
     , incipit >=0.2
     , lens
@@ -390,6 +392,7 @@ test-suite polysemy-hasql-unit
       RecursiveDo
       ScopedTypeVariables
       StandaloneDeriving
+      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -408,7 +411,7 @@ test-suite polysemy-hasql-unit
     , exon
     , first-class-families
     , generics-sop
-    , hasql >=1.4.3 && <1.5
+    , hasql >=1.4.3
     , incipit >=0.2
     , path
     , polysemy >=1.7.1

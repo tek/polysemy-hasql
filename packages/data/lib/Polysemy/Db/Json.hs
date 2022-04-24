@@ -8,7 +8,6 @@ import qualified Language.Haskell.TH.Syntax as TH
 
 import Prelude (Bool(True), dropWhile, (==))
 
-
 basicOptions :: Aeson.Options
 basicOptions =
   Aeson.defaultOptions {

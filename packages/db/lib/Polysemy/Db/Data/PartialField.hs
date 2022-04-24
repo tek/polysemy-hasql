@@ -1,8 +1,9 @@
+{-# language CPP #-}
+
 module Polysemy.Db.Data.PartialField where
 
-import Data.Aeson (FromJSON (parseJSON), Object, ToJSON (toJSON), Value (Null))
+import Data.Aeson (FromJSON (parseJSON), Object, ToJSON (toJSON), Value (Null), (.:?))
 import Data.Aeson.Types (Parser, Value (Object))
-import qualified Data.HashMap.Strict as HashMap
 import Exon (exon)
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))
@@ -17,6 +18,12 @@ import Polysemy.Db.Tree.Effect (DefaultEffects, TreeEffects)
 import Polysemy.Db.Tree.FoldMap (FoldMapTree, FoldMapTreeConcat (..), FoldMapTreePrim (..), foldMapTree)
 import Polysemy.Db.Tree.Unfold (UnfoldRoot (..), UnfoldTreeLocal (..), UnfoldTreePrim (..))
 import qualified Polysemy.Db.Type.Data.Tree as Type
+
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.KeyMap as KeyMap
+#else
+import qualified Data.HashMap.Strict as HashMap
+#endif
 
 data PartialField (a :: Type) =
   Update Text a
@@ -83,18 +90,18 @@ instance (
       Keep ->
         mempty
       Update key value ->
-        HashMap.singleton key (toJSON value)
+        [(fromString (toString key), toJSON value)]
 
 filterNulls :: [Object] -> Object
 filterNulls =
-  mconcat . filter (not . HashMap.null)
+  mconcat . filter (not . null)
 
 instance (
     KnownSymbol name
   ) => FoldMapTreeConcat 'False () PartialField Object ('NamedField name) effs where
   foldMapTreeConcat = \case
     [] -> mempty
-    os -> HashMap.singleton (symbolText @name) (Object (filterNulls os))
+    os -> [(fromString (symbolVal (Proxy @name)), Object (filterNulls os))]
 
 instance FoldMapTreeConcat 'False () PartialField Object ('NumberedField name num) effs where
   foldMapTreeConcat =
@@ -116,7 +123,7 @@ instance (
   ) => UnfoldTreePrim () PartialField Parser Value ('NamedField name) effs d where
   unfoldTreePrim = \case
     Object o ->
-      maybe (pure Keep) (fmap (Update name) . parseJSON) (HashMap.lookup name o)
+      maybe (pure Keep) (fmap (Update name) . parseJSON) =<< (o .:? fromString (toString name))
     Null ->
       pure Keep
     value ->
@@ -129,7 +136,11 @@ instance (
     KnownSymbol name
   ) => UnfoldTreeLocal () PartialField Value ('NamedField name) effs where
   unfoldTreeLocal = \case
+#if MIN_VERSION_aeson(2,0,0)
+    Object o -> fromMaybe Null (KeyMap.lookup (fromString (symbolVal (Proxy @name))) o)
+#else
     Object o -> fromMaybe Null (HashMap.lookup (symbolText @name) o)
+#endif
     _ -> Null
 
 instance UnfoldTreeLocal () PartialField Value ('NumberedField name num) effs where
