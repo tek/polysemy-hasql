@@ -1,8 +1,8 @@
 module Polysemy.Hasql.Test.Run where
 
-import GHC.Stack (withFrozenCallStack)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
+import Hedgehog.Internal.Property (Failure)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
@@ -35,6 +35,7 @@ type TestEffects =
     Fail,
     Error TestError,
     Hedgehog IO,
+    Error Failure,
     Embed IO,
     Resource,
     Final IO

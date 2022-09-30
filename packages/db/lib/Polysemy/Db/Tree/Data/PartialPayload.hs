@@ -8,7 +8,7 @@ module Polysemy.Db.Tree.Data.PartialPayload (
   decodePartialPayloadTree,
 ) where
 
-import Data.Aeson (FromJSON, Result (Error, Success), ToJSON (toJSON), Value, fromJSON)
+import Data.Aeson (Result (Error, Success), ToJSON (toJSON), Value, fromJSON)
 
 import Polysemy.Db.Data.PartialField (PartialTree, Partially)
 import Polysemy.Db.Data.Uid (Uid)

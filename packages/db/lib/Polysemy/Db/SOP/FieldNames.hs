@@ -5,6 +5,7 @@ module Polysemy.Db.SOP.FieldNames where
 
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Functor (FMap)
+import Prelude hiding (type (@@))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo (Constructor, Record), DatatypeInfo (ADT), FieldInfo (FieldInfo))
 

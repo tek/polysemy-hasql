@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Database where
 
-import Control.Lens (at, (?~))
 import qualified Data.Map.Strict as Map
 import Hasql.Connection (Connection)
 import Hasql.Decoders (Row)

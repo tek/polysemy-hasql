@@ -1,11 +1,10 @@
 module Polysemy.Hasql.Where.Prepared where
 
 import qualified Exon
-import Exon (exon)
 import Polysemy.Db.Data.Cond (Greater, GreaterOrEq, Less, LessOrEq)
 import Polysemy.Db.SOP.Error (ErrorWithType2)
 
-import Polysemy.Hasql.Data.SqlCode (SqlCode)
+import Polysemy.Hasql.Data.SqlCode (SqlCode, esql)
 import Polysemy.Hasql.Table.Query.Prepared (dollar)
 
 fieldWithOp ::
@@ -14,7 +13,7 @@ fieldWithOp ::
   Int ->
   SqlCode
 fieldWithOp op name index =
-  [exon|#{name} #{op} #{dollar index}|]
+  [esql|#{name} #{op} #{dollar index}|]
 
 regularField ::
   SqlCode ->
@@ -28,7 +27,7 @@ maybeField ::
   SqlCode ->
   SqlCode
 maybeField index cond =
-  [exon|(#{dollar index} is null or #{cond})|]
+  [esql|(#{dollar index} is null or #{cond})|]
 
 concatWhereFields ::
   [Int -> SqlCode] ->

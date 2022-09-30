@@ -9,6 +9,7 @@ import Polysemy.Db.Data.FieldId (FieldId (NamedField), FieldIdText (fieldIdText)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Tree.Fold (FoldTree (foldTree), FoldTreeLocal (foldTreeLocal), FoldTreeLocalCon (foldTreeLocalCon), FoldTreePrim (..))
 import Polysemy.Db.Tree.QueryName (FindPrimQuery)
+import Prelude hiding (type (@@))
 
 import Polysemy.Hasql.Data.DbType (Selector (Selector), textSelector)
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN (queryValueNoN))

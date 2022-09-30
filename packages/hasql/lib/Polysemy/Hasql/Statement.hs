@@ -1,8 +1,6 @@
 module Polysemy.Hasql.Statement where
 
-import Control.Lens ((^.))
 import Data.Composition ((.:))
-import Exon (exon)
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, int8, noResult, nullable)
 import Hasql.DynamicStatements.Statement (dynamicallyParameterized)
@@ -16,7 +14,7 @@ import qualified Polysemy.Hasql.Data.DbType as Column
 import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), Selector, TypeName)
 import qualified Polysemy.Hasql.Data.QueryTable as QueryTable
 import Polysemy.Hasql.Data.QueryTable (QueryTable (QueryTable), qwhere)
-import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode), esql)
 import Polysemy.Hasql.Data.Table (Table (Table, _params, _row, _structure))
 import Polysemy.Hasql.Data.Where (Where (Where))
 import Polysemy.Hasql.DbType (baseColumns, columnSpec, quotedName, typeName)
@@ -73,7 +71,7 @@ selectSql ::
   Column ->
   SqlCode
 selectSql column@Column {_selector} =
-  [exon|#{sel} #{from}|]
+  [esql|#{sel} #{from}|]
   where
     sel =
       selectFragment column
@@ -93,7 +91,7 @@ selectWhereSql ::
   QueryTable query d ->
   SqlCode
 selectWhereSql (QueryTable (Table column _ _) _ (whereFragment -> wh)) =
-  [exon|#{sel} #{wh}|]
+  [esql|#{sel} #{wh}|]
   where
     sel =
       selectSql column
@@ -112,7 +110,7 @@ anyWhereSql ::
   QueryTable query d ->
   SqlCode
 anyWhereSql table =
-  [exon|select 1 #{from} where #{qw} limit 1|]
+  [esql|select 1 #{from} where #{qw} limit 1|]
   where
     Where qw _ =
       table ^. qwhere
@@ -135,7 +133,7 @@ upsertSql ::
   Column ->
   SqlCode
 upsertSql table =
-  [exon|#{ins} #{conflict}|]
+  [esql|#{ins} #{conflict}|]
   where
     conflict =
       conflictFragment table st
@@ -155,7 +153,7 @@ deleteWhereSql ::
   Where q d ->
   SqlCode
 deleteWhereSql Table {_structure} where' =
-  [exon|#{del} #{wh} returning #{cols}|]
+  [esql|#{del} #{wh} returning #{cols}|]
   where
     wh =
       whereFragment where'
@@ -198,7 +196,7 @@ createTableSql ::
   Column ->
   SqlCode
 createTableSql column =
-  [exon|create table #{quotedName column} (#{formattedColumns})|]
+  [esql|create table #{quotedName column} (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (toList (columnSpec <$> baseColumns column))
@@ -211,12 +209,12 @@ createTable =
 
 createCtorTypeSql :: Column -> SqlCode
 createCtorTypeSql column@(Column _ _ tpe _ _) =
-  [exon|create type #{typeName tpe} as (#{formattedColumns})|]
+  [esql|create type #{typeName tpe} as (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (toList (formattedColumn <$> baseColumns column))
     formattedColumn col@(Column _ _ t _ _) =
-      [exon|#{quotedName col} #{typeName t}|]
+      [esql|#{quotedName col} #{typeName t}|]
 
 createCtorType ::
   Column ->
@@ -229,12 +227,12 @@ createProdTypeSql ::
   [Column] ->
   SqlCode
 createProdTypeSql prodName columns =
-  [exon|create type #{typeName prodName} as (#{formattedColumns})|]
+  [esql|create type #{typeName prodName} as (#{formattedColumns})|]
   where
     formattedColumns =
       commaSeparated (formattedColumn <$> columns)
     formattedColumn column@(Column _ _ tpe _ _) =
-      [exon|#{quotedName column} #{typeName tpe}|]
+      [esql|#{quotedName column} #{typeName tpe}|]
 
 createProdType ::
   TypeName ->
@@ -247,7 +245,7 @@ dropTypeSql ::
   Text ->
   SqlCode
 dropTypeSql (sqlQuote -> name) =
-   [exon|drop type if exists #{name} cascade|]
+   [esql|drop type if exists #{name} cascade|]
 
 dropType ::
   Text ->
@@ -259,7 +257,7 @@ dropTableSql ::
   Name ->
   SqlCode
 dropTableSql (Name (sqlQuote -> name)) =
-   [exon|drop table if exists #{name}|]
+   [esql|drop table if exists #{name}|]
 
 dropTable ::
   Name ->
@@ -272,7 +270,7 @@ alterSql ::
   NonEmpty Column ->
   SqlCode
 alterSql (alterFragment -> alter') (toList -> columns) =
-  [exon|#{alter'} #{colAdds}|]
+  [esql|#{alter'} #{colAdds}|]
   where
     colAdds =
       commaSeparated (addColumnFragment <$> columns)
@@ -288,7 +286,7 @@ createDbSql ::
   DbName ->
   SqlCode
 createDbSql (quoteName -> name) =
-  [exon|create database #{name}|]
+  [esql|create database #{name}|]
 
 createDb ::
   DbName ->
@@ -300,7 +298,7 @@ dropDbSql ::
   DbName ->
   SqlCode
 dropDbSql (quoteName -> name) =
-  [exon|drop database #{name}|]
+  [esql|drop database #{name}|]
 
 dropDb ::
   DbName ->

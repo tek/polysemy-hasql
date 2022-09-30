@@ -1,8 +1,9 @@
 module Polysemy.Db.Store where
 
 import Control.Concurrent.STM.TVar (TVar)
-import Control.Lens (makeClassy, view, views, (%~))
+import Control.Lens (makeClassy, view, views)
 import Data.Composition ((.:))
+import Prelude hiding (type (@@))
 
 import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.Partial (Partial, getPartial)

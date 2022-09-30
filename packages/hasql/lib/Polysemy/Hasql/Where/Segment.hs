@@ -5,6 +5,7 @@ import Fcf.Alg.Symbol (type (==))
 import Fcf.Class.Functor (FMap)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField), FieldIdSymbol)
 import Polysemy.Db.SOP.Error (JoinError)
+import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
 
 data Segment =

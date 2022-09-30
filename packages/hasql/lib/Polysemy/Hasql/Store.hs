@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Store where
 
-import Control.Lens ((^.))
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.Rep (PrimQuery, PrimaryKey, UidRep)

@@ -57,21 +57,30 @@ instance (
     All (Compose Show (Tree t n)) sub
   ) => Show (Node t n ('Kind.Prod d sub)) where
   show (Prod n sub) =
-    [exon|Prod #{show @String n} [#{intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @String) sub))}]|]
+    [exon|Prod #{show @String n} [#{subS}]|]
+    where
+      subS =
+        intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Tree t n))) (K . show @String) sub))
 
 instance (
     Show (n d),
     All (Compose Show (Con t n)) cons
   ) => Show (Node t n ('Kind.Sum d cons)) where
   show (Sum n sub) =
-    [exon|Sum #{show @String n} [#{hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @String) sub)}]|]
+    [exon|Sum #{show @String n} [#{subS}]|]
+    where
+      subS =
+        hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @String) sub)
 
 instance (
     Show (n d),
     All (Compose Show (Con t n)) sub
   ) => Show (Node t n ('Kind.SumProd d sub)) where
   show (SumProd n sub) =
-    [exon|SumProd #{show @String n} [#{intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @String) sub))}]|]
+    [exon|SumProd #{show @String n} [#{subS}]|]
+    where
+      subS =
+        intercalate ", " (hcollapse (hcmap (Proxy @(Compose Show (Con t n))) (K . show @String) sub))
 
 instance Eq (n d) => Eq (Node t n ('Kind.Prim d)) where
   Prim l == Prim r =

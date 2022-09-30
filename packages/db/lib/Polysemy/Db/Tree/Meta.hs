@@ -6,6 +6,7 @@ module Polysemy.Db.Tree.Meta where
 import Fcf (Eval, FromMaybe, type (@@))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo (ADT))
+import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
 import Type.Errors.Pretty (type (%), type (<>))
 

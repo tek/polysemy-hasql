@@ -3,6 +3,7 @@ module Polysemy.Db.Tree.QueryName where
 import Fcf (ConstFn, Eval, Exp, Pure1, UnEither, Zip, type (@@))
 import Fcf.Class.Foldable (ConcatMap)
 import Generics.SOP.GGP (GCode)
+import Prelude hiding (type (@@))
 import Type.Errors (IfStuck, Pure, ShowTypeQuoted)
 import Type.Errors.Pretty (type (%), type (<>))
 

@@ -11,8 +11,9 @@ import Polysemy.Db.Data.Uid (Uid)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Constraint (DataName, slugString_, symbolString)
 import Polysemy.Db.Text.Quote (dquote)
+import Prelude hiding (type (@@))
 
-import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode), esql)
 import qualified Polysemy.Hasql.Data.Where as Data (Where (Where))
 import Polysemy.Hasql.Table.QueryParam (QueryValueNoN)
 import Polysemy.Hasql.Table.SumIndex (sumIndexIdentifier)
@@ -86,7 +87,7 @@ reifyPath =
   case reifySegments @s of
     [] -> ""
     [prim] -> prim
-    base : rest -> [exon|(#{base}).#{Exon.intercalate "." rest}|]
+    base : rest -> [esql|(#{base}).#{Exon.intercalate "." rest}|]
 
 class QueryCond (field :: QCond) where
   queryCond :: K (Int -> SqlCode) field

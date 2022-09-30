@@ -1,7 +1,6 @@
 module Polysemy.Hasql.DbConnection where
 
 import Control.Concurrent (myThreadId, throwTo)
-import Control.Lens ((.~))
 import Hasql.Connection (Connection, Settings)
 import qualified Hasql.Connection as Connection (acquire, release, settings)
 import Polysemy.Db.Atomic (interpretAtomic)

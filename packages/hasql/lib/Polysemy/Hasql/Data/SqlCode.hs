@@ -1,7 +1,16 @@
 module Polysemy.Hasql.Data.SqlCode where
 
 import qualified Data.Text as Text
-import Exon (Exon (..), ExonDefault, Result (Empty, Result))
+import qualified Data.Text.Lazy.Builder as Text
+import Exon (
+  ExonAppend (exonAppend, exonConcat),
+  ExonExpression (exonExpression),
+  Result (Empty, Result),
+  SkipWs (SkipWs),
+  exonWith,
+  skipWs,
+  )
+import Language.Haskell.TH.Quote (QuasiQuoter)
 
 newtype SqlCode =
   SqlCode { unSqlCode :: Text }
@@ -18,11 +27,25 @@ instance ConvertUtf8 Text bs => ConvertUtf8 SqlCode bs where
   decodeUtf8Strict =
     fmap SqlCode . decodeUtf8Strict
 
-instance Exon ExonDefault SqlCode where
-  isEmpty =
-    Text.null . unSqlCode
+esql :: QuasiQuoter
+esql =
+  exonWith (Just ([e|SkipWs|], [e|skipWs|])) True False
 
-  insertWhitespace Empty _ s =
-    convertSegment @ExonDefault s
-  insertWhitespace (Result s1) _ s2 =
-    Result (s1 <> " ") <> convertSegment @ExonDefault s2
+instance ExonExpression (SkipWs SqlCode) Text builder where
+  exonExpression builder expr
+    | Text.null expr = Empty
+    | otherwise = Result (builder expr)
+
+instance ExonAppend (SkipWs SqlCode) Text.Builder where
+  exonAppend z a =
+    Result (z <> a)
+
+  exonConcat (h :| t) =
+    go h t
+    where
+      go Empty (seg : segs) = go seg segs
+      go z (Empty : Empty : segs) = go z (Empty : segs)
+      go z [Empty] = z
+      go z (Empty : segs) = go z (Result " " : segs)
+      go (Result z) (Result seg : segs) = go (exonAppend @SqlCode z seg) segs
+      go z [] = z

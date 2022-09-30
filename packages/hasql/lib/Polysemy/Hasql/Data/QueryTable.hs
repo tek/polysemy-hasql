@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Data.QueryTable where
 
-import Control.Lens (Lens', makeClassy)
+import Control.Lens (makeClassy)
 import Exon (exon)
 import Hasql.Encoders (Params)
 import Polysemy.Db.Data.Uid (Uid)

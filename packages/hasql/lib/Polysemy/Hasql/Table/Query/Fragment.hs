@@ -1,10 +1,9 @@
 module Polysemy.Hasql.Table.Query.Fragment where
 
-import Exon (exon)
 import Polysemy.Db.Data.ColumnOptions (ColumnOptions (ColumnOptions))
 
 import Polysemy.Hasql.Data.DbType (Column (Column), Selector (Selector))
-import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode), esql)
 import Polysemy.Hasql.Data.Where (Where (Where))
 import Polysemy.Hasql.DbType (baseColumns, columnSpec)
 import Polysemy.Hasql.Table.Query.Select (selectColumns)
@@ -21,25 +20,25 @@ fromFragment ::
   Selector ->
   SqlCode
 fromFragment (Selector name) =
-  [exon|from #{name}|]
+  [esql|from #{name}|]
 
 intoFragment ::
   Selector ->
   SqlCode
 intoFragment (Selector name) =
-  [exon|into #{name}|]
+  [esql|into #{name}|]
 
 alterFragment ::
   Selector ->
   SqlCode
 alterFragment (Selector name) =
-  [exon|alter table #{name}|]
+  [esql|alter table #{name}|]
 
 addColumnFragment ::
   Column ->
   SqlCode
 addColumnFragment column =
-  [exon|add #{columnSpec column}|]
+  [esql|add #{columnSpec column}|]
 
 conflictFragment ::
   Column ->
@@ -51,7 +50,7 @@ conflictFragment (baseColumns -> columns) setters =
     format Nothing =
       ""
     format (Just (commaSeparated -> cols)) =
-      [exon|on conflict (#{cols}) do update #{setters}|]
+      [esql|on conflict (#{cols}) do update #{setters}|]
     uniques =
       nonEmpty [n | UniqueName n <- columns]
 
@@ -59,7 +58,7 @@ selectFragment ::
   Column ->
   SqlCode
 selectFragment (selectColumns -> cols) =
-  [exon|select #{cols}|]
+  [esql|select #{cols}|]
 
 whereFragment ::
   Where q d ->
@@ -68,4 +67,4 @@ whereFragment = \case
   Where (SqlCode "") _ ->
     mempty
   Where qw _ ->
-    [exon|where #{qw}|]
+    [esql|where #{qw}|]

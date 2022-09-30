@@ -1,6 +1,5 @@
 module Polysemy.Hasql.DbType where
 
-import Exon (exon)
 import Polysemy.Db.Text.Quote (dquote)
 
 import qualified Polysemy.Hasql.ColumnOptions as ColumnOptions
@@ -12,7 +11,7 @@ import Polysemy.Hasql.Data.DbType (
   Selector (Selector),
   TypeName (CompositeTypeName, PrimTypeName),
   )
-import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (SqlCode), esql)
 
 quotedName :: Column -> SqlCode
 quotedName (Column (Name name) _ _ _ _) =
@@ -23,7 +22,7 @@ typeName = \case
   PrimTypeName name ->
     SqlCode name
   CompositeTypeName name ->
-    [exon|ph_type__#{SqlCode name}|]
+    [esql|ph_type__#{SqlCode name}|]
 
 baseColumns :: Column -> [Column]
 baseColumns col@(Column _ _ _ _ dbType) =
@@ -40,7 +39,7 @@ columnSpec ::
   Column ->
   SqlCode
 columnSpec (Column _ (Selector selector) tpe (ColumnOptions.format -> params) _) =
-  [exon|#{selector} #{typeName tpe} #{params}|]
+  [esql|#{selector} #{typeName tpe} #{params}|]
 
 flatColumns :: Column -> [Column]
 flatColumns col@(Column _ _ _ _ dbType) =

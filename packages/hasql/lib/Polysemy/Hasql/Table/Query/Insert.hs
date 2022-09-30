@@ -1,8 +1,7 @@
 module Polysemy.Hasql.Table.Query.Insert where
 
-import Exon (exon)
 import Polysemy.Hasql.Data.DbType (Column (Column), DbType (Prim, Prod, Sum))
-import Polysemy.Hasql.Data.SqlCode (SqlCode (..))
+import Polysemy.Hasql.Data.SqlCode (SqlCode (..), esql)
 import Polysemy.Hasql.DbType (baseColumns)
 import Polysemy.Hasql.Table.Query.Fragment (intoFragment)
 import Polysemy.Hasql.Table.Query.Prepared (dollar)
@@ -10,7 +9,7 @@ import Polysemy.Hasql.Table.Query.Text (commaColumns, commaSeparated)
 
 row :: SqlCode -> SqlCode
 row a =
-  [exon|row(#{a})|]
+  [esql|row(#{a})|]
 
 insertColumn :: Int -> Column -> (Int, SqlCode)
 insertColumn index = \case
@@ -38,7 +37,7 @@ insert ::
   Column ->
   SqlCode
 insert table@(Column _ (intoFragment -> into) _ _ _) =
-  [exon|insert #{into} (#{cols}) values (#{values})|]
+  [esql|insert #{into} (#{cols}) values (#{values})|]
   where
     cols =
       commaColumns (baseColumns table)

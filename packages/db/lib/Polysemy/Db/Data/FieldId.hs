@@ -3,6 +3,7 @@ module Polysemy.Db.Data.FieldId where
 import Exon (exon)
 import Fcf (Eval, Exp, Pure1, type (@@))
 import Fcf.Class.Functor (FMap)
+import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
 import Type.Errors.Pretty (type (<>))
 

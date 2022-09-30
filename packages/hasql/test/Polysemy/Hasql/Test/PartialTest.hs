@@ -37,10 +37,6 @@ type DatNode =
 type DatTree =
   'Kind.Tree ('NamedField "Dat") TreeEffs DatNode
 
-datTree :: DataTree DatTree
-datTree =
-  dataTree @Dat record
-
 record :: Dat
 record =
   Dat 9 5

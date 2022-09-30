@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Interpreter.QueryStore where
 
-import Control.Lens ((^.))
 import Hasql.Encoders (Params)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbError (DbError)

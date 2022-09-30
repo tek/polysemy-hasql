@@ -1,8 +1,7 @@
 module Polysemy.Hasql.Table.Query.Set where
 
-import Exon (exon)
 import Polysemy.Hasql.Data.DbType (Column)
-import Polysemy.Hasql.Data.SqlCode (SqlCode)
+import Polysemy.Hasql.Data.SqlCode (SqlCode, esql)
 import Polysemy.Hasql.DbType (baseColumnSelectors)
 import Polysemy.Hasql.Table.Query.Insert (insertValues)
 import Polysemy.Hasql.Table.Query.Prepared (assign)
@@ -12,7 +11,7 @@ set ::
   Column ->
   SqlCode
 set column =
-  [exon|set #{assigns}|]
+  [esql|set #{assigns}|]
   where
     assigns =
       commaSeparated (zipWith assign (baseColumnSelectors column) (insertValues column))

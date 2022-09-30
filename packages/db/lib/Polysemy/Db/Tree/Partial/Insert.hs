@@ -6,6 +6,7 @@ import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
 import GHC.TypeLits (ErrorMessage)
 import Generics.SOP (All, hcmap)
+import Prelude hiding (type (@@))
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Db.Data.FieldId (FieldId (NamedField, NumberedField))

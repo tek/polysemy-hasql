@@ -7,6 +7,7 @@ import GHC.TypeLits (ErrorMessage)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.Kind.Data.Tree (TreeDataType)
 import Polysemy.Db.SOP.Error (Unlines)
+import Prelude hiding (type (@@))
 import Type.Errors.Pretty (type (%), type (<>))
 
 import Polysemy.Hasql.Where.FlatFields (FieldPath (FieldPath), FlatRoot)

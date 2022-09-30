@@ -3,7 +3,7 @@ module Main where
 import Polysemy.Hasql.Test.DeriveQuery.UnaSumNumberedTest (test_deriveQuery_UnaSumNumbered)
 import Polysemy.Hasql.Test.EnumTest (test_enumColTable, test_enumsColTable)
 import Polysemy.Hasql.Test.ParamTest ()
-import Polysemy.Hasql.Test.PartialTest (test_partialTree, test_partialUpdateSum)
+import Polysemy.Hasql.Test.PartialTest (test_partialTree, test_partialUpdateNestedSum, test_partialUpdateSum)
 import Polysemy.Hasql.Test.RepTest (test_rep)
 import Polysemy.Hasql.Test.StatementTest (statementTests)
 import Polysemy.Hasql.Test.TableTest (tableTests)
@@ -33,6 +33,7 @@ tests =
     unitTest "derive db representations" test_rep,
     unitTest "partial tree update" test_partialTree,
     unitTest "partial sum update" test_partialUpdateSum,
+    unitTest "partial nested sum update" test_partialUpdateNestedSum,
     unitTest "derive prod data tree" test_deriveProd,
     unitTest "derive sum data tree" test_deriveSum,
     unitTest "derive data tree with sum field" test_deriveSumField,

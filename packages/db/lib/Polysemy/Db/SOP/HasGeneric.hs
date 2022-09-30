@@ -26,8 +26,8 @@ instance {-# incoherent #-} flag ~ 'False => GCodeResolves d flag
 instance flag ~ 'True => GCodeResolves (d : ds) flag
 instance flag ~ 'True => GCodeResolves '[] flag
 
-class HasGeneric d (flag :: Bool) | d -> flag where
-instance GCodeResolves (GCode d) flag => HasGeneric d flag where
+class HasGeneric d (flag :: Bool) | d -> flag
+instance GCodeResolves (GCode d) flag => HasGeneric d flag
 
 class GCodeResolvesNot (d :: [[Type]]) (flag :: Bool) | d -> flag where
   gcodeResolvesNot :: Bool

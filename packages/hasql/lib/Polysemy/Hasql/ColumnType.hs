@@ -13,7 +13,7 @@ import Polysemy.Db.Data.Rep (Enum, Json, JsonB, Prim)
 import Polysemy.Db.SOP.Constraint (DataName)
 import Polysemy.Db.Text.DbIdentifier (dbSymbol)
 import Polysemy.Db.Tree.Data.Effect (Adt, CustomType, Newtype, Tycon)
-import Prelude hiding (Enum)
+import Prelude hiding (Enum, type (@@))
 import Type.Errors (ErrorMessage)
 import Type.Errors.Pretty (type (%), type (<>))
 

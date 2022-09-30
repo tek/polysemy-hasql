@@ -1,7 +1,6 @@
 module Polysemy.Hasql.Table.DecoderValue where
 
 import qualified Data.Aeson as Aeson
-import Data.Aeson (FromJSON)
 import Hasql.Decoders (Value, jsonBytes)
 import Polysemy.Db.Data.Rep (Enum, Json, Prim)
 import Polysemy.Db.Tree.Data.Effect (Newtype)

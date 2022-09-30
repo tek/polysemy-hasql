@@ -2,6 +2,7 @@ module Polysemy.Db.Tree.Data.TreeMeta where
 
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Functor (FMap)
+import Prelude hiding (type (@@))
 import Generics.SOP (AllZip, AllZip2, HTrans (htrans), I (I), K (K), LiftedCoercible, NP, SOP, hcoerce)
 
 import Polysemy.Db.Data.FieldId (FieldId)

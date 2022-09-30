@@ -1,29 +1,20 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.6.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-hasql
 version:        0.1.0.0
-synopsis:       Polysemy effects for Hasql
-description:    Please see the README on Github at <https://github.com/tek/polysemy-hasql>
+synopsis:       Polysemy effects for databases
+description:    See https://hackage.haskell.org/package/polysemy-hasql/docs/Polysemy-Hasql.html
 category:       Database
-homepage:       https://github.com/tek/polysemy-hasql#readme
-bug-reports:    https://github.com/tek/polysemy-hasql/issues
 author:         Torsten Schmits
-maintainer:     tek@tryp.io
-copyright:      2021 Torsten Schmits
+maintainer:     hackage@tryp.io
+copyright:      2022 Torsten Schmits
 license:        BSD-2-Clause-Patent
 license-file:   LICENSE
 build-type:     Simple
-extra-source-files:
-    readme.md
-    changelog.md
-
-source-repository head
-  type: git
-  location: https://github.com/tek/polysemy-hasql
 
 library
   exposed-modules:
@@ -110,6 +101,7 @@ library
   hs-source-dirs:
       lib
   default-extensions:
+      StandaloneKindSignatures
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns
@@ -123,12 +115,14 @@ library
       DeriveFoldable
       DeriveFunctor
       DeriveGeneric
+      DeriveLift
       DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
       DoAndIfThenElse
       DuplicateRecordFields
+      EmptyCase
       EmptyDataDecls
       ExistentialQuantification
       FlexibleContexts
@@ -143,8 +137,9 @@ library
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      OverloadedStrings
+      OverloadedLabels
       OverloadedLists
+      OverloadedStrings
       PackageImports
       PartialTypeSignatures
       PatternGuards
@@ -155,9 +150,9 @@ library
       RankNTypes
       RecordWildCards
       RecursiveDo
+      RoleAnnotations
       ScopedTypeVariables
       StandaloneDeriving
-      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -172,7 +167,7 @@ library
   build-depends:
       aeson
     , async
-    , base
+    , base >=4.12 && <5
     , chronos
     , composition
     , contravariant
@@ -182,10 +177,9 @@ library
     , generics-sop
     , hasql >=1.4.3
     , hasql-dynamic-statements
-    , incipit >=0.2
     , lens
     , path
-    , polysemy >=1.7.1
+    , polysemy
     , polysemy-conc
     , polysemy-db
     , polysemy-db-data
@@ -193,8 +187,10 @@ library
     , polysemy-plugin
     , polysemy-time
     , postgresql-libpq
+    , prelate >=0.1
     , scientific
     , stm-chans
+    , template-haskell
     , time
     , torsor
     , transformers
@@ -204,6 +200,8 @@ library
     , vector
   mixins:
       base hiding (Prelude)
+    , prelate (Prelate as Prelude)
+    , prelate hiding (Prelate)
   default-language: Haskell2010
 
 test-suite polysemy-hasql-integration
@@ -231,6 +229,7 @@ test-suite polysemy-hasql-integration
   hs-source-dirs:
       integration
   default-extensions:
+      StandaloneKindSignatures
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns
@@ -244,12 +243,14 @@ test-suite polysemy-hasql-integration
       DeriveFoldable
       DeriveFunctor
       DeriveGeneric
+      DeriveLift
       DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
       DoAndIfThenElse
       DuplicateRecordFields
+      EmptyCase
       EmptyDataDecls
       ExistentialQuantification
       FlexibleContexts
@@ -264,8 +265,9 @@ test-suite polysemy-hasql-integration
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      OverloadedStrings
+      OverloadedLabels
       OverloadedLists
+      OverloadedStrings
       PackageImports
       PartialTypeSignatures
       PatternGuards
@@ -276,9 +278,9 @@ test-suite polysemy-hasql-integration
       RankNTypes
       RecordWildCards
       RecursiveDo
+      RoleAnnotations
       ScopedTypeVariables
       StandaloneDeriving
-      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -292,14 +294,13 @@ test-suite polysemy-hasql-integration
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , base
+    , base >=4.12 && <5
     , exon
     , hasql >=1.4.3
     , hedgehog
-    , incipit >=0.2
     , lens
     , path
-    , polysemy >=1.7.1
+    , polysemy
     , polysemy-conc
     , polysemy-db
     , polysemy-db-data
@@ -308,11 +309,14 @@ test-suite polysemy-hasql-integration
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
+    , prelate >=0.1
     , tasty
     , time
     , uuid
   mixins:
       base hiding (Prelude)
+    , prelate (Prelate as Prelude)
+    , prelate hiding (Prelate)
   default-language: Haskell2010
 
 test-suite polysemy-hasql-unit
@@ -345,6 +349,7 @@ test-suite polysemy-hasql-unit
   hs-source-dirs:
       test
   default-extensions:
+      StandaloneKindSignatures
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns
@@ -358,12 +363,14 @@ test-suite polysemy-hasql-unit
       DeriveFoldable
       DeriveFunctor
       DeriveGeneric
+      DeriveLift
       DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
       DoAndIfThenElse
       DuplicateRecordFields
+      EmptyCase
       EmptyDataDecls
       ExistentialQuantification
       FlexibleContexts
@@ -378,8 +385,9 @@ test-suite polysemy-hasql-unit
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      OverloadedStrings
+      OverloadedLabels
       OverloadedLists
+      OverloadedStrings
       PackageImports
       PartialTypeSignatures
       PatternGuards
@@ -390,9 +398,9 @@ test-suite polysemy-hasql-unit
       RankNTypes
       RecordWildCards
       RecursiveDo
+      RoleAnnotations
       ScopedTypeVariables
       StandaloneDeriving
-      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -406,22 +414,24 @@ test-suite polysemy-hasql-unit
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
-    , base
+    , base >=4.12 && <5
     , chronos
     , exon
     , first-class-families
     , generics-sop
     , hasql >=1.4.3
-    , incipit >=0.2
     , path
-    , polysemy >=1.7.1
+    , polysemy
     , polysemy-db
     , polysemy-db-data
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
+    , prelate >=0.1
     , tasty
     , uuid
   mixins:
       base hiding (Prelude)
+    , prelate (Prelate as Prelude)
+    , prelate hiding (Prelate)
   default-language: Haskell2010

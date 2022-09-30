@@ -10,6 +10,7 @@ import Polysemy.Db.Data.FieldId (FieldId)
 import qualified Polysemy.Db.Kind.Data.Tree as Kind
 import Polysemy.Db.SOP.Error (ErrorWithType)
 import Polysemy.Db.Tree.Data.Effect (ContainsFlatten, Newtype)
+import Prelude hiding (type (@@))
 
 import Polysemy.Hasql.Where.Segment (Segment (ConSegment, FieldSegment, SumIndexSegment, SumSegment))
 

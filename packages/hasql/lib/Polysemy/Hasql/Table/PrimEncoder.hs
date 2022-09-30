@@ -127,7 +127,7 @@ instance PrimEncoder Chronos.Time where
 
 chronosToTimeOfDay :: Chronos.TimeOfDay -> TimeOfDay
 chronosToTimeOfDay (Chronos.TimeOfDay h m ns) =
-  TimeOfDay h m (realToFrac ns / 1000000000)
+  TimeOfDay h m (fromMaybe 0 (realToFrac ns / 1000000000))
 
 datetimeToLocalTime :: Chronos.Datetime -> LocalTime
 datetimeToLocalTime (Chronos.Datetime d t) =

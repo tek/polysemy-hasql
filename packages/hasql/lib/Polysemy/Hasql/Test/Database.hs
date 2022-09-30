@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.Database where
 
-import Control.Lens (Lens', view, (%~), (.~))
+import Control.Lens (view)
 import qualified Data.UUID as UUID
 import Exon (exon)
 import Hasql.Connection (Connection)

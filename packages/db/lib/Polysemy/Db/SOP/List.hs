@@ -4,6 +4,7 @@ import Fcf (ConstFn, Eval, Exp, If, IsJust, Pure, type (@@))
 import Fcf.Class.Functor (FMap)
 import Generics.SOP (All, K (K), NP, SameShapeAs, Top, hpure, htrans)
 import Generics.SOP.Constraint (AllZipF)
+import Prelude hiding (type (@@))
 
 type family As (a :: Type) (xs :: [k]) :: [Type] where
   As a xs = FMap (ConstFn a) @@ xs

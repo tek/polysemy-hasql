@@ -1,6 +1,7 @@
 module Polysemy.Db.SOP.Error where
 
 import Fcf (Eval, Exp, UnList, type (@@))
+import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
 import Type.Errors.Pretty (type (%), type (<>))
 

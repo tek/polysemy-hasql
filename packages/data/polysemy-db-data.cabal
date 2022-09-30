@@ -1,29 +1,20 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.6.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-db-data
 version:        0.1.0.0
 synopsis:       Polysemy effects for databases
-description:    Please see the README on Github at <https://github.com/tek/polysemy-hasql>
+description:    See https://hackage.haskell.org/package/polysemy-db-data/docs/Polysemy-Db-Data.html
 category:       Database
-homepage:       https://github.com/tek/polysemy-hasql#readme
-bug-reports:    https://github.com/tek/polysemy-hasql/issues
 author:         Torsten Schmits
-maintainer:     tek@tryp.io
-copyright:      2021 Torsten Schmits
+maintainer:     hackage@tryp.io
+copyright:      2022 Torsten Schmits
 license:        BSD-2-Clause-Patent
 license-file:   LICENSE
 build-type:     Simple
-extra-source-files:
-    readme.md
-    changelog.md
-
-source-repository head
-  type: git
-  location: https://github.com/tek/polysemy-hasql
 
 library
   exposed-modules:
@@ -39,6 +30,7 @@ library
   hs-source-dirs:
       lib
   default-extensions:
+      StandaloneKindSignatures
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns
@@ -52,12 +44,14 @@ library
       DeriveFoldable
       DeriveFunctor
       DeriveGeneric
+      DeriveLift
       DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
       DoAndIfThenElse
       DuplicateRecordFields
+      EmptyCase
       EmptyDataDecls
       ExistentialQuantification
       FlexibleContexts
@@ -72,8 +66,9 @@ library
       MultiParamTypeClasses
       MultiWayIf
       NamedFieldPuns
-      OverloadedStrings
+      OverloadedLabels
       OverloadedLists
+      OverloadedStrings
       PackageImports
       PartialTypeSignatures
       PatternGuards
@@ -84,9 +79,9 @@ library
       RankNTypes
       RecordWildCards
       RecursiveDo
+      RoleAnnotations
       ScopedTypeVariables
       StandaloneDeriving
-      StandaloneKindSignatures
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -100,15 +95,15 @@ library
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages
   build-depends:
       aeson
-    , base
+    , base >=4.12 && <5
     , comonad
     , data-default
-    , incipit >=0.2
     , lens
-    , polysemy >=1.7.1
-    , polysemy-plugin
+    , prelate >=0.1
     , template-haskell
     , uuid
   mixins:
       base hiding (Prelude)
+    , prelate (Prelate as Prelude)
+    , prelate hiding (Prelate)
   default-language: Haskell2010

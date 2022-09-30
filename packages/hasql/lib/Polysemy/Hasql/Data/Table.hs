@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Data.Table where
 
-import Control.Lens (Lens', makeClassy)
+import Control.Lens (makeClassy)
 import Exon (exon)
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)

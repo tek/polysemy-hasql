@@ -2,6 +2,7 @@ module Polysemy.Db.Tree.Data.Effect where
 
 import Fcf (Eval, Exp, type (@@))
 import Fcf.Class.Foldable (Any)
+import Prelude hiding (type (@@))
 
 import Polysemy.Db.Data.Rep (Flatten, PrimQuery, PrimQueryAs)
 import Polysemy.Db.SOP.List (FirstJust)
