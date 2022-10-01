@@ -17,7 +17,7 @@ import qualified Polysemy.Hasql.Data.DbType as Data
 import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName), unName)
 import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
-import Polysemy.Hasql.Data.SqlCode (SqlCode (unSqlCode), esql)
+import Polysemy.Hasql.Data.SqlCode (SqlCode (unSqlCode))
 import Polysemy.Hasql.DbType (baseColumns, typeName)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.DataColumn (TableStructure, tableStructure)
@@ -65,7 +65,7 @@ tableColumns =
   dbColumnsFor code
   where
     code =
-      [esql|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
+      [exon|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
 
 typeColumns ::
   Members [Embed IO, Stop QueryError] r =>
@@ -76,7 +76,7 @@ typeColumns connection =
   dbColumnsFor code connection . Name . unSqlCode . typeName
   where
     code =
-      [esql|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
+      [exon|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
 
 -- TODO
 updateType ::

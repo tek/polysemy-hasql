@@ -4,7 +4,7 @@ import Exon (exon)
 import Hasql.DynamicStatements.Snippet (Snippet)
 import qualified Text.Show as Show
 
-import Polysemy.Hasql.Data.SqlCode (SqlCode)
+import Polysemy.Hasql.Data.SqlCode (SqlCode, esql)
 
 data Where q d =
   Where {
@@ -14,11 +14,11 @@ data Where q d =
 
 instance Semigroup (Where q d) where
   Where pl fl <> Where pr fr =
-    Where (pl <> pr) (fl <> fr)
+    Where [esql|#{pl} #{pr}|] (fl <> fr)
 
 instance Monoid (Where q d) where
   mempty =
-    Where mempty mempty
+    Where "" mempty
 
 instance Show (Where q d) where
   show (Where p _) =

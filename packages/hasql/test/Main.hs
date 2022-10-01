@@ -5,6 +5,7 @@ import Polysemy.Hasql.Test.EnumTest (test_enumColTable, test_enumsColTable)
 import Polysemy.Hasql.Test.ParamTest ()
 import Polysemy.Hasql.Test.PartialTest (test_partialTree, test_partialUpdateNestedSum, test_partialUpdateSum)
 import Polysemy.Hasql.Test.RepTest (test_rep)
+import Polysemy.Hasql.Test.SqlCodeTest (test_sqlCodeNoInterpolation)
 import Polysemy.Hasql.Test.StatementTest (statementTests)
 import Polysemy.Hasql.Test.TableTest (tableTests)
 import Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest (test_deriveNewtypePartial)
@@ -28,6 +29,7 @@ tests =
   testGroup "all" [
     tableTests,
     statementTests,
+    unitTest "esql quote without interpolation" test_sqlCodeNoInterpolation,
     unitTest "column of an enum" test_enumColTable,
     unitTest "column of a list of enums" test_enumsColTable,
     unitTest "derive db representations" test_rep,
