@@ -5,6 +5,7 @@ import Polysemy.AtomicState (AtomicState (AtomicGet, AtomicState))
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import qualified Polysemy.Db.Store as Store
+import Conc (Lock, lock)
 
 insertState ::
   ∀ d e r .
@@ -30,15 +31,16 @@ readState initial = do
 -- Given an action that produces an initial value, every action reads the value from the database and writes it
 -- back.
 interpretAtomicStateStore ::
-  ∀ d e r .
-  Member (Store () d !! e) r =>
+  ∀ tag d e r .
+  Members [Store () d !! e, Lock @@ tag] r =>
   Sem (Stop e : r) d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateStore initial =
   interpretResumable \case
-    AtomicState f -> do
-      (newState, a) <- f <$> readState @d @e initial
-      a <$ insertState @d @e (pure newState)
+    AtomicState f ->
+      tag @tag @Lock $ lock do
+        (newState, a) <- f <$> raise (readState @d @e initial)
+        a <$ insertState @d @e (pure newState)
     AtomicGet ->
       readState @d @e initial
 {-# inline interpretAtomicStateStore #-}
@@ -47,8 +49,8 @@ interpretAtomicStateStore initial =
 --
 -- Given an initial value, every action reads the value from the database and writes it back.
 interpretAtomicStateStoreAs ::
-  ∀ d e r .
-  Member (Store () d !! e) r =>
+  ∀ tag d e r .
+  Members [Store () d !! e, Lock @@ tag] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateStoreAs value =

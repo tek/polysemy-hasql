@@ -1,5 +1,6 @@
 module Polysemy.Hasql.AtomicState where
 
+import Conc (interpretLockReentrant, Lock, MaskIO)
 import Polysemy.Db.AtomicState (interpretAtomicStateStore)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
@@ -25,14 +26,15 @@ import Polysemy.Hasql.Table.Schema (Schema)
 interpretAtomicStateDb ::
   Show e =>
   BuildPartialSql d tree u =>
-  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
-  Sem (Stop e : Store () d !! e : UidCrud () d !! e : r) d ->
+  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, MaskIO, Resource, Race, Embed IO] r =>
+  Sem (Stop e : Store () d !! e : UidCrud () d !! e : Lock @@ () : r) d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateDb initial =
+  interpretLockReentrant . untag .
   interpretCrudSingleton .
   interpretStoreDb .
   interpretAtomicStateStore initial .
-  raiseUnder2
+  insertAt @1
 {-# inline interpretAtomicStateDb #-}
 
 -- |Interpret 'AtomicState' as a singleton table.
@@ -41,7 +43,7 @@ interpretAtomicStateDb initial =
 interpretAtomicStateDbAs ::
   Show e =>
   BuildPartialSql d tree u =>
-  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
+  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, MaskIO, Resource, Race, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateDbAs d =
@@ -56,7 +58,7 @@ interpretAtomicStateDbAs d =
 interpretAtomicStateDbAsAuto ::
   Schema Auto Auto () (Uid () d) =>
   BuildPartialSql d tree u =>
-  Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
+  Members [Database !! DbError, Error InitDbError, Log, MaskIO, Resource, Race, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! DbError) r
 interpretAtomicStateDbAsAuto initial =
