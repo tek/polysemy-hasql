@@ -146,11 +146,11 @@ dequeue queue =
       symbolText @queue
 
 dequeueLoop ::
-  ∀ (queue :: Symbol) d t dt u resource r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Member (RestartingMonitor resource) r =>
+  Member RestartingMonitor r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Embed IO, Final IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -178,11 +178,11 @@ interpretInputDbQueue queue =
       embed (atomically (readTBMQueue queue))
 
 dequeueThread ::
-  ∀ (queue :: Symbol) d t dt u resource r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Member (RestartingMonitor resource) r =>
+  Member RestartingMonitor r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Async, Embed IO, Final IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
@@ -205,11 +205,11 @@ releaseInputQueue handle _ = do
   resume_ (Database.retryingSqlDef [exon|unlisten "#{SqlCode (symbolText @queue)}"|])
 
 interpretInputDbQueueListen ::
-  ∀ (queue :: Symbol) d t dt u resource r .
+  ∀ (queue :: Symbol) d t dt u r .
   Ord t =>
   TimeUnit u =>
   KnownSymbol queue =>
-  Members [RestartingMonitor resource, Final IO] r =>
+  Members [RestartingMonitor, Final IO] r =>
   Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->

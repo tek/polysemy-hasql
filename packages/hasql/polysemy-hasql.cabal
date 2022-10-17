@@ -187,7 +187,7 @@ library
     , polysemy-plugin
     , polysemy-time
     , postgresql-libpq
-    , prelate >=0.1
+    , prelate >=0.2
     , scientific
     , stm-chans
     , template-haskell
@@ -309,7 +309,7 @@ test-suite polysemy-hasql-integration
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
-    , prelate >=0.1
+    , prelate >=0.2
     , tasty
     , time
     , uuid
@@ -428,7 +428,7 @@ test-suite polysemy-hasql-unit
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.1
+    , prelate >=0.2
     , tasty
     , uuid
   mixins:

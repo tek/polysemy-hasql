@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.Run where
 
-import Conc (MaskIO, interpretMaskFinal, interpretRace)
+import Conc (interpretMaskFinal, interpretRace)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
 import Hedgehog.Internal.Property (Failure)
@@ -32,7 +32,7 @@ type TestEffects =
     Error InitDbError,
     Error DbError,
     Error Text,
-    MaskIO,
+    Mask,
     Race,
     Test,
     Fail,

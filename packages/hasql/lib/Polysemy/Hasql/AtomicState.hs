@@ -1,6 +1,6 @@
 module Polysemy.Hasql.AtomicState where
 
-import Conc (interpretLockReentrant, Lock, MaskIO)
+import Conc (Lock, interpretLockReentrant)
 import Polysemy.Db.AtomicState (interpretAtomicStateStore)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
@@ -26,7 +26,7 @@ import Polysemy.Hasql.Table.Schema (Schema)
 interpretAtomicStateDb ::
   Show e =>
   BuildPartialSql d tree u =>
-  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, MaskIO, Resource, Race, Embed IO] r =>
+  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, Mask, Resource, Race, Embed IO] r =>
   Sem (Stop e : Store () d !! e : UidCrud () d !! e : Lock @@ () : r) d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateDb initial =
@@ -43,7 +43,7 @@ interpretAtomicStateDb initial =
 interpretAtomicStateDbAs ::
   Show e =>
   BuildPartialSql d tree u =>
-  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, MaskIO, Resource, Race, Embed IO] r =>
+  Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, Mask, Resource, Race, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
 interpretAtomicStateDbAs d =
@@ -58,7 +58,7 @@ interpretAtomicStateDbAs d =
 interpretAtomicStateDbAsAuto ::
   Schema Auto Auto () (Uid () d) =>
   BuildPartialSql d tree u =>
-  Members [Database !! DbError, Error InitDbError, Log, MaskIO, Resource, Race, Embed IO] r =>
+  Members [Database !! DbError, Error InitDbError, Log, Mask, Resource, Race, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! DbError) r
 interpretAtomicStateDbAsAuto initial =

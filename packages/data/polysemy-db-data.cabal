@@ -99,7 +99,7 @@ library
     , comonad
     , data-default
     , lens
-    , prelate >=0.1
+    , prelate >=0.2
     , template-haskell
     , uuid
   mixins:

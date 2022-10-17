@@ -148,7 +148,7 @@ library
     , polysemy
     , polysemy-db-data
     , polysemy-plugin
-    , prelate >=0.1
+    , prelate >=0.2
     , random
     , time
     , type-errors
