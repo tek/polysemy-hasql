@@ -4,9 +4,9 @@
 
 module Polysemy.Db.SOP.Constraint where
 
-import Generics.SOP (All, All2, Top)
+import Generics.SOP (All, All2, Top, SOP (SOP), NS (Z), I (I), NP ((:*), Nil), unSOP, unZ, hd, unI)
 import Generics.SOP.Constraint (Head)
-import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo)
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf, GFrom, GTo, gto, gfrom)
 import Generics.SOP.Type.Metadata (ConstructorInfo (Record), DatatypeInfo (ADT, Newtype), FieldInfo)
 
 import Polysemy.Db.Text.Case (unCamelCase, unCamelCaseString)
@@ -20,14 +20,33 @@ type ProductGCode d =
 type ProductCoded (d :: Type) (ds :: [Type]) =
   Coded d '[ds]
 
-type NewtypeCoded (d :: Type) (a :: Type) =
-  (Coercible d a, ProductCoded d '[a])
-
 type ReifySOP (d :: Type) (dss :: [[Type]]) =
   (Generic d, GTo d, GCode d ~ dss, All2 Top dss)
 
 type ConstructSOP (d :: Type) (dss :: [[Type]]) =
   (Generic d, GFrom d, GCode d ~ dss, All2 Top dss)
+
+type ReifyNt n d =
+  ReifySOP n '[ '[d] ]
+
+reifyNt ::
+  ReifyNt n d =>
+  d ->
+  n
+reifyNt d =
+  gto (SOP (Z (I d :* Nil)))
+{-# inline reifyNt #-}
+
+constructNt ::
+  ConstructNt n d =>
+  n ->
+  d
+constructNt d =
+  unI (hd (unZ (unSOP (gfrom d))))
+{-# inline constructNt #-}
+
+type ConstructNt n d =
+  ConstructSOP n '[ '[d] ]
 
 type IsNullary =
   (~) '[]

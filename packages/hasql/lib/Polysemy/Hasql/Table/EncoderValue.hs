@@ -3,6 +3,7 @@ module Polysemy.Hasql.Table.EncoderValue where
 import qualified Data.Aeson as Aeson
 import Hasql.Encoders (Value, enum, jsonBytes)
 import Polysemy.Db.Data.Rep (Enum, Json, Prim)
+import Polysemy.Db.SOP.Constraint (ConstructNt, constructNt)
 import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Prelude hiding (Enum, bool)
 
@@ -28,8 +29,8 @@ instance ToJSON d => EncoderValue '[Json] d where
     toStrict . Aeson.encode >$< jsonBytes
 
 instance (
-    Coercible n d,
+    ConstructNt n d,
     EncoderValue effs d
   ) => EncoderValue (Newtype n d : effs) n where
   encoderValue =
-    coerce (encoderValue @effs @d)
+    constructNt >$< (encoderValue @effs @d)

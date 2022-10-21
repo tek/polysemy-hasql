@@ -3,6 +3,7 @@ module Polysemy.Hasql.Table.DecoderValue where
 import qualified Data.Aeson as Aeson
 import Hasql.Decoders (Value, jsonBytes)
 import Polysemy.Db.Data.Rep (Enum, Json, Prim)
+import Polysemy.Db.SOP.Constraint (ReifyNt, reifyNt)
 import Polysemy.Db.Tree.Data.Effect (Newtype)
 import Prelude hiding (Enum, bool)
 
@@ -38,8 +39,8 @@ instance FromJSON a => DecoderValue '[Json] a where
     jsonBytes (first toText . Aeson.eitherDecodeStrict')
 
 instance (
-    Coercible n d,
+    ReifyNt n d,
     DecoderValue effs d
   ) => DecoderValue (Newtype n d : effs) n where
   decoderValue =
-    coerce <$> decoderValue @effs @d
+    reifyNt <$> decoderValue @effs @d

@@ -17,6 +17,7 @@ import Hasql.Decoders (
   vectorArray,
   )
 import Polysemy.Db.Data.Rep (Prim)
+import Polysemy.Db.SOP.Constraint (ReifyNt, reifyNt)
 import Polysemy.Db.Tree.Data.Effect (Newtype, Tycon)
 
 import Polysemy.Hasql.Table.DecoderValue (DecoderValue, decoderValue)
@@ -33,11 +34,11 @@ class QueryRow (eff :: [Type]) (d :: Type) where
   queryRow :: Row d
 
 instance (
-    Coercible n d,
+    ReifyNt n d,
     QueryRow eff d
   ) => QueryRow (Newtype n d : eff) n where
   queryRow =
-    coerce <$> queryRow @eff @d
+    reifyNt <$> queryRow @eff @d
 
 instance DecoderValue eff d => QueryRow (Tycon [] d : eff) [d] where
   queryRow =

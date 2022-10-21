@@ -5,7 +5,7 @@ module Polysemy.Hasql.Test.QueryTest where
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import Hasql.Encoders (Params)
-import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
+import Polysemy.Db.Data.Cond (LessOrEq)
 import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
