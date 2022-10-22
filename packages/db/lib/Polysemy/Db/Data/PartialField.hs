@@ -127,7 +127,7 @@ instance (
     Null ->
       pure Keep
     value ->
-      fail [exon|invalid json type for partially update of field '#{toString name}': #{show value}|]
+      fail [exon|invalid json type for partial update of field '#{toString name}': #{show value}|]
     where
       name =
         symbolText @name

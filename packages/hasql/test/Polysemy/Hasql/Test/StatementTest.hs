@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.StatementTest where
 
 import Exon (exon)
-import Polysemy.Db.Data.Cond (LessOrEq (LessOrEq))
+import Polysemy.Db.Data.Cond (LessOrEq)
 import Polysemy.Db.Data.FieldId (FieldId (NamedField))
 import Polysemy.Db.Data.Rep (Auto, Flatten, IdQuery, Prim, PrimQuery, PrimaryKey, Product, Sum, UidRep, Unique)
 import Polysemy.Db.Data.Uid (Uid)
