@@ -2,13 +2,16 @@ module Polysemy.Hasql.Query.Basic where
 
 import Hasql.Statement (Statement)
 import Polysemy.Db.Data.InitDbError (InitDbError)
-import Polysemy.Db.Data.StoreQuery (StoreQuery(Basic))
+import Polysemy.Db.Data.Partial (Partial, getPartial)
+import Polysemy.Db.Data.StoreQuery (StoreQuery (Basic))
 
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable)
 import Polysemy.Hasql.Data.Query (Query)
 import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.ManagedTable (queryTable)
+import qualified Polysemy.Hasql.Statement as Statement
+import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 
 interpretStoreQueryWith ::
   ∀ f qOut qIn dIn dOut dResult e r .
@@ -47,3 +50,15 @@ interpretStoreQuery statement =
   interpretResumable \case
     Basic params ->
       restop (ManagedTable.runStatement params statement)
+
+interpretStoreQueryPartialUpdate ::
+  ∀ i d e r u tree .
+  Show e =>
+  BuildPartialSql d tree u =>
+  Members [Query i d, ManagedTable d !! e, Error InitDbError] r =>
+  InterpreterFor (StoreQuery (i, Partial d) (Maybe d) !! e) r
+interpretStoreQueryPartialUpdate =
+  interpretResumable \case
+    Basic (i, patch) -> do
+      table <- queryTable
+      restop (ManagedTable.runStatement () (Statement.update table i (getPartial patch)))

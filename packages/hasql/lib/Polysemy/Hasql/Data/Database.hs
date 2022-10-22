@@ -27,7 +27,7 @@ raiseInitDb (InitDb t th) =
 
 -- |This effect provides the capability to execute statements, either as hasql's 'Statement' or raw SQL.
 -- Additionally, it exposes managed access to the raw 'Connection' resource and automatic table initialization as
--- higher-order effects.
+-- higher-order actions.
 --
 -- With the minimal stack, an SQL query can be executed in two fashions.
 -- One is to use automatically derived codecs:
@@ -36,7 +36,7 @@ raiseInitDb (InitDb t th) =
 -- prog :: Member Database r => Sem r ()
 -- prog = do
 --   user :: Maybe User <- Database.sql () "select * from users where id = 1"
---   user :: [User] <- Database.sql "guest" "select * from users where name = $1"
+--   user :: [User] <- Database.sql ("guest", True) "select * from users where name = $1 and locked = $2"
 -- @
 --
 -- The other works by providing an explicit 'Statement':
