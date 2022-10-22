@@ -21,15 +21,14 @@ import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable, interpretManagedTableGen)
 import Polysemy.Hasql.Query (interpretQuery)
 import qualified Polysemy.Hasql.Store.Statement as Statement
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (Schema)
 
 type QueryStoreStack i d q p =
-  [QueryStore i d q p !! DbError, Crud i d q p !! DbError, ManagedTable d !! DbError]
+  [QueryStore i d q !! DbError, Crud i d q !! DbError, ManagedTable d !! DbError]
 
 interpretQueryStoreDb ::
-  Members [Crud i d q p !! e, ManagedTable d !! e] r =>
-  InterpreterFor (QueryStore i d q p !! e) r
+  Members [Crud i d q !! e, ManagedTable d !! e] r =>
+  InterpreterFor (QueryStore i d q !! e) r
 interpretQueryStoreDb =
   interpretResumable \case
     QueryStore.Insert record ->
@@ -46,16 +45,11 @@ interpretQueryStoreDb =
       nonEmpty <$> Statement.fetchAll
     QueryStore.Query q ->
       nonEmpty <$> Statement.fetchQ q
-    QueryStore.Update i patch ->
-      Statement.update i patch
-    QueryStore.UpdateQuery q patch ->
-      Statement.updateQ q patch
 
 type QueryStoreDeps t dt =
   [Database !! DbError, Time t dt, Log, Embed IO]
 
 interpretQueryStoreDbFullWith ::
-  BuildPartialSql p tree u =>
   Members (QueryStoreDeps t dt) r =>
   QueryTable q d ->
   Params i ->
@@ -68,9 +62,8 @@ interpretQueryStoreDbFullWith table iParams iWhere =
 {-# inline interpretQueryStoreDbFullWith #-}
 
 interpretQueryStoreDbQuery ::
-  ∀ qrep rep i d q p t dt r tree u .
+  ∀ qrep rep i d q p t dt r .
   Schema qrep rep q d =>
-  BuildPartialSql p tree u =>
   Members [Tagged "id" (Query i d), Tagged "main" (Query q d), Error InitDbError] r =>
   Members (QueryStoreDeps t dt) r =>
   InterpretersFor (QueryStoreStack i d q p) r
@@ -81,10 +74,9 @@ interpretQueryStoreDbQuery =
 {-# inline interpretQueryStoreDbQuery #-}
 
 interpretQueryStoreDbFullGenAs ::
-  ∀ qrep iqrep rep i d q p t dt r tree u .
+  ∀ qrep iqrep rep i d q p t dt r .
   Schema qrep rep q d =>
   Schema iqrep rep i d =>
-  BuildPartialSql p tree u =>
   Members (Error InitDbError : QueryStoreDeps t dt) r =>
   InterpretersFor (QueryStoreStack i d q p) r
 interpretQueryStoreDbFullGenAs =
@@ -97,10 +89,9 @@ interpretQueryStoreDbFullGenAs =
   raise3Under
 
 interpretQueryStoreDbSingle ::
-  ∀ qrep iqrep rep i d q p r tree u .
+  ∀ qrep iqrep rep i d q p r .
   Schema qrep rep q d =>
   Schema iqrep rep i d =>
-  BuildPartialSql p tree u =>
   Members [Resource, Log, Error InitDbError, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->

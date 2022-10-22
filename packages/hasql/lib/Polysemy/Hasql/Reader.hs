@@ -13,16 +13,14 @@ import Polysemy.Hasql.Data.Query (UidQuery)
 import Polysemy.Hasql.ManagedTable (interpretManagedTableAuto)
 import Polysemy.Hasql.Query (interpretQueryAuto)
 import Polysemy.Hasql.Store (interpretStoreDb)
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (Schema)
 
 -- |Interpret 'Reader' as a singleton table.
 --
 -- Given an initial value, every state action reads the value from the database, potentially writing it on first access.
 interpretReaderDb ::
-  ∀ d e r tree u .
+  ∀ d e r .
   Show e =>
-  BuildPartialSql d tree u =>
   Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError] r =>
   d ->
   InterpreterFor (Reader d !! e) r
@@ -39,9 +37,8 @@ interpretReaderDb initial =
 --
 -- Uses the automatic derivation strategy.
 interpretReaderDbAuto ::
-  ∀ d r tree u .
+  ∀ d r .
   Schema Auto Auto () (Uid () d) =>
-  BuildPartialSql d tree u =>
   Members [Database !! DbError, Error InitDbError, Log, Embed IO] r =>
   d ->
   InterpreterFor (Reader d !! DbError) r

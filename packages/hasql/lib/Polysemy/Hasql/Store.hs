@@ -18,14 +18,13 @@ import Polysemy.Hasql.Database (interpretDatabase)
 import Polysemy.Hasql.DbConnection (interpretDbConnection)
 import Polysemy.Hasql.ManagedTable (interpretManagedTable)
 import qualified Polysemy.Hasql.Store.Statement as Statement
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (UidQuerySchema, UidSchema, schema)
 
 type StoreStack i d =
-  [Store i d !! DbError, Crud i (Uid i d) i d !! DbError, ManagedTableUid i d !! DbError]
+  [Store i d !! DbError, Crud i (Uid i d) i !! DbError, ManagedTableUid i d !! DbError]
 
 interpretStoreDb ::
-  Members [Crud i (Uid i d) i d !! e, ManagedTableUid i d !! e] r =>
+  Members [Crud i (Uid i d) i !! e, ManagedTableUid i d !! e] r =>
   InterpreterFor (Store i d !! e) r
 interpretStoreDb =
   interpretResumable \case
@@ -46,7 +45,6 @@ type StoreDeps t dt =
   [Database !! DbError, Time t dt, Log, Embed IO]
 
 interpretStoreDbFull ::
-  BuildPartialSql d tree u =>
   Members (StoreDeps t dt) r =>
   QueryTable i (Uid i d) ->
   InterpretersFor (StoreStack i d) r
@@ -56,9 +54,8 @@ interpretStoreDbFull table =
   interpretStoreDb
 
 interpretStoreDbFullGenAs ::
-  ∀ qrep irep rep i d t dt r tree u .
+  ∀ qrep irep rep i d t dt r .
   UidQuerySchema qrep irep rep i i d =>
-  BuildPartialSql d tree u =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack i d) r
 interpretStoreDbFullGenAs =
@@ -73,18 +70,16 @@ interpretStoreDbFullGenAs =
 --   Store.fetchAll
 -- @
 interpretStoreDbFullGen ::
-  ∀ rep i d t dt r tree u .
+  ∀ rep i d t dt r .
   UidSchema rep i d =>
-  BuildPartialSql d tree u =>
   Members (StoreDeps t dt) r =>
   InterpretersFor (StoreStack i d) r
 interpretStoreDbFullGen =
   interpretStoreDbFullGenAs @(PrimQuery "id") @PrimaryKey @rep
 
 interpretStoreDbSingle ::
-  ∀ qrep irep rep i d r tree u .
+  ∀ qrep irep rep i d r .
   UidQuerySchema qrep irep rep i i d =>
-  BuildPartialSql d tree u =>
   Members [Resource, Log, Embed IO, Final IO] r =>
   Text ->
   DbConfig ->

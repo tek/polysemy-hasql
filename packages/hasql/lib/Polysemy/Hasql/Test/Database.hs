@@ -32,7 +32,6 @@ import Polysemy.Hasql.Store (StoreStack, interpretStoreDbFull)
 import Polysemy.Hasql.Table (createTable, dropTable, runStatement)
 import Polysemy.Hasql.Table.BasicSchema (BasicSchema, basicSchema)
 import Polysemy.Hasql.Table.Query.Text (sqlQuote)
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (Schema, UidQuerySchema, UidSchema, schema)
 
 suffixedTable ::
@@ -164,8 +163,7 @@ type TestStoreDeps =
   ]
 
 withTestStoreTable ::
-  ∀ qrep rep d i r tree a u .
-  BuildPartialSql d tree u =>
+  ∀ qrep rep d i r a .
   Members TestStoreDeps r =>
   Schema qrep rep i (Uid i d) =>
   (UidQueryTable i d -> Sem (StoreStack i d ++ r) a) ->
@@ -175,8 +173,7 @@ withTestStoreTable prog =
     interpretStoreDbFull table (prog table)
 
 withTestStoreTableGenAs ::
-  ∀ qrep rep irep d i r tree a u .
-  BuildPartialSql d tree u =>
+  ∀ qrep rep irep d i r a .
   Members TestStoreDeps r =>
   UidQuerySchema qrep irep rep i i d =>
   (UidQueryTable i d -> Sem (StoreStack i d ++ r) a) ->
@@ -186,8 +183,7 @@ withTestStoreTableGenAs prog =
     interpretStoreDbFull table (prog table)
 
 withTestStoreTableGen ::
-  ∀ rep i d r tree a u .
-  BuildPartialSql d tree u =>
+  ∀ rep i d r a .
   Members TestStoreDeps r =>
   UidSchema rep i d =>
   (UidQueryTable i d -> Sem (StoreStack i d ++ r) a) ->
@@ -197,8 +193,7 @@ withTestStoreTableGen prog =
     interpretStoreDbFull table (prog table)
 
 withTestStore ::
-  ∀ qrep rep i d r tree u .
-  BuildPartialSql d tree u =>
+  ∀ qrep rep i d r .
   Members TestStoreDeps r =>
   Schema qrep rep i (Uid i d) =>
   InterpretersFor (StoreStack i d) r
@@ -206,8 +201,7 @@ withTestStore prog =
   withTestStoreTable @qrep @rep (const prog)
 
 withTestStoreGenAs ::
-  ∀ qrep irep rep i d r tree u .
-  BuildPartialSql d tree u =>
+  ∀ qrep irep rep i d r .
   Members TestStoreDeps r =>
   UidQuerySchema qrep irep rep i i d =>
   InterpretersFor (StoreStack i d) r
@@ -215,8 +209,7 @@ withTestStoreGenAs prog =
   withTestStoreTableGenAs @qrep @rep @irep (const prog)
 
 withTestStoreGen ::
-  ∀ rep i d r tree u .
-  BuildPartialSql d tree u =>
+  ∀ rep i d r .
   Members TestStoreDeps r =>
   UidSchema rep i d =>
   InterpretersFor (StoreStack i d) r
@@ -224,8 +217,7 @@ withTestStoreGen =
   withTestStoreGenAs @(PrimQuery "id") @PrimaryKey @rep
 
 withTestStoreAuto ::
-  ∀ i d r tree a u .
-  BuildPartialSql d tree u =>
+  ∀ i d r a.
   Members TestStoreDeps r =>
   UidSchema Auto i d =>
   Sem (StoreStack i d ++ r) a ->
@@ -234,9 +226,8 @@ withTestStoreAuto =
   withTestStoreGen @Auto
 
 withTestStoreUidAs ::
-  ∀ qrep irep i d r tree a u .
+  ∀ qrep irep i d r a.
   Members TestStoreDeps r =>
-  BuildPartialSql d tree u =>
   Schema qrep (UidRep irep Auto) i (Uid i d) =>
   Sem (StoreStack i d ++ r) a ->
   Sem r a
@@ -245,9 +236,8 @@ withTestStoreUidAs prog =
     interpretStoreDbFull table prog
 
 withTestStoreUid ::
-  ∀ i d r tree a u .
+  ∀ i d r a.
   Members TestStoreDeps r =>
-  BuildPartialSql d tree u =>
   Schema (PrimQuery "id") (UidRep PrimaryKey Auto) i (Uid i d) =>
   Sem (StoreStack i d ++ r) a ->
   Sem r a

@@ -30,7 +30,7 @@ data DatRep =
   deriving stock (Eq, Show, Generic)
 
 prog ::
-  Members [QueryStore () Dat () Dat !! DbError, Stop DbError] r =>
+  Members [QueryStore () Dat () !! DbError, Stop DbError] r =>
   Sem r (Dat, Maybe (NonEmpty Dat))
 prog = do
   let a = Dat id' "foo"

@@ -1,10 +1,7 @@
 module Polysemy.Hasql.Crud where
 
-import Hasql.Decoders (singleRow)
 import Hasql.Encoders (Params)
-import Hasql.Statement (Statement (Statement))
 import Polysemy.Db.Data.InitDbError (InitDbError)
-import Polysemy.Db.Data.Partial (getPartial)
 import Polysemy.Db.Data.Uid (Uid)
 
 import Polysemy.Hasql.Data.Crud (Crud (..))
@@ -16,14 +13,12 @@ import Polysemy.Hasql.Data.Table (Table (Table))
 import Polysemy.Hasql.Data.Where (Where)
 import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 
 interpretCrudWith ::
-  BuildPartialSql p tree u =>
   QueryTable q d ->
   Params i ->
   Where i d ->
-  InterpreterFor (Crud i d q p !! e) r
+  InterpreterFor (Crud i d q !! e) r
 interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) iParams iWhere =
   interpretResumable $ pure . \case
     Fetch ->
@@ -40,21 +35,16 @@ interpretCrudWith qTable@(QueryTable table@(Table structure row _) _ _) iParams 
       Statement.deleteWhere iQueryTable
     DeleteAll ->
       Statement.deleteAll table
-    Update i patch ->
-      Statement.update iQueryTable i (getPartial patch)
-    UpdateQ q patch ->
-      Statement.update qTable q (getPartial patch)
   where
     iQueryTable =
       qTable { _qparams = iParams, _qwhere = iWhere }
 {-# inline interpretCrudWith #-}
 
 interpretCrud ::
-  ∀ i d q p e r tree u .
+  ∀ i d q e r .
   Show e =>
-  BuildPartialSql p tree u =>
   Members [Tagged "id" (Query i d), Tagged "main" (Query q d), ManagedTable d !! e, Error InitDbError] r =>
-  InterpreterFor (Crud i d q p !! e) r
+  InterpreterFor (Crud i d q !! e) r
 interpretCrud sem = do
   table <- tag @"main" queryTable
   iParams <- tag @"id" (Query.params @i @d)
@@ -63,11 +53,10 @@ interpretCrud sem = do
 {-# inline interpretCrud #-}
 
 interpretCrudUidWith ::
-  BuildPartialSql p tree u =>
   QueryTable q (Uid i d) ->
   Params i ->
   Where i (Uid i d) ->
-  InterpreterFor (Crud i (Uid i d) q p !! e) r
+  InterpreterFor (Crud i (Uid i d) q !! e) r
 interpretCrudUidWith qTable@(QueryTable table@(Table structure row _) _ _) iParams iWhere =
   interpretResumable $ pure . \case
     Fetch ->
@@ -84,10 +73,6 @@ interpretCrudUidWith qTable@(QueryTable table@(Table structure row _) _ _) iPara
       Statement.deleteWhere uidQueryTable
     DeleteAll ->
       Statement.deleteAll table
-    Update i patch ->
-      Statement.update uidQueryTable i (getPartial patch)
-    UpdateQ q patch ->
-      Statement.update qTable q (getPartial patch)
   where
     uidQueryTable =
       qTable { _qparams = iParams, _qwhere = iWhere }
@@ -97,7 +82,7 @@ interpretCrudUidNoUpdateWith ::
   QueryTable q (Uid i d) ->
   Params i ->
   Where i (Uid i d) ->
-  InterpreterFor (Crud i (Uid i d) q p !! e) r
+  InterpreterFor (Crud i (Uid i d) q !! e) r
 interpretCrudUidNoUpdateWith qTable@(QueryTable table@(Table structure row _) _ _) iParams iWhere =
   interpretResumable $ pure . \case
     Fetch ->
@@ -114,21 +99,16 @@ interpretCrudUidNoUpdateWith qTable@(QueryTable table@(Table structure row _) _ 
       Statement.deleteWhere uidQueryTable
     DeleteAll ->
       Statement.deleteAll table
-    Update _ _ ->
-      Statement "select 1" mempty (singleRow (pure Nothing)) True
-    UpdateQ _ _ ->
-      Statement "select 1" mempty (singleRow (pure Nothing)) True
   where
     uidQueryTable =
       qTable { _qparams = iParams, _qwhere = iWhere }
 {-# inline interpretCrudUidNoUpdateWith #-}
 
 interpretCrudUid ::
-  ∀ i d q p e r tree u .
+  ∀ i d q e r .
   Show e =>
-  BuildPartialSql p tree u =>
   Members [Tagged "id" (UidQuery i d), Tagged "main" (Query q (Uid i d)), ManagedTableUid i d !! e, Error InitDbError] r =>
-  InterpreterFor (Crud i (Uid i d) q p !! e) r
+  InterpreterFor (Crud i (Uid i d) q !! e) r
 interpretCrudUid sem = do
   table <- tag @"main" queryTable
   iParams <- tag @"id" (Query.params @i @(Uid i d))
@@ -137,11 +117,10 @@ interpretCrudUid sem = do
 {-# inline interpretCrudUid #-}
 
 interpretCrudUidId ::
-  ∀ i d p e r tree u .
+  ∀ i d e r .
   Show e =>
-  BuildPartialSql p tree u =>
   Members [UidQuery i d, ManagedTableUid i d !! e, Error InitDbError] r =>
-  InterpreterFor (Crud i (Uid i d) i p !! e) r
+  InterpreterFor (Crud i (Uid i d) i !! e) r
 interpretCrudUidId sem = do
   table <- queryTable
   iParams <- Query.params @i @(Uid i d)
@@ -150,9 +129,8 @@ interpretCrudUidId sem = do
 {-# inline interpretCrudUidId #-}
 
 interpretCrudSingletonWith ::
-  BuildPartialSql p tree u =>
   Table d ->
-  InterpreterFor (Crud () d () p !! e) r
+  InterpreterFor (Crud () d () !! e) r
 interpretCrudSingletonWith table@(Table structure row _) =
   interpretResumable $ pure . \case
     Fetch ->
@@ -169,17 +147,12 @@ interpretCrudSingletonWith table@(Table structure row _) =
       Statement.deleteAll table
     DeleteAll ->
       Statement.deleteAll table
-    Update _ patch ->
-      Statement.updateSingle table (getPartial patch)
-    UpdateQ _ patch ->
-      Statement.updateSingle table (getPartial patch)
 {-# inline interpretCrudSingletonWith #-}
 
 interpretCrudSingleton ::
   Show e =>
-  BuildPartialSql p tree u =>
   Members [Query () d, ManagedTable d !! e, Error InitDbError] r =>
-  InterpreterFor (Crud () d () p !! e) r
+  InterpreterFor (Crud () d () !! e) r
 interpretCrudSingleton sem = do
   QueryTable table _ _ <- queryTable
   interpretCrudSingletonWith table sem

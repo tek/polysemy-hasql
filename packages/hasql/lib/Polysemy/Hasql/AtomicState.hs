@@ -16,7 +16,6 @@ import Polysemy.Hasql.Data.Query (UidQuery)
 import Polysemy.Hasql.ManagedTable (interpretManagedTableAuto)
 import Polysemy.Hasql.Query (interpretQueryAuto)
 import Polysemy.Hasql.Store (interpretStoreDb)
-import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
 import Polysemy.Hasql.Table.Schema (Schema)
 
 -- |Interpret 'AtomicState' as a singleton table.
@@ -25,7 +24,6 @@ import Polysemy.Hasql.Table.Schema (Schema)
 -- back.
 interpretAtomicStateDb ::
   Show e =>
-  BuildPartialSql d tree u =>
   Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, Mask, Resource, Race, Embed IO] r =>
   Sem (Stop e : Store () d !! e : UidCrud () d !! e : Lock @@ () : r) d ->
   InterpreterFor (AtomicState d !! e) r
@@ -42,7 +40,6 @@ interpretAtomicStateDb initial =
 -- Given an initial value, every state action reads the value from the database and writes it back.
 interpretAtomicStateDbAs ::
   Show e =>
-  BuildPartialSql d tree u =>
   Members [UidQuery () d, ManagedTableUid () d !! e, Error InitDbError, Mask, Resource, Race, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! e) r
@@ -57,7 +54,6 @@ interpretAtomicStateDbAs d =
 -- Uses the automatic derivation strategy.
 interpretAtomicStateDbAsAuto ::
   Schema Auto Auto () (Uid () d) =>
-  BuildPartialSql d tree u =>
   Members [Database !! DbError, Error InitDbError, Log, Mask, Resource, Race, Embed IO] r =>
   d ->
   InterpreterFor (AtomicState d !! DbError) r
