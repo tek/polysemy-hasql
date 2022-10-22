@@ -1,9 +1,11 @@
 module Polysemy.Hasql.Query.Basic where
 
 import Hasql.Statement (Statement)
+import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Data.Partial (Partial, getPartial)
 import Polysemy.Db.Data.StoreQuery (StoreQuery (Basic))
+import Polysemy.Db.Data.Uid (Uid)
 
 import qualified Polysemy.Hasql.Data.ManagedTable as ManagedTable
 import Polysemy.Hasql.Data.ManagedTable (ManagedTable, ManagedTableUid)
@@ -12,8 +14,6 @@ import Polysemy.Hasql.Data.QueryTable (QueryTable)
 import Polysemy.Hasql.ManagedTable (queryTable)
 import qualified Polysemy.Hasql.Statement as Statement
 import Polysemy.Hasql.Table.Query.Update (BuildPartialSql)
-import Polysemy.Db.Data.Uid (Uid)
-import Lens.Micro.Extras (view)
 
 interpretStoreQueryWith ::
   ∀ f qOut qIn dIn dOut dResult e r .

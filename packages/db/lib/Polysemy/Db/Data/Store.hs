@@ -1,7 +1,7 @@
 module Polysemy.Db.Data.Store where
 
 import Data.UUID (UUID)
-import Polysemy.Db.Data.Partial (Partial)
+
 import Polysemy.Db.Data.Uid (Uid)
 
 -- |A 'Store' is characterized by a record type @d@ and a primary key type @i@.
@@ -25,7 +25,6 @@ data Store i d :: Effect where
   DeleteAll :: Store i d m (Maybe (NonEmpty (Uid i d)))
   Fetch :: i -> Store i d m (Maybe (Uid i d))
   FetchAll :: Store i d m (Maybe (NonEmpty (Uid i d)))
-  Update :: i -> Partial d -> Store i d m (Maybe (Uid i d))
 
 makeSem ''Store
 

@@ -41,8 +41,6 @@ interpretStoreDb =
       Statement.fetch id'
     Store.FetchAll ->
       nonEmpty <$> Statement.fetchAll
-    Store.Update i patch ->
-      Statement.update i patch
 
 type StoreDeps t dt =
   [Database !! DbError, Time t dt, Log, Embed IO]

@@ -17,6 +17,10 @@ import Polysemy.Test (UnitTest, assertJust)
 
 import Polysemy.Hasql.Test.Database (withTestStoreUidAs)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Db.Data.StoreQuery (StoreQuery)
+import qualified Polysemy.Db.Data.StoreQuery as StoreQuery
+import Polysemy.Hasql.Query.Basic (interpretStoreQueryPartialUpdate)
+import Polysemy.Hasql.Query (interpretQueryUid)
 
 newtype Tex =
   Tex { unTex :: Text }
@@ -79,21 +83,21 @@ update =
 
 updateWith ::
   ∀ e r .
-  Members [Store SumId Dat !! e, Stop e] r =>
+  Members [StoreQuery (SumId, Partial Dat) (Maybe Dat) !! e, Stop e] r =>
   Partial Dat ->
   Sem r ()
 updateWith upd =
-  restop (void (Store.update (S1 1) upd))
+  restop (void (StoreQuery.basic (S1 1, upd)))
 
 prog ::
   ∀ e r .
-  Members [Store SumId Dat !! e, Stop e, Error Text] r =>
+  Members [StoreQuery (SumId, Partial Dat) (Maybe Dat) !! e, Store SumId Dat !! e, Stop e, Error Text] r =>
   Sem r (Maybe (NonEmpty (Uid SumId Dat)))
 prog = do
   restop (Store.insert updateRecord)
   restop (Store.insert keepRecord)
   updateWith update
-  restop (Store.update (S1 1) (partial @Dat +> field @"intField" (99 :: Int) +> field @"_boo" (Buul False)))
+  restop (StoreQuery.basic (S1 1, (partial @Dat +> field @"intField" (99 :: Int) +> field @"_boo" (Buul False))))
   jsonUpdate <- fromEither (first toText (Aeson.eitherDecode [exon|{"txt":"updated"}|]))
   updateWith jsonUpdate
   restop Store.fetchAll
@@ -105,6 +109,8 @@ target =
 test_partialDbUpdate :: UnitTest
 test_partialDbUpdate =
   integrationTest do
-    withTestStoreUidAs @(IdQueryAs (Sum SumIdRep)) @(Rep [PrimaryKey, Sum Auto]) do
-      result <- prog @DbError
-      assertJust target (NonEmpty.sortWith Uid._id <$> result)
+    withTestStoreUidAs @(IdQueryAs (Sum SumIdRep)) @(Rep [PrimaryKey, Sum Auto]) $
+      interpretQueryUid @(IdQueryAs (Sum SumIdRep)) @(Rep [PrimaryKey, Sum Auto]) @Auto $
+      interpretStoreQueryPartialUpdate do
+        result <- prog @DbError
+        assertJust target (NonEmpty.sortWith Uid._id <$> result)

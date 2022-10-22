@@ -1,22 +1,24 @@
 module Polysemy.Db.StoreQuery where
 
 import Control.Concurrent.STM.TVar (TVar, newTVarIO)
-import Control.Lens (view)
+import Control.Lens (view, views)
 import qualified Data.Map.Strict as Map
 
+import Polysemy.Db.Data.Partial (Partial, getPartial)
 import qualified Polysemy.Db.Data.Store as Store
 import Polysemy.Db.Data.Store (Store)
 import Polysemy.Db.Data.StoreQuery (StoreQuery (..))
 import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Store (StrictStore (StrictStore))
-import qualified Polysemy.Db.Store as StrictStore (records)
+import Polysemy.Db.Store (PureStore (PureStore), PureStoreUpdate, PureUidStore, records)
+import qualified Polysemy.Db.Store as PureStore (records)
+import Polysemy.Db.Tree.Partial (updatePartial)
 
-interpretStoreQueryStrict ::
+interpretStoreQueryPure ::
   Ord q =>
   (∀ a . [a] -> f a) ->
   Map q [d] ->
   InterpreterFor (StoreQuery q (f d) !! e) r
-interpretStoreQueryStrict filter' store =
+interpretStoreQueryPure filter' store =
   interpretResumable \case
     Basic params ->
       pure (filter' (fromMaybe [] (Map.lookup params store)))
@@ -25,40 +27,40 @@ single :: [a] -> Maybe a
 single [a] = Just a
 single _ = Nothing
 
-interpretStoreQueryStrictOne ::
+interpretStoreQueryPureOne ::
   Ord q =>
   Map q [d] ->
   InterpreterFor (StoreQuery q (Maybe d) !! e) r
-interpretStoreQueryStrictOne =
-  interpretStoreQueryStrict single
+interpretStoreQueryPureOne =
+  interpretStoreQueryPure single
 
-interpretStoreQueryStrictMulti ::
+interpretStoreQueryPureMulti ::
   Ord q =>
   Map q [d] ->
   InterpreterFor (StoreQuery q [d] !! e) r
-interpretStoreQueryStrictMulti =
-  interpretStoreQueryStrict id
+interpretStoreQueryPureMulti =
+  interpretStoreQueryPure id
 
 interpretStoreQueryAtomicState ::
   ∀ d q e f r .
-  Member (AtomicState (StrictStore d)) r =>
+  Member (AtomicState (PureStore d)) r =>
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
   InterpreterFor (StoreQuery q (f d) !! e) r
 interpretStoreQueryAtomicState filter' match =
   interpretResumable \case
     Basic q ->
-      atomicGets @(StrictStore d) (filter' . filter (match q) . view StrictStore.records)
+      atomicGets @(PureStore d) (filter' . filter (match q) . view PureStore.records)
 
 interpretStoreQueryAtomicStateOne ::
-  Member (AtomicState (StrictStore d)) r =>
+  Member (AtomicState (PureStore d)) r =>
   (q -> d -> Bool) ->
   InterpreterFor (StoreQuery q (Maybe d) !! e) r
 interpretStoreQueryAtomicStateOne =
   interpretStoreQueryAtomicState single
 
 interpretStoreQueryAtomicStateMulti ::
-  Member (AtomicState (StrictStore d)) r =>
+  Member (AtomicState (PureStore d)) r =>
   (q -> d -> Bool) ->
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretStoreQueryAtomicStateMulti =
@@ -66,7 +68,7 @@ interpretStoreQueryAtomicStateMulti =
 
 interpretStoreQueryAtomicTVar ::
   Member (Embed IO) r =>
-  TVar (StrictStore d) ->
+  TVar (PureStore d) ->
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
   InterpreterFor (StoreQuery q (f d) !! e) r
@@ -80,7 +82,7 @@ interpretStoreQueryAtomicWith ::
   [d] ->
   InterpreterFor (StoreQuery q (f d) !! e) r
 interpretStoreQueryAtomicWith filter' match initial sem = do
-  tvar <- embed (newTVarIO (StrictStore initial))
+  tvar <- embed (newTVarIO (PureStore initial))
   interpretStoreQueryAtomicTVar tvar filter' match sem
 
 interpretStoreQueryAtomicOneWith ::
@@ -89,7 +91,7 @@ interpretStoreQueryAtomicOneWith ::
   [d] ->
   InterpreterFor (StoreQuery q (Maybe d) !! e) r
 interpretStoreQueryAtomicOneWith match initial sem = do
-  tvar <- embed (newTVarIO (StrictStore initial))
+  tvar <- embed (newTVarIO (PureStore initial))
   interpretStoreQueryAtomicTVar tvar single match sem
 
 interpretStoreQueryAtomicMultiWith ::
@@ -98,7 +100,7 @@ interpretStoreQueryAtomicMultiWith ::
   [d] ->
   InterpreterFor (StoreQuery q [d] !! e) r
 interpretStoreQueryAtomicMultiWith match initial sem = do
-  tvar <- embed (newTVarIO (StrictStore initial))
+  tvar <- embed (newTVarIO (PureStore initial))
   interpretStoreQueryAtomicTVar tvar id match sem
 
 interpretStoreQueryAtomicOne ::
@@ -124,3 +126,22 @@ interpretStoreQueryAny match =
   interpretResumable \case
     Basic q ->
       maybe False (any (match q . Uid._payload)) <$> restop @e @(Store i d) (Store.fetchAll @i)
+
+interpretStoreQueryPartialUpdatePure ::
+  ∀ i d e tree dataTree r .
+  Eq i =>
+  PureStoreUpdate d '[] tree dataTree =>
+  Member (AtomicState (PureUidStore i d)) r =>
+  InterpreterFor (StoreQuery (i, Partial d) (Maybe d) !! e) r
+interpretStoreQueryPartialUpdatePure =
+  interpretResumable \case
+    Basic (i, patch) ->
+      atomicGets @(PureUidStore i d) (views records (find ((i ==) . Uid._id))) >>= \case
+        Just d ->
+          Just (updated ^. #_payload) <$ atomicModify' @(PureUidStore i d) (records %~ updateRecords)
+          where
+            updateRecords a =
+              updated : filter (\ d' -> Uid._id d /= Uid._id d') a
+            updated =
+              fmap (updatePartial (getPartial patch)) d
+        Nothing -> pure Nothing
