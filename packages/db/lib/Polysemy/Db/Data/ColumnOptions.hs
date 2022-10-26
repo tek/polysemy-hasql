@@ -6,7 +6,7 @@ data ColumnOptions =
      notNull :: Bool,
      primaryKey :: Bool
   }
-  deriving stock (Eq, Show, Ord)
+  deriving stock (Eq, Show, Ord, Generic)
 
 instance Default ColumnOptions where
   def =

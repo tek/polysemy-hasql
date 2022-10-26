@@ -67,6 +67,13 @@ library
       Polysemy.Hasql.Table.ColumnOptions
       Polysemy.Hasql.Table.DataColumn
       Polysemy.Hasql.Table.DecoderValue
+      Polysemy.Hasql.Table.Dsl.Api
+      Polysemy.Hasql.Table.Dsl.Codec
+      Polysemy.Hasql.Table.Dsl.Data.Builder
+      Polysemy.Hasql.Table.Dsl.Data.PgColumn
+      Polysemy.Hasql.Table.Dsl.Names
+      Polysemy.Hasql.Table.Dsl.Product
+      Polysemy.Hasql.Table.Dsl.Sum
       Polysemy.Hasql.Table.EncoderValue
       Polysemy.Hasql.Table.Enum
       Polysemy.Hasql.Table.PrimDecoder
@@ -213,6 +220,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.DeleteTest
+      Polysemy.Hasql.Test.DslTest
       Polysemy.Hasql.Test.InitTest
       Polysemy.Hasql.Test.JsonTest
       Polysemy.Hasql.Test.PKTest
@@ -296,6 +304,7 @@ test-suite polysemy-hasql-integration
       aeson
     , base >=4.12 && <5
     , exon
+    , generics-sop
     , hasql >=1.4.3
     , hedgehog
     , lens

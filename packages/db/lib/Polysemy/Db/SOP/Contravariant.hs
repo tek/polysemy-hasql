@@ -1,18 +1,19 @@
 module Polysemy.Db.SOP.Contravariant where
 
-import Generics.SOP (SListI,
-  I(I),
-  K(K),
+import Generics.SOP (
+  I (I),
+  K (K),
   NP,
   Projection,
+  SListI,
   hcollapse,
   hmap,
   hzipWith,
   projections,
-  type (-.->)(Fn),
   unComp,
   unI,
-  (:.:)(Comp),
+  type (-.->) (Fn),
+  (:.:) (Comp),
   )
 
 sequenceContravariantNPF ::

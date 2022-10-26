@@ -47,14 +47,14 @@ test_json = do
   integrationTest do
     interpretStoreDbFullGen @DatRep @Int @Dat do
       restop @DbError $ Store.insert dat
-    result <- evalMaybe =<< Database.retryingQuerySqlDef @DbError query enc dec 5
+    result <- evalMaybe =<< Database.retryingQuerySqlDef @DbError query dec enc 5
     assertRight f3 (Aeson.eitherDecodeStrict' result)
   where
     query =
       [exon|select field3 from dat where id = $1|]
-    enc =
-      column (Decoders.nonNullable (jsonBytes pure))
     dec =
+      column (Decoders.nonNullable (jsonBytes pure))
+    enc =
       param (Encoders.nonNullable int8)
     dat =
       Uid 5 (Dat "field1" 8 f3)

@@ -4,7 +4,6 @@ import Data.Composition ((.:))
 import qualified Data.Set as Set
 import Data.Vector (Vector)
 import Hasql.Decoders (
-  Array,
   Row,
   Value,
   array,
@@ -26,10 +25,6 @@ value :: Value a -> Row a
 value =
   column . nonNullable
 
-values :: Array a -> Row a
-values =
-  value . array
-
 class QueryRow (eff :: [Type]) (d :: Type) where
   queryRow :: Row d
 
@@ -42,11 +37,11 @@ instance (
 
 instance DecoderValue eff d => QueryRow (Tycon [] d : eff) [d] where
   queryRow =
-    value (listArray (nonNullable (decoderValue @eff)))
+    fold <$> column (nullable (listArray (nonNullable (decoderValue @eff))))
 
 instance DecoderValue eff d => QueryRow (Tycon Vector d : eff) (Vector d) where
   queryRow =
-    value (vectorArray (nonNullable (decoderValue @eff)))
+    fold <$> column (nullable (vectorArray (nonNullable (decoderValue @eff))))
 
 instance DecoderValue eff d => QueryRow (Tycon NonEmpty d : eff) (NonEmpty d) where
   queryRow = do
@@ -55,7 +50,7 @@ instance DecoderValue eff d => QueryRow (Tycon NonEmpty d : eff) (NonEmpty d) wh
 
 instance (DecoderValue eff d, Ord d) => QueryRow (Tycon Set d : eff) (Set d) where
   queryRow =
-    value (array $ dimension (fmap Set.fromList .: replicateM) $ element (nonNullable (decoderValue @eff)))
+    fold <$> column (nullable (array $ dimension (fmap Set.fromList .: replicateM) $ element (nonNullable (decoderValue @eff))))
 
 instance DecoderValue eff d => QueryRow (Tycon Maybe d : eff) (Maybe d) where
   queryRow =

@@ -167,6 +167,7 @@ in {
       dependencies = [
         "aeson"
         "exon"
+        "generics-sop"
         "hasql >= 1.4.3"
         "hedgehog"
         "lens"

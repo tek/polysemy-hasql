@@ -1,7 +1,8 @@
 module Polysemy.Db.Data.ColumnPrefix where
-import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 
 import Exon (exon)
+
+import Polysemy.Db.Text.DbIdentifier (quotedDbId)
 
 data ColumnPrefix =
   InitPrefix

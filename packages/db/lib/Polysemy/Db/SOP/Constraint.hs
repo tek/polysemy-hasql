@@ -26,8 +26,14 @@ type ReifySOP (d :: Type) (dss :: [[Type]]) =
 type ConstructSOP (d :: Type) (dss :: [[Type]]) =
   (Generic d, GFrom d, GCode d ~ dss, All2 Top dss)
 
+type ReifyProd d ds =
+  ReifySOP d '[ds]
+
+type ConstructProd d ds =
+  ConstructSOP d '[ds]
+
 type ReifyNt n d =
-  ReifySOP n '[ '[d] ]
+  ReifyProd n '[d]
 
 reifyNt ::
   ReifyNt n d =>

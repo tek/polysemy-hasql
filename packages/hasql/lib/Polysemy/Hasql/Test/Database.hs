@@ -162,6 +162,16 @@ type TestStoreDeps =
     GhcTime
   ]
 
+withTestStoreUsing ::
+  ∀ d i r a .
+  Members TestStoreDeps r =>
+  UidQueryTable i d ->
+  Sem (StoreStack i d ++ r) a ->
+  Sem r a
+withTestStoreUsing table prog =
+  withTestQueryTable table \ t ->
+    interpretStoreDbFull t prog
+
 withTestStoreTable ::
   ∀ qrep rep d i r a .
   Members TestStoreDeps r =>
