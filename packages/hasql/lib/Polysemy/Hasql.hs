@@ -7,52 +7,20 @@ module Polysemy.Hasql (
 
   -- ** Low-Level Interpreters
   Database,
-  interpretDatabase,
-  DbConnection,
-  interpretDbConnection,
   DbConfig(DbConfig),
 
-  -- ** Derived Crud Interpreters
-  -- $derived
-  interpretStoreDbFullGen,
-  -- $derived2
-  QueryTable,
-
-  -- * Crud Derivation
-  -- $derivation
-  Schema(schema),
-  UidQuerySchema,
-  UidSchema,
-  Auto,
-
   -- * Misc
-  HasqlConnection,
   DbConnectionError,
   interpretAtomicStateDb,
-  interpretAtomicStateDbAs,
-  interpretAtomicStateDbAsAuto,
   interpretReaderDb,
-  interpretReaderDbAuto,
-  interpretQueryWith,
-  interpretQuery,
-  interpretQueryAuto,
-  interpretQuerySingleton,
 ) where
 
 import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
-import Polysemy.Db.Data.Rep (Auto)
 
-import Polysemy.Hasql.AtomicState (interpretAtomicStateDb, interpretAtomicStateDbAs, interpretAtomicStateDbAsAuto)
-import Polysemy.Hasql.Data.Database (Database)
-import Polysemy.Hasql.Data.DbConnection (DbConnection)
-import Polysemy.Hasql.Data.QueryTable (QueryTable)
-import Polysemy.Hasql.Database (HasqlConnection, interpretDatabase)
-import Polysemy.Hasql.DbConnection (interpretDbConnection)
-import Polysemy.Hasql.Query (interpretQuery, interpretQueryAuto, interpretQuerySingleton, interpretQueryWith)
-import Polysemy.Hasql.Reader (interpretReaderDb, interpretReaderDbAuto)
-import Polysemy.Hasql.Store (interpretStoreDbFullGen)
-import Polysemy.Hasql.Table.Schema (Schema (schema), UidQuerySchema, UidSchema)
+import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
+import Polysemy.Hasql.Effect.Database (Database)
+import Polysemy.Hasql.Reader (interpretReaderDb)
 
 -- $intro
 -- This library provides two independent features as well as their synthesis:
@@ -68,7 +36,7 @@ import Polysemy.Hasql.Table.Schema (Schema (schema), UidQuerySchema, UidSchema)
 -- /Note/: Effect constructors should idiomatically be used as qualified names, which is why they aren't exported here:
 --
 -- @
--- import qualified Polysemy.Hasql.Data.Database as Database
+-- import qualified Polysemy.Hasql.Effect.Database as Database
 --
 -- prog = do
 --   Database.runStatement p s

@@ -36,7 +36,7 @@ table =
     columns =
       Columns (pure (Column "number" "bigint" def { primaryKey = True }))
     statement =
-      SqlCode "number = $1"
+      Sql "number = $1"
 
 main :: IO ()
 main = do

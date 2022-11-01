@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.HasGeneric where
 
 import Generics.SOP.GGP (GCode)
-import Polysemy.Db.SOP.HasGeneric (gcodeResolvesNot, hasNoGeneric)
+import Sqel.SOP.HasGeneric (gcodeResolvesNot, hasNoGeneric)
 import Polysemy.Test (UnitTest, runTestAuto, (===))
 
 data Dat =

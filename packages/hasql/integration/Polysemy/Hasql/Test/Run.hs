@@ -4,20 +4,18 @@ import Conc (interpretMaskFinal, interpretRace)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
 import Hedgehog.Internal.Property (Failure)
+import Log (Severity (Trace), interpretLogStdoutLevelConc)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Random (Random, runRandomIO)
-import Polysemy.Log (interpretLogNull)
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
 import Polysemy.Time (GhcTime, interpretTimeGhc)
 
-import Polysemy.Hasql (HasqlConnection)
-import Polysemy.Hasql.Data.Database (Database)
-import Polysemy.Hasql.Test.Database (withTestConnection)
+import Polysemy.Hasql.Test.Database (TestConnectionEffects, withTestConnection)
 import Polysemy.Hasql.Test.DbConfig (dbConfig)
 
 type TestEffects =
@@ -34,6 +32,7 @@ type TestEffects =
     Error Text,
     Mask,
     Race,
+    Async,
     Test,
     Fail,
     Error TestError,
@@ -54,6 +53,7 @@ integrationTestWith run =
       Just conf -> do
         runTestAuto do
           r <-
+            asyncToIOFinal $
             interpretRace $
             interpretMaskFinal $
             runError @Text $
@@ -63,7 +63,7 @@ integrationTestWith run =
             mapStop @QueryError @Text show $
             mapStop @DbError @Text show $
             mapStop @DbConnectionError @Text show $
-            interpretLogNull $
+            interpretLogStdoutLevelConc (Just Trace) $
             runRandomIO $
             interpretTimeGhc $
             run conf
@@ -73,7 +73,7 @@ integrationTestWith run =
 
 integrationTest ::
   HasCallStack =>
-  Sem (Database !! DbError : HasqlConnection : TestEffects) () ->
+  Sem (TestConnectionEffects ++ TestEffects) () ->
   TestT IO ()
 integrationTest thunk =
   withFrozenCallStack do
@@ -81,7 +81,7 @@ integrationTest thunk =
 
 integrationTestWithDb ::
   HasCallStack =>
-  (DbConfig -> Sem (Database !! DbError : HasqlConnection : TestEffects) ()) ->
+  (DbConfig -> Sem (TestConnectionEffects ++ TestEffects) ()) ->
   TestT IO ()
 integrationTestWithDb thunk =
   withFrozenCallStack do

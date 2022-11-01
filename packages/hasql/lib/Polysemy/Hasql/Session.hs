@@ -3,8 +3,9 @@ module Polysemy.Hasql.Session where
 import qualified Data.Text as Text
 import Exon (exon)
 import Hasql.Connection (Connection)
+import qualified Hasql.Session as Session
 import Hasql.Session (CommandError (ClientError, ResultError), QueryError (QueryError), Session)
-import qualified Hasql.Session as Session (run)
+import Hasql.Statement (Statement)
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -18,9 +19,19 @@ convertQueryError (QueryError template (Text.intercalate "," -> args) cmdError) 
       DbError.Query [exon|#{decodeUtf8 template} #{args} #{show err}|]
 
 runSession ::
-  Member (Embed IO) r =>
+  Members [Stop DbError, Embed IO] r =>
   Connection ->
   Session a ->
-  Sem r (Either DbError a)
-runSession connection session =
-  first convertQueryError <$> embed (Session.run session connection)
+  Sem r a
+runSession connection session = do
+  result <- tryIOError (Session.run session connection)
+  stopEither (first convertQueryError =<< first DbError.Unexpected result)
+
+runStatement ::
+  Members [Stop DbError, Embed IO] r =>
+  Connection ->
+  p ->
+  Statement p a ->
+  Sem r a
+runStatement connection p stmt =
+  runSession connection (Session.statement p stmt)

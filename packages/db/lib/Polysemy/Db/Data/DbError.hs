@@ -8,4 +8,10 @@ data DbError =
   Query Text
   |
   Table Text
+  |
+  Unexpected Text
   deriving stock (Eq, Show)
+
+instance IsString DbError where
+  fromString =
+    Table . fromString

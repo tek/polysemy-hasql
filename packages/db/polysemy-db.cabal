@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-db
-version:        0.1.0.0
+version:        0.3.0.0
 synopsis:       Polysemy effects for databases
 description:    See https://hackage.haskell.org/package/polysemy-db/docs/Polysemy-Db.html
 category:       Database
@@ -21,55 +21,30 @@ library
       Polysemy.Db
       Polysemy.Db.Atomic
       Polysemy.Db.AtomicState
-      Polysemy.Db.Data.ColumnOptions
-      Polysemy.Db.Data.ColumnPrefix
       Polysemy.Db.Data.Cond
       Polysemy.Db.Data.CreationTime
+      Polysemy.Db.Data.DbConfig
       Polysemy.Db.Data.DbConnectionError
       Polysemy.Db.Data.DbError
+      Polysemy.Db.Data.DbHost
+      Polysemy.Db.Data.DbName
+      Polysemy.Db.Data.DbPassword
+      Polysemy.Db.Data.DbPort
+      Polysemy.Db.Data.DbUser
       Polysemy.Db.Data.FieldId
-      Polysemy.Db.Data.Partial
-      Polysemy.Db.Data.PartialField
-      Polysemy.Db.Data.PartialUpdate
+      Polysemy.Db.Data.InitDbError
       Polysemy.Db.Data.QueryStore
-      Polysemy.Db.Data.Rep
-      Polysemy.Db.Data.Store
-      Polysemy.Db.Data.StoreQuery
-      Polysemy.Db.Kind.Data.Tree
+      Polysemy.Db.Effect.Store
+      Polysemy.Db.Effect.StoreQuery
       Polysemy.Db.Random
       Polysemy.Db.Reader
-      Polysemy.Db.SOP.Constraint
       Polysemy.Db.SOP.Constructor
       Polysemy.Db.SOP.Contravariant
-      Polysemy.Db.SOP.Error
       Polysemy.Db.SOP.FieldNames
       Polysemy.Db.SOP.Fundeps
-      Polysemy.Db.SOP.HasGeneric
       Polysemy.Db.SOP.List
       Polysemy.Db.Store
       Polysemy.Db.StoreQuery
-      Polysemy.Db.Text.Case
-      Polysemy.Db.Text.DbIdentifier
-      Polysemy.Db.Text.Quote
-      Polysemy.Db.Tree
-      Polysemy.Db.Tree.Api
-      Polysemy.Db.Tree.Data
-      Polysemy.Db.Tree.Data.Effect
-      Polysemy.Db.Tree.Data.Params
-      Polysemy.Db.Tree.Data.PartialPayload
-      Polysemy.Db.Tree.Data.TreeMeta
-      Polysemy.Db.Tree.Effect
-      Polysemy.Db.Tree.Fold
-      Polysemy.Db.Tree.FoldMap
-      Polysemy.Db.Tree.Lookup
-      Polysemy.Db.Tree.Merge
-      Polysemy.Db.Tree.Meta
-      Polysemy.Db.Tree.Partial
-      Polysemy.Db.Tree.Partial.Insert
-      Polysemy.Db.Tree.Partial.Update
-      Polysemy.Db.Tree.QueryName
-      Polysemy.Db.Tree.Unfold
-      Polysemy.Db.Type.Data.Tree
   hs-source-dirs:
       lib
   default-extensions:
@@ -137,24 +112,20 @@ library
       ViewPatterns
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin
   build-depends:
-      aeson
-    , base >=4.12 && <5
-    , composition
+      base >=4.12 && <5
     , exon
     , first-class-families
     , generics-sop
     , lens
-    , path
     , polysemy
-    , polysemy-db-data
     , polysemy-plugin
     , prelate >=0.2
     , random
+    , sqel
     , time
     , type-errors
     , type-errors-pretty
     , uuid
-    , vector
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

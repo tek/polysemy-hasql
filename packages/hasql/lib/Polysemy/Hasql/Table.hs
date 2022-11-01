@@ -1,82 +1,77 @@
 module Polysemy.Hasql.Table where
 
-import qualified Data.Map.Strict as Map
-import qualified Data.Text as Text
 import Exon (exon)
 import Hasql.Connection (Connection)
 import qualified Hasql.Decoders as Decoders
 import qualified Hasql.Encoders as Encoders
-import Hasql.Session (QueryError)
-import qualified Hasql.Session as Session (run, statement)
 import Hasql.Statement (Statement)
-import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Log as Log
+import qualified Sqel.Data.PgType as PgType
+import Sqel.Data.PgType (
+  PgColumnName (PgColumnName),
+  PgStructure (PgStructure),
+  PgTable (PgTable),
+  PgTypeRef (PgTypeRef),
+  StructureType (StructureComp, StructurePrim),
+  )
+import Sqel.Data.PgTypeName (PgTableName)
+import Sqel.Data.Sql (Sql)
+import qualified Sqel.Sql.Type as Sql
+import qualified Sqel.Statement as Statement
+import Sqel.Statement (plain)
 
-import qualified Polysemy.Hasql.Data.DbType as Data
-import Polysemy.Hasql.Data.DbType (Column (Column), Name (Name), TypeName (CompositeTypeName, PrimTypeName), unName)
-import qualified Polysemy.Hasql.Data.ExistingColumn as ExistingColumn
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
-import Polysemy.Hasql.Data.SqlCode (SqlCode (unSqlCode))
-import Polysemy.Hasql.DbType (baseColumns, typeName)
-import qualified Polysemy.Hasql.Statement as Statement
-import Polysemy.Hasql.Table.DataColumn (TableStructure, tableStructure)
-
-runStatement ::
-  Members [Embed IO, Stop QueryError] r =>
-  Connection ->
-  p ->
-  Statement p d ->
-  Sem r d
-runStatement connection args statement =
-  stopEither =<< embed (Session.run (Session.statement args statement) connection)
+import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag))
+import Polysemy.Hasql.Session (runStatement)
 
 dbColumnsStatement ::
-  SqlCode ->
-  Statement Text [(Text, Text)]
+  Sql ->
+  Statement Text [(Text, Text, Text)]
 dbColumnsStatement sql =
   Statement.prepared sql decoder encoder
   where
     decoder =
-      (,) <$> text' <*> text'
+      (,,) <$> text' <*> text' <*> text'
     text' =
       Decoders.column (Decoders.nonNullable Decoders.text)
     encoder =
       Encoders.param (Encoders.nonNullable Encoders.text)
 
 dbColumnsFor ::
-  Members [Embed IO, Stop QueryError] r =>
-  SqlCode ->
+  Members [Embed IO, Stop DbError] r =>
+  Sql ->
   Connection ->
-  Name ->
+  ClientTag ->
   Sem r (Maybe (NonEmpty ExistingColumn))
-dbColumnsFor sql connection (Name tableName) =
+dbColumnsFor sql connection (ClientTag tableName) =
   nonEmpty . fmap cons <$> runStatement connection tableName (dbColumnsStatement sql)
   where
-    cons (name, dataType) =
-      ExistingColumn (Name name) dataType
+    cons (name, dataType, udtName) =
+      ExistingColumn (PgColumnName name) dataType udtName
+
+tableColumnsSql :: Sql
+tableColumnsSql =
+  [exon|select "column_name", "data_type", "udt_name" from information_schema.columns where "table_name" = $1|]
 
 tableColumns ::
-  Members [Embed IO, Stop QueryError] r =>
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
-  Name ->
+  ClientTag ->
   Sem r (Maybe (NonEmpty ExistingColumn))
 tableColumns =
-  dbColumnsFor code
-  where
-    code =
-      [exon|select "column_name", "data_type" from information_schema.columns where "table_name" = $1|]
+  dbColumnsFor tableColumnsSql
+
+typeColumnsSql :: Sql
+typeColumnsSql =
+  [exon|select "attribute_name", "data_type", "attribute_udt_name" from information_schema.attributes where "udt_name" = $1|]
 
 typeColumns ::
-  Members [Embed IO, Stop QueryError] r =>
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
-  TypeName ->
+  PgTypeRef ->
   Sem r (Maybe (NonEmpty ExistingColumn))
-typeColumns connection =
-  dbColumnsFor code connection . Name . unSqlCode . typeName
-  where
-    code =
-      [exon|select "attribute_name", "data_type" from information_schema.attributes where "udt_name" = $1|]
+typeColumns connection (PgTypeRef name) =
+  dbColumnsFor typeColumnsSql connection (ClientTag name)
 
 -- TODO
 updateType ::
@@ -85,177 +80,63 @@ updateType ::
 updateType _ =
   unit
 
-initCtorType ::
-  Members [Embed IO, Stop QueryError] r =>
+initComp ::
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
-  Column ->
+  PgTypeRef ->
+  PgStructure ->
   Sem r ()
-initCtorType connection col@(Column _ _ tpe _ _) = do
-  exists <- isJust <$> typeColumns connection tpe
-  unless exists (runStatement connection () (Statement.createCtorType col))
-
-initProd ::
-  Members [Embed IO, Stop QueryError] r =>
-  Connection ->
-  TypeName ->
-  [Column] ->
-  Sem r ()
-initProd connection tpe columns = do
+initComp connection tpe structure = do
   existing <- typeColumns connection tpe
-  maybe createType updateType existing
+  when (isNothing existing) createType
   where
     createType = do
-      traverse_ (initType connection) columns
-      run (Statement.createProdType tpe columns)
+      initStructure connection structure
+      run (plain (Sql.createProdType tpe structure))
     run =
       runStatement connection ()
 
 -- TODO use effects for running statements
--- TODO fix undefined
 initType ::
-  Members [Embed IO, Stop QueryError] r =>
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
-  Data.Column ->
+  PgColumnName ->
+  StructureType ->
   Sem r ()
-initType connection (Column _ _ tpe _ dbType) =
-  case dbType of
-    Data.Prim ->
-      unit
-    Data.Prod columns -> do
-      initProd connection tpe columns
-    Data.Sum (Column _ _ _ _ (Data.Prod columns)) ->
-      initProd connection tpe columns
-    _ ->
-      undefined
+initType connection (PgColumnName _) = \case
+  StructurePrim _ _ ->
+    unit
+  StructureComp tpe columns ->
+    initComp connection tpe columns
+
+initStructure ::
+  Members [Embed IO, Stop DbError] r =>
+  Connection ->
+  PgStructure ->
+  Sem r ()
+initStructure connection (PgStructure cols) =
+  traverse_ (uncurry (initType connection)) cols
 
 createTable ::
-  Members [Embed IO, Stop QueryError] r =>
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
-  Column ->
+  PgTable a ->
   Sem r ()
-createTable connection table = do
-  traverse_ (initType connection) (baseColumns table)
-  run (Statement.createTable table)
+createTable connection table@PgTable {structure} = do
+  initStructure connection structure
+  run (plain (Sql.createTable table))
   where
     run =
       runStatement connection ()
 
 dropTable ::
-  Members [Embed IO, Stop QueryError] r =>
+  Members [Embed IO, Stop DbError] r =>
   Connection ->
-  Name ->
+  PgTableName ->
   Sem r ()
 dropTable connection =
-  runStatement connection () . Statement.dropTable
-
-columnMap ::
-  Foldable t =>
-  t ExistingColumn ->
-  Map Name Text
-columnMap cols =
-  Map.fromList (columnTuple <$> toList cols)
-  where
-    columnTuple ExistingColumn {..} =
-      (name, ctype)
-
-missingColumns ::
-  [ExistingColumn] ->
-  [Column] ->
-  Maybe (NonEmpty Column)
-missingColumns dbColumns dataColumns =
-  nonEmpty $ filter missingColumn dataColumns
-  where
-    missingColumn (Column name _ _ _ _) =
-      not (Map.member name dbMap)
-    dbMap =
-      columnMap dbColumns
-
-sameType :: Text -> TypeName -> Bool
-sameType "ARRAY" (PrimTypeName dataType) =
-  Text.takeEnd 2 dataType == "[]"
-sameType dbType (PrimTypeName dataType) =
-  dbType == dataType
-sameType _ (CompositeTypeName _) =
-  False
+  runStatement connection () . plain . Sql.dropTable
 
 userDefined :: Text
 userDefined =
   "USER-DEFINED"
-
-mismatchedColumns ::
-  [ExistingColumn] ->
-  [Column] ->
-  Maybe (NonEmpty (Name, Column))
-mismatchedColumns dbColumns dataColumns =
-  nonEmpty (mapMaybe mismatchedColumn (toList dataColumns))
-  where
-    mismatchedColumn dataColumn@(Column name _ tpe _ _) = do
-      -- dbType <- Map.lookup (fromMaybe name ("USER-DEFINED" <$ comp)) dbMap
-      dbType <- Map.lookup name dbMap
-      if sameType dbType tpe then Nothing else Just (Name dbType, dataColumn)
-    dbMap =
-      columnMap dbColumns
-
-reportMismatchedColumns ::
-  Member (Stop DbError) r =>
-  Name ->
-  NonEmpty (Name, Column) ->
-  Sem r ()
-reportMismatchedColumns (Name name) columns =
-  stop (DbError.Table [exon|mismatched columns in table `#{name}`: #{columnsDescription}|])
-  where
-    columnsDescription =
-      Text.intercalate ";" (toList (columnDescription <$> columns))
-    columnDescription (dbType, Column colName _ tpe _ _) =
-      [exon|db: #{show colName} :: #{show dbType}, app: #{show colName} :: #{show tpe}|]
-
-updateTable ::
-  Members [Embed IO, Stop DbError] r =>
-  NonEmpty ExistingColumn ->
-  Connection ->
-  Column ->
-  Sem r ()
-updateTable (toList -> existing) connection column@(Column name selector _ _ _) = do
-  mapStop (DbError.Query . show) $ traverse_ alter missing
-  traverse_ (reportMismatchedColumns name) (mismatchedColumns existing target)
-  where
-    alter =
-      runStatement connection () . Statement.alter selector
-    missing =
-      missingColumns existing target
-    target =
-      baseColumns column
-
-initTable ::
-  Members [Log, Stop DbError, Embed IO] r =>
-  Connection ->
-  Column ->
-  Sem r ()
-initTable connection t@(Column name _ _ _ _) = do
-  Log.debug [exon|initializing table `#{unName name}`|]
-  process =<< liftError (tableColumns connection name)
-  where
-    process (Just existing) =
-      updateTable existing connection t
-    process Nothing =
-      liftError (createTable connection t)
-    liftError =
-      mapStop (DbError.Query . show)
-
-initTableGen ::
-  ∀ d rep r .
-  Members [Log, Stop DbError, Embed IO] r =>
-  TableStructure d rep =>
-  Connection ->
-  Sem r ()
-initTableGen connection = do
-  initTable connection (tableStructure @d @rep)
-
-initTableE ::
-  ∀ d rep r .
-  Members [Log, Embed IO] r =>
-  TableStructure d rep =>
-  Connection ->
-  Sem r (Either DbError ())
-initTableE =
-  runStop . initTableGen @d @rep

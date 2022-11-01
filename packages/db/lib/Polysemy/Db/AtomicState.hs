@@ -1,11 +1,12 @@
 module Polysemy.Db.AtomicState where
 
-import Polysemy.AtomicState (AtomicState (AtomicGet, AtomicState))
-
-import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store)
-import qualified Polysemy.Db.Store as Store
 import Conc (Lock, lock)
+import Polysemy.AtomicState (AtomicState (AtomicGet, AtomicState))
+import Sqel.Data.Uid (Uid (Uid))
+
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
+import qualified Polysemy.Db.Store as Store
 
 insertState ::
   ∀ d e r .
@@ -15,7 +16,7 @@ insertState ::
 insertState initial = do
   restop @e @(Store () d) do
     d <- raise initial
-    d <$ (Store.deleteAll @() @d >> Store.insert @() @d (pure d))
+    d <$ (Store.deleteAll @() @d >> Store.insert @() @d (Uid () d))
 
 readState ::
   ∀ d e r .

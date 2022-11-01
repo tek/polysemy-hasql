@@ -1,7 +1,8 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
-import Polysemy.Db.Data.Rep (Json, Prim)
-import Polysemy.Db.Tree (RootName)
+import Sqel.SOP.Constraint (symbolText)
+
+import Sqel.Data.Dd (DbTypeName (dbTypeName))
 
 data Queued t a =
   Queued {
@@ -11,14 +12,9 @@ data Queued t a =
   deriving stock (Eq, Show, Generic)
 
 instance (
-    RootName d inner,
+    DbTypeName d inner,
     name ~ AppendSymbol "Queued" inner,
     KnownSymbol name
-  ) => RootName (Queued t d) name where
-
-data QueuedRep =
-  QueuedRep {
-    queue_created :: Prim,
-    queue_payload :: Json
-  }
-  deriving stock (Generic)
+  ) => DbTypeName (Queued t d) name where
+    dbTypeName =
+      symbolText @name

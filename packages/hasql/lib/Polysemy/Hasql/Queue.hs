@@ -3,5 +3,5 @@ module Polysemy.Hasql.Queue (
   module Polysemy.Hasql.Queue.Output,
 ) where
 
-import Polysemy.Hasql.Queue.Input (interpretInputDbQueueFull, interpretInputDbQueueFullGen)
-import Polysemy.Hasql.Queue.Output (interpretOutputDbQueue, interpretOutputDbQueueFull, interpretOutputDbQueueFullGen)
+import Polysemy.Hasql.Queue.Input (interpretInputDbQueueFull)
+import Polysemy.Hasql.Queue.Output (interpretOutputDbQueue, interpretOutputDbQueueFull)

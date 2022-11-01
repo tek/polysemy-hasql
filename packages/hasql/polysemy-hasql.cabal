@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-hasql
-version:        0.1.0.0
+version:        0.3.0.0
 synopsis:       Polysemy effects for databases
 description:    See https://hackage.haskell.org/package/polysemy-hasql/docs/Polysemy-Hasql.html
 category:       Database
@@ -20,37 +20,27 @@ library
   exposed-modules:
       Polysemy.Hasql
       Polysemy.Hasql.AtomicState
-      Polysemy.Hasql.ColumnOptions
-      Polysemy.Hasql.ColumnType
-      Polysemy.Hasql.Crud
       Polysemy.Hasql.Data.ConnectionState
-      Polysemy.Hasql.Data.Crud
-      Polysemy.Hasql.Data.Database
-      Polysemy.Hasql.Data.DbConnection
-      Polysemy.Hasql.Data.DbType
+      Polysemy.Hasql.Data.ConnectionTag
       Polysemy.Hasql.Data.ExistingColumn
-      Polysemy.Hasql.Data.ManagedTable
-      Polysemy.Hasql.Data.Query
-      Polysemy.Hasql.Data.QueryTable
+      Polysemy.Hasql.Data.InitDb
       Polysemy.Hasql.Data.QueueOutputError
-      Polysemy.Hasql.Data.SqlCode
-      Polysemy.Hasql.Data.StoreTable
-      Polysemy.Hasql.Data.Table
-      Polysemy.Hasql.Data.Where
+      Polysemy.Hasql.Data.Set
       Polysemy.Hasql.Database
-      Polysemy.Hasql.DbConnection
-      Polysemy.Hasql.DbType
-      Polysemy.Hasql.DeriveStatement
+      Polysemy.Hasql.Effect.Database
+      Polysemy.Hasql.Effect.DbConnectionPool
+      Polysemy.Hasql.Effect.DbTable
+      Polysemy.Hasql.Effect.Transaction
       Polysemy.Hasql.InitDbError
-      Polysemy.Hasql.Interpreter.QueryStore
-      Polysemy.Hasql.ManagedTable
-      Polysemy.Hasql.Query
+      Polysemy.Hasql.Interpreter.Database
+      Polysemy.Hasql.Interpreter.DbConnectionPool
+      Polysemy.Hasql.Interpreter.Store
+      Polysemy.Hasql.Interpreter.Transaction
+      Polysemy.Hasql.Migration
       Polysemy.Hasql.Query.Any
       Polysemy.Hasql.Query.Basic
       Polysemy.Hasql.Query.Many
       Polysemy.Hasql.Query.One
-      Polysemy.Hasql.QueryParams
-      Polysemy.Hasql.QueryRows
       Polysemy.Hasql.Queue
       Polysemy.Hasql.Queue.Data.Queue
       Polysemy.Hasql.Queue.Data.Queued
@@ -60,51 +50,14 @@ library
       Polysemy.Hasql.Session
       Polysemy.Hasql.SOP.Enum
       Polysemy.Hasql.Statement
-      Polysemy.Hasql.Store
-      Polysemy.Hasql.Store.Statement
+      Polysemy.Hasql.Statement.Transaction
       Polysemy.Hasql.Table
-      Polysemy.Hasql.Table.BasicSchema
-      Polysemy.Hasql.Table.ColumnOptions
-      Polysemy.Hasql.Table.DataColumn
-      Polysemy.Hasql.Table.DecoderValue
-      Polysemy.Hasql.Table.Dsl.Api
-      Polysemy.Hasql.Table.Dsl.Codec
-      Polysemy.Hasql.Table.Dsl.Data.Builder
-      Polysemy.Hasql.Table.Dsl.Data.PgColumn
-      Polysemy.Hasql.Table.Dsl.Names
-      Polysemy.Hasql.Table.Dsl.Product
-      Polysemy.Hasql.Table.Dsl.Sum
-      Polysemy.Hasql.Table.EncoderValue
       Polysemy.Hasql.Table.Enum
-      Polysemy.Hasql.Table.PrimDecoder
-      Polysemy.Hasql.Table.PrimEncoder
-      Polysemy.Hasql.Table.Query.Delete
-      Polysemy.Hasql.Table.Query.Fragment
-      Polysemy.Hasql.Table.Query.Insert
-      Polysemy.Hasql.Table.Query.Prepared
-      Polysemy.Hasql.Table.Query.Select
-      Polysemy.Hasql.Table.Query.Set
       Polysemy.Hasql.Table.Query.Text
       Polysemy.Hasql.Table.Query.Update
-      Polysemy.Hasql.Table.QueryParam
-      Polysemy.Hasql.Table.QueryRow
-      Polysemy.Hasql.Table.ReadNull
-      Polysemy.Hasql.Table.ResultShape
-      Polysemy.Hasql.Table.Schema
       Polysemy.Hasql.Table.SumIndex
-      Polysemy.Hasql.Table.WriteNull
       Polysemy.Hasql.Test.Database
-      Polysemy.Hasql.Test.QueryStore
-      Polysemy.Hasql.Tree.Table
-      Polysemy.Hasql.Tree.Value
-      Polysemy.Hasql.Where
-      Polysemy.Hasql.Where.Cond
-      Polysemy.Hasql.Where.Dynamic
-      Polysemy.Hasql.Where.Error
-      Polysemy.Hasql.Where.FieldSelector
-      Polysemy.Hasql.Where.FlatFields
-      Polysemy.Hasql.Where.Prepared
-      Polysemy.Hasql.Where.Segment
+      Polysemy.Hasql.Transaction
   hs-source-dirs:
       lib
   default-extensions:
@@ -172,39 +125,26 @@ library
       ViewPatterns
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin
   build-depends:
-      aeson
-    , async
+      async
     , base >=4.12 && <5
-    , chronos
-    , composition
-    , contravariant
+    , containers
     , exon
-    , fcf-containers >=0.6
-    , first-class-families
+    , extra
     , generics-sop
     , hasql >=1.4.3
-    , hasql-dynamic-statements
-    , lens
-    , path
     , polysemy
     , polysemy-conc
     , polysemy-db
-    , polysemy-db-data
     , polysemy-log
     , polysemy-plugin
     , polysemy-time
     , postgresql-libpq
     , prelate >=0.2
-    , scientific
+    , sqel
     , stm-chans
-    , template-haskell
-    , time
     , torsor
     , transformers
-    , type-errors
-    , type-errors-pretty
     , uuid
-    , vector
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)
@@ -220,17 +160,23 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.DeleteTest
+      Polysemy.Hasql.Test.Dsl.MigrationTest
+      Polysemy.Hasql.Test.Dsl.QueryTest
+      Polysemy.Hasql.Test.Dsl.SimpleQueryTest
+      Polysemy.Hasql.Test.Dsl.SumTest
+      Polysemy.Hasql.Test.Dsl.TableSchemaTest
+      Polysemy.Hasql.Test.Dsl.UnaryConTest
       Polysemy.Hasql.Test.DslTest
-      Polysemy.Hasql.Test.InitTest
       Polysemy.Hasql.Test.JsonTest
-      Polysemy.Hasql.Test.PKTest
       Polysemy.Hasql.Test.QueryTest
       Polysemy.Hasql.Test.QueueTest
+      Polysemy.Hasql.Test.RetryTest
       Polysemy.Hasql.Test.Run
       Polysemy.Hasql.Test.SingletonTest
       Polysemy.Hasql.Test.StoreUpdateTest
       Polysemy.Hasql.Test.SumFieldTest
       Polysemy.Hasql.Test.SumTableTest
+      Polysemy.Hasql.Test.TransactionTest
       Polysemy.Hasql.Test.UnarySumTest
       Polysemy.Hasql.Test.UpsertTest
       Polysemy.Hasql.Test.WithInitTest
@@ -304,6 +250,7 @@ test-suite polysemy-hasql-integration
       aeson
     , base >=4.12 && <5
     , exon
+    , first-class-families
     , generics-sop
     , hasql >=1.4.3
     , hedgehog
@@ -312,13 +259,14 @@ test-suite polysemy-hasql-integration
     , polysemy
     , polysemy-conc
     , polysemy-db
-    , polysemy-db-data
     , polysemy-hasql
     , polysemy-log
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
     , prelate >=0.2
+    , prettyprinter
+    , sqel
     , tasty
     , time
     , uuid
@@ -332,30 +280,10 @@ test-suite polysemy-hasql-unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Polysemy.Hasql.Test.DeriveQuery.UnaSumNumberedTest
       Polysemy.Hasql.Test.EnumTest
       Polysemy.Hasql.Test.HasGeneric
-      Polysemy.Hasql.Test.ParamTest
-      Polysemy.Hasql.Test.PartialTest
-      Polysemy.Hasql.Test.RepTest
       Polysemy.Hasql.Test.SqlCodeTest
       Polysemy.Hasql.Test.StatementTest
-      Polysemy.Hasql.Test.TableTest
-      Polysemy.Hasql.Test.Tree.Data.DatS
-      Polysemy.Hasql.Test.Tree.DeriveNewtypePartialTest
-      Polysemy.Hasql.Test.Tree.DeriveNewtypeQueryTest
-      Polysemy.Hasql.Test.Tree.DeriveProdTest
-      Polysemy.Hasql.Test.Tree.DeriveSumDbTest
-      Polysemy.Hasql.Test.Tree.DeriveSumFieldDbTest
-      Polysemy.Hasql.Test.Tree.DeriveSumFieldTest
-      Polysemy.Hasql.Test.Tree.DeriveSumIdDbTest
-      Polysemy.Hasql.Test.Tree.DeriveSumTest
-      Polysemy.Hasql.Test.Tree.DeriveUnitTest
-      Polysemy.Hasql.Test.Tree.JsonTest
-      Polysemy.Hasql.Test.Tree.LookupPartialTest
-      Polysemy.Hasql.Test.Tree.MergePartialTest
-      Polysemy.Hasql.Test.UidSumFlattenTest
-      Polysemy.Hasql.Test.WhereTest
   hs-source-dirs:
       test
   default-extensions:
@@ -433,13 +361,12 @@ test-suite polysemy-hasql-unit
     , path
     , polysemy
     , polysemy-db
-    , polysemy-db-data
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
     , prelate >=0.2
+    , sqel
     , tasty
-    , uuid
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

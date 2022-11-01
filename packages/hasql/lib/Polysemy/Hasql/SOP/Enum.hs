@@ -22,7 +22,7 @@ import Generics.SOP (
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf, gto)
 import qualified Generics.SOP.Type.Metadata as T
 
-import Polysemy.Db.SOP.Constraint (IsEnum, IsNullary, ReifySOP)
+import Sqel.SOP.Constraint (IsEnum, IsNullary, ReifySOP)
 
 #if sop5
 genEnumTable ::

@@ -1,17 +1,15 @@
 module Polysemy.Db.StoreQuery where
 
 import Control.Concurrent.STM.TVar (TVar, newTVarIO)
-import Control.Lens (view, views)
+import Control.Lens (view)
 import qualified Data.Map.Strict as Map
 
-import Polysemy.Db.Data.Partial (Partial, getPartial)
-import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store)
-import Polysemy.Db.Data.StoreQuery (StoreQuery (..))
-import qualified Polysemy.Db.Data.Uid as Uid
-import Polysemy.Db.Store (PureStore (PureStore), PureStoreUpdate, PureUidStore, records)
+import qualified Sqel.Data.Uid as Uid
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
+import Polysemy.Db.Effect.StoreQuery (StoreQuery (..))
+import Polysemy.Db.Store (PureStore (PureStore))
 import qualified Polysemy.Db.Store as PureStore (records)
-import Polysemy.Db.Tree.Partial (updatePartial)
 
 interpretStoreQueryPure ::
   Ord q =>
@@ -125,23 +123,4 @@ interpretStoreQueryAny ::
 interpretStoreQueryAny match =
   interpretResumable \case
     Basic q ->
-      maybe False (any (match q . Uid._payload)) <$> restop @e @(Store i d) (Store.fetchAll @i)
-
-interpretStoreQueryPartialUpdatePure ::
-  ∀ i d e tree dataTree r .
-  Eq i =>
-  PureStoreUpdate d '[] tree dataTree =>
-  Member (AtomicState (PureUidStore i d)) r =>
-  InterpreterFor (StoreQuery (i, Partial d) (Maybe d) !! e) r
-interpretStoreQueryPartialUpdatePure =
-  interpretResumable \case
-    Basic (i, patch) ->
-      atomicGets @(PureUidStore i d) (views records (find ((i ==) . Uid._id))) >>= \case
-        Just d ->
-          Just (updated ^. #_payload) <$ atomicModify' @(PureUidStore i d) (records %~ updateRecords)
-          where
-            updateRecords a =
-              updated : filter (\ d' -> Uid._id d /= Uid._id d') a
-            updated =
-              fmap (updatePartial (getPartial patch)) d
-        Nothing -> pure Nothing
+      maybe False (any (match q . Uid.payload)) <$> restop @e @(Store i d) (Store.fetchAll @i)

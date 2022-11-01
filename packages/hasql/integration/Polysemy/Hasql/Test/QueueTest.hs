@@ -1,21 +1,18 @@
 module Polysemy.Hasql.Test.QueueTest where
 
-import Polysemy.Conc (interpretRace)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Data.Uid (Uuid, intUuid)
-import Polysemy.Db.Json (defaultJson)
-import Polysemy.Log (interpretLogNull)
+import Sqel.Data.Uid (Uuid, intUuid)
 import Polysemy.Test (UnitTest, assertJust)
 import Polysemy.Test.Data.Hedgehog (Hedgehog)
 import qualified Polysemy.Time as Time
-import Polysemy.Time (MilliSeconds (MilliSeconds), Seconds (Seconds), interpretTimeGhc)
+import Polysemy.Time (MilliSeconds (MilliSeconds), Seconds (Seconds))
 
-import qualified Polysemy.Hasql.Data.DbConnection as DbConnection
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
-import Polysemy.Hasql.Database (HasqlConnection)
-import Polysemy.Hasql.DbConnection (interpretDbConnection)
-import Polysemy.Hasql.Queue (interpretInputDbQueueFullGen, interpretOutputDbQueueFullGen)
+import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool
+import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
+import Polysemy.Hasql.Queue.Input (interpretInputDbQueueFull)
+import Polysemy.Hasql.Queue.Output (interpretOutputDbQueueFull)
 import Polysemy.Hasql.Test.Run (integrationTestWithDb)
 
 data Dat =
@@ -24,46 +21,37 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-defaultJson ''Dat
+json ''Dat
 
 prog ::
-  ∀ oe t dt m r .
-  Monad m =>
-  Members [Input (Maybe (Uuid Dat)), Output (Uuid Dat) !! oe, Stop oe, Stop DbError, Time t dt, Hedgehog m] r =>
-  Members [Tagged "test-queue-input" HasqlConnection, Stop DbConnectionError] r =>
-  Member (Tagged "test-queue-output" HasqlConnection) r =>
+  ∀ oe t dt r .
+  Members [Input (Maybe (Uuid Dat)), Output (Uuid Dat) !! oe, Stop oe, Stop DbError, Time t dt, Hedgehog IO] r =>
+  Members [DbConnectionPool !! DbConnectionError, Stop DbConnectionError] r =>
   Sem r ()
 prog = do
-  Time.sleep (MilliSeconds 100)
+  Time.sleep (MilliSeconds 500)
   restop (output d1 >> output d2)
   dequeue1 <- input
-  tag @"test-queue-input" (restop @DbConnectionError (raiseUnder @HasqlConnection DbConnection.kill))
+  restop @DbConnectionError (DbConnectionPool.kill "dequeue-test-queue")
   dequeue2 <- input
   assertJust d1 dequeue1
   assertJust d2 dequeue2
   restop (output d3)
   assertJust d3 =<< input
-  tag @"test-queue-output" (restop @DbConnectionError (raiseUnder @HasqlConnection DbConnection.kill))
+  -- tag @"test-queue-output" (restop @DbConnectionError (raiseUnder @HasqlConnection DbConnection.kill))
+  -- TODO this used to kill the output queue connection, but it's not unique anymore
+  -- restop @DbConnectionError (DbConnectionPool.release "dequeue-test-queue")
   restop (output d1)
   assertJust d1 =<< input
   where
-    d1 =
-      intUuid 1 (Dat "5'\\'\'\n")
-    d2 =
-      intUuid 2 (Dat "bonjour")
-    d3 =
-      intUuid 3 (Dat "data")
+    d1 = intUuid 1 (Dat "5'\\'\'\n")
+    d2 = intUuid 2 (Dat "bonjour")
+    d3 = intUuid 3 (Dat "data")
 
 test_queue :: UnitTest
 test_queue =
-  integrationTestWithDb \ conf ->
-    asyncToIOFinal $
-    interpretRace $
+  integrationTestWithDb \ _ ->
     mapStop @QueueOutputError @Text show $
-    interpretTimeGhc $
-    interpretLogNull $
-    (interpretDbConnection "test-queue-input" conf . untag @"test-queue-input") $
-    (interpretDbConnection "test-queue-output" conf . untag @"test-queue-output") $
-    interpretOutputDbQueueFullGen @"test-queue" @(Uuid Dat) $
-    interpretInputDbQueueFullGen @"test-queue" (Seconds 0) def (const (pure False)) $
+    interpretOutputDbQueueFull @"test-queue" @(Uuid Dat) $
+    interpretInputDbQueueFull @"test-queue" (Seconds 0) def (const (pure True)) $
     prog

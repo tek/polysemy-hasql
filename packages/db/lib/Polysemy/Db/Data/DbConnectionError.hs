@@ -6,4 +6,6 @@ data DbConnectionError =
   Release Text
   |
   Query Text
+  |
+  Limit Text
   deriving stock (Eq, Show, Generic)

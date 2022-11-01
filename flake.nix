@@ -36,16 +36,16 @@
 
   in hix.lib.pro ({ config, lib, ... }: {
     main = "polysemy-hasql";
-    overrides = { inherit all; };
+    overrides = { inherit all; dev = all; };
     depsFull = [prelate];
     packages = {
+      sqel = ./packages/sqel;
       polysemy-db = ./packages/db;
-      polysemy-db-data = ./packages/data;
       polysemy-hasql = ./packages/hasql;
     };
     devGhc.compiler = "ghc902";
     ghci = {
-      args = ["-fplugin=Polysemy.Plugin"];
+      args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
       preludePackage = "prelate";
       preludeModule = "Prelate";
       extensions = ["StandaloneKindSignatures"];

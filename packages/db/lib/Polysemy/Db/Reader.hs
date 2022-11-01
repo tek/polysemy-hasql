@@ -2,9 +2,10 @@ module Polysemy.Db.Reader where
 
 import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Reader (Reader (Ask, Local))
+import Sqel.Data.Uid (Uid (Uid))
 
-import qualified Polysemy.Db.Data.Store as Store
-import Polysemy.Db.Data.Store (Store)
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
 import qualified Polysemy.Db.Store as Store
 
 insertValue ::
@@ -14,7 +15,7 @@ insertValue ::
   Sem r d
 insertValue initial =
   restop @e @(Store () d) do
-    initial <$ (Store.deleteAll @() @d >> Store.insert @() @d (pure initial))
+    initial <$ (Store.deleteAll @() @d >> Store.insert @() @d (Uid () initial))
 
 readValue ::
   ∀ d e r .

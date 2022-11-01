@@ -7,10 +7,10 @@ import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
 import Type.Errors.Pretty (type (<>))
 
-import Polysemy.Db.SOP.Constraint (symbolString, symbolText)
-import Polysemy.Db.SOP.Error (JoinComma)
-import Polysemy.Db.Text.DbIdentifier (dbIdentifier)
-import Polysemy.Db.Text.Quote (dquote)
+import Sqel.SOP.Constraint (symbolString, symbolText)
+import Sqel.SOP.Error (JoinComma)
+import Sqel.Text.DbIdentifier (dbIdentifier)
+import Sqel.Text.Quote (dquote)
 
 data FieldId =
   NamedField Symbol

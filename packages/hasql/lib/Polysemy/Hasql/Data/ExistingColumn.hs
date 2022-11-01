@@ -1,10 +1,11 @@
 module Polysemy.Hasql.Data.ExistingColumn where
 
-import Polysemy.Hasql.Data.DbType (Name)
+import Sqel.Data.PgType (PgColumnName)
 
 data ExistingColumn =
   ExistingColumn {
-    name :: Name,
-    ctype :: Text
+    columnName :: PgColumnName,
+    dataType :: Text,
+    udtName :: Text
   }
   deriving stock (Eq, Show, Ord)

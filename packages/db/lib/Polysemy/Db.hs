@@ -1,14 +1,14 @@
 module Polysemy.Db (
   -- $intro
-  module Polysemy.Db.Data.Store,
-  module Polysemy.Db.Data.StoreQuery,
+  module Polysemy.Db.Effect.Store,
+  module Polysemy.Db.Effect.StoreQuery,
   module Polysemy.Db.Store,
   interpretAtomicStateStore,
 ) where
 
 import Polysemy.Db.AtomicState (interpretAtomicStateStore)
-import Polysemy.Db.Data.Store (Store, delete, deleteAll, fetch, fetchAll, insert, upsert)
-import Polysemy.Db.Data.StoreQuery (StoreQuery, basic)
+import Polysemy.Db.Effect.Store (Store, delete, deleteAll, fetch, fetchAll, insert, upsert)
+import Polysemy.Db.Effect.StoreQuery (StoreQuery, basic)
 import Polysemy.Db.Store (interpretStoreAtomic)
 
 -- $intro

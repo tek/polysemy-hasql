@@ -26,7 +26,7 @@ let
   };
 
   meta = {
-    version = "0.1.0.0";
+    version = "0.3.0.0";
     license = "BSD-2-Clause-Patent";
     license-file = "LICENSE";
     author = "Torsten Schmits";
@@ -68,7 +68,7 @@ let
   exe = pkg: dir: merge (paths pkg // {
     main = "Main.hs";
     source-dirs = dir;
-    dependencies = dependencies ++ ["polysemy" "polysemy-plugin" pkg];
+    dependencies = dependencies ++ [pkg];
     ghc-options = [
       "-threaded"
       "-rtsopts"
@@ -76,75 +76,50 @@ let
     ];
   });
 
-in {
+  polysemyExe = pkg: dir: merge (exe pkg dir {
+    dependencies = ["polysemy" "polysemy-plugin"];
+  });
 
-  polysemy-db-data = merge (project "polysemy-db-data" "Polysemy-Db-Data") {
-    synopsis = "Polysemy effects for databases";
-    library.dependencies = [
-      "aeson"
-      "comonad"
-      "data-default"
-      "lens"
-      "template-haskell"
-      "uuid"
-    ];
-  };
+in {
 
   polysemy-db = merge (polysemy "polysemy-db" "Polysemy-Db") {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
-      "aeson"
-      "composition"
       "exon"
       "first-class-families"
       "generics-sop"
       "lens"
-      "path"
-      "polysemy-db-data"
       "random"
+      "sqel"
       "time"
       "type-errors"
       "type-errors-pretty"
       "uuid"
-      "vector"
     ];
   };
 
   polysemy-hasql = merge (polysemy "polysemy-hasql" "Polysemy-Hasql") {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
-      "aeson"
       "async"
-      "chronos"
-      "composition"
-      "contravariant"
+      "containers"
       "exon"
-      "fcf-containers >= 0.6"
-      "first-class-families"
+      "extra"
       "generics-sop"
       "hasql >= 1.4.3"
-      "hasql-dynamic-statements"
-      "lens"
-      "path"
       "polysemy-conc"
       "polysemy-db"
-      "polysemy-db-data"
       "polysemy-log"
       "polysemy-time"
       "postgresql-libpq"
-      "scientific"
+      "sqel"
       "stm-chans"
-      "template-haskell"
-      "time"
       "torsor"
       "transformers"
-      "type-errors"
-      "type-errors-pretty"
       "uuid"
-      "vector"
     ];
 
-    tests.polysemy-hasql-unit = exe "polysemy-hasql" "test" {
+    tests.polysemy-hasql-unit = polysemyExe "polysemy-hasql" "test" {
       dependencies = [
         "aeson"
         "chronos"
@@ -154,19 +129,19 @@ in {
         "hasql >= 1.4.3"
         "path"
         "polysemy-db"
-        "polysemy-db-data"
         "polysemy-hasql"
         "polysemy-plugin"
         "polysemy-test"
+        "sqel"
         "tasty"
-        "uuid"
       ];
     };
 
-    tests.polysemy-hasql-integration = exe "polysemy-hasql" "integration" {
+    tests.polysemy-hasql-integration = polysemyExe "polysemy-hasql" "integration" {
       dependencies = [
         "aeson"
         "exon"
+        "first-class-families"
         "generics-sop"
         "hasql >= 1.4.3"
         "hedgehog"
@@ -174,12 +149,13 @@ in {
         "path"
         "polysemy-conc"
         "polysemy-db"
-        "polysemy-db-data"
         "polysemy-hasql"
         "polysemy-log"
         "polysemy-plugin"
         "polysemy-test"
         "polysemy-time"
+        "prettyprinter"
+        "sqel"
         "tasty"
         "time"
         "uuid"
@@ -187,5 +163,49 @@ in {
     };
 
   };
+
+  sqel = merge (project "sqel" "Sqel") {
+    synopsis = "Guided derivation for Hasql statements";
+    library.dependencies = [
+      "aeson"
+      "chronos"
+      "composition"
+      "containers"
+      "contravariant"
+      "exon"
+      "first-class-families"
+      "generics-sop"
+      "hasql >= 1.4.3"
+      "invariant"
+      "path"
+      "prettyprinter"
+      "scientific"
+      "some"
+      "template-haskell"
+      "time"
+      "type-errors"
+      "type-errors-pretty"
+      "uuid"
+      "vector"
+    ];
+
+    tests.polysemy-hasql-unit = polysemyExe "sqel" "test" {
+      dependencies = [
+        "aeson"
+        "chronos"
+        "exon"
+        "first-class-families"
+        "generics-sop"
+        "hasql >= 1.4.3"
+        "hedgehog"
+        "path"
+        "tasty"
+        "tasty-hedgehog"
+        "uuid"
+      ];
+    };
+
+  };
+
 
 }

@@ -1,8 +1,8 @@
 module Polysemy.Hasql.Table.SumIndex where
 
 import Exon (exon)
-import Polysemy.Db.SOP.Constraint (DataName)
-import Polysemy.Db.Text.DbIdentifier (dbDataName)
+import Sqel.SOP.Constraint (DataName)
+import Sqel.Text.DbIdentifier (dbDataName)
 
 sumIndexIdentifier ::
   ∀ d name .
