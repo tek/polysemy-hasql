@@ -18,7 +18,7 @@ module Polysemy.Hasql.Test.ArrayTest where
 -- import Sqel.Product (prod)
 -- import Sqel.Query (checkQuery)
 
--- import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+-- import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 -- import Polysemy.Hasql.Test.Run (integrationTest)
 
 -- data Flag =
@@ -61,6 +61,6 @@ module Polysemy.Hasql.Test.ArrayTest where
 -- test_arrayField :: UnitTest
 -- test_arrayField =
 --   integrationTest do
---     interpretManagedTable table $ interpretStoreDb table query do
+--     interpretDbTable table $ interpretStoreDb table query do
 --       result <- restop @DbError prog
 --       assertJust array result

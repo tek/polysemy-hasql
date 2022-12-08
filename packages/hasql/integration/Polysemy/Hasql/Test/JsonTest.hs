@@ -20,7 +20,7 @@ import Sqel.Product (uid)
 import Sqel.Query (checkQuery)
 
 import qualified Polysemy.Hasql.Database as Database
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Field3 =
@@ -51,7 +51,7 @@ ts =
 test_json :: UnitTest
 test_json = do
   integrationTest do
-    interpretManagedTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
+    interpretDbTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
       restop @DbError do
         Store.insert dat
         assertJust dat =<< Store.fetch 5

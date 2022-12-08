@@ -34,11 +34,11 @@ library
       Polysemy.Hasql.InitDbError
       Polysemy.Hasql.Interpreter.Database
       Polysemy.Hasql.Interpreter.DbConnectionPool
+      Polysemy.Hasql.Interpreter.Query
       Polysemy.Hasql.Interpreter.Store
       Polysemy.Hasql.Interpreter.Transaction
       Polysemy.Hasql.Migration
       Polysemy.Hasql.Query.Any
-      Polysemy.Hasql.Query.Basic
       Polysemy.Hasql.Query.Many
       Polysemy.Hasql.Query.One
       Polysemy.Hasql.Queue

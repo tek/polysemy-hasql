@@ -16,9 +16,9 @@ module Polysemy.Hasql.Test.StoreUpdateTest where
 
 -- import Polysemy.Hasql.Test.Database (withTestStoreUidAs)
 -- import Polysemy.Hasql.Test.Run (integrationTest)
--- import Polysemy.Db.Effect.StoreQuery (StoreQuery)
--- import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
--- import Polysemy.Hasql.Query.Basic (interpretStoreQueryPartialUpdate)
+-- import Polysemy.Db.Effect.Query (Query)
+-- import qualified Polysemy.Db.Effect.Query as Query
+-- import Polysemy.Hasql.Query.Query (interpretStoreQueryPartialUpdate)
 
 -- newtype Tex =
 --   Tex { unTex :: Text }
@@ -81,21 +81,21 @@ module Polysemy.Hasql.Test.StoreUpdateTest where
 
 -- updateWith ::
 --   ∀ e r .
---   Members [StoreQuery (SumId, Partial Dat) (Maybe Dat) !! e, Stop e] r =>
+--   Members [Query (SumId, Partial Dat) (Maybe Dat) !! e, Stop e] r =>
 --   Partial Dat ->
 --   Sem r ()
 -- updateWith upd =
---   restop (void (StoreQuery.basic (S1 1, upd)))
+--   restop (void (Query.query (S1 1, upd)))
 
 -- prog ::
 --   ∀ e r .
---   Members [StoreQuery (SumId, Partial Dat) (Maybe Dat) !! e, Store SumId Dat !! e, Stop e, Error Text] r =>
+--   Members [Query (SumId, Partial Dat) (Maybe Dat) !! e, Store SumId Dat !! e, Stop e, Error Text] r =>
 --   Sem r (Maybe (NonEmpty (Uid SumId Dat)))
 -- prog = do
 --   restop (Store.insert updateRecord)
 --   restop (Store.insert keepRecord)
 --   updateWith update
---   restop (StoreQuery.basic (S1 1, (partial @Dat +> field @"intField" (99 :: Int) +> field @"_boo" (Buul False))))
+--   restop (Query.query (S1 1, (partial @Dat +> field @"intField" (99 :: Int) +> field @"_boo" (Buul False))))
 --   jsonUpdate <- fromEither (first toText (Aeson.eitherDecode [exon|{"txt":"updated"}|]))
 --   updateWith jsonUpdate
 --   restop Store.fetchAll

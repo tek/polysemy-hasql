@@ -8,8 +8,8 @@ import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
-import Polysemy.Db.Effect.StoreQuery (StoreQuery (Basic))
+import qualified Polysemy.Db.Effect.Query as Query
+import Polysemy.Db.Effect.Query (Query (Query))
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Column (nullable)
@@ -26,7 +26,7 @@ import Sqel.Statement (qStatement)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data PordQ =
@@ -78,11 +78,11 @@ idSchema :: QuerySchema Int64 (Uid Int64 Dat)
 idSchema =
   checkQuery (primAs @"id") td
 
-interpretQ ::
+interpretQuery ::
   Member (Database !! DbError) r =>
-  InterpreterFor (StoreQuery Q [Uid Int64 Dat] !! DbError) r
-interpretQ =
-  interpretResumable \ (Basic params) -> restop (Database.statement params stm)
+  InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
+interpretQuery =
+  interpretResumable \ (Query params) -> restop (Database.statement params stm)
   where
     stm :: Statement Q [Uid Int64 Dat]
     stm =
@@ -98,9 +98,9 @@ interpretQ =
 test_dslQuery :: UnitTest
 test_dslQuery =
   integrationTest do
-    interpretManagedTable ts $ interpretStoreDb ts idSchema $ interpretQ do
-      restop @DbError @(StoreQuery _ _) $ restop @DbError @(Store _ _) do
+    interpretDbTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
+      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         for_ @[] [1..10] \ i ->
           Store.insert (Uid i (Dat "name" (Pord i "hnnnggg")))
-        r <- fmap (view #id) <$> StoreQuery.basic (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name")
+        r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name")
         [3, 4] === r

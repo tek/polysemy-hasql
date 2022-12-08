@@ -6,10 +6,10 @@ import Generics.SOP (NP (Nil, (:*)))
 import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
+import qualified Polysemy.Db.Effect.Query as Query
+import Polysemy.Db.Effect.Query (Query (Query))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
-import Polysemy.Db.Effect.StoreQuery (StoreQuery (Basic))
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Data.Dd
@@ -25,7 +25,7 @@ import Sqel.Sum (con1, sum)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data F2 =
@@ -89,20 +89,20 @@ checkedQStm :: Statement Q [Uid Int64 Dat]
 checkedQStm =
   qStatement checkedQ t1d
 
-interpretQ ::
+interpretQuery ::
   Member (Database !! DbError) r =>
-  InterpreterFor (StoreQuery Q [Uid Int64 Dat] !! DbError) r
-interpretQ =
+  InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
+interpretQuery =
   interpretResumable \case
-    Basic params ->
+    Query params ->
       restop (Database.statement params checkedQStm)
 
 test_dslUnaryCon :: UnitTest
 test_dslUnaryCon =
   integrationTest do
-    interpretManagedTable t1d $ interpretStoreDb t1d (checkQuery (primAs @"id") t1C) $ interpretQ do
-      restop @DbError @(StoreQuery _ _) $ restop @DbError @(Store _ _) do
+    interpretDbTable t1d $ interpretStoreDb t1d (checkQuery (primAs @"id") t1C) $ interpretQuery do
+      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         Store.insert (Uid 1 (Dat "ellow" (S1 "crinp")))
         Store.insert (Uid 2 (Dat "cheerio" (S2 (F2 "pord" 93))))
-        r <- fmap (view #id) <$> StoreQuery.basic (Q "ellow" (S1 "crinp"))
+        r <- fmap (view #id) <$> Query.query (Q "ellow" (S1 "crinp"))
         [1] === r

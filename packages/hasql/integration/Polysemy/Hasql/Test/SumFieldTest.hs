@@ -13,8 +13,8 @@ module Polysemy.Hasql.Test.SumFieldTest where
 -- import Polysemy.Db.Data.Rep (Auto, Flatten, IdQuery, Prim, PrimaryKey, Rep, Sum, UidNestRep, UidRep, UuidRep)
 -- import qualified Polysemy.Db.Effect.Store as Store
 -- import Polysemy.Db.Effect.Store (Store, UuidStore)
--- import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
--- import Polysemy.Db.Effect.StoreQuery (StoreQuery)
+-- import qualified Polysemy.Db.Effect.Query as Query
+-- import Polysemy.Db.Effect.Query (Query)
 -- import qualified Sqel.Data.Uid as Uid
 -- import Sqel.Data.Uid (Uid (Uid), Uuid)
 -- import Polysemy.Test (Hedgehog, UnitTest, assertJust, evalLeft)
@@ -208,13 +208,13 @@ module Polysemy.Hasql.Test.SumFieldTest where
 --   Uid SumPK SumId
 
 -- sumIdQProg ::
---   Member (StoreQuery SumPKQ (Maybe (Uid SumPK SumId)) !! DbError) r =>
+--   Member (Query SumPKQ (Maybe (Uid SumPK SumId)) !! DbError) r =>
 --   Members [Store SumPK SumId !! DbError, HasqlConnection, Stop DbError, Hedgehog IO, Embed IO] r =>
 --   Sem r ()
 -- sumIdQProg = do
 --   restop (Store.upsert specimen)
 --   r1 <- restop (Store.fetch (SumPKR 5))
---   r2 <- restop (StoreQuery.basic (SumPKQ Nothing))
+--   r2 <- restop (Query.query (SumPKQ Nothing))
 --   assertJust specimen r1
 --   assertJust specimen r2
 --   where
@@ -229,7 +229,7 @@ module Polysemy.Hasql.Test.SumFieldTest where
 -- sumIdProg (QueryTable table _ _) =
 --   interpretDatabase $
 --     interpretQuery @Auto @(UidRep (Sum SumPKRep) SumIdRep) $
---     interpretManagedTable table $
+--     interpretDbTable table $
 --     interpretOne $
 --     sumIdQProg
 

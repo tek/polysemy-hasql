@@ -6,8 +6,8 @@ import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
-import Polysemy.Db.Effect.StoreQuery (StoreQuery (Basic))
+import qualified Polysemy.Db.Effect.Query as Query
+import Polysemy.Db.Effect.Query (Query (Query))
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, (:>) ((:>)))
@@ -22,7 +22,7 @@ import Sqel.Statement (qStatement)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Q =
@@ -50,12 +50,12 @@ idSchema :: QuerySchema Int (Uid Int Dat)
 idSchema =
   checkQuery (primAs @"id") td
 
-interpretQ ::
+interpretQuery ::
   Member (Database !! DbError) r =>
-  InterpreterFor (StoreQuery Q [Uid Int Dat] !! DbError) r
-interpretQ =
+  InterpreterFor (Query Q [Uid Int Dat] !! DbError) r
+interpretQuery =
   interpretResumable \case
-    Basic params ->
+    Query params ->
       restop (Database.statement params stm)
       where
         stm = qStatement (checkQuery (prod (prim :> prim)) td) ts
@@ -63,9 +63,9 @@ interpretQ =
 test_dslSimpleQuery :: UnitTest
 test_dslSimpleQuery =
   integrationTest do
-    interpretManagedTable ts $ interpretStoreDb ts idSchema $ interpretQ do
-      restop @DbError @(StoreQuery _ _) $ restop @DbError @(Store _ _) do
+    interpretDbTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
+      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         for_ @[] [1..10] \ i ->
           Store.insert (Uid i (Dat "name" i 12))
-        r <- fmap (view #id) <$> StoreQuery.basic (Q "name" 5)
+        r <- fmap (view #id) <$> Query.query (Q "name" 5)
         [5] === r

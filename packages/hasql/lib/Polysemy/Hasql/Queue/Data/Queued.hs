@@ -1,8 +1,6 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
-import Sqel.SOP.Constraint (symbolText)
-
-import Sqel.Data.Dd (DbTypeName (dbTypeName))
+import Sqel.Data.Dd (DbTypeName)
 
 data Queued t a =
   Queued {
@@ -13,8 +11,5 @@ data Queued t a =
 
 instance (
     DbTypeName d inner,
-    name ~ AppendSymbol "Queued" inner,
-    KnownSymbol name
+    name ~ AppendSymbol "Queued" inner
   ) => DbTypeName (Queued t d) name where
-    dbTypeName =
-      symbolText @name

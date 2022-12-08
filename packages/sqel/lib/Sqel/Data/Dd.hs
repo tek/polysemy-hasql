@@ -6,7 +6,7 @@ import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
 
 import Sqel.Data.Sel (Sel, SelW (SelWAuto, SelWPath, SelWSymbol, SelWUnused), showSelW)
 import Sqel.Data.Uid (Uid)
-import Sqel.SOP.Constraint (DataName, dataName, symbolText)
+import Sqel.SOP.Constraint (DataName, symbolText)
 
 newtype ConCol as =
   ConCol { unConCol :: NP I as }
@@ -126,17 +126,10 @@ instance MatchDdType ('DdK sel p a s) a
 
 type DbTypeName :: Type -> Symbol -> Constraint
 class DbTypeName a name | a -> name where
-    dbTypeName :: Text
 
-instance {-# overlappable #-} (
-    DataName a name
-  ) => DbTypeName a name where
-    dbTypeName = dataName @a
+instance {-# overlappable #-} DataName a name => DbTypeName a name where
 
-instance (
-    DbTypeName a name
-  ) => DbTypeName (Uid i a) name where
-    dbTypeName = dbTypeName @a
+instance DbTypeName a name => DbTypeName (Uid i a) name where
 
 data a :> b = a :> b
 infixr 3 :>

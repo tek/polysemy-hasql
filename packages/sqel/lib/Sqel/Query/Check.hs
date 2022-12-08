@@ -70,6 +70,6 @@ type instance Eval (NoMatch ('CheckField path tpe)) =
     " does not correspond to a table column."
   )
 
-type family CheckQuery (qs :: DdK) (s :: DdK) :: Maybe k where
-  CheckQuery qs ts =
+type family CheckQueryFields (qs :: DdK) (s :: DdK) :: Maybe k where
+  CheckQueryFields qs ts =
     FMap NoMatch @@ (Find (CheckQueryField (CheckFields ts)) @@ CheckFields qs)

@@ -37,7 +37,7 @@ import Sqel.Data.PgType (
   )
 import Sqel.Data.PgTypeName (PgTableName, pattern PgTypeName, PgTypeName)
 import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWSymbol, SelWAuto))
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto, SelWSymbol))
 import Sqel.Data.Sql (Sql)
 import qualified Sqel.Data.TableSchema as TableSchema
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
@@ -49,7 +49,6 @@ import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable)
-import Polysemy.Hasql.Session (convertQueryError)
 import Polysemy.Hasql.Table (createTable, dbColumnsStatement, tableColumnsSql, typeColumnsSql)
 
 type EmptyQuery =
@@ -99,19 +98,19 @@ interpretStoreDb table query =
     das = dStatement emptyQuerySchema table
 
 -- TODO lots of duplication in this module
-interpretManagedTable ::
+interpretDbTable ::
   ∀ d r .
   Members [Database !! DbError, Log, Embed IO] r =>
   TableSchema d ->
   InterpreterFor (DbTable d !! DbError) r
-interpretManagedTable schema@(TableSchema table@PgTable {name = PgTypeName name} _ _) =
+interpretDbTable schema@(TableSchema table@PgTable {name = PgTypeName name} _ _) =
   interpretResumable \case
     DbTable.Schema ->
       pure schema
     DbTable.Statement q stmt ->
       restop (Database.withInit initDb (Database.statement q stmt))
   where
-    initDb = InitDb (ClientTag name) True \ _ -> initWithMigrations table noMigrations
+    initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations
 
 typeColumns ::
   Member Database r =>
@@ -166,6 +165,7 @@ startMigration (Migration _ _ _ action) = do
   Log.info [exon|Starting migration|]
   action
 
+-- TODO is it necessary for migrations to be stored as an NP? there's no type stuff going on here anymore
 class RunMigrations d migs r where
   runMigrations ::
     PgTable d ->
@@ -185,20 +185,18 @@ instance (
   runMigrations table (h :* t) =
     ifM (tableMatch (tableFrom h)) (startMigration h) nextMigration
     where
-      nextMigration =
-        runMigrations table t *> startMigration h
+      nextMigration = runMigrations table t *> startMigration h
 
--- TODO create table
-initWithMigrations ::
+initTable ::
   Members [Database, Stop DbError, Log, Embed IO] r =>
   RunMigrations d (Migs ds d) r =>
   PgTable d ->
   Migrations (Sem r) ds d ->
   Sem r ()
-initWithMigrations table (Migrations migrations) =
+initTable table (Migrations migrations) =
   ifM (Map.null <$> tableColumns (table ^. #name))
   do
-    Database.use \ c -> mapStop convertQueryError (createTable c table)
+    Database.use \ c -> createTable c table
   do
     unlessM (tableMatch table) do
       runMigrations table migrations
@@ -217,7 +215,7 @@ interpretTableMigrations schema@(TableSchema table@PgTable {name = PgTypeName na
     DbTable.Statement q stmt -> do
       restop (Database.withInit initDb (Database.statement q stmt))
   where
-    initDb = InitDb (ClientTag name) True \ _ -> initWithMigrations table migrations
+    initDb = InitDb (ClientTag name) True \ _ -> initTable table migrations
 
 tableDatabaseScoped ::
   Members [Scoped conn (Database !! DbError), Stop DbError, Log, Embed IO] r =>
@@ -260,4 +258,4 @@ interpretStoreXa schema@(TableSchema {pg = table@PgTable {name = PgTypeName name
     qas :: Statement () [Uid i d]
     qas = qStatement emptyQuerySchema schema
     initDb :: InitDb (Sem (Database : Stop DbError : Database !! DbError : Stop DbError : r))
-    initDb = InitDb (ClientTag name) True \ _ -> initWithMigrations table noMigrations
+    initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations

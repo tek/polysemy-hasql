@@ -138,7 +138,7 @@ You can easily add your own markers to implement custom column metadata:
 
 # Queries
 
-Non-CRUD queries are handled by the effect `StoreQuery`, defined by another
+Non-CRUD queries are handled by the effect `Query`, defined by another
 data type whose fields are a subset of the table type's:
 
 ```haskell
@@ -149,9 +149,9 @@ data RecordQuery =
   }
 deriveGeneric ''RecordQuery
 
-prog :: Member (StoreQuery RecordQuery (Maybe Record)) r => Sem r (Maybe Record)
+prog :: Member (Query RecordQuery (Maybe Record)) r => Sem r (Maybe Record)
 prog =
-  StoreQuery.basic (RecordQuery ["one", "two"] 5.5)
+  Query.query (RecordQuery ["one", "two"] 5.5)
 
 main :: IO ()
 main =

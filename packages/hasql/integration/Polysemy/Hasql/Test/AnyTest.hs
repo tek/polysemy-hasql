@@ -3,8 +3,8 @@ module Polysemy.Hasql.Test.AnyTest where
 -- import Polysemy.Db.Data.DbError (DbError)
 -- import qualified Polysemy.Db.Effect.Store as Store
 -- import Polysemy.Db.Effect.Store (Store)
--- import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
--- import Polysemy.Db.Effect.StoreQuery (StoreQuery)
+-- import qualified Polysemy.Db.Effect.Query as Query
+-- import Polysemy.Db.Effect.Query (Query)
 -- import Sqel.Data.Uid (Uid(Uid))
 -- import Polysemy.Test (Hedgehog, UnitTest, assert)
 
@@ -21,14 +21,14 @@ module Polysemy.Hasql.Test.AnyTest where
 --   Uid 1 (Dat "name")
 
 -- prog ::
---   Members [Store Int Dat, StoreQuery Dat Bool, Hedgehog IO] r =>
+--   Members [Store Int Dat, Query Dat Bool, Hedgehog IO] r =>
 --   Sem r ()
 -- prog = do
 --   Store.insert (Uid 1 (Dat "first"))
---   assert =<< StoreQuery.basic (Dat "first")
---   assert . not =<< StoreQuery.basic (Dat "second")
+--   assert =<< Query.query (Dat "first")
+--   assert . not =<< Query.query (Dat "second")
 
 -- test_any :: UnitTest
 -- test_any =
 --   integrationTest do
---       restop @DbError @(StoreQuery Dat Bool) $ restop @DbError @(Store Int Dat) prog
+--       restop @DbError @(Query Dat Bool) $ restop @DbError @(Store Int Dat) prog

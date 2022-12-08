@@ -48,7 +48,7 @@ import Sqel.Prim (prim, primAs, primJson)
 import Sqel.Product (uid)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database, Databases, withDatabaseUnique)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queue (Queue, QueueName (QueueName))
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
@@ -265,7 +265,7 @@ interpretInputDbQueueFull ::
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueFull errorDelay csConfig errorHandler =
-  interpretManagedTable ts .
+  interpretDbTable ts .
   interpretStoreDb ts (checkQuery query table) .
   interpretAtomic Nothing .
   interpretMonitorRestart (monitorClockSkew csConfig) .

@@ -56,10 +56,10 @@ plain s =
   Statement (encodeUtf8 s) mempty noResult False
 
 qStatement ::
-  ∀ q a result .
-  ResultShape a result =>
-  QuerySchema q a ->
-  TableSchema a ->
+  ∀ result proj q table .
+  ResultShape proj result =>
+  QuerySchema q table ->
+  TableSchema proj ->
   Statement q result
 qStatement (QuerySchema query (Encoder qp _)) (TableSchema col row _) =
   prepared [sql|##{Select col} ##{query}|] row qp

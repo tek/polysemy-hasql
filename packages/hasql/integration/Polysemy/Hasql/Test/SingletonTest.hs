@@ -41,7 +41,7 @@ module Polysemy.Hasql.Test.SingletonTest where
 -- test_singletonDb =
 --   integrationTest do
 --     (a, b) <- withTestPlainTable (basicSchema @DatRep) $ \ table ->
---       interpretManagedTable table $
+--       interpretDbTable table $
 --         interpretCrudSingletonWith table $
 --         interpretQueryStoreDb $
 --         prog

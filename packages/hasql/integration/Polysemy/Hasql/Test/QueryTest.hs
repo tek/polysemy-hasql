@@ -13,8 +13,8 @@ module Polysemy.Hasql.Test.QueryTest where
 -- import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
 -- import qualified Polysemy.Db.Effect.Store as Store
 -- import Polysemy.Db.Effect.Store (UuidStore)
--- import qualified Polysemy.Db.Effect.StoreQuery as StoreQuery
--- import Polysemy.Db.Effect.StoreQuery (StoreQuery)
+-- import qualified Polysemy.Db.Effect.Query as Query
+-- import Polysemy.Db.Effect.Query (Query)
 -- import qualified Sqel.Data.Uid as Uid
 -- import Sqel.Data.Uid (Uid (Uid), Uuid)
 -- import qualified Polysemy.Db.Kind.Data.Tree as Kind
@@ -211,8 +211,8 @@ module Polysemy.Hasql.Test.QueryTest where
 --   Uid (Uid.uuid 2) (Dat "hello" (num 5) (Lef 8) creation)
 
 -- prog ::
---   Members [Stop DbError, StoreQuery ContentNumber [Uuid Dat] !! DbError] r =>
---   Members [UuidStore Dat !! DbError, StoreQuery ContentNumber (Maybe (Uuid Dat)) !! DbError] r =>
+--   Members [Stop DbError, Query ContentNumber [Uuid Dat] !! DbError] r =>
+--   Members [UuidStore Dat !! DbError, Query ContentNumber (Maybe (Uuid Dat)) !! DbError] r =>
 --   Sem r (Int, Maybe (Uuid Dat))
 -- prog = do
 --   restop @DbError @(UuidStore Dat) do
@@ -222,8 +222,8 @@ module Polysemy.Hasql.Test.QueryTest where
 --     Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" (num 5) (Lef 8) creation))
 --     Store.insert (Uid (Uid.uuid 5) (Dat "hello" (num 7) (Lef 9) creation))
 --     Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ True) creation))
---     r1 :: [Uuid Dat] <- restop (StoreQuery.basic (ContentNumber "hello" Nothing Nothing (Lef 8)))
---     r2 <- restop (StoreQuery.basic (ContentNumber "hello" Nothing (Just 6) (Lef 8)))
+--     r1 :: [Uuid Dat] <- restop (Query.query (ContentNumber "hello" Nothing Nothing (Lef 8)))
+--     r2 <- restop (Query.query (ContentNumber "hello" Nothing (Just 6) (Lef 8)))
 --     pure (length r1, r2)
 
 -- prog' ::

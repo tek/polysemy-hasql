@@ -19,7 +19,7 @@ import Sqel.Product (uid)
 import Sqel.Query (checkQuery)
 
 import Polysemy.Hasql.Effect.Transaction (Transactions, abort)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb, interpretStoreXa)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb, interpretStoreXa)
 import Polysemy.Hasql.Interpreter.Transaction (interpretTransactions)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Transaction (transactStores)
@@ -57,8 +57,8 @@ queryRat :: QuerySchema Int64 (Uid Int64 Rat)
 test_transaction :: UnitTest
 test_transaction =
   integrationTest $
-  interpretManagedTable tableDat $
-  interpretManagedTable tableRat $
+  interpretDbTable tableDat $
+  interpretDbTable tableRat $
   interpretStoreDb tableDat queryDat $
   interpretStoreDb tableRat queryRat $
   interpretStoreXa tableDat queryDat $

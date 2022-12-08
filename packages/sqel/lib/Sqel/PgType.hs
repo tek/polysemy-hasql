@@ -8,7 +8,7 @@ import Exon (exon)
 import Lens.Micro.Extras (view)
 
 import Sqel.Data.Codec (Codec (Codec), FullCodec)
-import Sqel.Data.Dd (Dd, DdType)
+import Sqel.Data.Dd (Dd, DdK, DdType)
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
   PgColumnName,
@@ -72,6 +72,7 @@ mkSelector =
     [name] -> quotedDbId name
     root :| names -> [exon|(#{dquote root}).#{Text.intercalate "." (dbIdentifierT <$> names)}|]
 
+-- TODO use CommaSep
 mkValues :: PgStructure -> [Sql]
 mkValues (PgStructure base) =
   snd (mapAccumL mkCol (1 :: Int) base)
@@ -116,13 +117,15 @@ pgTable ::
 pgTable dd =
   toTable (reifyDd dd)
 
-tableSchema ::
-  ∀ table .
-  ReifyDd table =>
-  ReifyCodec FullCodec table (DdType table) =>
-  Dd table ->
-  TableSchema (DdType table)
-tableSchema tab =
-  TableSchema (pgTable tab) (row ^. #decodeValue) (params ^. #encodeValue)
-  where
-    Codec params row = reifyCodec @FullCodec tab
+type MkTableSchema :: DdK -> Constraint
+class MkTableSchema table where
+  tableSchema :: Dd table -> TableSchema (DdType table)
+
+instance (
+    ReifyDd table,
+    ReifyCodec FullCodec table (DdType table)
+  ) => MkTableSchema table where
+  tableSchema tab =
+    TableSchema (pgTable tab) (row ^. #decodeValue) (params ^. #encodeValue)
+    where
+      Codec params row = reifyCodec @FullCodec tab

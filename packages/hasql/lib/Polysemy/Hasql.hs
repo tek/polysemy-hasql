@@ -29,7 +29,7 @@ import Polysemy.Hasql.Reader (interpretReaderDb)
 --   - A generic derivation mechanism for Hasql codecs and statements
 
 -- $interpreters
--- Four auxiliary effects can be combined to build an interpreter stack for 'Store' and 'StoreQuery'.
+-- Four auxiliary effects can be combined to build an interpreter stack for 'Store' and 'Query'.
 -- The minimal set consists of 'DbConnection', which manages a 'Connection' value, and 'Database', which executes
 -- statements, coordinates retries on broken connections, and handles initialization of tables and types.
 --

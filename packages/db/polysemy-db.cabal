@@ -33,9 +33,9 @@ library
       Polysemy.Db.Data.DbUser
       Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.InitDbError
-      Polysemy.Db.Data.QueryStore
+      Polysemy.Db.Effect.Query
       Polysemy.Db.Effect.Store
-      Polysemy.Db.Effect.StoreQuery
+      Polysemy.Db.Query
       Polysemy.Db.Random
       Polysemy.Db.Reader
       Polysemy.Db.SOP.Constructor
@@ -44,7 +44,6 @@ library
       Polysemy.Db.SOP.Fundeps
       Polysemy.Db.SOP.List
       Polysemy.Db.Store
-      Polysemy.Db.StoreQuery
   hs-source-dirs:
       lib
   default-extensions:

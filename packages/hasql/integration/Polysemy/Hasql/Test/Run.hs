@@ -4,7 +4,7 @@ import Conc (interpretMaskFinal, interpretRace)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
 import Hedgehog.Internal.Property (Failure)
-import Log (Severity (Trace), interpretLogStdoutLevelConc)
+import Log (Severity (Error), interpretLogStdoutLevelConc)
 import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
@@ -63,7 +63,7 @@ integrationTestWith run =
             mapStop @QueryError @Text show $
             mapStop @DbError @Text show $
             mapStop @DbConnectionError @Text show $
-            interpretLogStdoutLevelConc (Just Trace) $
+            interpretLogStdoutLevelConc (Just Error) $
             runRandomIO $
             interpretTimeGhc $
             run conf

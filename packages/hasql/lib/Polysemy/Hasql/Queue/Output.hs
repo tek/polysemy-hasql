@@ -4,31 +4,31 @@ import Data.UUID (UUID)
 import Exon (exon)
 import Generics.SOP (NP (Nil, (:*)))
 import Polysemy.Db.Data.DbError (DbError)
-import Sqel.Data.Uid (Uid (Uid))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Db.Random (Random, random)
-import Sqel.SOP.Constraint (symbolText)
 import qualified Polysemy.Log as Log
 import Polysemy.Output (Output (Output))
 import qualified Polysemy.Time as Time
 import Polysemy.Time (Seconds (Seconds))
 import Prelude hiding (Queue, group)
+import Sqel.Codec (PrimColumn)
+import Sqel.Data.Dd (DbTypeName)
+import Sqel.Data.Sql (Sql (Sql))
+import Sqel.Data.Uid (Uid (Uid))
+import Sqel.PgType (tableSchema)
+import Sqel.Prim (prim, primAs, primJson)
+import Sqel.Product (uid)
+import Sqel.Query (checkQuery)
+import Sqel.SOP.Constraint (symbolText)
 
 import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
-import Sqel.Data.Sql (Sql (Sql))
 import qualified Polysemy.Hasql.Database as Database (retryingSql)
-import Sqel.Codec (PrimColumn)
-import Sqel.Data.Dd (DbTypeName)
-import Sqel.Prim (prim, primAs, primJson)
-import Sqel.Product (uid)
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queue (Queue)
 import Polysemy.Hasql.Queue.Data.Queued (Queued (Queued))
-import Sqel.Query (checkQuery)
-import Sqel.PgType (tableSchema)
 
 -- TODO I think notify doesn't even need a unique connection, only listen does
 interpretOutputDbQueue ::
@@ -61,7 +61,7 @@ interpretOutputDbQueueFull ::
   Members [Database !! DbError, Time t dt, Log, Random, Resource, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputDbQueueFull =
-  interpretManagedTable ts .
+  interpretDbTable ts .
   interpretStoreDb ts (checkQuery query table) .
   raiseUnder .
   interpretOutputDbQueue @queue .

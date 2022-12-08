@@ -7,7 +7,7 @@ import Sqel.Data.Codec (Encoder)
 import Sqel.Data.Dd (Dd, DdK, DdType)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Sql (Sql)
-import Sqel.Query.Check (CheckQuery)
+import Sqel.Query.Check (CheckQueryFields)
 import Sqel.Query.Fragments (ColumnPrefix (NoPrefix), joinFrag, joinSum)
 import Sqel.Query.SelectExpr (ToSelectExpr (toSelectExpr))
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
@@ -31,7 +31,7 @@ class CheckedQ (qs :: DdK) (ts :: DdK) where
   checkedQ :: Dd qs -> SelectExpr
 
 instance (
-    check ~ CheckQuery qs ts,
+    check ~ CheckQueryFields qs ts,
     CheckedQ' check qs
   ) => CheckedQ qs ts where
     checkedQ = checkedQ' @check
@@ -60,21 +60,25 @@ querySchemaWith ::
 querySchemaWith query expr =
   QuerySchema (compileSelectExpr expr) (reifyCodec @Encoder query)
 
-unsafeQueryMeta ::
+unsafeQuerySchema ::
   ∀ q query a .
   ToSelectExpr query =>
   ReifyCodec Encoder query q =>
   Dd query ->
   QuerySchema q a
-unsafeQueryMeta query =
+unsafeQuerySchema query =
   querySchemaWith query (toSelectExpr NoPrefix query)
 
-checkQuery ::
-  ∀ query table .
-  CheckedQ query table =>
-  ReifyCodec Encoder query (DdType query) =>
-  Dd query ->
-  Dd table ->
-  QuerySchema (DdType query) (DdType table)
-checkQuery query _ =
-  querySchemaWith query (checkedQ @query @table query)
+class CheckQuery query table where
+  checkQuery ::
+    Dd query ->
+    Dd table ->
+    QuerySchema (DdType query) (DdType table)
+
+type CheckQuery :: DdK -> DdK -> Constraint
+instance (
+    CheckedQ query table,
+    ReifyCodec Encoder query (DdType query)
+  ) => CheckQuery query table where
+  checkQuery query _ =
+    querySchemaWith query (checkedQ @query @table query)
