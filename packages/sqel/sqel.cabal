@@ -71,6 +71,7 @@ library
       Sqel.ReifyDd
       Sqel.ResultShape
       Sqel.SOP.Constraint
+      Sqel.SOP.Enum
       Sqel.SOP.Error
       Sqel.SOP.HasGeneric
       Sqel.Sql.CommaSep

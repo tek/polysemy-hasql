@@ -22,7 +22,7 @@ import Sqel.Text.DbIdentifier (dbIdentifierT, dbSymbol)
 newtype PgPrimName =
   PgPrimName { unPgPrimName :: Text }
   deriving stock (Eq, Show, Generic)
-  deriving newtype (IsString, Ord)
+  deriving newtype (IsString, Ord, Semigroup, Monoid)
 
 instance Pretty PgPrimName where
   pretty (PgPrimName n) = pretty n

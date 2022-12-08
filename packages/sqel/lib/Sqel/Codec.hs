@@ -10,12 +10,15 @@ import Hasql.Encoders (Params)
 import Path (Path)
 import Prelude hiding (sum)
 
-import Sqel.Codec.Sum (ignoreEncoder)
-import Sqel.Data.PgType (PgPrimName)
 import qualified Sqel.Codec.PrimDecoder as PrimDecoder
 import Sqel.Codec.PrimDecoder (PrimDecoder)
 import qualified Sqel.Codec.PrimEncoder as PrimEncoder
 import Sqel.Codec.PrimEncoder (PrimEncoder)
+import Sqel.Codec.Sum (ignoreEncoder)
+import Sqel.Column (ignoreDecoder)
+import qualified Sqel.Data.Codec as Codec
+import Sqel.Data.Codec (Codec (Codec), Decoder (Decoder), Encoder (Encoder), FullCodec, ValueCodec)
+import Sqel.Data.PgType (PgPrimName)
 
 class ColumnEncoder f where
   columnEncoder :: f a -> Params a
@@ -69,3 +72,19 @@ instance PrimColumn Chronos.Time where pgType = "bigint"
 instance PrimColumn Chronos.Datetime where pgType = "timestamp without time zone"
 instance PrimDecoder (Path b t) => PrimColumn (Path b t) where pgType = "text"
 instance PrimColumn () where pgType = "bool"
+
+fullPrimCodec ::
+  Encoders.Value a ->
+  Decoders.Value a ->
+  FullCodec a
+fullPrimCodec encoder decoder =
+  Codec {
+    encoder = Encoder (columnEncoder encoder) (columnEncoderIgnore encoder),
+    decoder = Decoder (columnDecoder decoder) (void ignoreDecoder)
+  }
+
+toFullPrimCodec ::
+  ValueCodec a ->
+  FullCodec a
+toFullPrimCodec (Codec encoder decoder) =
+  fullPrimCodec encoder decoder

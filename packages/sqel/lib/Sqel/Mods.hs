@@ -6,7 +6,7 @@ import qualified Hasql.Decoders as Decoders
 import qualified Hasql.Encoders as Encoders
 
 import Sqel.Data.Codec (Codec (Codec))
-import Sqel.Data.Mods (Mods (Mods))
+import Sqel.Data.Mods (EnumColumn (EnumColumn), Mods (Mods), ReadShowColumn (ReadShowColumn))
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.Sql (sql)
 import Sqel.Sql.Prepared (dollar)
@@ -15,10 +15,6 @@ import Sqel.Sql.Select (FragType (Where), SelectAtom (SelectAtom))
 defaultWhere :: SelectAtom
 defaultWhere =
   SelectAtom Where (\ sel i -> [sql|##{sel} = #{dollar i}|])
-
-data DefaultParam =
-  DefaultParam
-  deriving stock (Eq, Show, Generic)
 
 jsonEncoder ::
   ToJSON a =>
@@ -47,3 +43,14 @@ primJsonValue ::
   Mods [PgPrimName, PrimValueCodec a]
 primJsonValue =
   Mods (I "json" :* I (PrimCodec (Codec jsonEncoder jsonDecoder)) :* Nil)
+
+-- TODO change to "enum", create the type just like other composites
+primEnumValue ::
+  Mods [PgPrimName, EnumColumn]
+primEnumValue =
+  Mods (I "text" :* I EnumColumn :* Nil)
+
+primReadShowValue ::
+  Mods [PgPrimName, ReadShowColumn]
+primReadShowValue =
+  Mods (I "text" :* I ReadShowColumn :* Nil)

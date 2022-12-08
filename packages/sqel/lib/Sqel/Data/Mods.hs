@@ -104,19 +104,26 @@ instance c => GetMod c p '[] where
 instance GetMod c p (p : ps) where
   getMod _ (Mods (I p :* _)) = p
 
+class AddMod p s0 s1 | p s0 -> s1 where
+  addMod :: p -> Dd s0 -> Dd s1
+
+instance AddMod p ('DdK sel (Mods ps) a s) ('DdK sel (Mods (p : ps)) a s) where
+  addMod p (Dd sel (Mods ps) s) =
+    Dd sel (Mods (I p :* ps)) s
+
 instance {-# overlappable #-} (
     GetMod c p ps
   ) => GetMod c p (a' : ps) where
     getMod f (Mods (_ :* ps)) =
       getMod @c f (Mods ps)
 
-class MapModDd p s0 s1 | p s0 -> s1 where
-  mapModDd :: p -> (p -> p) -> Dd s0 -> Dd s1
+class MapMod p s0 s1 | p s0 -> s1 where
+  mapMod :: p -> (p -> p) -> Dd s0 -> Dd s1
 
 instance (
     MapMod' p ps0 ps1
-  ) => MapModDd p ('DdK sel (Mods ps0) a s0) ('DdK sel (Mods ps1) a s0) where
-    mapModDd p f (Dd sel ps0 s) =
+  ) => MapMod p ('DdK sel (Mods ps0) a s0) ('DdK sel (Mods ps1) a s0) where
+    mapMod p f (Dd sel ps0 s) =
       Dd sel (mapMod' p f ps0) s
 
 class CMapMod c p0 p p1 s0 s1 | s0 p0 p1 -> p s1 where
@@ -128,21 +135,22 @@ instance (
   cmapMod p0 f (Dd sel ps0 s) =
     Dd sel (cmapMod' @c @_ @_ @p1 p0 f ps0) s
 
+-- TODO this appends the mod if it is missing, while it should prepend it to preserve the order of effects.
 amendMod ::
-  MapModDd p s0 s1 =>
+  MapMod p s0 s1 =>
   p ->
   Dd s0 ->
   Dd s1
 amendMod p =
-  mapModDd p id
+  mapMod p id
 
 setMod ::
-  MapModDd p s0 s1 =>
+  MapMod p s0 s1 =>
   p ->
   Dd s0 ->
   Dd s1
 setMod p =
-  mapModDd p (const p)
+  mapMod p (const p)
 
 type OptMod :: Type -> [Type] -> Type -> Constraint
 class OptMod p ps res | ps p -> res where
@@ -158,3 +166,13 @@ instance {-# overlappable #-} (
     OptMod p ps p1
   ) => OptMod p (p0 : ps) p1 where
     optMod (Mods (_ :* ps)) = optMod @p (Mods ps)
+
+data EnumColumn = EnumColumn
+  deriving stock (Eq, Show, Generic)
+
+data ReadShowColumn = ReadShowColumn
+  deriving stock (Eq, Show, Generic)
+
+type ArrayColumn :: (Type -> Type) -> Type
+data ArrayColumn f = ArrayColumn
+  deriving stock (Eq, Show, Generic)

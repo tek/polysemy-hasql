@@ -4,9 +4,9 @@ import Generics.SOP (I, NP)
 import qualified Hasql.Decoders as Hasql
 import Hasql.Decoders (Row, custom)
 
-import Sqel.Data.Mods (Mods, MapModDd (mapModDd), amendMod)
 import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), DdStruct (DdPrim), Struct (Prim))
+import Sqel.Data.Mods (AddMod (addMod), MapMod (mapMod), Mods)
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), mkSel)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetName)
@@ -48,10 +48,10 @@ class WithOption s0 s1 | s0 -> s1 where
   withOption :: (ColumnOptions -> ColumnOptions) -> Dd s0 -> Dd s1
 
 instance (
-    MapModDd ColumnOptions s0 s1
+    MapMod ColumnOptions s0 s1
   ) => WithOption s0 s1 where
   withOption f =
-    mapModDd def f
+    mapMod def f
 
 pk ::
   WithOption s0 s1 =>
@@ -60,34 +60,31 @@ pk ::
 pk =
   withOption (#primaryKey .~ True)
 
-class MkNullable a p0 sel p | p0 -> sel p where
-  mkNullable :: p0 -> Dd ('DdK sel p (Maybe a) 'Prim)
+class MkNullable s0 s1 | s0 -> s1 where
+  mkNullable :: Dd s0 -> Dd s1
 
-instance MkNullable a (Mods p) 'SelAuto (Mods p) where
-  mkNullable p = Dd mkSel p DdPrim
-
-instance MkNullable a (Dd ('DdK sel p a 'Prim)) sel p where
+instance MkNullable ('DdK sel p a 'Prim) ('DdK sel p (Maybe a) 'Prim) where
   mkNullable (Dd sel p s) = Dd sel p s
 
 nullable ::
-  ∀ a p0 sel p s0 s1 .
-  MkNullable a p0 sel p =>
-  MapModDd Nullable ('DdK sel p (Maybe a) 'Prim) s0 =>
+  ∀ s0 s1 s2 s3 .
   WithOption s0 s1 =>
-  p0 ->
-  Dd s1
+  AddMod Nullable s1 s2 =>
+  MkNullable s2 s3 =>
+  Dd s0 ->
+  Dd s3
 nullable =
-  withOption (#notNull .~ False) .
-  amendMod Nullable .
-  mkNullable @a
+  mkNullable .
+  addMod Nullable .
+  withOption (#notNull .~ False)
 
 nullableAs ::
-  ∀ name a p0 sel p s0 s1 .
-  MkNullable a p0 sel p =>
-  MapModDd Nullable ('DdK sel p (Maybe a) 'Prim) s0 =>
+  ∀ name s0 s1 s2 s3 .
   WithOption s0 s1 =>
-  Rename s1 (SetName s1 name) =>
-  p0 ->
-  Dd (SetName s1 name)
+  AddMod Nullable s1 s2 =>
+  MkNullable s2 s3 =>
+  Rename s3 (SetName s3 name) =>
+  Dd s0 ->
+  Dd (SetName s3 name)
 nullableAs =
-  rename . nullable @a
+  rename . nullable

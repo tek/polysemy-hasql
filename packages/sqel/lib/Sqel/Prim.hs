@@ -4,16 +4,26 @@ import Generics.SOP (I (I), NP (Nil, (:*)))
 
 import Sqel.Column (MkColumn (column), Nullable, columnAs, nullable)
 import Sqel.Data.ColumnOptions (ColumnOptions)
-import Sqel.Data.Dd (ConCol, Dd, DdK (DdK), DdType, Struct (Prim))
+import Sqel.Data.Dd (ConCol, Dd (Dd), DdK (DdK), DdType, Struct (Prim))
 import Sqel.Data.MigrationParams (
   MigrationDefault (MigrationDefault),
   MigrationDelete (MigrationDelete),
   MigrationRename (MigrationRename),
   )
-import Sqel.Data.Mods (MapModDd, Mods (Mods), NoMods, SymNP, setMod, symMods)
+import Sqel.Data.Mods (
+  ArrayColumn (ArrayColumn),
+  EnumColumn,
+  MapMod,
+  Mods (Mods),
+  NoMods,
+  ReadShowColumn,
+  SymNP,
+  setMod,
+  symMods,
+  )
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol))
-import Sqel.Mods (PrimValueCodec, primJsonValue)
+import Sqel.Mods (PrimValueCodec, primEnumValue, primJsonValue, primReadShowValue)
 import Sqel.SOP.Constraint (ProductGCode)
 
 mods ::
@@ -50,6 +60,18 @@ primJson ::
 primJson =
   column primJsonValue
 
+enum ::
+  ∀ a .
+  Dd ('DdK 'SelAuto (Mods [PgPrimName, EnumColumn]) a 'Prim)
+enum =
+  column primEnumValue
+
+readShow ::
+  ∀ a .
+  Dd ('DdK 'SelAuto (Mods [PgPrimName, ReadShowColumn]) a 'Prim)
+readShow =
+  column primReadShowValue
+
 primNullable ::
   ∀ a .
   Dd ('DdK 'SelAuto (Mods [Nullable, ColumnOptions]) (Maybe a) 'Prim)
@@ -65,16 +87,24 @@ primAs =
 
 primDef ::
   ∀ s0 s1 .
-  MapModDd (MigrationDefault (DdType s0)) s0 s1 =>
+  MapMod (MigrationDefault (DdType s0)) s0 s1 =>
   DdType s0 ->
   Dd s0 ->
   Dd s1
 primDef a =
   setMod (MigrationDefault a)
 
+-- TODO are composite arrays legal?
+array ::
+  ∀ f a p sel s .
+  Dd ('DdK sel (Mods p) a s) ->
+  Dd ('DdK sel (Mods (ArrayColumn f : p)) (f a) s)
+array (Dd sel (Mods p) s) =
+    Dd sel (Mods (I ArrayColumn :* p)) s
+
 migrateRename ::
   ∀ name s0 s1 .
-  MapModDd (MigrationRename name) s0 s1 =>
+  MapMod (MigrationRename name) s0 s1 =>
   Dd s0 ->
   Dd s1
 migrateRename =
@@ -82,7 +112,7 @@ migrateRename =
 
 migrateDelete ::
   ∀ s0 s1 .
-  MapModDd MigrationDelete s0 s1 =>
+  MapMod MigrationDelete s0 s1 =>
   Dd s0 ->
   Dd s1
 migrateDelete =

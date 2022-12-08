@@ -1,9 +1,12 @@
 module Sqel.Codec.PrimDecoder where
 
 import qualified Chronos as Chronos
+import qualified Data.Map.Strict as Map
 import Data.Scientific (Scientific)
+import qualified Data.Set as Set
 import Data.Time (Day, DiffTime, LocalTime (LocalTime), TimeOfDay (TimeOfDay), TimeZone, UTCTime, toModifiedJulianDay)
 import Data.UUID (UUID)
+import Data.Vector (Vector)
 import Hasql.Decoders (
   Value,
   bool,
@@ -11,22 +14,29 @@ import Hasql.Decoders (
   char,
   custom,
   date,
+  enum,
   float4,
   float8,
   int2,
   int4,
   int8,
   interval,
+  listArray,
+  nonNullable,
   numeric,
+  refine,
   text,
   time,
   timestamp,
   timestamptz,
   timetz,
   uuid,
+  vectorArray,
   )
 import Path (Abs, Dir, File, Path, Rel, parseAbsDir, parseAbsFile, parseRelDir, parseRelFile)
 import Prelude hiding (Enum, bool)
+
+import Sqel.SOP.Enum (EnumTable (enumTable))
 
 class PrimDecoder a where
   primDecoder :: Value a
@@ -155,3 +165,40 @@ localTimeToDatetime (LocalTime d t) =
 instance PrimDecoder Chronos.Datetime where
   primDecoder =
     localTimeToDatetime <$> primDecoder
+
+class ArrayDecoder f a where
+  arrayDecoder :: Value a -> Value (f a)
+
+instance ArrayDecoder [] a where
+  arrayDecoder =
+    listArray . nonNullable
+
+instance ArrayDecoder NonEmpty a where
+  arrayDecoder =
+    refine (maybeToRight "no elements in NonEmpty field" . nonEmpty) .
+    listArray .
+    nonNullable
+
+instance ArrayDecoder Vector a where
+  arrayDecoder =
+    vectorArray . nonNullable
+
+instance (
+    Ord a
+  ) => ArrayDecoder Set a where
+  arrayDecoder =
+    refine (Right . Set.fromList) .
+    listArray .
+    nonNullable
+
+enumDecoder ::
+  EnumTable a =>
+  Value a
+enumDecoder =
+  enum (`Map.lookup` enumTable)
+
+readDecoder ::
+  Read a =>
+  Value a
+readDecoder =
+  enum (readMaybe . fromText)

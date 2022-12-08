@@ -7,14 +7,15 @@ import Sqel.Codec (
   ColumnDecoder (columnDecoder, columnDecoderNullable),
   ColumnEncoder (columnEncoder, columnEncoderIgnore, columnEncoderNullable),
   PrimColumn (primDecoder, primEncoder),
+  fullPrimCodec,
   )
+import Sqel.Codec.PrimDecoder (ArrayDecoder (arrayDecoder), enumDecoder, readDecoder)
+import Sqel.Codec.PrimEncoder (arrayEncoder)
 import Sqel.Codec.Product (ProdCodec (prodCodec))
 import Sqel.Codec.Sum (ConCodec (conCodec), SumCodec (sumCodec), ignoreEncoder)
-import Sqel.Mods (PrimCodec (PrimCodec), PrimValueCodec, PrimValueEncoder)
 import Sqel.Column (Nullable (Nullable), ignoreDecoder)
 import qualified Sqel.Data.Codec as Codec
 import Sqel.Data.Codec (Codec (Codec), Decoder (Decoder), Encoder (Encoder), FullCodec, ValueCodec)
-import Sqel.Data.Mods (Mods (Mods))
 import Sqel.Data.Dd (
   Comp (Prod, Sum),
   CompInc,
@@ -25,7 +26,10 @@ import Sqel.Data.Dd (
   ProdType (Con, Reg),
   Struct (Comp, Prim),
   )
+import Sqel.Data.Mods (ArrayColumn (ArrayColumn), EnumColumn (EnumColumn), Mods (Mods), ReadShowColumn (ReadShowColumn))
 import Sqel.Data.Sel (Sel (SelSymbol))
+import Sqel.Mods (PrimCodec (PrimCodec), PrimValueCodec, PrimValueEncoder)
+import Sqel.SOP.Enum (EnumTable)
 
 type CompCodec :: Comp -> CompInc -> Type -> (Type -> Type) -> [Type] -> Constraint
 class CompCodec c i a b as | a -> as where
@@ -134,6 +138,7 @@ instance ReifyPrimCodec Encoder (PrimValueEncoder a : ps) a where
   reifyPrimCodec (I (PrimCodec encoder) :* _) =
     Encoder (columnEncoder encoder) (columnEncoderIgnore encoder)
 
+-- TODO this could also produce NullableOrNot
 instance (
     ReifyPrimCodec Encoders.Value ps a
   ) => ReifyPrimCodec Encoder (Nullable : ps) (Maybe a) where
@@ -141,6 +146,54 @@ instance (
       Encoder (columnEncoderNullable encoder) (ignoreEncoder encoder)
       where
         encoder = reifyPrimCodec @Encoders.Value ps
+
+instance (
+    Show a,
+    EnumTable a
+  ) => ReifyPrimCodec FullCodec (EnumColumn : ps) a where
+  reifyPrimCodec (I EnumColumn :* _) =
+    fullPrimCodec (Encoders.enum show) enumDecoder
+
+instance (
+    Show a,
+    EnumTable a
+  ) => ReifyPrimCodec ValueCodec (EnumColumn : ps) a where
+  reifyPrimCodec (I EnumColumn :* _) =
+    Codec (Encoders.enum show) enumDecoder
+
+instance (
+    Show a,
+    Read a
+  ) => ReifyPrimCodec FullCodec (ReadShowColumn : ps) a where
+  reifyPrimCodec (I ReadShowColumn :* _) =
+    fullPrimCodec (Encoders.enum show) readDecoder
+
+instance (
+    Show a,
+    Read a
+  ) => ReifyPrimCodec ValueCodec (ReadShowColumn : ps) a where
+  reifyPrimCodec (I ReadShowColumn :* _) =
+    Codec (Encoders.enum show) readDecoder
+
+instance (
+    ReifyPrimCodec ValueCodec ps a,
+    Foldable f,
+    ArrayDecoder f a
+  ) => ReifyPrimCodec ValueCodec (ArrayColumn f : ps) (f a) where
+  reifyPrimCodec (I ArrayColumn :* ps) =
+    Codec (arrayEncoder encoder) (arrayDecoder decoder)
+      where
+        Codec encoder decoder = reifyPrimCodec @ValueCodec ps
+
+instance (
+    ReifyPrimCodec ValueCodec ps a,
+    Foldable f,
+    ArrayDecoder f a
+  ) => ReifyPrimCodec FullCodec (ArrayColumn f : ps) (f a) where
+  reifyPrimCodec (I ArrayColumn :* ps) =
+    fullPrimCodec (arrayEncoder encoder) (arrayDecoder decoder)
+      where
+        Codec encoder decoder = reifyPrimCodec @ValueCodec ps
 
 instance (
     DefaultPrimCodec b a

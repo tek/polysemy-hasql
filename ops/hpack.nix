@@ -159,6 +159,7 @@ in {
         "tasty"
         "time"
         "uuid"
+        "vector"
       ];
     };
 

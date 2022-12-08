@@ -6,16 +6,20 @@ import Data.Time (Day (ModifiedJulianDay), DiffTime, LocalTime (LocalTime), Time
 import Data.UUID (UUID)
 import Hasql.Encoders (
   Value,
+  array,
   bool,
   bytea,
   char,
   date,
+  dimension,
+  element,
   float4,
   float8,
   int2,
   int4,
   int8,
   interval,
+  nonNullable,
   numeric,
   text,
   time,
@@ -133,3 +137,13 @@ datetimeToLocalTime (Chronos.Datetime d t) =
 instance PrimEncoder Chronos.Datetime where
   primEncoder =
      datetimeToLocalTime >$< primEncoder
+
+arrayEncoder ::
+  Foldable f =>
+  Value a ->
+  Value (f a)
+arrayEncoder =
+  array .
+  dimension foldl' .
+  element .
+  nonNullable

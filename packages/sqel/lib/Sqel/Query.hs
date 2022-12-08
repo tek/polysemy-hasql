@@ -23,10 +23,6 @@ class CheckedQ' (check :: Maybe Constraint) (s :: DdK) where
 instance ToSelectExpr s => CheckedQ' 'Nothing s where
   checkedQ' = toSelectExpr NoPrefix
 
--- instance err => CheckedQ' ('Just err) s where
---   checkedQ' _ =
---     error "unreachable"
-
 class CheckedQ (qs :: DdK) (ts :: DdK) where
   checkedQ :: Dd qs -> SelectExpr
 

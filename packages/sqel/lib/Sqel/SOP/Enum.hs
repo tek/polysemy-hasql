@@ -2,22 +2,22 @@
 {-# language CPP #-}
 #define sop5 MIN_VERSION_generics_sop(0,5,0)
 
-module Polysemy.Hasql.SOP.Enum where
+module Sqel.SOP.Enum where
 
 import qualified Data.Map.Strict as Map
 import qualified Generics.SOP as SOP
 import Generics.SOP (
   I,
-  K(K),
-  NP(Nil),
+  K (K),
+  NP (Nil),
   NS,
-  SOP(SOP),
+  SOP (SOP),
   constructorName,
   hcollapse,
   hczipWith,
   injections,
-  type (-.->),
   unK,
+  type (-.->),
   )
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf, gto)
 import qualified Generics.SOP.Type.Metadata as T
