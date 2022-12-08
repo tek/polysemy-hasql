@@ -1,17 +1,17 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-hasql
-version:        0.3.0.0
+version:        0.0.1.0
 synopsis:       Polysemy effects for databases
 description:    See https://hackage.haskell.org/package/polysemy-hasql/docs/Polysemy-Hasql.html
 category:       Database
 author:         Torsten Schmits
 maintainer:     hackage@tryp.io
-copyright:      2022 Torsten Schmits
+copyright:      2023 Torsten Schmits
 license:        BSD-2-Clause-Patent
 license-file:   LICENSE
 build-type:     Simple
@@ -19,43 +19,33 @@ build-type:     Simple
 library
   exposed-modules:
       Polysemy.Hasql
-      Polysemy.Hasql.AtomicState
       Polysemy.Hasql.Data.ConnectionState
       Polysemy.Hasql.Data.ConnectionTag
-      Polysemy.Hasql.Data.ExistingColumn
       Polysemy.Hasql.Data.InitDb
       Polysemy.Hasql.Data.QueueOutputError
-      Polysemy.Hasql.Data.Set
       Polysemy.Hasql.Database
       Polysemy.Hasql.Effect.Database
       Polysemy.Hasql.Effect.DbConnectionPool
       Polysemy.Hasql.Effect.DbTable
       Polysemy.Hasql.Effect.Transaction
-      Polysemy.Hasql.InitDbError
+      Polysemy.Hasql.Interpreter.AtomicState
       Polysemy.Hasql.Interpreter.Database
       Polysemy.Hasql.Interpreter.DbConnectionPool
+      Polysemy.Hasql.Interpreter.DbTable
+      Polysemy.Hasql.Interpreter.Query
+      Polysemy.Hasql.Interpreter.Reader
       Polysemy.Hasql.Interpreter.Store
       Polysemy.Hasql.Interpreter.Transaction
       Polysemy.Hasql.Migration
-      Polysemy.Hasql.Query.Any
-      Polysemy.Hasql.Query.Basic
-      Polysemy.Hasql.Query.Many
-      Polysemy.Hasql.Query.One
       Polysemy.Hasql.Queue
       Polysemy.Hasql.Queue.Data.Queue
       Polysemy.Hasql.Queue.Data.Queued
       Polysemy.Hasql.Queue.Input
       Polysemy.Hasql.Queue.Output
-      Polysemy.Hasql.Reader
+      Polysemy.Hasql.Queue.Store
       Polysemy.Hasql.Session
-      Polysemy.Hasql.SOP.Enum
       Polysemy.Hasql.Statement
       Polysemy.Hasql.Statement.Transaction
-      Polysemy.Hasql.Table
-      Polysemy.Hasql.Table.Enum
-      Polysemy.Hasql.Table.Query.Text
-      Polysemy.Hasql.Table.Query.Update
-      Polysemy.Hasql.Table.SumIndex
       Polysemy.Hasql.Test.Database
       Polysemy.Hasql.Transaction
   hs-source-dirs:
@@ -125,26 +115,22 @@ library
       ViewPatterns
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin
   build-depends:
-      async
+      async ==2.2.*
     , base >=4.12 && <5
     , containers
-    , exon
-    , extra
-    , generics-sop
-    , hasql >=1.4.3
+    , exon ==1.4.*
+    , generics-sop ==0.5.*
+    , hasql ==1.6.*
     , polysemy
-    , polysemy-conc
-    , polysemy-db
-    , polysemy-log
+    , polysemy-db >=0.0.1.0 && <0.1
     , polysemy-plugin
-    , polysemy-time
-    , postgresql-libpq
-    , prelate >=0.2
-    , sqel
-    , stm-chans
-    , torsor
+    , postgresql-libpq ==0.9.*
+    , prelate >=0.5.1 && <0.6
+    , sqel >=0.0.1 && <0.1
+    , stm-chans ==3.0.*
+    , torsor ==0.1.*
     , transformers
-    , uuid
+    , uuid ==1.3.*
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)
@@ -155,30 +141,22 @@ test-suite polysemy-hasql-integration
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Polysemy.Hasql.Test.AnyTest
       Polysemy.Hasql.Test.ArrayTest
       Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
-      Polysemy.Hasql.Test.DeleteTest
-      Polysemy.Hasql.Test.Dsl.MigrationTest
-      Polysemy.Hasql.Test.Dsl.QueryTest
-      Polysemy.Hasql.Test.Dsl.SimpleQueryTest
-      Polysemy.Hasql.Test.Dsl.SumTest
-      Polysemy.Hasql.Test.Dsl.TableSchemaTest
-      Polysemy.Hasql.Test.Dsl.UnaryConTest
-      Polysemy.Hasql.Test.DslTest
+      Polysemy.Hasql.Test.DefaultTest
       Polysemy.Hasql.Test.JsonTest
+      Polysemy.Hasql.Test.MigrationTest
       Polysemy.Hasql.Test.QueryTest
       Polysemy.Hasql.Test.QueueTest
       Polysemy.Hasql.Test.RetryTest
-      Polysemy.Hasql.Test.Run
-      Polysemy.Hasql.Test.SingletonTest
-      Polysemy.Hasql.Test.StoreUpdateTest
-      Polysemy.Hasql.Test.SumFieldTest
-      Polysemy.Hasql.Test.SumTableTest
+      Polysemy.Hasql.Test.RunIntegration
+      Polysemy.Hasql.Test.SimpleQueryTest
+      Polysemy.Hasql.Test.SumQueryTest
+      Polysemy.Hasql.Test.SumTest
       Polysemy.Hasql.Test.TransactionTest
-      Polysemy.Hasql.Test.UnarySumTest
-      Polysemy.Hasql.Test.UpsertTest
+      Polysemy.Hasql.Test.TransformMigrationTest
+      Polysemy.Hasql.Test.UnaryConTest
       Polysemy.Hasql.Test.WithInitTest
   hs-source-dirs:
       integration
@@ -247,126 +225,23 @@ test-suite polysemy-hasql-integration
       ViewPatterns
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
+      aeson ==2.0.*
     , base >=4.12 && <5
-    , exon
-    , first-class-families
-    , generics-sop
-    , hasql >=1.4.3
-    , hedgehog
-    , lens
-    , path
+    , exon ==1.4.*
+    , generics-sop ==0.5.*
+    , hasql ==1.6.*
+    , hedgehog ==1.1.*
     , polysemy
-    , polysemy-conc
-    , polysemy-db
-    , polysemy-hasql
-    , polysemy-log
+    , polysemy-db >=0.0.1.0 && <0.1
+    , polysemy-hasql >=0.0.1.0 && <0.1
     , polysemy-plugin
-    , polysemy-test
-    , polysemy-time
-    , prelate >=0.2
-    , prettyprinter
-    , sqel
-    , tasty
-    , time
-    , uuid
-  mixins:
-      base hiding (Prelude)
-    , prelate (Prelate as Prelude)
-    , prelate hiding (Prelate)
-  default-language: Haskell2010
-
-test-suite polysemy-hasql-unit
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  other-modules:
-      Polysemy.Hasql.Test.EnumTest
-      Polysemy.Hasql.Test.HasGeneric
-      Polysemy.Hasql.Test.SqlCodeTest
-      Polysemy.Hasql.Test.StatementTest
-  hs-source-dirs:
-      test
-  default-extensions:
-      StandaloneKindSignatures
-      AllowAmbiguousTypes
-      ApplicativeDo
-      BangPatterns
-      BinaryLiterals
-      BlockArguments
-      ConstraintKinds
-      DataKinds
-      DefaultSignatures
-      DeriveAnyClass
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveLift
-      DeriveTraversable
-      DerivingStrategies
-      DerivingVia
-      DisambiguateRecordFields
-      DoAndIfThenElse
-      DuplicateRecordFields
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
-      FunctionalDependencies
-      GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
-      LambdaCase
-      LiberalTypeSynonyms
-      MultiParamTypeClasses
-      MultiWayIf
-      NamedFieldPuns
-      OverloadedLabels
-      OverloadedLists
-      OverloadedStrings
-      PackageImports
-      PartialTypeSignatures
-      PatternGuards
-      PatternSynonyms
-      PolyKinds
-      QuantifiedConstraints
-      QuasiQuotes
-      RankNTypes
-      RecordWildCards
-      RecursiveDo
-      RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
-      TemplateHaskell
-      TupleSections
-      TypeApplications
-      TypeFamilies
-      TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
-      UndecidableInstances
-      UnicodeSyntax
-      ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      aeson
-    , base >=4.12 && <5
-    , chronos
-    , exon
-    , first-class-families
-    , generics-sop
-    , hasql >=1.4.3
-    , path
-    , polysemy
-    , polysemy-db
-    , polysemy-hasql
-    , polysemy-plugin
-    , polysemy-test
-    , prelate >=0.2
-    , sqel
-    , tasty
+    , polysemy-test ==0.7.*
+    , prelate >=0.5.1 && <0.6
+    , sqel >=0.0.1 && <0.1
+    , tasty ==1.4.*
+    , uuid ==1.3.*
+    , vector ==0.12.*
+    , zeugma ==0.7.*
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

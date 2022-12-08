@@ -1,19 +1,15 @@
 {
-  description = "Polysemy Effects for Databases";
+  description = "Polysemy effects for databases";
 
   inputs = {
     hix.url = git+https://git.tryp.io/tek/hix;
+    hls.url = "github:haskell/haskell-language-server?ref=1.9.0.0";
     prelate.url = git+https://git.tryp.io/tek/prelate;
+    sqel.url = git+https://git.tryp.io/tek/sqel;
   };
 
-  outputs = { hix, prelate, ... }:
+  outputs = { hix, hls, prelate, sqel, ... }:
   let
-
-    all = { hackage, jailbreak, source, notest, unbreak, ... }: {
-      fcf-containers = notest (hackage "0.6.0" "0wxc5213dcxkmd2j1vkhjqsqsxipv8hbq3jnc0ll4xzrlpqic3wf");
-      hasql-dynamic-statements = hackage "0.3.1.1" "0pq67kknygp9qjhz5afwmbllf8391czb0m6x9ivla4ddq0cp8plc";
-      hasql-implicits = jailbreak unbreak;
-    };
 
     vm = {
       name = "polysemy-db";
@@ -36,14 +32,13 @@
 
   in hix.lib.pro ({ config, lib, ... }: {
     main = "polysemy-hasql";
-    overrides = { inherit all; dev = all; };
-    depsFull = [prelate];
+    depsFull = [sqel prelate];
     packages = {
-      sqel = ./packages/sqel;
       polysemy-db = ./packages/db;
       polysemy-hasql = ./packages/hasql;
+      polysemy-hasql-test = ./packages/hasql-test;
     };
-    devGhc.compiler = "ghc902";
+    devGhc.compiler = "ghc925";
     ghci = {
       args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
       preludePackage = "prelate";
@@ -51,10 +46,12 @@
       extensions = ["StandaloneKindSignatures"];
     };
     hpack.packages = import ./ops/hpack.nix { inherit config lib; };
+    hackage.versionFile = "ops/version.nix";
     ghcid = {
       shellConfig = { inherit vm; };
       testConfig = conf: { inherit env; vm.enable = lib.mkForce (conf.type == "integration"); };
     };
     compat.enable = false;
+    shell.hls.package = hls.packages.${config.system}.haskell-language-server-925;
   });
 }

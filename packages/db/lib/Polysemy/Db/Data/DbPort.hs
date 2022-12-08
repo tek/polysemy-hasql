@@ -1,12 +1,11 @@
 module Polysemy.Db.Data.DbPort where
 
 newtype DbPort =
-  DbPort Int
-  deriving stock (Eq, Show)
-  deriving newtype (Num, Real, Enum, Integral, Ord, Read)
+  DbPort { unDbPort :: Int }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (Read, Num, Real, Enum, Integral, Ord)
 
 instance Default DbPort where
-  def =
-    5432
+  def = 5432
 
 json ''DbPort

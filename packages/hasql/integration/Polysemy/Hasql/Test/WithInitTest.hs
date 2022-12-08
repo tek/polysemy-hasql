@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.WithInitTest where
 
+import Conc (interpretAtomic)
 import Hasql.Decoders (column, int8, nonNullable)
-import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (Hedgehog, UnitTest, assertEq)
 import Sqel.Statement (unprepared)
@@ -9,7 +9,7 @@ import Sqel.Statement (unprepared)
 import Polysemy.Hasql.Data.InitDb (InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 prog ::
   Members [Hedgehog IO, Database, AtomicState Int] r =>

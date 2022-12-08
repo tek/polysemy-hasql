@@ -17,32 +17,6 @@ data ConnectionSource =
   |
   Supplied ConnectionTag Connection
 
--- |This effect provides the capability to execute 'Statement's.
--- Additionally, it exposes managed access to the raw 'Connection' resource and automatic table initialization as
--- higher-order actions.
---
--- With the minimal stack, an SQL query can be executed in two fashions.
--- One is to use automatically derived codecs:
---
--- @
--- prog :: Member Database r => Sem r ()
--- prog = do
---   user :: Maybe User <- Database.sql () "select * from users where id = 1"
---   user :: [User] <- Database.sql ("guest", True) "select * from users where name = $1 and locked = $2"
--- @
---
--- The other works by providing an explicit 'Statement':
---
--- @
--- statement :: Statement Text User
--- statement = ...
---
--- prog :: Member Database r => Sem r ()
--- prog = do
---   user <- Database.runStatement "guest" statement
--- @
---
--- For documentation on the individual constructors, see the module page.
 data Database :: Effect where
   Tag :: Database m ConnectionTag
   Release :: Database m ()

@@ -1,12 +1,11 @@
 module Polysemy.Db.Data.DbHost where
 
 newtype DbHost =
-  DbHost Text
-  deriving stock (Eq, Show)
-  deriving newtype (IsString)
+  DbHost { unDbHost :: Text }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)
 
 instance Default DbHost where
-  def =
-    "localhost"
+  def = "localhost"
 
 json ''DbHost

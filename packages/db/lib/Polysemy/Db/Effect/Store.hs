@@ -1,32 +1,20 @@
 module Polysemy.Db.Effect.Store where
 
 import Data.UUID (UUID)
-
+import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uid)
 
--- |A 'Store' is characterized by a record type @d@ and a primary key type @i@.
--- The parameter is usually something like 'UUID' or 'Int', and it is combined with the record in the data type 'Uid'.
--- Programs using 'Store' need no knowledge about the database that might be backing the effect:
---
--- @
--- data User { name :: Text }
--- progStore :: Member (Store Int User) r => Sem r (Maybe (Uid Int User))
--- progStore = do
---   Store.insert (Uid 1 (User "admin"))
---   Store.upsert (Uid 1 (User "root"))
---   Store.upsert (Uid 2 (User "guest"))
---   _ \<- Store.delete 2
---   Store.fetch 1
--- @
-data Store i d :: Effect where
-  Insert :: Uid i d -> Store i d m ()
-  Upsert :: Uid i d -> Store i d m ()
-  Delete :: i -> Store i d m (Maybe (Uid i d))
-  DeleteAll :: Store i d m (Maybe (NonEmpty (Uid i d)))
-  Fetch :: i -> Store i d m (Maybe (Uid i d))
-  FetchAll :: Store i d m (Maybe (NonEmpty (Uid i d)))
+data QStore f q d :: Effect where
+  Insert :: d -> QStore f i d m ()
+  Upsert :: d -> QStore f i d m ()
+  Delete :: i -> QStore f i d m (f d)
+  DeleteAll :: QStore f i d m [d]
+  Fetch :: i -> QStore f i d m (f d)
+  FetchAll :: QStore f i d m [d]
 
-makeSem ''Store
+makeSem ''QStore
+
+type Store i d = QStore Maybe i (Uid i d)
 
 type UuidStore d =
   Store UUID d
@@ -38,3 +26,29 @@ type family StoreEffects i e ds :: EffectRow where
 type family Stores i e ds r :: Constraint where
   Stores _ _ '[] _ = ()
   Stores i e (d : ds) r = (Member (Store i d !! e) r, Stores i e ds r)
+
+elem ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  Sem r Bool
+elem id' =
+  isJust <$> fetch id'
+
+fetchPayload ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  Sem r (Maybe d)
+fetchPayload id' =
+  fmap Uid.payload <$> fetch id'
+
+alter ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  (d -> d) ->
+  Sem r ()
+alter id' f = do
+  cur <- fetch id'
+  traverse_ (upsert . (#payload %~ f)) cur

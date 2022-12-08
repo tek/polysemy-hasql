@@ -1,5 +1,16 @@
 module Polysemy.Hasql.Queue.Input where
 
+import Conc (
+  ClockSkewConfig,
+  Monitor,
+  Restart,
+  RestartingMonitor,
+  interpretAtomic,
+  interpretMonitorRestart,
+  monitor,
+  monitorClockSkew,
+  restart,
+  )
 import Control.Concurrent (threadWaitRead)
 import qualified Control.Concurrent.Async as Concurrent
 import Control.Concurrent.STM (atomically)
@@ -11,49 +22,31 @@ import qualified Data.UUID as UUID
 import Data.UUID (UUID)
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Exon (exon)
-import Generics.SOP (NP (Nil, (:*)))
 import Hasql.Connection (Connection, withLibPQConnection)
-import qualified Polysemy.Conc as Monitor
-import Polysemy.Conc (
-  ClockSkewConfig,
-  Monitor,
-  Restart,
-  RestartingMonitor,
-  interpretAtomic,
-  interpretMonitorRestart,
-  monitorClockSkew,
-  )
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Sqel.Data.Uid as Uid
-import Sqel.Data.Uid (Uuid)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import Sqel.SOP.Constraint (symbolText)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
-import qualified Polysemy.Log as Log
-import qualified Polysemy.Time as Time
+import qualified Log
+import qualified Time as Time
 import Prelude hiding (Queue, listen)
+import Sqel.Data.Sql (sql)
+import qualified Sqel.Data.Uid as Uid
+import Sqel.Data.Uid (Uuid)
+import Sqel.SOP.Constraint (symbolText)
 import Torsor (Torsor)
 
 import Polysemy.Hasql.Data.ConnectionTag (ConnectionTag (NamedTag))
 import Polysemy.Hasql.Data.InitDb (InitDb (InitDb))
-import Sqel.Data.Sql (sql)
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
-import Sqel.Codec (PrimColumn)
-import Sqel.Data.Dd (DbTypeName)
-import Sqel.Prim (prim, primAs, primJson)
-import Sqel.Product (uid)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database, Databases, withDatabaseUnique)
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queue (Queue, QueueName (QueueName))
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
-import Sqel.Query (checkQuery)
-import Sqel.PgType (tableSchema)
 
 -- | Try to fetch a notification, and if there is none, wait on the connection's file descriptor until some data is
 -- received.
@@ -81,7 +74,7 @@ tryDequeue connection = do
       embed (LibPQ.socket connection) >>= \case
         Just fd -> do
           status "Waiting for activity"
-          Monitor.monitor (embed (threadWaitRead fd))
+          monitor (embed (threadWaitRead fd))
           status "Activity received"
           Right Nothing <$ embed (LibPQ.consumeInput connection)
         Nothing ->
@@ -120,7 +113,7 @@ initQueue ::
 initQueue write = do
   QueueName name <- ask
   Log.trace [exon|Initializing queue '#{name}'|]
-  waiting <- resumeAs Nothing Store.deleteAll
+  waiting <- resumeAs Nothing (nonEmpty <$> Store.deleteAll)
   traverse_ (traverse_ write . processMessages) waiting
   listen
 
@@ -203,14 +196,14 @@ startDequeueLoop ::
 startDequeueLoop errorDelay errorHandler queue = do
   QueueName name <- ask
   withDatabaseUnique (Just (NamedTag [exon|dequeue-#{name}|])) do
-    finally (Monitor.restart (dequeueLoop errorDelay (insertAt @0 . errorHandler) queue)) unlisten
+    finally (restart (dequeueLoop errorDelay (insertAt @0 . errorHandler) queue)) unlisten
 
-interpretInputDbQueue ::
+interpretInputQueue ::
   ∀ d r .
   Member (Embed IO) r =>
   TBMQueue d ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueue queue =
+interpretInputQueue queue =
   interpret \case
     Input ->
       embed (atomically (readTBMQueue queue))
@@ -230,49 +223,38 @@ dequeueThread errorDelay errorHandler = do
   pure (handle, queue)
 
 interpretInputDbQueueListen ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (name :: Symbol) d t dt u r .
   Ord t =>
   TimeUnit u =>
-  KnownSymbol queue =>
+  KnownSymbol name =>
   Members [RestartingMonitor, Final IO] r =>
   Members [Store UUID (Queued t d) !! DbError, Databases, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueListen errorDelay errorHandler sem =
-  runReader (QueueName (symbolText @queue)) $
+  runReader (QueueName (symbolText @name)) $
   bracket acquire release \ (_, queue) -> do
-    interpretInputDbQueue queue (raiseUnder sem)
+    interpretInputQueue queue (raiseUnder sem)
   where
     acquire = dequeueThread errorDelay (raise . errorHandler)
     release (handle, _) = cancel handle
 
-interpretInputDbQueueFull ::
-  ∀ (queue :: Symbol) d t diff dt u r name .
-  ToJSON d =>
-  FromJSON d =>
+interpretInputQueueDb ::
+  ∀ qname u t dt d diff r .
   TimeUnit u =>
-  PrimColumn t =>
   TimeUnit diff =>
   Torsor t diff =>
-  Queue queue t =>
-  DbTypeName d name =>
-  KnownSymbol (AppendSymbol "Queued" name) =>
-  Members [Databases, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO, Final IO] r =>
-  Member Race r =>
+  Queue qname t =>
+  Members [Store UUID (Queued t d) !! DbError, Databases] r =>
+  Members [Time t dt, Log, Resource, Async, Race, Embed IO, Final IO] r =>
   u ->
   ClockSkewConfig ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueFull errorDelay csConfig errorHandler =
-  interpretManagedTable ts .
-  interpretStoreDb ts (checkQuery query table) .
+interpretInputQueueDb errorDelay csConfig errorHandler =
   interpretAtomic Nothing .
   interpretMonitorRestart (monitorClockSkew csConfig) .
   raiseUnder .
-  interpretInputDbQueueListen @queue errorDelay (insertAt @0 . errorHandler) .
-  raiseUnder3
-  where
-    ts = tableSchema table
-    query = primAs @"id"
-    table = uid prim (prim :* primJson :* Nil)
+  interpretInputDbQueueListen @qname errorDelay (insertAt @0 . errorHandler) .
+  raiseUnder

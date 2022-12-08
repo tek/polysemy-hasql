@@ -6,14 +6,14 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (Hedgehog, UnitTest, assertEq)
-import Polysemy.Time (Seconds (Seconds))
+import Time (Seconds (Seconds))
 import Sqel.Statement (unprepared)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Databases, withDatabaseUnique)
 import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool
 import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 prog ::
   Members [Hedgehog IO, Databases, DbConnectionPool !! DbConnectionError, Stop DbError, Embed IO] r =>

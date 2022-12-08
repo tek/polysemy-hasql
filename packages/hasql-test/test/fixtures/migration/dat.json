@@ -1,0 +1,257 @@
+[
+  {
+    "name": "dat",
+    "statementsMigration": [
+      "alter table dat drop column old",
+      "alter table dat add column size bigint",
+      "update dat set size = $1",
+      "alter table dat alter column size set not null",
+      "alter table dat add column pord sqel_type__pord"
+    ],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"old\" text not null)"
+    ],
+    "table": [
+      {
+        "name": "id",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "old",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "text",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      }
+    ],
+    "types": []
+  },
+  {
+    "name": "dat",
+    "statementsMigration": [
+      "alter table dat drop column size",
+      "alter table dat add column number bigint",
+      "update dat set number = $1",
+      "alter table dat alter column number set not null",
+      "alter type sqel_type__pord add attribute p2 text"
+    ],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"size\" bigint not null, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint)"
+    ],
+    "table": [
+      {
+        "name": "id",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "size",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "pord",
+        "pgType": {
+          "tag": "ColumnComp",
+          "pgType": "sqel_type__pord",
+          "unique": false,
+          "constraints": ["not null"]
+        }
+      }
+    ],
+    "types": [
+      {
+        "columns": [
+          {
+            "name": "p1",
+            "pgType": {
+              "constraints": [
+                "not null"
+              ],
+              "name": "bigint",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          }
+        ],
+        "name": "sqel_type__pord"
+      }
+    ]
+  },
+  {
+    "name": "dat",
+    "statementsMigration": [
+      "alter table dat rename column number to num",
+      "alter table dat add column name text",
+      "update dat set name = $1",
+      "alter table dat alter column name set not null"
+    ],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"number\" bigint not null, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+    ],
+    "table": [
+      {
+        "name": "id",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "number",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "pord",
+        "pgType": {
+          "tag": "ColumnComp",
+          "pgType": "sqel_type__pord",
+          "unique": false,
+          "constraints": ["not null"]
+        }
+      }
+    ],
+    "types": [
+      {
+        "columns": [
+          {
+            "name": "p1",
+            "pgType": {
+              "constraints": [
+                "not null"
+              ],
+              "name": "bigint",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          },
+          {
+            "name": "p2",
+            "pgType": {
+              "constraints": [],
+              "name": "text",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          }
+        ],
+        "name": "sqel_type__pord"
+      }
+    ]
+  },
+  {
+    "name": "dat",
+    "statementsMigration": [],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"name\" text not null, \"num\" bigint not null, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+    ],
+    "table": [
+      {
+        "name": "id",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "name",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "text",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "num",
+        "pgType": {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      },
+      {
+        "name": "pord",
+        "pgType": {
+          "tag": "ColumnComp",
+          "pgType": "sqel_type__pord",
+          "unique": false,
+          "constraints": ["not null"]
+        }
+      }
+    ],
+    "types": [
+      {
+        "columns": [
+          {
+            "name": "p1",
+            "pgType": {
+              "constraints": [
+                "not null"
+              ],
+              "name": "bigint",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          },
+          {
+            "name": "p2",
+            "pgType": {
+              "constraints": [],
+              "name": "text",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          }
+        ],
+        "name": "sqel_type__pord"
+      }
+    ]
+  }
+]

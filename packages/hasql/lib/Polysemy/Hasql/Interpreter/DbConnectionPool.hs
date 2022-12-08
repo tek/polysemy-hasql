@@ -21,7 +21,7 @@ import Polysemy.Db.Data.DbUser (DbUser (DbUser))
 import qualified Text.Show as Show
 
 import Polysemy.Hasql.Data.ConnectionTag (ConnectionTag)
-import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool (Acquire, Free, Kill, Release, UnsafeGet, Use))
+import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool (Acquire, Config, Free, Kill, Release, UnsafeGet, Use))
 
 data KillCommand =
   KillCommand
@@ -115,7 +115,7 @@ releaseNative ::
   Members [Stop DbConnectionError, Embed IO] r =>
   Connection ->
   Sem r ()
-releaseNative connection = do
+releaseNative connection =
   stopTryIOError DbConnectionError.Release (Connection.release connection)
 
 release ::
@@ -216,11 +216,13 @@ handleDbConnectionPool dbConfig = \case
   Kill ctag -> do
     cur <- embed myThreadId
     atomicGets (view (#active . at ctag)) >>= traverse_ \ (ConnectionClients _ clients) -> do
-      for_ (Map.keys clients) \ c -> do
+      for_ (Map.keys clients) \ c ->
         unless (cur == c) (embed (throwTo c KillCommand))
     pureT =<< release ctag
   UnsafeGet ctag ->
     pureT . fmap (coerce . connection) =<< atomicGets (view (#active . at ctag))
+  Config ->
+    pureT dbConfig
 
 interpretDbConnectionPool ::
   Members [Log, Resource, Embed IO, Final IO] r =>
@@ -259,6 +261,8 @@ handleDbConnectionPoolSingle dbConfig = \case
     unitT
   UnsafeGet _ ->
     pureT Nothing
+  Config ->
+    pureT dbConfig
 
 interpretDbConnectionPoolSingle ::
   Member (Embed IO) r =>

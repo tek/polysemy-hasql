@@ -2,60 +2,79 @@ module Polysemy.Hasql (
   -- * Introduction
   -- $intro
 
-  -- * Hasql Interpreters
-  -- $interpreters
+  -- * Hasql interpreters for [Polysemy.Db]("Polysemy.Db")
+  interpretQStoreDb,
+  interpretQStoreXa,
+  interpretQStores,
+  interpretStoreDb,
+  interpretStoreXa,
+  interpretStores,
 
-  -- ** Low-Level Interpreters
+  interpretQuery,
+  interpretQueryDd,
+
+  -- * Database effects
+  DbConnectionPool,
   Database,
-  DbConfig(DbConfig),
+  Databases,
+  DbTable,
+  StoreTable,
+  Transaction,
+  Transactions,
+  abort,
+
+  -- * Database interpeters
+  interpretDbConnectionPool,
+  interpretDbConnectionPoolSingle,
+
+  interpretDatabase,
+  interpretDatabases,
+  interpretHasql,
+
+  interpretTablesMigrations,
+  interpretTableMigrations,
+  interpretTableMigrationsScoped,
+  interpretTables,
+  interpretTable,
+  interpretTableView,
+  interpretTableViewDd,
+
+  -- * Misc combinators
+  queryVia,
+  mapQuery,
 
   -- * Misc
-  DbConnectionError,
   interpretAtomicStateDb,
+  interpretAtomicStatesDb,
   interpretReaderDb,
 ) where
 
-import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
-import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
-
-import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
-import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Reader (interpretReaderDb)
+import Polysemy.Hasql.Effect.Database (Database, Databases)
+import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
+import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
+import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions, abort)
+import Polysemy.Hasql.Interpreter.AtomicState (interpretAtomicStateDb, interpretAtomicStatesDb)
+import Polysemy.Hasql.Interpreter.Database (interpretDatabase, interpretDatabases, interpretHasql)
+import Polysemy.Hasql.Interpreter.DbConnectionPool (interpretDbConnectionPool, interpretDbConnectionPoolSingle)
+import Polysemy.Hasql.Interpreter.DbTable (
+  interpretTable,
+  interpretTableMigrations,
+  interpretTableMigrationsScoped,
+  interpretTableView,
+  interpretTableViewDd,
+  interpretTables,
+  interpretTablesMigrations,
+  )
+import Polysemy.Hasql.Interpreter.Query (interpretQuery, interpretQueryDd, mapQuery, queryVia)
+import Polysemy.Hasql.Interpreter.Reader (interpretReaderDb)
+import Polysemy.Hasql.Interpreter.Store (
+  interpretQStoreDb,
+  interpretQStoreXa,
+  interpretQStores,
+  interpretStoreDb,
+  interpretStoreXa,
+  interpretStores,
+  )
 
 -- $intro
--- This library provides two independent features as well as their synthesis:
---
---   - Hasql-specific interpreters for the effects in "Polysemy.Db"
---   - A generic derivation mechanism for Hasql codecs and statements
-
--- $interpreters
--- Four auxiliary effects can be combined to build an interpreter stack for 'Store' and 'StoreQuery'.
--- The minimal set consists of 'DbConnection', which manages a 'Connection' value, and 'Database', which executes
--- statements, coordinates retries on broken connections, and handles initialization of tables and types.
---
--- /Note/: Effect constructors should idiomatically be used as qualified names, which is why they aren't exported here:
---
--- @
--- import qualified Polysemy.Hasql.Effect.Database as Database
---
--- prog = do
---   Database.runStatement p s
--- @
-
--- $derived
--- The generic derivation machinery described further down can be used with two additional effects whose interpreters
--- use auto-generated SQL statements.
--- When using any of these, the derivation can either be guided for granular configuration of columns or use defaults.
---
--- These two effects are used in conjunction with a set of interpreters for 'Polysemy.Db.Data.Store', the most
--- complete of which is 'interpretStoreDbFullGen':
-
--- $derived2
--- The data structure produced by the derivation is of type 'QueryTable', which can also be constructed manually:
-
--- $derivation
--- 'QueryTable' is derived by specifying an auxiliary datatype, called /representation/, to the class 'GenQueryTable'.
--- The special type 'Auto' indicates that everything should use default encodings.
---
--- Aside from configuring column options, the derivation system can also convert structural information, as in nested
--- data types, into columns.
+-- This library provides Hasql-specific interpreters for the effects in [Polysemy.Db]("Polysemy.Db")

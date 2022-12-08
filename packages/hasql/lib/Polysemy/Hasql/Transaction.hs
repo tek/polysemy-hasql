@@ -1,9 +1,20 @@
 module Polysemy.Hasql.Transaction where
 
-import Polysemy.Db.Effect.Store (Store)
+import Hasql.Connection (Connection)
+import Polysemy.Db.Effect.Store (QStore, Store)
+import Sqel.Data.Uid (Uid)
 
+import qualified Polysemy.Hasql.Effect.Database as Database
+import Polysemy.Hasql.Effect.Database (ConnectionSource)
 import qualified Polysemy.Hasql.Effect.Transaction as Transaction
 import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions)
+import Polysemy.Internal.CustomErrors (FirstOrder)
+
+type XaQStore res err f q d =
+  Scoped res (QStore f q d !! err) !! err
+
+type XaStore res err i d =
+  XaQStore res err Maybe i (Uid i d)
 
 type TransactionEffects :: EffectRow -> EffectRow -> Type -> Type -> EffectRow -> Constraint
 class TransactionEffects all effs err res r where
@@ -37,9 +48,9 @@ transact ma =
     transactionEffects @effs @effs @err conn do
       ma
 
-type family XaStores (ds :: [Type]) :: [Effect] where
+type family XaStores (ds :: [(Type, Type)]) :: [Effect] where
   XaStores '[] = '[]
-  XaStores (d : ds) = Store Int64 d : XaStores ds
+  XaStores ('(i, d) : ds) = Store i d : XaStores ds
 
 transactStores ::
   ∀ ds res err r xas .
@@ -53,3 +64,30 @@ transactStores ma =
     conn <- Transaction.resource
     transactionEffects @xas @xas @err conn do
       ma
+
+connectionScope ::
+  ∀ eff err r a .
+  Member (Scoped ConnectionSource (eff !! err)) r =>
+  Connection ->
+  (() -> Sem (eff !! err : r) a) ->
+  Sem r a
+connectionScope conn use =
+  scoped (Database.Supplied "transaction" conn) (use ())
+
+interpretForXa ::
+  ∀ dep eff err r .
+  Member (Scoped ConnectionSource (dep !! err)) r =>
+  (∀ x r0 . eff (Sem r0) x -> Sem (Stop err : dep !! err : r) x) ->
+  InterpreterFor (Scoped Connection (eff !! err) !! err) r
+interpretForXa handler =
+  interpretScopedRWith @'[dep !! err] connectionScope \ () -> insertAt @2 . handler
+
+interpretWithXa ::
+  ∀ dep eff err r .
+  FirstOrder eff "interpretResumable" =>
+  Members [Scoped ConnectionSource (dep !! err), dep !! err] r =>
+  (∀ x r0 . eff (Sem r0) x -> Sem (Stop err : dep !! err : r) x) ->
+  InterpretersFor [Scoped Connection (eff !! err) !! err, eff !! err] r
+interpretWithXa handler =
+  interpretResumable (subsume_ . raise2Under . handler) .
+  interpretForXa (raise2Under . handler)

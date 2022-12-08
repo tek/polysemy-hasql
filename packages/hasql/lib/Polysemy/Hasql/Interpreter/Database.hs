@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Interpreter.Database where
 
-import Conc (Lock, interpretAtomic, interpretLockReentrant, interpretResumableScopedWithH, lock)
+import Conc (Lock, interpretAtomic, interpretLockReentrant, lock)
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Exon (exon)
 import Hasql.Connection (Connection, withLibPQConnection)

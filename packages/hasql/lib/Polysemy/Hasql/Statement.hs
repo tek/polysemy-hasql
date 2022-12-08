@@ -1,11 +1,13 @@
 module Polysemy.Hasql.Statement where
 
 import Hasql.Statement (Statement)
-import Polysemy.Db.Data.DbName (DbName)
-import Sqel.Data.Sql (Sql, sql)
+import Polysemy.Db.Data.DbName (DbName, unDbName)
+import Sqel.Data.Sql (Sql, sql, sqlQuote)
 import Sqel.Statement (plain)
 
-import Polysemy.Hasql.Table.Query.Text (quoteName)
+quoteName :: DbName -> Sql
+quoteName =
+  sqlQuote . unDbName
 
 createDbSql ::
   DbName ->

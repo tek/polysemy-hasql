@@ -15,13 +15,16 @@ import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs, primJson)
-import Sqel.Product (uid)
+import qualified Sqel.Prim as Sqel
+import Sqel.Prim (prim, primAs)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
+import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Database as Database
-import Polysemy.Hasql.Interpreter.Store (interpretManagedTable, interpretStoreDb)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
+import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Field3 =
   Field3 {
@@ -42,7 +45,7 @@ data Dat =
 
 table :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 table =
-  uid prim (prim :> prim :> primJson)
+  uid prim (prod (prim :> prim :> Sqel.json))
 
 ts :: TableSchema (Uid Int64 Dat)
 ts =
@@ -51,10 +54,10 @@ ts =
 test_json :: UnitTest
 test_json = do
   integrationTest do
-    interpretManagedTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
+    interpretTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
       restop @DbError do
         Store.insert dat
-        assertJust dat =<< Store.fetch 5
+        raise . assertJust dat =<< Store.fetch 5
     result <- evalMaybe =<< Database.retryingQuerySqlDef @DbError query dec enc 5
     assertRight f3 (Aeson.eitherDecodeStrict' result)
   where

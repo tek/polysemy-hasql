@@ -26,12 +26,12 @@ let
   };
 
   meta = {
-    version = "0.3.0.0";
+    version = import ./version.nix;
     license = "BSD-2-Clause-Patent";
     license-file = "LICENSE";
     author = "Torsten Schmits";
     maintainer = "hackage@tryp.io";
-    copyright = "2022 Torsten Schmits";
+    copyright = "2023 Torsten Schmits";
     category = "Database";
     build-type = "Simple";
   };
@@ -47,7 +47,7 @@ let
 
   dependencies = [
     { name = "base"; version = ">= 4.12 && < 5"; mixin = "hiding (Prelude)"; }
-    { name = "prelate"; version = ">= 0.2"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
+    { name = "prelate"; version = "^>= 0.5.1"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
   ];
 
   project = name: doc: merge (meta // { library = paths name; } // options) {
@@ -80,132 +80,91 @@ let
     dependencies = ["polysemy" "polysemy-plugin"];
   });
 
+  dep = n: "${n} ^>= ${import ./version.nix}";
+  dep_db = dep "polysemy-db";
+  dep_hasql = dep "polysemy-hasql";
+
 in {
 
   polysemy-db = merge (polysemy "polysemy-db" "Polysemy-Db") {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
-      "exon"
-      "first-class-families"
-      "generics-sop"
-      "lens"
-      "random"
-      "sqel"
-      "time"
-      "type-errors"
-      "type-errors-pretty"
-      "uuid"
+      "exon ^>= 1.4"
+      "random ^>= 1.2"
+      "sqel ^>= 0.0.1"
+      "uuid ^>= 1.3"
     ];
   };
 
   polysemy-hasql = merge (polysemy "polysemy-hasql" "Polysemy-Hasql") {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
-      "async"
+      "async ^>= 2.2"
       "containers"
-      "exon"
-      "extra"
-      "generics-sop"
-      "hasql >= 1.4.3"
-      "polysemy-conc"
-      "polysemy-db"
-      "polysemy-log"
-      "polysemy-time"
-      "postgresql-libpq"
-      "sqel"
-      "stm-chans"
-      "torsor"
+      "exon ^>= 1.4"
+      "generics-sop ^>= 0.5"
+      "hasql ^>= 1.6"
+      dep_db
+      "postgresql-libpq ^>= 0.9"
+      "sqel ^>= 0.0.1"
+      "stm-chans ^>= 3.0"
+      "torsor ^>= 0.1"
       "transformers"
-      "uuid"
+      "uuid ^>= 1.3"
     ];
-
-    tests.polysemy-hasql-unit = polysemyExe "polysemy-hasql" "test" {
-      dependencies = [
-        "aeson"
-        "chronos"
-        "exon"
-        "first-class-families"
-        "generics-sop"
-        "hasql >= 1.4.3"
-        "path"
-        "polysemy-db"
-        "polysemy-hasql"
-        "polysemy-plugin"
-        "polysemy-test"
-        "sqel"
-        "tasty"
-      ];
-    };
 
     tests.polysemy-hasql-integration = polysemyExe "polysemy-hasql" "integration" {
       dependencies = [
-        "aeson"
-        "exon"
-        "first-class-families"
-        "generics-sop"
-        "hasql >= 1.4.3"
-        "hedgehog"
-        "lens"
-        "path"
-        "polysemy-conc"
-        "polysemy-db"
-        "polysemy-hasql"
-        "polysemy-log"
-        "polysemy-plugin"
-        "polysemy-test"
-        "polysemy-time"
-        "prettyprinter"
-        "sqel"
-        "tasty"
-        "time"
-        "uuid"
+        "aeson ^>= 2.0"
+        "exon ^>= 1.4"
+        "generics-sop ^>= 0.5"
+        "hasql ^>= 1.6"
+        "hedgehog ^>= 1.1"
+        "polysemy-test ^>= 0.7"
+        "tasty ^>= 1.4"
+        "uuid ^>= 1.3"
+        "vector ^>= 0.12"
+        "zeugma ^>= 0.7"
+        dep_db
+        dep_hasql
+        "sqel ^>= 0.0.1"
       ];
     };
 
   };
 
-  sqel = merge (project "sqel" "Sqel") {
-    synopsis = "Guided derivation for Hasql statements";
+  polysemy-hasql-test = merge (polysemy "polysemy-hasql-test" "Polysemy-Hasql-Test") {
+    synopsis = "Test utilities for polysemy-hasql";
+
     library.dependencies = [
-      "aeson"
-      "chronos"
-      "composition"
-      "containers"
-      "contravariant"
-      "exon"
-      "first-class-families"
-      "generics-sop"
-      "hasql >= 1.4.3"
-      "invariant"
-      "path"
-      "prettyprinter"
-      "scientific"
-      "some"
-      "template-haskell"
-      "time"
-      "type-errors"
-      "type-errors-pretty"
-      "uuid"
-      "vector"
+      "hasql ^>= 1.6"
+      "hedgehog ^>= 1.1"
+      "path ^>= 0.9"
+      "polysemy-test ^>= 0.7"
+      "uuid ^>= 1.3"
+      dep_db
+      dep_hasql
+      "sqel ^>= 0.0.1"
     ];
 
-    tests.polysemy-hasql-unit = polysemyExe "sqel" "test" {
+    tests.polysemy-hasql-test-unit = polysemyExe "polysemy-hasql-test" "test" {
       dependencies = [
-        "aeson"
-        "chronos"
-        "exon"
-        "first-class-families"
-        "generics-sop"
-        "hasql >= 1.4.3"
-        "hedgehog"
-        "path"
-        "tasty"
-        "tasty-hedgehog"
-        "uuid"
+        "aeson ^>= 2.0"
+        "chronos ^>= 1.1"
+        "exon ^>= 1.4"
+        "first-class-families ^>= 0.8"
+        "generics-sop ^>= 0.5"
+        "hasql ^>= 1.6"
+        "path ^>= 0.9"
+        "polysemy-test ^>= 0.7"
+        "tasty ^>= 1.4"
+        dep_db
+        dep_hasql
+        "sqel ^>= 0.0.1"
       ];
+
     };
 
   };
-
 
 }

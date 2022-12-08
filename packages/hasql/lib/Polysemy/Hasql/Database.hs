@@ -2,14 +2,14 @@ module Polysemy.Hasql.Database where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Time (Seconds (Seconds))
+import Time (Seconds (Seconds))
 import Sqel.Data.Codec (Encoder, FullCodec)
 import Sqel.Data.Dd (Dd, DdType)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Sql (Sql)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.PgType (tableSchema)
-import Sqel.Query (CheckedQ, checkQuery)
+import Sqel.Query (CheckedQuery, checkQuery)
 import Sqel.ReifyCodec (ReifyCodec)
 import Sqel.ReifyDd (ReifyDd)
 import Sqel.ResultShape (ResultShape)
@@ -63,7 +63,7 @@ retryingQuerySqlDef =
 query ::
   ∀ res query proj table r .
   Member Database r =>
-  CheckedQ query table =>
+  CheckedQuery query table =>
   ReifyCodec Encoder query (DdType query) =>
   ReifyDd proj =>
   ReifyCodec FullCodec proj (DdType proj) =>
