@@ -8,7 +8,7 @@ import Sqel.Data.Dd (
   CompInc (Nest),
   ConCoded,
   ConCol,
-  DbTypeName,
+  DbTypeName (dbTypeName),
   Dd (Dd),
   DdInc (DdNest),
   DdK (DdK),
@@ -21,7 +21,7 @@ import Sqel.Data.Dd (
   Struct (Comp, Prim),
   )
 import Sqel.Data.Mods (Mods (Mods), NoMods)
-import Sqel.Data.Sel (MkSel, Sel (SelAuto, SelSymbol), SelW (SelWAuto), mkSel)
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto), mkSel)
 import Sqel.Data.Sql (sql)
 import Sqel.Names.Comp (ProdNamed, SumNamed)
 import Sqel.Names.Rename (renameN, renameN2)
@@ -75,13 +75,16 @@ instance (
 
 type CompName :: Type -> Sel -> Constraint
 class CompName a sel | a -> sel where
+  compName :: SelW sel
 
 instance {-# overlappable #-} (
     DbTypeName a name,
     sel ~ 'SelSymbol name
   ) => CompName a sel where
+    compName = dbTypeName @a
 
 instance CompName (ConCol as) 'SelAuto where
+  compName = mkSel
 
 class CompFields c a s0 s1 | a s0 -> s1 where
   compFields :: NP Dd s0 -> NP Dd s1
@@ -89,6 +92,7 @@ class CompFields c a s0 s1 | a s0 -> s1 where
 instance ProdNamed a s0 s1 => CompFields ('Prod 'Reg) a s0 s1 where
   compFields = renameN
 
+-- TODO overlap needed?
 instance {-# overlappable #-} CompFields ('Prod ('Con as)) (ConCol as) s0 s0 where
   compFields = id
 
@@ -111,12 +115,11 @@ instance (
     MkDdVar c,
     MkDdInc i,
     CompName a sel,
-    MkSel sel,
     CompCoded c i s0 a as,
     CompFields c a s0 s1
   ) => CompColumn' c i a s0 ('DdK 'SelAuto NoMods a ('Comp sel c i s1)) where
     compColumn' np =
-      Dd SelWAuto (Mods Nil) (DdComp mkSel ddVar ddInc (compFields @c @a np))
+      Dd SelWAuto (Mods Nil) (DdComp (compName @a) ddVar ddInc (compFields @c @a np))
 
 -- | This class does nothing, but it allows downstream combinators to supply only the first three type arguments for
 -- some reason.

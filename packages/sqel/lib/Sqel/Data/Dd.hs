@@ -1,13 +1,13 @@
 module Sqel.Data.Dd where
 
 import Generics.SOP (I, NP (Nil, (:*)))
-import Generics.SOP.GGP (GCode)
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
 
 import Sqel.Data.Mods (Mods)
-import Sqel.Data.Sel (Sel, SelW (SelWAuto, SelWPath, SelWSymbol, SelWUnused), showSelW)
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol), SelW (SelWAuto, SelWPath, SelWSymbol, SelWUnused), showSelW)
 import Sqel.Data.Uid (Uid)
-import Sqel.SOP.Constraint (DataName, symbolText)
+import Sqel.SOP.Constraint (IsDataT, symbolText)
 
 newtype ConCol as =
   ConCol { unConCol :: NP I as }
@@ -127,10 +127,16 @@ instance MatchDdType ('DdK sel p a s) a
 
 type DbTypeName :: Type -> Symbol -> Constraint
 class DbTypeName a name | a -> name where
+  dbTypeName :: SelW ('SelSymbol name)
 
-instance {-# overlappable #-} DataName a name => DbTypeName a name where
+instance {-# overlappable #-} (
+    IsDataT (GDatatypeInfoOf a) name,
+    MkSel ('SelSymbol name)
+  ) => DbTypeName a name where
+    dbTypeName = mkSel
 
 instance DbTypeName a name => DbTypeName (Uid i a) name where
+  dbTypeName = dbTypeName @a
 
 data a :> b = a :> b
 infixr 3 :>

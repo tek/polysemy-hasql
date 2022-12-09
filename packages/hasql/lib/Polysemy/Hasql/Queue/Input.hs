@@ -11,7 +11,6 @@ import qualified Data.UUID as UUID
 import Data.UUID (UUID)
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Exon (exon)
-import Generics.SOP (NP (Nil, (:*)))
 import Hasql.Connection (Connection, withLibPQConnection)
 import qualified Polysemy.Conc as Monitor
 import Polysemy.Conc (
@@ -33,16 +32,9 @@ import Polysemy.Input (Input (Input))
 import qualified Polysemy.Log as Log
 import qualified Polysemy.Time as Time
 import Prelude hiding (Queue, listen)
-import Sqel.Codec (PrimColumn)
-import Sqel.Data.Dd (DbTypeName)
 import Sqel.Data.Sql (sql)
 import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uuid)
-import Sqel.PgType (tableSchema)
-import qualified Sqel.Prim as Sqel
-import Sqel.Prim (prim, primAs)
-import Sqel.Product (uid)
-import Sqel.Query (checkQuery)
 import Sqel.SOP.Constraint (symbolText)
 import Torsor (Torsor)
 
@@ -51,7 +43,6 @@ import Polysemy.Hasql.Data.InitDb (InitDb (InitDb))
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database, Databases, withDatabaseUnique)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queue (Queue, QueueName (QueueName))
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
@@ -206,12 +197,12 @@ startDequeueLoop errorDelay errorHandler queue = do
   withDatabaseUnique (Just (NamedTag [exon|dequeue-#{name}|])) do
     finally (Monitor.restart (dequeueLoop errorDelay (insertAt @0 . errorHandler) queue)) unlisten
 
-interpretInputDbQueue ::
+interpretInputQueue ::
   ∀ d r .
   Member (Embed IO) r =>
   TBMQueue d ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueue queue =
+interpretInputQueue queue =
   interpret \case
     Input ->
       embed (atomically (readTBMQueue queue))
@@ -231,49 +222,38 @@ dequeueThread errorDelay errorHandler = do
   pure (handle, queue)
 
 interpretInputDbQueueListen ::
-  ∀ (queue :: Symbol) d t dt u r .
+  ∀ (name :: Symbol) d t dt u r .
   Ord t =>
   TimeUnit u =>
-  KnownSymbol queue =>
+  KnownSymbol name =>
   Members [RestartingMonitor, Final IO] r =>
   Members [Store UUID (Queued t d) !! DbError, Databases, Time t dt, Log, Resource, Async, Embed IO] r =>
   u ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
 interpretInputDbQueueListen errorDelay errorHandler sem =
-  runReader (QueueName (symbolText @queue)) $
+  runReader (QueueName (symbolText @name)) $
   bracket acquire release \ (_, queue) -> do
-    interpretInputDbQueue queue (raiseUnder sem)
+    interpretInputQueue queue (raiseUnder sem)
   where
     acquire = dequeueThread errorDelay (raise . errorHandler)
     release (handle, _) = cancel handle
 
-interpretInputDbQueueFull ::
-  ∀ (queue :: Symbol) d t diff dt u r name .
-  ToJSON d =>
-  FromJSON d =>
+interpretInputQueueDb ::
+  ∀ qname u t dt d diff r .
   TimeUnit u =>
-  PrimColumn t =>
   TimeUnit diff =>
   Torsor t diff =>
-  Queue queue t =>
-  DbTypeName d name =>
-  KnownSymbol (AppendSymbol "Queued" name) =>
-  Members [Databases, Database !! DbError, Time t dt, Log, Resource, Async, Embed IO, Final IO] r =>
-  Member Race r =>
+  Queue qname t =>
+  Members [Store UUID (Queued t d) !! DbError, Databases] r =>
+  Members [Time t dt, Log, Resource, Async, Race, Embed IO, Final IO] r =>
   u ->
   ClockSkewConfig ->
   (DbError -> Sem r Bool) ->
   InterpreterFor (Input (Maybe d)) r
-interpretInputDbQueueFull errorDelay csConfig errorHandler =
-  interpretDbTable ts .
-  interpretStoreDb ts (checkQuery query table) .
+interpretInputQueueDb errorDelay csConfig errorHandler =
   interpretAtomic Nothing .
   interpretMonitorRestart (monitorClockSkew csConfig) .
   raiseUnder .
-  interpretInputDbQueueListen @queue errorDelay (insertAt @0 . errorHandler) .
-  raiseUnder3
-  where
-    ts = tableSchema table
-    query = primAs @"id"
-    table = uid prim (prim :* Sqel.json :* Nil)
+  interpretInputDbQueueListen @qname errorDelay (insertAt @0 . errorHandler) .
+  raiseUnder

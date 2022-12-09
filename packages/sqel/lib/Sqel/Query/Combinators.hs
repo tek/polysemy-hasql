@@ -11,11 +11,11 @@ nocond (Dd _ p s) =
   Dd mkSel p s
 
 limit ::
-  Dd ('DdK 'SelUnused '[SelectAtom] Int64 'Prim)
+  Dd ('DdK 'SelUnused '[SelectAtom] a 'Prim)
 limit =
   nocond (primMod (SelectAtom Limit (const dollar)))
 
 offset ::
-  Dd ('DdK 'SelUnused '[SelectAtom] Int64 'Prim)
+  Dd ('DdK 'SelUnused '[SelectAtom] a 'Prim)
 offset =
   nocond (primMod (SelectAtom Offset (const dollar)))

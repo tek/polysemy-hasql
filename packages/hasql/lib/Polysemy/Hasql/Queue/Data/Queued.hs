@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
-import Sqel.Data.Dd (DbTypeName)
+import Sqel.Data.Dd (DbTypeName (dbTypeName))
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol))
 
 data Queued t a =
   Queued {
@@ -11,5 +12,7 @@ data Queued t a =
 
 instance (
     DbTypeName d inner,
-    name ~ AppendSymbol "Queued" inner
+    name ~ AppendSymbol "Queued" inner,
+    MkSel ('SelSymbol name)
   ) => DbTypeName (Queued t d) name where
+    dbTypeName = mkSel

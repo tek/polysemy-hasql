@@ -4,6 +4,7 @@ import qualified Data.Aeson as Aeson
 import Generics.SOP (I (I), NP (Nil, (:*)))
 import qualified Hasql.Decoders as Decoders
 import qualified Hasql.Encoders as Encoders
+import Text.Show (show)
 
 import Sqel.Data.Codec (Codec (Codec))
 import Sqel.Data.Mods (EnumColumn (EnumColumn), Mods (Mods), ReadShowColumn (ReadShowColumn))
@@ -30,6 +31,10 @@ jsonDecoder =
 
 data PrimCodec f a =
   PrimCodec (f a)
+
+instance Show (PrimCodec f a) where
+  show _ =
+    "PrimCodec"
 
 type PrimValueCodec a =
   PrimCodec (Codec Encoders.Value Decoders.Value) a

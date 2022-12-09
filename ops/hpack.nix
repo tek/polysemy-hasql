@@ -200,6 +200,7 @@ in {
         "hasql >= 1.4.3"
         "hedgehog"
         "path"
+        "prettyprinter"
         "tasty"
         "tasty-hedgehog"
         "uuid"

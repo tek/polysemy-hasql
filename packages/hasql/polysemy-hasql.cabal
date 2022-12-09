@@ -46,6 +46,7 @@ library
       Polysemy.Hasql.Queue.Data.Queued
       Polysemy.Hasql.Queue.Input
       Polysemy.Hasql.Queue.Output
+      Polysemy.Hasql.Queue.Store
       Polysemy.Hasql.Reader
       Polysemy.Hasql.Session
       Polysemy.Hasql.Statement

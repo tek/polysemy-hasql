@@ -48,6 +48,7 @@ prim ::
 prim =
   column (Mods Nil)
 
+-- TODO move aeson to reify
 json ::
   ∀ a .
   ToJSON a =>

@@ -274,6 +274,7 @@ test-suite polysemy-hasql-unit
     , polysemy
     , polysemy-plugin
     , prelate >=0.2
+    , prettyprinter
     , sqel
     , tasty
     , tasty-hedgehog

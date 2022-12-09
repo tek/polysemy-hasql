@@ -11,12 +11,12 @@ import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Db.Store (PureStore (PureStore))
 import qualified Polysemy.Db.Store as PureStore (records)
 
-interpretStoreQueryPure ::
+interpretQueryPure ::
   Ord q =>
   (∀ a . [a] -> f a) ->
   Map q [d] ->
   InterpreterFor (Query q (f d) !! e) r
-interpretStoreQueryPure filter' store =
+interpretQueryPure filter' store =
   interpretResumable \case
     Query params ->
       pure (filter' (fromMaybe [] (Map.lookup params store)))
@@ -25,102 +25,102 @@ single :: [a] -> Maybe a
 single [a] = Just a
 single _ = Nothing
 
-interpretStoreQueryPureOne ::
+interpretQueryPureOne ::
   Ord q =>
   Map q [d] ->
   InterpreterFor (Query q (Maybe d) !! e) r
-interpretStoreQueryPureOne =
-  interpretStoreQueryPure single
+interpretQueryPureOne =
+  interpretQueryPure single
 
-interpretStoreQueryPureMulti ::
+interpretQueryPureMulti ::
   Ord q =>
   Map q [d] ->
   InterpreterFor (Query q [d] !! e) r
-interpretStoreQueryPureMulti =
-  interpretStoreQueryPure id
+interpretQueryPureMulti =
+  interpretQueryPure id
 
-interpretStoreQueryAtomicState ::
+interpretQueryAtomicState ::
   ∀ d q e f r .
   Member (AtomicState (PureStore d)) r =>
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
   InterpreterFor (Query q (f d) !! e) r
-interpretStoreQueryAtomicState filter' match =
+interpretQueryAtomicState filter' match =
   interpretResumable \case
     Query q ->
       atomicGets @(PureStore d) (filter' . filter (match q) . view PureStore.records)
 
-interpretStoreQueryAtomicStateOne ::
+interpretQueryAtomicStateOne ::
   Member (AtomicState (PureStore d)) r =>
   (q -> d -> Bool) ->
   InterpreterFor (Query q (Maybe d) !! e) r
-interpretStoreQueryAtomicStateOne =
-  interpretStoreQueryAtomicState single
+interpretQueryAtomicStateOne =
+  interpretQueryAtomicState single
 
-interpretStoreQueryAtomicStateMulti ::
+interpretQueryAtomicStateMulti ::
   Member (AtomicState (PureStore d)) r =>
   (q -> d -> Bool) ->
   InterpreterFor (Query q [d] !! e) r
-interpretStoreQueryAtomicStateMulti =
-  interpretStoreQueryAtomicState id
+interpretQueryAtomicStateMulti =
+  interpretQueryAtomicState id
 
-interpretStoreQueryAtomicTVar ::
+interpretQueryAtomicTVar ::
   Member (Embed IO) r =>
   TVar (PureStore d) ->
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
   InterpreterFor (Query q (f d) !! e) r
-interpretStoreQueryAtomicTVar tvar filter' match sem =
-  runAtomicStateTVar tvar . interpretStoreQueryAtomicState filter' match . raiseUnder $ sem
+interpretQueryAtomicTVar tvar filter' match sem =
+  runAtomicStateTVar tvar . interpretQueryAtomicState filter' match . raiseUnder $ sem
 
-interpretStoreQueryAtomicWith ::
+interpretQueryAtomicWith ::
   Member (Embed IO) r =>
   (∀ a . [a] -> f a) ->
   (q -> d -> Bool) ->
   [d] ->
   InterpreterFor (Query q (f d) !! e) r
-interpretStoreQueryAtomicWith filter' match initial sem = do
+interpretQueryAtomicWith filter' match initial sem = do
   tvar <- embed (newTVarIO (PureStore initial))
-  interpretStoreQueryAtomicTVar tvar filter' match sem
+  interpretQueryAtomicTVar tvar filter' match sem
 
-interpretStoreQueryAtomicOneWith ::
+interpretQueryAtomicOneWith ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
   [d] ->
   InterpreterFor (Query q (Maybe d) !! e) r
-interpretStoreQueryAtomicOneWith match initial sem = do
+interpretQueryAtomicOneWith match initial sem = do
   tvar <- embed (newTVarIO (PureStore initial))
-  interpretStoreQueryAtomicTVar tvar single match sem
+  interpretQueryAtomicTVar tvar single match sem
 
-interpretStoreQueryAtomicMultiWith ::
+interpretQueryAtomicMultiWith ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
   [d] ->
   InterpreterFor (Query q [d] !! e) r
-interpretStoreQueryAtomicMultiWith match initial sem = do
+interpretQueryAtomicMultiWith match initial sem = do
   tvar <- embed (newTVarIO (PureStore initial))
-  interpretStoreQueryAtomicTVar tvar id match sem
+  interpretQueryAtomicTVar tvar id match sem
 
-interpretStoreQueryAtomicOne ::
+interpretQueryAtomicOne ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
   InterpreterFor (Query q (Maybe d) !! e) r
-interpretStoreQueryAtomicOne match =
-  interpretStoreQueryAtomicOneWith match def
+interpretQueryAtomicOne match =
+  interpretQueryAtomicOneWith match def
 
-interpretStoreQueryAtomicMulti ::
+interpretQueryAtomicMulti ::
   Member (Embed IO) r =>
   (q -> d -> Bool) ->
   InterpreterFor (Query q [d] !! e) r
-interpretStoreQueryAtomicMulti match =
-  interpretStoreQueryAtomicMultiWith match def
+interpretQueryAtomicMulti match =
+  interpretQueryAtomicMultiWith match def
 
-interpretStoreQueryAny ::
+interpretQueryAny ::
   ∀ q d i e r .
   Member (Store i d !! e) r =>
   (q -> d -> Bool) ->
   InterpreterFor (Query q Bool !! e) r
-interpretStoreQueryAny match =
+interpretQueryAny match =
   interpretResumable \case
     Query q ->
       maybe False (any (match q . Uid.payload)) <$> restop @e @(Store i d) (Store.fetchAll @i)

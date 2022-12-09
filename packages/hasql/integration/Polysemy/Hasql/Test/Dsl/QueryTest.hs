@@ -6,10 +6,10 @@ import Generics.SOP (NP (Nil, (:*)))
 import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store)
 import qualified Polysemy.Db.Effect.Query as Query
 import Polysemy.Db.Effect.Query (Query (Query))
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Column (nullable)
