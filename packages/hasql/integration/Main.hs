@@ -1,6 +1,6 @@
 module Main where
 
--- import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
+import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
 -- import Polysemy.Hasql.Test.AtomicStateTest (test_atomicStateDb)
 -- import Polysemy.Hasql.Test.DeleteTest (test_deleteEmpty)
 import Polysemy.Hasql.Test.DslTest (test_dsl)
@@ -24,7 +24,7 @@ tests :: TestTree
 tests =
   testGroup "integration" [
     -- unitTest "schema for a singleton db" test_singletonDb,
-    -- unitTest "array db column" test_arrayField,
+    unitTest "array db column" test_arrayField,
     -- unitTest "query" test_query,
     -- unitTest "sum field" test_sumField,
     -- unitTest "sum field as id column" test_sumId,

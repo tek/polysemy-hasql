@@ -2,6 +2,7 @@ module Sqel.Comp where
 
 import Generics.SOP (All, AllZip, NP (Nil, (:*)), hcmap)
 
+import Sqel.Class.Mods (OverMod (overMod))
 import Sqel.Data.Dd (
   Comp (Prod, Sum),
   CompInc (Nest),
@@ -11,7 +12,7 @@ import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdNest),
   DdK (DdK),
-  DdStruct (DdComp, DdPrim),
+  DdStruct (DdComp),
   DdVar (DdProd),
   MatchDdType,
   MkDdInc (ddInc),
@@ -39,12 +40,14 @@ type IndexColumn name =
 class GuardSumPrim s where
   guardSumPrim :: Dd s -> Dd s
 
-instance GuardSumPrim ('DdK sel SelectAtom a 'Prim) where
-  guardSumPrim = \case
-    Dd sel (SelectAtom Where code) DdPrim ->
-      Dd sel (SelectAtom Where (\ s i -> [sql|(#{dollar i} is null or #{code s i})|])) DdPrim
-    Dd sel a DdPrim ->
-      Dd sel a DdPrim
+instance (
+    OverMod SelectAtom ('DdK sel p a 'Prim)
+  ) => GuardSumPrim ('DdK sel p a 'Prim) where
+  guardSumPrim =
+    overMod \case
+      SelectAtom Where code ->
+        SelectAtom Where (\ s i -> [sql|(#{dollar i} is null or #{code s i})|])
+      m -> m
 
 instance (
     All GuardSumPrim sub

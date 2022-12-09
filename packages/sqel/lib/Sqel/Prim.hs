@@ -2,29 +2,25 @@ module Sqel.Prim where
 
 import Generics.SOP (I (I), NP (Nil, (:*)))
 
-import Sqel.Column (MkColumn (column), Nullable, columnAs, nullable)
+import Sqel.Class.Mods (MapMod, SymNP, setMod, symMods)
+import Sqel.Column (Nullable, nullable)
 import Sqel.Data.ColumnOptions (ColumnOptions)
-import Sqel.Data.Dd (ConCol, Dd (Dd), DdK (DdK), DdType, Struct (Prim))
+import Sqel.Data.Dd (ConCol, Dd (Dd), DdK (DdK), DdStruct (DdPrim), DdType, Struct (Prim))
 import Sqel.Data.MigrationParams (
   MigrationDefault (MigrationDefault),
   MigrationDelete (MigrationDelete),
   MigrationRename (MigrationRename),
   )
-import Sqel.Data.Mods (
-  ArrayColumn (ArrayColumn),
-  EnumColumn,
-  MapMod,
-  Mods (Mods),
-  NoMods,
-  ReadShowColumn,
-  SymNP,
-  setMod,
-  symMods,
-  )
+import Sqel.Data.Mods (ArrayColumn (ArrayColumn), EnumColumn, Mods (Mods), NoMods, ReadShowColumn)
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol))
-import Sqel.Mods (PrimValueCodec, primEnumValue, primJsonValue, primReadShowValue)
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto))
+import Sqel.Mods (PrimValueCodec, primEnumMods, primJsonMods, primReadShowMods)
+import Sqel.Names (named)
 import Sqel.SOP.Constraint (ProductGCode)
+
+column :: Mods p -> Dd ('DdK 'SelAuto p a 'Prim)
+column m =
+  Dd SelWAuto m DdPrim
 
 mods ::
   SymNP p ps =>
@@ -35,14 +31,14 @@ mods =
 
 primMod ::
   p ->
-  Dd ('DdK 'SelAuto (Mods '[p]) a 'Prim)
+  Dd ('DdK 'SelAuto '[p] a 'Prim)
 primMod p =
   column (Mods (I p :* Nil))
 
 primMods ::
   SymNP p ps =>
   p ->
-  Dd ('DdK 'SelAuto (Mods ps) a 'Prim)
+  Dd ('DdK 'SelAuto ps a 'Prim)
 primMods p =
   column (mods p)
 
@@ -52,38 +48,38 @@ prim ::
 prim =
   column (Mods Nil)
 
-primJson ::
+json ::
   ∀ a .
   ToJSON a =>
   FromJSON a =>
-  Dd ('DdK 'SelAuto (Mods [PgPrimName, PrimValueCodec a]) a 'Prim)
-primJson =
-  column primJsonValue
+  Dd ('DdK 'SelAuto [PgPrimName, PrimValueCodec a] a 'Prim)
+json =
+  column primJsonMods
 
 enum ::
   ∀ a .
-  Dd ('DdK 'SelAuto (Mods [PgPrimName, EnumColumn]) a 'Prim)
+  Dd ('DdK 'SelAuto [PgPrimName, EnumColumn] a 'Prim)
 enum =
-  column primEnumValue
+  column primEnumMods
 
 readShow ::
   ∀ a .
-  Dd ('DdK 'SelAuto (Mods [PgPrimName, ReadShowColumn]) a 'Prim)
+  Dd ('DdK 'SelAuto [PgPrimName, ReadShowColumn] a 'Prim)
 readShow =
-  column primReadShowValue
+  column primReadShowMods
 
 primNullable ::
   ∀ a .
-  Dd ('DdK 'SelAuto (Mods [Nullable, ColumnOptions]) (Maybe a) 'Prim)
+  Dd ('DdK 'SelAuto [Nullable, ColumnOptions] (Maybe a) 'Prim)
 primNullable =
   nullable (prim @a)
 
 primAs ::
   ∀ name a .
   KnownSymbol name =>
-  Dd ('DdK ('SelSymbol name) NoMods a 'Prim)
+  Dd ('DdK ('SelSymbol name) '[] a 'Prim)
 primAs =
-  columnAs (prim @a)
+  named @name (prim @a)
 
 primDef ::
   ∀ s0 s1 .
@@ -96,11 +92,11 @@ primDef a =
 
 -- TODO are composite arrays legal?
 array ::
-  ∀ f a p sel s .
-  Dd ('DdK sel (Mods p) a s) ->
-  Dd ('DdK sel (Mods (ArrayColumn f : p)) (f a) s)
+  ∀ f a p sel .
+  Dd ('DdK sel p a 'Prim) ->
+  Dd ('DdK sel (ArrayColumn f : p) (f a) 'Prim)
 array (Dd sel (Mods p) s) =
-    Dd sel (Mods (I ArrayColumn :* p)) s
+  Dd sel (Mods (I ArrayColumn :* p)) s
 
 migrateRename ::
   ∀ name s0 s1 .
@@ -130,7 +126,7 @@ instance MkPrims '[] '[] where
 
 instance (
     MkPrims as s
-  ) => MkPrims (a : as) ('DdK 'SelAuto NoMods a 'Prim : s) where
+  ) => MkPrims (a : as) ('DdK 'SelAuto '[] a 'Prim : s) where
     mkPrims = prim :* mkPrims @as @s
 
 type family PrimProd (a :: Type) :: [Type] where

@@ -6,8 +6,8 @@ import Sqel.Data.Dd (Comp, CompInc, Dd (..), DdK (DdK), DdStruct (DdComp), Struc
 import Sqel.Data.Sel (Sel)
 
 type FoldDd ::
-  (Sel -> Type -> Type -> Constraint) ->
-  (Comp -> CompInc -> Sel -> Sel -> Type -> Type -> [DdK] -> Constraint) ->
+  (Sel -> [Type] -> Type -> Constraint) ->
+  (Comp -> CompInc -> Sel -> Sel -> [Type] -> Type -> [DdK] -> Constraint) ->
   Type ->
   DdK ->
   Constraint

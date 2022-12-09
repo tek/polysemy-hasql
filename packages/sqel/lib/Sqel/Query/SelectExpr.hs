@@ -4,7 +4,7 @@ import Generics.SOP (All, K (K), NP ((:*)), hcmap, hcollapse)
 
 import Sqel.Mods (defaultWhere)
 import Sqel.Comp (IndexColumn)
-import Sqel.Data.Mods (Mods, GetMod (getMod))
+import Sqel.Class.Mods (GetMod (getMod))
 import Sqel.Data.Dd (
   Comp (Prod, Sum),
   CompInc (Merge, Nest),
@@ -40,7 +40,7 @@ class ToSelectExpr query where
 -- TODO this creates an invalid fragment, but it seems not to be used
 instance (
     GetMod () SelectAtom ps
-  ) => ToSelectExpr ('DdK 'SelUnused (Mods ps) q 'Prim) where
+  ) => ToSelectExpr ('DdK 'SelUnused ps q 'Prim) where
   toSelectExpr _ (Dd _ p DdPrim) =
     SelectExprAtom type_ (code "")
     where
@@ -49,7 +49,7 @@ instance (
 instance (
     KnownSymbol n,
     GetMod () SelectAtom ps
-  ) => ToSelectExpr ('DdK ('SelSymbol n) (Mods ps) q 'Prim) where
+  ) => ToSelectExpr ('DdK ('SelSymbol n) ps q 'Prim) where
   toSelectExpr pre (Dd _ p DdPrim) =
     SelectExprAtom type_ (code (Selector (Sql (prefixed (dbSymbol @n) pre))))
     where

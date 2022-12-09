@@ -4,6 +4,7 @@ import Generics.SOP (I, NP (Nil, (:*)))
 import Generics.SOP.GGP (GCode)
 import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
 
+import Sqel.Data.Mods (Mods)
 import Sqel.Data.Sel (Sel, SelW (SelWAuto, SelWPath, SelWSymbol, SelWUnused), showSelW)
 import Sqel.Data.Uid (Uid)
 import Sqel.SOP.Constraint (DataName, symbolText)
@@ -37,7 +38,7 @@ data Struct =
 data DdK =
   DdK {
     columnName :: Sel,
-    param :: Type,
+    mods :: [Type],
     hsType :: Type,
     struct :: Struct
   }
@@ -75,7 +76,7 @@ data DdStruct s where
 -- also to stuff different metadata in there, like DdlColumn?
 type Dd :: DdK -> Type
 data Dd s where
-  Dd :: SelW sel -> p -> DdStruct s -> Dd ('DdK sel p a s)
+  Dd :: SelW sel -> Mods p -> DdStruct s -> Dd ('DdK sel p a s)
 
 data QOp =
   QAnd
@@ -165,7 +166,7 @@ instance (
         DdMerge -> "merge"
 
 instance (
-    Pretty p
+    Pretty (Mods p)
   ) => Pretty (Dd ('DdK sel p a 'Prim)) where
   pretty (Dd s p DdPrim) =
     "prim" <+> pretty (showSelW s) <+> pretty p

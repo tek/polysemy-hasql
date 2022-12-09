@@ -2,11 +2,12 @@ module Sqel.ReifyDd where
 
 import Generics.SOP (I (I), K, NP (Nil, (:*)), SListI, hcollapse, tl)
 
+import Sqel.Class.Mods (GetMod (getMod))
 import Sqel.Codec (PrimColumn (pgType))
 import Sqel.Column (Nullable (Nullable))
 import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (Comp, CompInc, Dd (Dd), DdK (DdK), DdStruct (DdComp, DdPrim), Struct (Comp, Prim))
-import Sqel.Data.Mods (ArrayColumn (ArrayColumn), GetMod (getMod), Mods (Mods))
+import Sqel.Data.Mods (ArrayColumn (ArrayColumn), Mods (Mods))
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
 import qualified Sqel.Data.Term as Term
@@ -40,20 +41,20 @@ instance (
 instance ReifyPrimName a (PgPrimName : ps) where
   reifyPrimName (I t :* _) = t
 
-type FoldPrim :: Sel -> Type -> Type -> Constraint
+type FoldPrim :: Sel -> [Type] -> Type -> Constraint
 class FoldPrim sel p a where
   foldPrim :: Dd ('DdK sel p a 'Prim) -> DdTerm
 
 instance (
     GetMod () ColumnOptions ps,
     ReifyPrimName a ps
-  ) => FoldPrim ('SelSymbol name) (Mods ps) a where
+  ) => FoldPrim ('SelSymbol name) ps a where
     foldPrim (Dd (SelWSymbol Proxy) p@(Mods ps) DdPrim) =
       DdTerm name (Term.Prim (reifyPrimName @a ps) (getMod @() def p))
       where
         name = symbolText @name
 
-type FoldComp :: Comp -> CompInc -> Sel -> Sel -> Type -> Type -> [DdK] -> Constraint
+type FoldComp :: Comp -> CompInc -> Sel -> Sel -> [Type] -> Type -> [DdK] -> Constraint
 class FoldComp c i sel tsel p a sub where
   foldComp ::
     Dd ('DdK sel p a ('Comp tsel c i sub)) ->

@@ -1,6 +1,5 @@
 module Sqel.Query.Combinators where
 
-import Sqel.Data.Mods (Mods)
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), Struct (Prim))
 import Sqel.Data.Sel (Sel (SelUnused), mkSel)
 import Sqel.Prim (primMod)
@@ -12,11 +11,11 @@ nocond (Dd _ p s) =
   Dd mkSel p s
 
 limit ::
-  Dd ('DdK 'SelUnused (Mods '[SelectAtom]) Int64 'Prim)
+  Dd ('DdK 'SelUnused '[SelectAtom] Int64 'Prim)
 limit =
   nocond (primMod (SelectAtom Limit (const dollar)))
 
 offset ::
-  Dd ('DdK 'SelUnused (Mods '[SelectAtom]) Int64 'Prim)
+  Dd ('DdK 'SelUnused '[SelectAtom] Int64 'Prim)
 offset =
   nocond (primMod (SelectAtom Offset (const dollar)))

@@ -2,10 +2,11 @@ module Sqel.Migration.Ddl where
 
 import Generics.SOP (NP (Nil, (:*)))
 
-import Sqel.Data.Mods (Mods (Mods), GetMod (getMod))
+import Sqel.Class.Mods (GetMod (getMod))
 import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (CompInc (Merge, Nest), Dd (Dd), DdK (DdK), DdStruct (DdComp, DdPrim), Struct (Comp, Prim))
 import Sqel.Data.MigrationParams (MigrationDeleteK, MigrationRenameK)
+import Sqel.Data.Mods (Mods (Mods))
 import Sqel.Data.PgType (ColumnType (ColumnComp, ColumnPrim), pgTypeRefSym)
 import Sqel.Data.PgTypeName (MkPgTypeName (pgTypeName))
 import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
@@ -31,19 +32,19 @@ instance (
     DdCols ss cols types,
     rename ~ MigrationRenameK p,
     delete ~ MigrationDeleteK p
-  ) => DdCols ('DdK ('SelSymbol name) (Mods p) a 'Prim : ss) ('DdlColumnK name 'Nothing p rename delete a : cols) types where
+  ) => DdCols ('DdK ('SelSymbol name) p a 'Prim : ss) ('DdlColumnK name 'Nothing p rename delete a : cols) types where
     ddCols (Dd (SelWSymbol Proxy) p@(Mods ps) DdPrim :* t) =
       (DdlColumn (ColumnPrim (reifyPrimName @a ps) (getMod @(Default ColumnOptions) def p)) p :* cols, types)
       where
         (cols, types) = ddCols t
 
 instance (
-    DdlTypes 'False ('DdK ('SelSymbol name) (Mods p) a ('Comp ('SelSymbol tname) c 'Nest sub)) hTypes,
+    DdlTypes 'False ('DdK ('SelSymbol name) p a ('Comp ('SelSymbol tname) c 'Nest sub)) hTypes,
     DdCols ss cols types,
     allTypes ~ hTypes ++ types,
     rename ~ MigrationRenameK p,
     delete ~ MigrationDeleteK p
-  ) => DdCols ('DdK ('SelSymbol name) (Mods p) a ('Comp ('SelSymbol tname) c 'Nest sub) : ss) ('DdlColumnK name ('Just tname) p rename delete a : cols) allTypes where
+  ) => DdCols ('DdK ('SelSymbol name) p a ('Comp ('SelSymbol tname) c 'Nest sub) : ss) ('DdlColumnK name ('Just tname) p rename delete a : cols) allTypes where
     ddCols (h@(Dd (SelWSymbol Proxy) p (DdComp (SelWSymbol Proxy) _ _ _)) :* t) =
       (DdlColumn (ColumnComp (pgTypeRefSym @tname)) p :* tailCols, appendNP subTypes tailTypes)
       where

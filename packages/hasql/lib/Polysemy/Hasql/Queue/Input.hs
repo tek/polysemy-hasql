@@ -26,34 +26,35 @@ import Polysemy.Conc (
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Sqel.Data.Uid as Uid
-import Sqel.Data.Uid (Uuid)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import Sqel.SOP.Constraint (symbolText)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
 import qualified Polysemy.Log as Log
 import qualified Polysemy.Time as Time
 import Prelude hiding (Queue, listen)
+import Sqel.Codec (PrimColumn)
+import Sqel.Data.Dd (DbTypeName)
+import Sqel.Data.Sql (sql)
+import qualified Sqel.Data.Uid as Uid
+import Sqel.Data.Uid (Uuid)
+import Sqel.PgType (tableSchema)
+import qualified Sqel.Prim as Sqel
+import Sqel.Prim (prim, primAs)
+import Sqel.Product (uid)
+import Sqel.Query (checkQuery)
+import Sqel.SOP.Constraint (symbolText)
 import Torsor (Torsor)
 
 import Polysemy.Hasql.Data.ConnectionTag (ConnectionTag (NamedTag))
 import Polysemy.Hasql.Data.InitDb (InitDb (InitDb))
-import Sqel.Data.Sql (sql)
 import qualified Polysemy.Hasql.Database as Database (retryingSqlDef)
-import Sqel.Codec (PrimColumn)
-import Sqel.Data.Dd (DbTypeName)
-import Sqel.Prim (prim, primAs, primJson)
-import Sqel.Product (uid)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database, Databases, withDatabaseUnique)
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queue (Queue, QueueName (QueueName))
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
 import qualified Polysemy.Hasql.Queue.Data.Queued as Queued (Queued (..))
-import Sqel.Query (checkQuery)
-import Sqel.PgType (tableSchema)
 
 -- | Try to fetch a notification, and if there is none, wait on the connection's file descriptor until some data is
 -- received.
@@ -275,4 +276,4 @@ interpretInputDbQueueFull errorDelay csConfig errorHandler =
   where
     ts = tableSchema table
     query = primAs @"id"
-    table = uid prim (prim :* primJson :* Nil)
+    table = uid prim (prim :* Sqel.json :* Nil)

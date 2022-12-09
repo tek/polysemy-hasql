@@ -21,10 +21,10 @@ import Sqel.Data.Dd (
   DdStruct (DdComp),
   DdVar (DdProd),
   ProdType (Reg),
-  QOp (QAnd),
   Struct (Comp),
   )
 import Sqel.Data.Migration (Mig (Mig), Migration (Migration, tableFrom), Migrations (Migrations), Migs, noMigrations)
+import Sqel.Data.Mods (pattern NoMods, NoMods)
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
@@ -52,18 +52,18 @@ import Polysemy.Hasql.Effect.DbTable (DbTable)
 import Polysemy.Hasql.Table (createTable, dbColumnsStatement, tableColumnsSql, typeColumnsSql)
 
 type EmptyQuery =
-  'DdK ('SelSymbol "") QOp () ('Comp 'SelAuto ('Prod 'Reg) 'Nest '[])
+  'DdK ('SelSymbol "") NoMods () ('Comp 'SelAuto ('Prod 'Reg) 'Nest '[])
 
 emptyQuery :: Dd EmptyQuery
 emptyQuery =
-  Dd (SelWSymbol Proxy) QAnd (DdComp SelWAuto DdProd DdNest Nil)
+  Dd (SelWSymbol Proxy) NoMods (DdComp SelWAuto DdProd DdNest Nil)
 
 type NoResult =
-  'DdK ('SelSymbol "") () () ('Comp ('SelSymbol "") ('Prod 'Reg) 'Nest '[])
+  'DdK ('SelSymbol "") NoMods () ('Comp ('SelSymbol "") ('Prod 'Reg) 'Nest '[])
 
 noResult :: Dd NoResult
 noResult =
-  Dd (SelWSymbol Proxy) () (DdComp (SelWSymbol Proxy) DdProd DdNest Nil)
+  Dd (SelWSymbol Proxy) NoMods (DdComp (SelWSymbol Proxy) DdProd DdNest Nil)
 
 interpretStoreDb ::
   ∀ i d e r .

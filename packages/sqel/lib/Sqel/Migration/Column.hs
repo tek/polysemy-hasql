@@ -3,8 +3,8 @@ module Sqel.Migration.Column where
 import Generics.SOP (NP (Nil, (:*)))
 import qualified Hasql.Encoders as Encoders
 
+import Sqel.Class.Mods (OptMod (optMod))
 import Sqel.Codec (PrimColumn (primEncoder))
-import Sqel.Data.Mods (OptMod (optMod))
 import Sqel.Data.Migration (MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
 import Sqel.Data.MigrationParams (MigrationDefault (MigrationDefault))
 import Sqel.Data.PgType (ColumnType, PgColumnName (PgColumnName), pgColumnName)

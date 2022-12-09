@@ -19,6 +19,7 @@ build-type:     Simple
 library
   exposed-modules:
       Sqel
+      Sqel.Class.Mods
       Sqel.Codec
       Sqel.Codec.PrimDecoder
       Sqel.Codec.PrimEncoder

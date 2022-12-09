@@ -37,20 +37,20 @@ type PrimValueCodec a =
 type PrimValueEncoder a =
   PrimCodec Encoders.Value a
 
-primJsonValue ::
+primJsonMods ::
   ToJSON a =>
   FromJSON a =>
   Mods [PgPrimName, PrimValueCodec a]
-primJsonValue =
+primJsonMods =
   Mods (I "json" :* I (PrimCodec (Codec jsonEncoder jsonDecoder)) :* Nil)
 
 -- TODO change to "enum", create the type just like other composites
-primEnumValue ::
+primEnumMods ::
   Mods [PgPrimName, EnumColumn]
-primEnumValue =
+primEnumMods =
   Mods (I "text" :* I EnumColumn :* Nil)
 
-primReadShowValue ::
+primReadShowMods ::
   Mods [PgPrimName, ReadShowColumn]
-primReadShowValue =
+primReadShowMods =
   Mods (I "text" :* I ReadShowColumn :* Nil)

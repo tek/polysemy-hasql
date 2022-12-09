@@ -15,7 +15,8 @@ import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs, primJson)
+import qualified Sqel.Prim as Sqel
+import Sqel.Prim (prim, primAs)
 import Sqel.Product (uid)
 import Sqel.Query (checkQuery)
 
@@ -42,7 +43,7 @@ data Dat =
 
 table :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 table =
-  uid prim (prim :> prim :> primJson)
+  uid prim (prim :> prim :> Sqel.json)
 
 ts :: TableSchema (Uid Int64 Dat)
 ts =

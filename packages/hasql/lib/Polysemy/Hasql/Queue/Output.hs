@@ -17,7 +17,8 @@ import Sqel.Data.Dd (DbTypeName)
 import Sqel.Data.Sql (Sql (Sql))
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs, primJson)
+import qualified Sqel.Prim as Sqel
+import Sqel.Prim (prim, primAs)
 import Sqel.Product (uid)
 import Sqel.Query (checkQuery)
 import Sqel.SOP.Constraint (symbolText)
@@ -69,4 +70,4 @@ interpretOutputDbQueueFull =
   where
     ts = tableSchema table
     query = primAs @"id"
-    table = uid prim (prim :* primJson :* Nil)
+    table = uid prim (prim :* Sqel.json :* Nil)

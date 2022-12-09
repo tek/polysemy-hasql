@@ -214,13 +214,13 @@ class ReifyCodec b s a | s -> a where
 
 instance (
     ReifyPrimCodec b ps a
-  ) => ReifyCodec b ('DdK sel (Mods ps) a 'Prim) a where
+  ) => ReifyCodec b ('DdK sel ps a 'Prim) a where
     reifyCodec (Dd _ (Mods ps) DdPrim) =
       reifyPrimCodec @b ps
 
 instance (
     AllZip (ReifyCodec b) sub as,
     ReifyCompCodec b c i ps as a
-  ) => ReifyCodec b ('DdK sel (Mods ps) a ('Comp ('SelSymbol tname) c i sub)) a where
+  ) => ReifyCodec b ('DdK sel ps a ('Comp ('SelSymbol tname) c i sub)) a where
     reifyCodec (Dd _ (Mods ps) (DdComp _ _ _ sub)) =
       reifyCompCodec @b @c @i @ps @as ps (htrans (Proxy @(ReifyCodec b)) reifyCodec sub)
