@@ -19,6 +19,7 @@ import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Term (DdTerm)
 import Sqel.Data.Uid (Uid (Uid))
+import Sqel.Names (named)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs, primNewtype)
 import Sqel.Product (prod, prodAs, uid)
@@ -50,7 +51,7 @@ data Q =
   Q {
     pr :: PordQ,
     params :: Par,
-    n :: Text
+    n :: TextNt
   }
   deriving stock (Eq, Show, Generic)
 
@@ -62,7 +63,7 @@ newtype TextNt =
 data Pord =
   Pord {
     p1 :: Int64,
-    p2 :: TextNt
+    p2 :: Maybe TextNt
   }
   deriving stock (Eq, Show, Generic)
 
@@ -77,7 +78,7 @@ td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 td =
   uid prim (
     prim :>
-    prod (prim :> primNewtype)
+    prod (prim :> nullable primNewtype)
   )
 
 codec :: FullCodec (Uid Int64 Dat)
@@ -108,7 +109,7 @@ interpretQuery =
       prod (
         prodAs @"po" (prim :* Nil) :*
         prod (nullable Q.limit :* nullable Q.offset :* Nil) :*
-        primAs @"name" :*
+        named @"name" (primNewtype) :*
         Nil
       )
 
@@ -118,6 +119,6 @@ test_dslQuery =
     interpretDbTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         for_ @[] [1..10] \ i ->
-          Store.insert (Uid i (Dat "name" (Pord i "hnnnggg")))
+          Store.insert (Uid i (Dat "name" (Pord i (Just (TextNt "hnnnggg")))))
         r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name")
         [3, 4] === r

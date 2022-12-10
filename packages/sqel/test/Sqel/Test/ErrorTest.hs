@@ -8,6 +8,8 @@ import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
 import Sqel.Test.Error.CompArgs (prodTooFew)
+import Sqel.Test.Error.NewtypeNoGeneric (newtypeNoGeneric)
+import Sqel.Test.Error.NewtypeNoNewtype (newtypeNoNewtype)
 import Sqel.Test.Error.QueryColumMismatch (queryColumnMismatch)
 
 typeError ::
@@ -38,14 +40,25 @@ prodTooFewMessage =
 newtypeNoGenericMessage :: [Text]
 newtypeNoGenericMessage =
   [
+    "\8226 \8216primNewtype\8217 declares a column for a newtype using \8216Generic\8217.",
+    "The type \8216TextNt\8217 does not have an instance of \8216Generic\8217.",
+    "You can add it like this:",
+    "\8216newtype MyType = MyType Text deriving Generic\8217",
+    "If you want to use \8216Coercible\8217 instead, use \8216primCoerce\8217."
+  ]
+
+newtypeNoNewtypeMessage :: [Text]
+newtypeNoNewtypeMessage =
+  [
+    "\8226 \8216primNewtype\8217 declares a column for a newtype using \8216Generic\8217.",
+    "The type \8216TextNt\8217 is not a newtype."
   ]
 
 test_errors :: TestTree
 test_errors =
   testGroup "type errors" [
     unitTest "query column mismatch" (typeError queryColumnMismatchMessage queryColumnMismatch),
-    unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew)
-    -- TODO TypeError isn't triggered with deferred errors
-    -- ,
-    -- unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric)
+    unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew),
+    unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric),
+    unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype)
   ]

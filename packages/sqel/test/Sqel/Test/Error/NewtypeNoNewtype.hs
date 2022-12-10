@@ -1,6 +1,6 @@
 {-# options_ghc -fdefer-type-errors -Wno-deferred-type-errors -Wno-partial-type-signatures #-}
 
-module Sqel.Test.Error.NewtypeNoGeneric where
+module Sqel.Test.Error.NewtypeNoNewtype where
 
 import Generics.SOP (I (I), NP (Nil, (:*)))
 
@@ -9,8 +9,8 @@ import Sqel.Data.Mods (Mods (Mods), Newtype (Newtype))
 import Sqel.Prim (prim, primNewtype)
 import Sqel.Product (prod)
 
-newtype TextNt = TextNt { unTextNt :: Text }
-  deriving stock (Eq, Show)
+data TextNt = TextNt { unTextNt :: Text }
+  deriving stock (Eq, Show, Generic)
 
 data Dat =
   Dat {
@@ -32,6 +32,6 @@ useMod =
     Dd _ _ (DdComp _ _ _ (_ :* Dd _ (Mods (I (Newtype unwrap _) :* Nil)) _ :* Nil)) ->
       unwrap (TextNt "asdf")
 
-newtypeNoGeneric :: Text
-newtypeNoGeneric =
+newtypeNoNewtype :: Text
+newtypeNoNewtype =
   useMod

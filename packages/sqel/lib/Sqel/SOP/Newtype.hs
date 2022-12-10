@@ -1,13 +1,13 @@
 module Sqel.SOP.Newtype where
 
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
-import Generics.SOP.Type.Metadata (DatatypeInfo (ADT, Newtype))
-import Type.Errors (ErrorMessage)
+import Generics.SOP.Type.Metadata (DatatypeInfo (Newtype))
+import Type.Errors (DelayError, ErrorMessage)
 import Type.Errors.Pretty (type (%), type (<>))
 import Unsafe.Coerce (unsafeCoerce)
 
 import Sqel.SOP.Error (Quoted, QuotedType)
-import Sqel.SOP.Fundeps (DummyDep)
+import Sqel.SOP.HasGeneric (HasGeneric)
 
 type NoGenericError a =
   "The type " <> QuotedType a <> " does not have an instance of " <> Quoted "Generic" <> "." %
@@ -18,7 +18,7 @@ type NoGenericError a =
 type NotNewtypeError a =
   "The type " <> QuotedType a <> " is not a newtype."
 
-type UN_CheckNewtype :: ErrorMessage -> [[Type]] -> DatatypeInfo -> Type -> Type -> Constraint
+type UN_CheckNewtype :: Void -> [[Type]] -> DatatypeInfo -> Type -> Type -> Constraint
 class UN_CheckNewtype err ass info a w | ass info a -> w where
   un_checkNewtype_unwrap :: a -> w
   un_checkNewtype_wrap :: w -> a
@@ -27,44 +27,34 @@ instance UN_CheckNewtype err '[ '[w] ] ('Newtype mn dn ci) a w where
   un_checkNewtype_unwrap = unsafeCoerce
   un_checkNewtype_wrap = unsafeCoerce
 
-instance (
-  TypeError (err % NotNewtypeError a),
-  '[ '[w] ] ~ ass
-  ) => UN_CheckNewtype err ass ('ADT mn dn ci si) a w where
-  un_checkNewtype_unwrap = error "not a newtype"
-  un_checkNewtype_wrap = error "not a newtype"
-
-type UN_CheckGeneric :: ErrorMessage -> [[Type]] -> DatatypeInfo -> Type -> Type -> Constraint
-class UN_CheckGeneric err ass info a w | ass info a -> w where
+type UN_CheckGeneric :: ErrorMessage -> Void -> [[Type]] -> DatatypeInfo -> Type -> Type -> Constraint
+class UN_CheckGeneric errHead err ass info a w | ass info a -> w where
   un_checkGeneric_unwrap :: a -> w
   un_checkGeneric_wrap :: w -> a
 
 instance (
+    err ~ DelayError (errHead % NotNewtypeError a),
     UN_CheckNewtype err '[] info a w
-  ) => UN_CheckGeneric err '[] info a w where
+  ) => UN_CheckGeneric errHead genErr '[] info a w where
     un_checkGeneric_unwrap = un_checkNewtype_unwrap @err @'[] @info
-    un_checkGeneric_wrap = un_checkGeneric_wrap @err @'[] @info
+    un_checkGeneric_wrap = un_checkNewtype_wrap @err @'[] @info
 
 instance (
+    err ~ DelayError (errHead % NotNewtypeError a),
     UN_CheckNewtype err (x : xs) info a w
-  ) => UN_CheckGeneric err (x : xs) info a w where
+  ) => UN_CheckGeneric errHead genErr (x : xs) info a w where
     un_checkGeneric_unwrap = un_checkNewtype_unwrap @err @(x : xs) @info
-    un_checkGeneric_wrap = un_checkGeneric_wrap @err @(x : xs) @info
-
-instance {-# incoherent #-} (
-    TypeError (err % NoGenericError a),
-    DummyDep ass w
-  ) => UN_CheckGeneric err ass info a w where
-    un_checkGeneric_unwrap = error "no Generic"
-    un_checkGeneric_wrap = error "no Generic"
+    un_checkGeneric_wrap = un_checkNewtype_wrap @err @(x : xs) @info
 
 type UnwrapNewtype :: ErrorMessage -> Type -> Type -> Constraint
-class UnwrapNewtype err a w | a -> w where
+class UnwrapNewtype errHead a w | a -> w where
   unwrapNewtype :: a -> w
   wrapNewtype :: w -> a
 
 instance (
-  UN_CheckGeneric err (GCode a) (GDatatypeInfoOf a) a w
-  ) => UnwrapNewtype err a w where
-    unwrapNewtype = un_checkGeneric_unwrap @err @(GCode a) @(GDatatypeInfoOf a)
-    wrapNewtype = un_checkGeneric_wrap @err @(GCode a) @(GDatatypeInfoOf a)
+  HasGeneric a flag,
+  err ~ DelayError (errHead % NoGenericError a),
+  UN_CheckGeneric errHead err (GCode a) (GDatatypeInfoOf a) a w
+  ) => UnwrapNewtype errHead a w where
+    unwrapNewtype = un_checkGeneric_unwrap @errHead @err @(GCode a) @(GDatatypeInfoOf a)
+    wrapNewtype = un_checkGeneric_wrap @errHead @err @(GCode a) @(GDatatypeInfoOf a)
