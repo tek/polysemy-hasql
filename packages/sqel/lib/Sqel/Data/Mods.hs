@@ -4,7 +4,7 @@ import Exon (exon)
 import Generics.SOP (All, Compose, I, K (K), NP (Nil), hcmap, hcollapse)
 import Prelude hiding (Compose)
 import Prettyprinter (Pretty (pretty), hsep, viaShow)
-import Text.Show (showParen, showsPrec)
+import Text.Show (show, showParen, showsPrec)
 
 import Sqel.Data.PgTypeName (PgTableName)
 
@@ -39,3 +39,14 @@ newtype SetTableName =
   SetTableName { unSetTableName :: PgTableName }
   deriving stock (Eq, Show, Generic)
   deriving newtype (IsString, Ord)
+
+data Newtype a w =
+  Newtype {
+    unwrap :: a -> w,
+    wrap :: w -> a
+  }
+  deriving stock (Generic)
+
+instance Show (Newtype a w) where
+  show _ =
+    "Newtype"

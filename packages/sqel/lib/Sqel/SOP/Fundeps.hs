@@ -1,6 +1,6 @@
 {-# language UndecidableSuperClasses #-}
 
-module Polysemy.Db.SOP.Fundeps where
+module Sqel.SOP.Fundeps where
 
 import Generics.SOP (AllZip)
 
@@ -17,3 +17,5 @@ instance (
     Fundep c a b,
     Fundeps (Fundep c) as bs
   ) => Fundeps (Fundep c) (a : as) (b : bs) where
+
+class DummyDep arg s | arg -> s where

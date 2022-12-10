@@ -17,7 +17,7 @@ typeError ::
 typeError msg t = do
   e <- liftIO (Base.try @SomeException (evaluate t))
   case e of
-    Right _ -> unit
+    Right _ -> fail "Test did not produce an error."
     Left err -> msg === (trunc (drop 1 (lines (show err))))
   where
     trunc =
@@ -35,9 +35,17 @@ prodTooFewMessage =
     "\8226 The product type \8216Pr\8217 has 3 fields, but the expression specifies 1."
   ]
 
+newtypeNoGenericMessage :: [Text]
+newtypeNoGenericMessage =
+  [
+  ]
+
 test_errors :: TestTree
 test_errors =
   testGroup "type errors" [
     unitTest "query column mismatch" (typeError queryColumnMismatchMessage queryColumnMismatch),
     unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew)
+    -- TODO TypeError isn't triggered with deferred errors
+    -- ,
+    -- unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric)
   ]

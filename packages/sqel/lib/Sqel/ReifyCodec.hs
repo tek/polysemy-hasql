@@ -1,5 +1,6 @@
 module Sqel.ReifyCodec where
 
+import Data.Functor.Invariant (Invariant, invmap)
 import Generics.SOP (AllZip, I (I), NP ((:*)), htrans)
 import qualified Hasql.Encoders as Encoders
 
@@ -26,7 +27,13 @@ import Sqel.Data.Dd (
   ProdType (Con, Reg),
   Struct (Comp, Prim),
   )
-import Sqel.Data.Mods (ArrayColumn (ArrayColumn), EnumColumn (EnumColumn), Mods (Mods), ReadShowColumn (ReadShowColumn))
+import Sqel.Data.Mods (
+  ArrayColumn (ArrayColumn),
+  EnumColumn (EnumColumn),
+  Mods (Mods),
+  Newtype (Newtype),
+  ReadShowColumn (ReadShowColumn),
+  )
 import Sqel.Data.Sel (Sel (SelSymbol))
 import Sqel.Mods (PrimCodec (PrimCodec), PrimValueCodec, PrimValueEncoder)
 import Sqel.SOP.Enum (EnumTable)
@@ -194,6 +201,13 @@ instance (
     fullPrimCodec (arrayEncoder encoder) (arrayDecoder decoder)
       where
         Codec encoder decoder = reifyPrimCodec @ValueCodec ps
+
+instance (
+    ReifyPrimCodec c mods w,
+    Invariant c
+  ) => ReifyPrimCodec c (Newtype a w : mods) a where
+  reifyPrimCodec (I (Newtype unwrap wrap) :* mods) =
+    invmap wrap unwrap (reifyPrimCodec mods)
 
 instance (
     DefaultPrimCodec b a

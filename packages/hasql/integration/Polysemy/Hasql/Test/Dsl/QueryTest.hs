@@ -13,15 +13,19 @@ import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Column (nullable)
+import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
+import Sqel.Data.Term (DdTerm)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs, prims)
+import Sqel.Prim (prim, primAs, primNewtype)
 import Sqel.Product (prod, prodAs, uid)
 import Sqel.Query (checkQuery)
 import qualified Sqel.Query.Combinators as Q
+import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
+import Sqel.ReifyDd (ReifyDd (reifyDd))
 import Sqel.Statement (qStatement)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -50,10 +54,15 @@ data Q =
   }
   deriving stock (Eq, Show, Generic)
 
+newtype TextNt =
+  TextNt { unTextNt :: Text }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)
+
 data Pord =
   Pord {
     p1 :: Int64,
-    p2 :: Text
+    p2 :: TextNt
   }
   deriving stock (Eq, Show, Generic)
 
@@ -68,8 +77,16 @@ td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 td =
   uid prim (
     prim :>
-    prod prims
+    prod (prim :> primNewtype)
   )
+
+codec :: FullCodec (Uid Int64 Dat)
+codec =
+  reifyCodec td
+
+term :: DdTerm
+term =
+  reifyDd td
 
 ts :: TableSchema (Uid Int64 Dat)
 ts = tableSchema td

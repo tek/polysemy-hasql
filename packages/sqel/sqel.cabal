@@ -74,7 +74,9 @@ library
       Sqel.SOP.Constraint
       Sqel.SOP.Enum
       Sqel.SOP.Error
+      Sqel.SOP.Fundeps
       Sqel.SOP.HasGeneric
+      Sqel.SOP.Newtype
       Sqel.Sql.CommaSep
       Sqel.Sql.Delete
       Sqel.Sql.From
@@ -191,6 +193,7 @@ test-suite polysemy-hasql-unit
   main-is: Main.hs
   other-modules:
       Sqel.Test.Error.CompArgs
+      Sqel.Test.Error.NewtypeNoGeneric
       Sqel.Test.Error.QueryColumMismatch
       Sqel.Test.ErrorTest
       Sqel.Test.TableSchemaTest

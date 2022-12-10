@@ -9,6 +9,7 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Path (Path)
 import Prelude hiding (sum)
+import Type.Errors.Pretty (type (<>), type (%))
 
 import qualified Sqel.Codec.PrimDecoder as PrimDecoder
 import Sqel.Codec.PrimDecoder (PrimDecoder)
@@ -19,6 +20,7 @@ import Sqel.Column (ignoreDecoder)
 import qualified Sqel.Data.Codec as Codec
 import Sqel.Data.Codec (Codec (Codec), Decoder (Decoder), Encoder (Encoder), FullCodec, ValueCodec)
 import Sqel.Data.PgType (PgPrimName)
+import Sqel.SOP.Error (QuotedType, Quoted)
 
 class ColumnEncoder f where
   columnEncoder :: f a -> Params a
@@ -53,6 +55,16 @@ class PrimColumn a where
   primEncoder = PrimEncoder.primEncoder
 
   pgType :: PgPrimName
+
+instance {-# overlappable #-} (
+    TypeError (
+      "A column of type " <> QuotedType a <> " was declared as primitive, but there is no instance of " %
+      Quoted "PrimColumn" <> " for that type."
+    )
+  ) => PrimColumn a where
+    primDecoder = error "no instance for PrimColumn"
+    primEncoder = error "no instance for PrimColumn"
+    pgType = error "no instance for PrimColumn"
 
 instance PrimColumn Bool where pgType = "bool"
 instance PrimColumn Int where pgType = "bigint"

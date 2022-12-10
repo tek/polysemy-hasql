@@ -7,7 +7,7 @@ import Sqel.Codec (PrimColumn (pgType))
 import Sqel.Column (Nullable (Nullable))
 import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (Comp, CompInc, Dd (Dd), DdK (DdK), DdStruct (DdComp, DdPrim), Struct (Comp, Prim))
-import Sqel.Data.Mods (ArrayColumn (ArrayColumn), Mods (Mods), SetTableName, unSetTableName)
+import Sqel.Data.Mods (ArrayColumn (ArrayColumn), Mods (Mods), Newtype (Newtype), SetTableName, unSetTableName)
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
 import qualified Sqel.Data.Term as Term
@@ -37,6 +37,11 @@ instance (
     ReifyPrimName a mods
   ) => ReifyPrimName (f a) (ArrayColumn f : mods) where
     reifyPrimName (I ArrayColumn :* mods) = reifyPrimName @a mods <> "[]"
+
+instance (
+    ReifyPrimName w mods
+  ) => ReifyPrimName a (Newtype a w : mods) where
+    reifyPrimName (I (Newtype _ _) :* mods) = reifyPrimName @w mods
 
 instance ReifyPrimName a (PgPrimName : mods) where
   reifyPrimName (I t :* _) = t

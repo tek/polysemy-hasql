@@ -1,6 +1,7 @@
 module Sqel.Prim where
 
 import Generics.SOP (I (I), NP (Nil, (:*)))
+import Type.Errors.Pretty (type (<>))
 
 import Sqel.Class.Mods (MapMod, SymNP, setMod, symMods)
 import Sqel.Column (Nullable, nullable)
@@ -11,12 +12,22 @@ import Sqel.Data.MigrationParams (
   MigrationDelete (MigrationDelete),
   MigrationRename (MigrationRename),
   )
-import Sqel.Data.Mods (ArrayColumn (ArrayColumn), EnumColumn, Mods (Mods), NoMods, ReadShowColumn)
+import Sqel.Data.Mods (
+  ArrayColumn (ArrayColumn),
+  EnumColumn,
+  Mods (Mods),
+  Newtype (Newtype),
+  pattern NoMods,
+  type NoMods,
+  ReadShowColumn,
+  )
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto))
 import Sqel.Mods (PrimValueCodec, primEnumMods, primJsonMods, primReadShowMods)
 import Sqel.Names (named)
 import Sqel.SOP.Constraint (ProductGCode)
+import Sqel.SOP.Error (Quoted)
+import Sqel.SOP.Newtype (UnwrapNewtype (unwrapNewtype, wrapNewtype))
 
 column :: Mods p -> Dd ('DdK 'SelAuto p a 'Prim)
 column m =
@@ -46,7 +57,25 @@ prim ::
   ∀ a .
   Dd ('DdK 'SelAuto NoMods a 'Prim)
 prim =
-  column (Mods Nil)
+  column NoMods
+
+type NewtypeError =
+  Quoted "primNewtype" <> " declares a column for a newtype using " <> Quoted "Generic" <> "."
+
+primNewtype ::
+  ∀ a w err .
+  err ~ NewtypeError =>
+  UnwrapNewtype err a w =>
+  Dd ('DdK 'SelAuto '[Newtype a w] a 'Prim)
+primNewtype =
+  primMod (Newtype (unwrapNewtype @err) (wrapNewtype @err))
+
+primCoerce ::
+  ∀ a w .
+  Coercible a w =>
+  Dd ('DdK 'SelAuto '[Newtype a w] a 'Prim)
+primCoerce =
+  primMod (Newtype coerce coerce)
 
 -- TODO move aeson to reify
 json ::

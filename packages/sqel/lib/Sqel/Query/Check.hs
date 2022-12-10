@@ -53,7 +53,7 @@ type family CheckFields s where
 -------------------------------------------------------------------------------------------------------
 
 type family MatchField' (f1 :: CheckField) (f2 :: CheckField) :: Bool where
-  MatchField' f f = 'True
+  MatchField' ('CheckField path _) ('CheckField path _) = 'True
   MatchField' _ _ = 'False
 
 data MatchField :: CheckField -> CheckField -> Exp Bool

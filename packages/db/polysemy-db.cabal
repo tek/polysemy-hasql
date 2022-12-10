@@ -40,7 +40,6 @@ library
       Polysemy.Db.SOP.Constructor
       Polysemy.Db.SOP.Contravariant
       Polysemy.Db.SOP.FieldNames
-      Polysemy.Db.SOP.Fundeps
       Polysemy.Db.SOP.List
       Polysemy.Db.Store
   hs-source-dirs:
