@@ -4,9 +4,11 @@ import Generics.SOP (I, NP)
 import qualified Hasql.Decoders as Hasql
 import Hasql.Decoders (Row, custom)
 
-import Sqel.Class.Mods (AddMod (addMod), MapMod (mapMod))
+import Sqel.Class.Mods (AddMod (addMod), MapMod (mapMod), amendMod)
 import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), Struct (Prim))
+import Sqel.Data.Mods (SetTableName (SetTableName))
+import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetName)
 
@@ -70,3 +72,12 @@ nullableAs ::
   Dd (SetName s3 name)
 nullableAs =
   rename . nullable
+
+tableName ::
+  ∀ s0 s1 .
+  MapMod SetTableName s0 s1 =>
+  PgTableName ->
+  Dd s0 ->
+  Dd s1
+tableName name =
+  amendMod (SetTableName name)

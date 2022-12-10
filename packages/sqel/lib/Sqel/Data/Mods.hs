@@ -1,10 +1,12 @@
 module Sqel.Data.Mods where
 
 import Exon (exon)
-import Generics.SOP (All, Compose, I, NP (Nil), hcollapse, hcmap, K (K))
+import Generics.SOP (All, Compose, I, K (K), NP (Nil), hcmap, hcollapse)
 import Prelude hiding (Compose)
-import Prettyprinter (Pretty (pretty), viaShow, hsep)
+import Prettyprinter (Pretty (pretty), hsep, viaShow)
 import Text.Show (showParen, showsPrec)
+
+import Sqel.Data.PgTypeName (PgTableName)
 
 newtype Mods ps = Mods { unMods :: NP I ps }
 
@@ -32,3 +34,8 @@ data ReadShowColumn = ReadShowColumn
 type ArrayColumn :: (Type -> Type) -> Type
 data ArrayColumn f = ArrayColumn
   deriving stock (Eq, Show, Generic)
+
+newtype SetTableName =
+  SetTableName { unSetTableName :: PgTableName }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)

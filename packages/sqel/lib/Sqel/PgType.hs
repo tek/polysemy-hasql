@@ -23,7 +23,7 @@ import Sqel.Data.PgType (
   pgColumnName,
   pgCompRef,
   )
-import Sqel.Data.PgTypeName (pgCompName, pgTableName)
+import Sqel.Data.PgTypeName (PgTableName, pgCompName, pgTableName)
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
@@ -38,9 +38,9 @@ pgColumn ::
   DdTerm ->
   ([(PgColumnName, ColumnType)], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty Text])
 pgColumn = \case
-  DdTerm name (Prim t opt) ->
+  DdTerm name _ (Prim t opt) ->
     ([(pgColumnName name, ColumnPrim t opt)], [(pgColumnName name, StructurePrim t opt)], mempty, [pure name])
-  DdTerm name (Comp typeName c i sub) ->
+  DdTerm name _ (Comp typeName c i sub) ->
     case comp typeName c i sub of
       (compType@(PgComposite cname _), struct, types, False, sels) ->
         (colType, structType, Map.insert ref compType types, (name <|) <$> sels)
@@ -87,25 +87,26 @@ mkValues (PgStructure base) =
 
 mkTable ::
   Text ->
+  Maybe PgTableName ->
   PgColumns ->
   Map PgTypeRef PgComposite ->
   [NonEmpty Text] ->
   PgStructure ->
   PgTable a
-mkTable name cols types selectors struct =
-  PgTable (pgTableName name) cols types (TableSelectors (mkSelector <$> selectors)) values struct
+mkTable name tableName cols types selectors struct =
+  PgTable (fromMaybe (pgTableName name) tableName) cols types (TableSelectors (mkSelector <$> selectors)) values struct
   where
     values = TableValues (mkValues struct)
 
 toTable :: DdTerm -> PgTable a
 toTable = \case
-  DdTerm name (Prim t opt) ->
-    mkTable name cols [] [pure name] struct
+  DdTerm name tableName (Prim t opt) ->
+    mkTable name tableName cols [] [pure name] struct
     where
       cols = PgColumns [(pgColumnName name, ColumnPrim t opt)]
       struct = PgStructure [(pgColumnName name, StructurePrim t opt)]
-  DdTerm _ (Comp typeName c i sub) ->
-    mkTable typeName cols types paths struct
+  DdTerm _ tableName (Comp typeName c i sub) ->
+    mkTable typeName tableName cols types paths struct
     where
       (PgComposite _ cols, struct, types, _, paths) = comp typeName c i sub
 

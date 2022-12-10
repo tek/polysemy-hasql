@@ -3,6 +3,7 @@ module Sqel.Data.Term where
 import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (DdInc (DdMerge, DdNest), DdVar (DdCon, DdProd, DdSum))
 import Sqel.Data.PgType (PgPrimName)
+import Sqel.Data.PgTypeName (PgTableName)
 
 data ProdType =
   Reg
@@ -28,9 +29,11 @@ data Struct =
   Comp Text Comp CompInc [DdTerm]
   deriving stock (Eq, Show, Generic)
 
+-- TODO would be nice to have a separate type wrapping the root for the table name
 data DdTerm =
   DdTerm {
     name :: Text,
+    tableName :: Maybe PgTableName,
     struct :: Struct
   }
   deriving stock (Eq, Show, Generic)

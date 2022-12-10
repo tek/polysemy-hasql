@@ -1,6 +1,6 @@
 module Sqel.ReifyCodec where
 
-import Generics.SOP (AllZip, I (I), NP (Nil, (:*)), htrans)
+import Generics.SOP (AllZip, I (I), NP ((:*)), htrans)
 import qualified Hasql.Encoders as Encoders
 
 import Sqel.Codec (
@@ -205,8 +205,8 @@ class ReifyCompCodec b c i ps as a where
 
 instance (
     DefaultCompCodec c i b a as
-  ) => ReifyCompCodec b c i '[] as a where
-    reifyCompCodec Nil sub =
+  ) => ReifyCompCodec b c i ps as a where
+    reifyCompCodec _ sub =
       defaultCompCodec @c @i sub
 
 class ReifyCodec b s a | s -> a where

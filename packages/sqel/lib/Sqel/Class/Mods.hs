@@ -182,3 +182,18 @@ instance {-# overlappable #-} (
     OptMod p ps p1
   ) => OptMod p (p0 : ps) p1 where
     optMod (Mods (_ :* ps)) = optMod @p (Mods ps)
+
+type MaybeMod :: Type -> [Type] -> Constraint
+class MaybeMod p ps where
+  maybeMod :: Mods ps -> Maybe p
+
+instance MaybeMod p '[] where
+  maybeMod (Mods Nil) = Nothing
+
+instance MaybeMod p (p : ps) where
+  maybeMod (Mods (I p :* _)) = Just p
+
+instance {-# overlappable #-} (
+    MaybeMod p ps
+  ) => MaybeMod p (p0 : ps) where
+    maybeMod (Mods (_ :* ps)) = maybeMod @p (Mods ps)

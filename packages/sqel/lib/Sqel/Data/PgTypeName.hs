@@ -76,13 +76,16 @@ pgCompName ::
 pgCompName name =
   UnsafePgCompName [exon|ph_type__#{dbIdentifierT name}|]
 
-instance IsString (PgTypeName 'True) where
+instance IsString PgTableName where
   fromString =
     pgTableName . fromString
 
-instance IsString (PgTypeName 'False) where
+instance IsString PgCompName where
   fromString =
     pgCompName . fromString
+
+instance Ord (PgTypeName table) where
+  compare = comparing unsafePgTypeName
 
 type MkPgTypeName :: Symbol -> Bool -> Constraint
 class MkPgTypeName name table where

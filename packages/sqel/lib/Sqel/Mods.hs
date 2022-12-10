@@ -7,8 +7,14 @@ import qualified Hasql.Encoders as Encoders
 import Text.Show (show)
 
 import Sqel.Data.Codec (Codec (Codec))
-import Sqel.Data.Mods (EnumColumn (EnumColumn), Mods (Mods), ReadShowColumn (ReadShowColumn))
+import Sqel.Data.Mods (
+  EnumColumn (EnumColumn),
+  Mods (Mods),
+  ReadShowColumn (ReadShowColumn),
+  SetTableName (SetTableName),
+  )
 import Sqel.Data.PgType (PgPrimName)
+import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Data.Sql (sql)
 import Sqel.Sql.Prepared (dollar)
 import Sqel.Sql.Select (FragType (Where), SelectAtom (SelectAtom))
@@ -50,12 +56,14 @@ primJsonMods =
   Mods (I "json" :* I (PrimCodec (Codec jsonEncoder jsonDecoder)) :* Nil)
 
 -- TODO change to "enum", create the type just like other composites
-primEnumMods ::
-  Mods [PgPrimName, EnumColumn]
+primEnumMods :: Mods [PgPrimName, EnumColumn]
 primEnumMods =
   Mods (I "text" :* I EnumColumn :* Nil)
 
-primReadShowMods ::
-  Mods [PgPrimName, ReadShowColumn]
+primReadShowMods :: Mods [PgPrimName, ReadShowColumn]
 primReadShowMods =
   Mods (I "text" :* I ReadShowColumn :* Nil)
+
+tableNameMods :: PgTableName -> Mods '[SetTableName]
+tableNameMods n =
+  Mods (I (SetTableName n) :* Nil)
