@@ -55,7 +55,7 @@ test_json = do
     interpretDbTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
       restop @DbError do
         Store.insert dat
-        assertJust dat =<< Store.fetch 5
+        raise . assertJust dat =<< Store.fetch 5
     result <- evalMaybe =<< Database.retryingQuerySqlDef @DbError query dec enc 5
     assertRight f3 (Aeson.eitherDecodeStrict' result)
   where

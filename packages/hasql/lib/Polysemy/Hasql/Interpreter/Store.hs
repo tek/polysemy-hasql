@@ -11,7 +11,7 @@ import qualified Log
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store)
+import Polysemy.Db.Effect.Store (Store, QStore)
 import Sqel.Data.Dd (
   Comp (Prod),
   CompInc (Nest),
@@ -48,8 +48,9 @@ import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
-import Polysemy.Hasql.Effect.DbTable (DbTable)
+import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
 import Polysemy.Hasql.Table (createTable, dbColumnsStatement, tableColumnsSql, typeColumnsSql)
+import Sqel.ResultShape (ResultShape)
 
 type EmptyQuery =
   'DdK ('SelSymbol "") NoMods () ('Comp 'SelAuto ('Prod 'Reg) 'Nest '[])
@@ -65,13 +66,14 @@ noResult :: Dd NoResult
 noResult =
   Dd (SelWSymbol Proxy) NoMods (DdComp (SelWSymbol Proxy) DdProd DdNest Nil)
 
-interpretStoreDb ::
-  ∀ i d e r .
-  Member (DbTable (Uid i d) !! e) r =>
-  TableSchema (Uid i d) ->
-  QuerySchema i (Uid i d) ->
-  InterpreterFor (Store i d !! e) r
-interpretStoreDb table query =
+interpretQStoreDb ::
+  ∀ f q d e r .
+  ResultShape d (f d) =>
+  Member (DbTable d !! e) r =>
+  TableSchema d ->
+  QuerySchema q d ->
+  InterpreterFor (QStore f q d !! e) r
+interpretQStoreDb table query =
   interpretResumable \case
     Store.Insert d ->
       restop (DbTable.statement d is)
@@ -80,22 +82,31 @@ interpretStoreDb table query =
     Store.Delete i ->
       restop (DbTable.statement i ds)
     Store.DeleteAll ->
-      nonEmpty <$> restop (DbTable.statement () das)
+      restop (DbTable.statement () das)
     Store.Fetch i ->
       restop (DbTable.statement i qs)
     Store.FetchAll ->
-      nonEmpty <$> restop (DbTable.statement () qas)
+      restop (DbTable.statement () qas)
   where
     is = iStatement table
     us = uStatement table
-    ds :: Statement i (Maybe (Uid i d))
+    ds :: Statement q (f d)
     ds = dStatement query table
-    qs :: Statement i (Maybe (Uid i d))
+    qs :: Statement q (f d)
     qs = qStatement query table
-    qas :: Statement () [Uid i d]
+    qas :: Statement () [d]
     qas = qStatement emptyQuerySchema table
-    das :: Statement () [Uid i d]
+    das :: Statement () [d]
     das = dStatement emptyQuerySchema table
+
+interpretStoreDb ::
+  ∀ i d e r .
+  Member (StoreTable i d !! e) r =>
+  TableSchema (Uid i d) ->
+  QuerySchema i (Uid i d) ->
+  InterpreterFor (Store i d !! e) r
+interpretStoreDb table query =
+  interpretQStoreDb table query
 
 -- TODO lots of duplication in this module
 interpretDbTable ::
@@ -248,7 +259,7 @@ interpretStoreXa schema@(TableSchema {pg = table@PgTable {name = PgTypeName name
     Store.Fetch i ->
       restop (Database.withInit initDb (Database.statement i qs))
     Store.FetchAll ->
-      nonEmpty <$> restop (Database.withInit initDb (Database.statement () qas))
+      restop (Database.withInit initDb (Database.statement () qas))
     _ ->
       undefined
   where

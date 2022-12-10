@@ -3,22 +3,21 @@ module Polysemy.Hasql.Reader where
 import Polysemy.Db.Reader (interpretReaderStore)
 import Sqel.Data.QuerySchema (emptyQuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid)
 
-import Polysemy.Hasql.Effect.DbTable (StoreTable)
-import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
+import Polysemy.Hasql.Effect.DbTable (DbTable)
+import Polysemy.Hasql.Interpreter.Store (interpretQStoreDb)
 
 -- |Interpret 'Reader' as a singleton table.
 --
 -- Given an initial value, every state action reads the value from the database, potentially writing it on first access.
 interpretReaderDb ::
   ∀ d e r .
-  Member (StoreTable () d !! e) r =>
-  TableSchema (Uid () d) ->
-  d ->
+  Member (DbTable d !! e) r =>
+  TableSchema d ->
+  Sem r d ->
   InterpreterFor (Reader d !! e) r
 interpretReaderDb table initial =
-  interpretStoreDb table emptyQuerySchema .
-  interpretReaderStore initial .
+  interpretQStoreDb table emptyQuerySchema .
+  interpretReaderStore (raise initial) .
   raiseUnder
 {-# inline interpretReaderDb #-}

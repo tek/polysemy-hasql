@@ -8,7 +8,8 @@ import qualified Log
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Test (UnitTest, assertJust, assertLeft)
+import Polysemy.Db.Effect.Store (Store)
+import Polysemy.Test (UnitTest, assertEq, assertLeft)
 import Sqel.Data.Dd (Dd, DdK (DdK))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
@@ -66,8 +67,8 @@ test_transaction =
   interpretTransactions $
   do
     let xaError e = Log.error [exon|transaction failed: #{show e}|]
-    restop @DbError @(_ _ Dat) (Store.insert (Uid 1 (Dat "gold")))
-    restop @DbError @(_ _ Rat) (Store.insert (Uid 1 (Rat "green")))
+    restop @DbError @(Store _ Dat) (Store.insert (Uid 1 (Dat "gold")))
+    restop @DbError @(Store _ Rat) (Store.insert (Uid 1 (Rat "green")))
     resuming @DbError @(Transactions _) xaError $ transactStores @[Dat, Rat] @_ @DbError do
       Store.insert (Uid 2 (Dat "cyan"))
     e <- resumeEither @DbError @(Transactions _) $ transactStores @[Dat, Rat] @_ @DbError do
@@ -78,5 +79,5 @@ test_transaction =
     resuming @DbError @(Transactions _) xaError $ transactStores @[Dat, Rat] @_ @DbError do
       Store.insert (Uid 3 (Rat "magenta"))
     assertLeft (DbError.Query "aborted by user") e
-    assertJust ["gold", "cyan"] . fmap (fmap (view (#payload . #color))) =<< restop @DbError @(_ _ Dat) Store.fetchAll
-    assertJust ["green", "magenta"] . fmap (fmap (view (#payload . #color))) =<< restop @DbError @(_ _ Rat) Store.fetchAll
+    assertEq ["gold", "cyan"] . fmap (view (#payload . #color)) =<< restop @DbError @(Store _ Dat) Store.fetchAll
+    assertEq ["green", "magenta"] . fmap (view (#payload . #color)) =<< restop @DbError @(Store _ Rat) Store.fetchAll

@@ -9,7 +9,6 @@ import Polysemy.Db.Effect.Query (Query (..))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Db.Store (PureStore (PureStore))
-import qualified Polysemy.Db.Store as PureStore (records)
 
 interpretQueryPure ::
   Ord q =>
@@ -48,7 +47,7 @@ interpretQueryAtomicState ::
 interpretQueryAtomicState filter' match =
   interpretResumable \case
     Query q ->
-      atomicGets @(PureStore d) (filter' . filter (match q) . view PureStore.records)
+      atomicGets @(PureStore d) (filter' . filter (match q) . view #records)
 
 interpretQueryAtomicStateOne ::
   Member (AtomicState (PureStore d)) r =>
@@ -123,4 +122,4 @@ interpretQueryAny ::
 interpretQueryAny match =
   interpretResumable \case
     Query q ->
-      maybe False (any (match q . Uid.payload)) <$> restop @e @(Store i d) (Store.fetchAll @i)
+      any (match q . Uid.payload) <$> restop Store.fetchAll

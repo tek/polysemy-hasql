@@ -1,23 +1,21 @@
 module Polysemy.Db.Store where
 
+import Conc (interpretAtomic)
 import Control.Concurrent.STM.TVar (TVar)
-import Control.Lens (makeClassy, view, views)
+import Control.Lens (view, views)
 import Prelude hiding (type (@@))
-
-import Polysemy.Db.Atomic (interpretAtomic)
 import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uid (Uid))
+
 import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store (..))
+import Polysemy.Db.Effect.Store (QStore (..), Store)
 
 newtype PureStore a =
   PureStore {
-    _records :: [a]
+    records :: [a]
   }
   deriving stock (Eq, Show, Generic)
   deriving newtype (Default, Semigroup, Monoid)
-
-makeClassy ''PureStore
 
 type PureUidStore i d =
   PureStore (Uid i d)
@@ -31,21 +29,21 @@ interpretStoreAtomicState ::
 interpretStoreAtomicState =
   interpretResumable \case
     Insert d ->
-      atomicModify' @(PureUidStore i d) (records %~ (d :))
+      atomicModify' @(PureUidStore i d) (#records %~ (d :))
     Upsert d ->
-      atomicModify' @(PureUidStore i d) (records %~ updateRecords)
+      atomicModify' @(PureUidStore i d) (#records %~ updateRecords)
       where
         updateRecords a =
           d : filter (\ d' -> Uid.id d /= Uid.id d') a
     Delete id' -> do
-      result <- atomicGets @(PureUidStore i d) (views records (filter ((id' ==) . Uid.id)))
-      listToMaybe result <$ atomicModify' @(PureUidStore i d) (records %~ (filter ((id' /=) . Uid.id)))
+      result <- atomicGets @(PureUidStore i d) (views #records (filter ((id' ==) . Uid.id)))
+      listToMaybe result <$ atomicModify' @(PureUidStore i d) (#records %~ (filter ((id' /=) . Uid.id)))
     DeleteAll -> do
-      atomicState' @(PureUidStore i d) \ (PureStore ds) -> (mempty, nonEmpty ds)
+      atomicState' @(PureUidStore i d) \ (PureStore ds) -> (mempty, ds)
     Fetch id' ->
-      atomicGets @(PureUidStore i d) (views records (find ((id' ==) . Uid.id)))
+      atomicGets @(PureUidStore i d) (views #records (find ((id' ==) . Uid.id)))
     FetchAll ->
-      atomicGets @(PureUidStore i d) (nonEmpty . view records)
+      atomicGets @(PureUidStore i d) (view #records)
 
 -- |This is a blackbox interpreter that takes an initial list of records and stores them in an 'AtomicState'.
 --
@@ -72,21 +70,21 @@ interpretStorePureState ::
 interpretStorePureState =
   interpretResumable \case
     Insert d ->
-      modify' @(PureUidStore i d) (records %~ (d :))
+      modify' @(PureUidStore i d) (#records %~ (d :))
     Upsert d ->
-      modify' @(PureUidStore i d) (records %~ updateRecords)
+      modify' @(PureUidStore i d) (#records %~ updateRecords)
       where
         updateRecords a =
           d : filter (\ d' -> Uid.id d /= Uid.id d') a
     Delete id' -> do
-      result <- gets @(PureUidStore i d) (views records (filter ((id' ==) . Uid.id)))
-      listToMaybe result <$ modify' @(PureUidStore i d) (records %~ (filter ((id' /=) . Uid.id)))
+      result <- gets @(PureUidStore i d) (views #records (filter ((id' ==) . Uid.id)))
+      listToMaybe result <$ modify' @(PureUidStore i d) (#records %~ (filter ((id' /=) . Uid.id)))
     DeleteAll -> do
-      gets @(PureUidStore i d) (nonEmpty . _records) <* put @(PureUidStore i d) mempty
+      gets @(PureUidStore i d) records <* put @(PureUidStore i d) mempty
     Fetch id' ->
-      gets @(PureUidStore i d) (views records (find ((id' ==) . Uid.id)))
+      gets @(PureUidStore i d) (views #records (find ((id' ==) . Uid.id)))
     FetchAll ->
-      gets @(PureUidStore i d) $ nonEmpty . view records
+      gets @(PureUidStore i d) $ view #records
 
 interpretStoreTVar ::
   Eq i =>
@@ -119,11 +117,11 @@ interpretStoreNull =
     Delete _ ->
       pure Nothing
     DeleteAll ->
-      pure Nothing
+      pure []
     Fetch _ ->
       pure Nothing
     FetchAll ->
-      pure Nothing
+      pure []
 
 elem ::
   ∀ i d r .
@@ -131,7 +129,7 @@ elem ::
   i ->
   Sem r Bool
 elem id' =
-  isJust <$> Store.fetch @i @d id'
+  isJust <$> Store.fetch id'
 
 fetchPayload ::
   ∀ i d r .
@@ -139,7 +137,7 @@ fetchPayload ::
   i ->
   Sem r (Maybe d)
 fetchPayload id' =
-  fmap Uid.payload <$> Store.fetch @i @d id'
+  fmap Uid.payload <$> Store.fetch id'
 
 fetchPayloadShow ::
   ∀ i e' e d r .
@@ -149,7 +147,7 @@ fetchPayloadShow ::
   i ->
   Sem r (Maybe d)
 fetchPayloadShow liftError id' =
-  fmap Uid.payload <$> (resumeHoist @e' @(Store i d) (liftError . show) (Store.fetch @i @d id'))
+  fmap Uid.payload <$> (resumeHoist @e' @(Store i d) (liftError . show) (Store.fetch id'))
 
 alter ::
   ∀ i d r .
@@ -158,8 +156,8 @@ alter ::
   (d -> d) ->
   Sem r ()
 alter id' f = do
-  cur <- Store.fetch @i @d id'
-  traverse_ (Store.upsert @i . (#payload %~ f)) cur
+  cur <- Store.fetch id'
+  traverse_ (Store.upsert . (#payload %~ f)) cur
 
 alterOr ::
   ∀ i d r .
@@ -169,8 +167,8 @@ alterOr ::
   (d -> d) ->
   Sem r ()
 alterOr fallback id' f = do
-  cur <- Store.fetch @i id'
-  Store.upsert @i ((#payload %~ f) (fromMaybe (Uid id' fallback) cur))
+  cur <- Store.fetch id'
+  Store.upsert ((#payload %~ f) (fromMaybe (Uid id' fallback) cur))
 
 alterDefault ::
   ∀ i d r .

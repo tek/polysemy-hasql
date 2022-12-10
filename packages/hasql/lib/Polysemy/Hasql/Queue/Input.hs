@@ -112,7 +112,7 @@ initQueue ::
 initQueue write = do
   QueueName name <- ask
   Log.trace [exon|Initializing queue '#{name}'|]
-  waiting <- resumeAs Nothing Store.deleteAll
+  waiting <- resumeAs Nothing (nonEmpty <$> Store.deleteAll)
   traverse_ (traverse_ write . processMessages) waiting
   listen
 

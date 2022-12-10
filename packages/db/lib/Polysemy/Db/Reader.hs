@@ -2,28 +2,26 @@ module Polysemy.Db.Reader where
 
 import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Reader (Reader (Ask, Local))
-import Sqel.Data.Uid (Uid (Uid))
 
 import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store)
-import qualified Polysemy.Db.Store as Store
+import Polysemy.Db.Effect.Store (QStore)
 
 insertValue ::
   ∀ d e r .
-  Members [Store () d !! e, Stop e] r =>
-  d ->
+  Members [QStore Maybe () d !! e, Stop e] r =>
+  Sem r d ->
   Sem r d
 insertValue initial =
-  restop @e @(Store () d) do
-    initial <$ (Store.deleteAll @() @d >> Store.insert @() @d (Uid () initial))
+  initial >>= tap \ d ->
+    restop (Store.deleteAll *> Store.insert d)
 
 readValue ::
   ∀ d e r .
-  Members [Store () d !! e, Stop e] r =>
-  d ->
+  Members [QStore Maybe () d !! e, Stop e] r =>
+  Sem r d ->
   Sem r d
 readValue initial = do
-  stored <- restop @e @(Store () d) (Store.fetchPayload @() @d ())
+  stored <- restop (Store.fetch ())
   maybe (insertValue @d @e initial) pure stored
 
 -- |Interpret 'Reader' as a singleton table.
@@ -31,13 +29,22 @@ readValue initial = do
 -- Given an initial value, every action reads the value from the database, potentially writing it on first access.
 interpretReaderStore ::
   ∀ d e r .
-  Member (Store () d !! e) r =>
-  d ->
+  Member (QStore Maybe () d !! e) r =>
+  Sem r d ->
   InterpreterFor (Reader d !! e) r
 interpretReaderStore initial =
   interpretResumableH \case
     Ask -> do
-      liftT (readValue @d @e initial)
+      liftT (readValue @d @e (raise initial))
     Local f ma ->
-      raise . interpretReaderStore (f initial) =<< runT ma
+      raise . interpretReaderStore (f <$> raise initial) =<< runT ma
 {-# inline interpretReaderStore #-}
+
+interpretReaderStoreAs ::
+  ∀ d e r .
+  Member (QStore Maybe () d !! e) r =>
+  d ->
+  InterpreterFor (Reader d !! e) r
+interpretReaderStoreAs initial =
+  interpretReaderStore (pure initial)
+{-# inline interpretReaderStoreAs #-}

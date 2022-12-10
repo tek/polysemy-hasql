@@ -19,7 +19,6 @@ build-type:     Simple
 library
   exposed-modules:
       Polysemy.Db
-      Polysemy.Db.Atomic
       Polysemy.Db.AtomicState
       Polysemy.Db.Data.Cond
       Polysemy.Db.Data.CreationTime

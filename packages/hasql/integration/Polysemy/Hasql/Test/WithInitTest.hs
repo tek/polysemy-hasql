@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Test.WithInitTest where
 
+import Conc (interpretAtomic)
 import Hasql.Decoders (column, int8, nonNullable)
-import Polysemy.Db.Atomic (interpretAtomic)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (Hedgehog, UnitTest, assertEq)
 import Sqel.Statement (unprepared)
