@@ -38,7 +38,7 @@ instance MapMod' p (p : ps) (p : ps) where
   mapMod' _ f (Mods (I p :* ps)) =
     Mods (I (f p) :* ps)
 
-instance (
+instance {-# overlappable #-} (
     MapMod' p ps0 ps1
   ) => MapMod' p (a' : ps0) (a' : ps1) where
     mapMod' p f (Mods (a' :* ps)) =

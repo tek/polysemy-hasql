@@ -1,9 +1,11 @@
 module Sqel.Sql.Type where
 
-import qualified Sqel.Data.ColumnOptions as ColumnOptions
-import Sqel.Data.PgType (PgColumnName (PgColumnName), PgPrimName (PgPrimName))
+import qualified Exon
+
 import qualified Sqel.Data.PgType as PgTable
 import Sqel.Data.PgType (
+  PgColumnName (PgColumnName),
+  PgPrimName (PgPrimName),
   PgStructure (PgStructure),
   PgTable (PgTable),
   PgTypeRef (PgTypeRef),
@@ -19,7 +21,7 @@ columnSpec ::
   StructureType ->
   Sql
 columnSpec (PgColumnName name) = \case
-  StructurePrim (PgPrimName tpe) (ColumnOptions.format -> params) ->
+  StructurePrim (PgPrimName tpe) _ (Exon.intercalate " " -> params) ->
     [sql|##{dquote name} ##{tpe} #{params}|]
   StructureComp (PgTypeRef tpe) _ ->
     [sql|##{dquote name} ##{tpe}|]
@@ -29,7 +31,7 @@ typeColumnSpec ::
   StructureType ->
   Sql
 typeColumnSpec (PgColumnName name) = \case
-  StructurePrim (PgPrimName tpe) _ ->
+  StructurePrim (PgPrimName tpe) _ _ ->
     [sql|##{dquote name} ##{tpe}|]
   StructureComp (PgTypeRef tpe) _ ->
     [sql|##{dquote name} ##{tpe}|]

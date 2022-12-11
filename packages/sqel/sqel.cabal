@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           sqel
-version:        0.3.0.0
+version:        0.1.0.0
 synopsis:       Guided derivation for Hasql statements
 description:    See https://hackage.haskell.org/package/sqel/docs/Sqel.html
 category:       Database
@@ -26,10 +26,10 @@ library
       Sqel.Codec.Product
       Sqel.Codec.Sum
       Sqel.Column
+      Sqel.ColumnConstraints
       Sqel.Combinators
       Sqel.Comp
       Sqel.Data.Codec
-      Sqel.Data.ColumnOptions
       Sqel.Data.Dd
       Sqel.Data.Migration
       Sqel.Data.MigrationParams

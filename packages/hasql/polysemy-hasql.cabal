@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-hasql
-version:        0.3.0.0
+version:        0.1.0.0
 synopsis:       Polysemy effects for databases
 description:    See https://hackage.haskell.org/package/polysemy-hasql/docs/Polysemy-Hasql.html
 category:       Database
@@ -159,6 +159,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
       Polysemy.Hasql.Test.DeleteTest
+      Polysemy.Hasql.Test.Dsl.DefaultTest
       Polysemy.Hasql.Test.Dsl.MigrationTest
       Polysemy.Hasql.Test.Dsl.QueryTest
       Polysemy.Hasql.Test.Dsl.SimpleQueryTest
@@ -173,7 +174,6 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.Run
       Polysemy.Hasql.Test.SingletonTest
       Polysemy.Hasql.Test.StoreUpdateTest
-      Polysemy.Hasql.Test.SumFieldTest
       Polysemy.Hasql.Test.SumTableTest
       Polysemy.Hasql.Test.TransactionTest
       Polysemy.Hasql.Test.UnarySumTest

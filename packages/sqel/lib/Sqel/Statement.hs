@@ -5,7 +5,6 @@ import Hasql.Encoders (Params)
 import Hasql.Statement (Statement (Statement))
 
 import Sqel.Data.Codec (Encoder (Encoder))
-import Sqel.Data.ColumnOptions (ColumnOptions (ColumnOptions))
 import Sqel.Data.PgType (PgColumnName (PgColumnName))
 import qualified Sqel.Data.PgType as PgTable
 import Sqel.Data.PgType (ColumnType (ColumnPrim), PgColumns (PgColumns), PgTable (PgTable))
@@ -78,13 +77,9 @@ iStatement ::
 iStatement (TableSchema col _ params) =
   prepared [sql|##{Insert col}|] unit params
 
-uniqueOrPrimary :: ColumnOptions -> Bool
-uniqueOrPrimary (ColumnOptions u _ p) =
-  u || p
-
 uniqueColumn :: (PgColumnName, ColumnType) -> Maybe Selector
 uniqueColumn = \case
-  (PgColumnName name, ColumnPrim _ (uniqueOrPrimary -> True)) ->
+  (PgColumnName name, ColumnPrim _ True _) ->
     Just (Selector (Sql (dquote name)))
   _ ->
     Nothing

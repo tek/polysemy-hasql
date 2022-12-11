@@ -1,11 +1,11 @@
 module Sqel.Migration.Statement where
 
 import Data.Some (Some, withSome)
+import qualified Exon
 import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session
 import Hasql.Session (Session)
 
-import qualified Sqel.Data.ColumnOptions as ColumnOptions
 import Sqel.Data.Migration (MigrationAction (ModifyType), MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
@@ -31,6 +31,7 @@ alterStatement typeName p enc f =
       PgCompName n -> ("type", "attribute", n)
 
 -- TODO maybe the default value can be null and the encoder Maybe, to unify the cases
+-- TODO use ToSql for these statements
 columnStatements ::
   Bool ->
   Some PgTypeName ->
@@ -42,15 +43,13 @@ columnStatements table typeName = \case
     when table do
       for_ md \ (defVal, enc) -> do
         alterStatement typeName defVal enc \ _ _ -> [sql|update ##{comp} set ##{colName} = $1|]
-      alter_ \ alter attr ->
-        [sql|#{alter} alter #{attr} ##{colName} set #{optFrag}|]
+      for_ (nonEmpty optFrag) \ opt ->
+        alter_ \ alter attr ->
+          [sql|#{alter} alter #{attr} ##{colName} set #{Exon.intercalate " " opt}|]
     where
-      optFrag = case tpe of
-        ColumnPrim _ opt -> ColumnOptions.format opt
-        ColumnComp _ -> mempty
-      colTypeName = case tpe of
-        ColumnPrim (PgPrimName n) _ -> Sql n
-        ColumnComp (PgTypeRef n) -> Sql n
+      (optFrag, colTypeName) = case tpe of
+        ColumnPrim (PgPrimName n) _ opt -> (opt, Sql n)
+        ColumnComp (PgTypeRef n) -> (mempty, Sql n)
   RenameColumn (PgColumnName old) (PgColumnName new) ->
     alter_ \ alter attr -> [sql|#{alter} rename #{attr} ##{old} to ##{new}|]
   RemoveColumn (PgColumnName name) _ ->

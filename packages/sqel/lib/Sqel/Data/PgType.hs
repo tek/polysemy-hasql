@@ -2,9 +2,8 @@ module Sqel.Data.PgType where
 
 import qualified Data.Map.Strict as Map
 import Exon (exon)
-import Prettyprinter (Pretty (pretty), nest, vsep, (<+>))
+import Prettyprinter (Pretty (pretty), nest, sep, vsep, (<+>))
 
-import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
 import Sqel.Data.Selector (Selector (unSelector), assign, nameSelector)
 import Sqel.Data.Sql (Sql, ToSql (toSql), sql, sqlQuote)
@@ -86,7 +85,7 @@ pgTypeRefSym =
   pgTypeRef (symbolText @tname)
 
 data ColumnType =
-  ColumnPrim PgPrimName ColumnOptions
+  ColumnPrim { name :: PgPrimName, unique :: Bool, constraints :: [Sql] }
   |
   ColumnComp PgTypeRef
   deriving stock (Eq, Show, Generic)
@@ -96,7 +95,7 @@ newtype PgColumns =
   deriving stock (Eq, Show)
 
 data StructureType =
-  StructurePrim PgPrimName ColumnOptions
+  StructurePrim { name :: PgPrimName, unique :: Bool, constraints :: [Sql] }
   |
   StructureComp PgTypeRef PgStructure
   deriving stock (Eq, Show, Generic)
@@ -104,7 +103,7 @@ data StructureType =
 instance Pretty PgColumns where
   pretty (PgColumns cs) =
     vsep $ cs <&> \case
-      (n, ColumnPrim t opt) -> "*" <+> pretty n <+> pretty t <+> pretty opt
+      (n, ColumnPrim t _ opt) -> "*" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
       (n, ColumnComp t) -> "+" <+> pretty n <+> pretty t
 
 instance ToSql (CommaSep PgColumns) where

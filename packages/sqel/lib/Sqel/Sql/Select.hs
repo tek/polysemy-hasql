@@ -60,6 +60,8 @@ data SelectExpr =
   SelectExprSum [SelectExpr]
   |
   SelectExprNot SelectExpr
+  |
+  SelectExprIgnore
 
 renderSelectFragment :: SelectFragment -> Sql
 renderSelectFragment SelectFragment {..} =

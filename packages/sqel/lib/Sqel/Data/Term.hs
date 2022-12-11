@@ -1,9 +1,9 @@
 module Sqel.Data.Term where
 
-import Sqel.Data.ColumnOptions (ColumnOptions)
 import Sqel.Data.Dd (DdInc (DdMerge, DdNest), DdVar (DdCon, DdProd, DdSum))
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.PgTypeName (PgTableName)
+import Sqel.Data.Sql (Sql)
 
 data ProdType =
   Reg
@@ -24,7 +24,7 @@ data CompInc =
   deriving stock (Eq, Show, Generic)
 
 data Struct =
-  Prim PgPrimName ColumnOptions
+  Prim PgPrimName Bool [Sql]
   |
   Comp Text Comp CompInc [DdTerm]
   deriving stock (Eq, Show, Generic)

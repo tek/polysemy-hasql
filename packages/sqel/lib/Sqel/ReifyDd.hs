@@ -2,12 +2,18 @@ module Sqel.ReifyDd where
 
 import Generics.SOP (I (I), K, NP (Nil, (:*)), SListI, hcollapse, tl)
 
-import Sqel.Class.Mods (GetMod (getMod), MaybeMod (maybeMod))
+import Sqel.Class.Mods (MaybeMod (maybeMod))
 import Sqel.Codec (PrimColumn (pgType))
-import Sqel.Column (Nullable (Nullable))
-import Sqel.Data.ColumnOptions (ColumnOptions)
+import Sqel.ColumnConstraints (ColumnConstraints, columnConstraints)
 import Sqel.Data.Dd (Comp, CompInc, Dd (Dd), DdK (DdK), DdStruct (DdComp, DdPrim), Struct (Comp, Prim))
-import Sqel.Data.Mods (ArrayColumn (ArrayColumn), Mods (Mods), Newtype (Newtype), SetTableName, unSetTableName)
+import Sqel.Data.Mods (
+  ArrayColumn (ArrayColumn),
+  Mods (Mods),
+  Newtype (Newtype),
+  Nullable (Nullable),
+  SetTableName,
+  unSetTableName,
+  )
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
 import qualified Sqel.Data.Term as Term
@@ -51,12 +57,12 @@ class FoldPrim sel p a where
   foldPrim :: Dd ('DdK sel p a 'Prim) -> DdTerm
 
 instance (
-    GetMod () ColumnOptions mods,
+    ColumnConstraints mods,
     MaybeMod SetTableName mods,
     ReifyPrimName a mods
   ) => FoldPrim ('SelSymbol name) mods a where
     foldPrim (Dd (SelWSymbol Proxy) mods@(Mods ms) DdPrim) =
-      DdTerm name (unSetTableName <$> maybeMod mods) (Term.Prim (reifyPrimName @a ms) (getMod @() def mods))
+      DdTerm name (unSetTableName <$> maybeMod mods) (uncurry (Term.Prim (reifyPrimName @a ms)) (columnConstraints mods))
       where
         name = symbolText @name
 

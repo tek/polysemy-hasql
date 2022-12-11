@@ -12,6 +12,7 @@ import Exon (
   skipWs,
   )
 import Language.Haskell.TH.Quote (QuasiQuoter)
+import Prettyprinter (Pretty (pretty))
 
 import Sqel.Text.Quote (dquote)
 
@@ -25,6 +26,9 @@ instance ConvertUtf8 Text bs => ConvertUtf8 Sql bs where
   decodeUtf8 = Sql . decodeUtf8
 
   decodeUtf8Strict = fmap Sql . decodeUtf8Strict
+
+instance Pretty Sql where
+  pretty (Sql s) = pretty s
 
 sql :: QuasiQuoter
 sql = exonWith (Just ([e|SkipWs|], [e|skipWs|])) True False

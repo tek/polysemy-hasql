@@ -13,7 +13,7 @@ import Sqel.Query.SelectExpr (ToSelectExpr (toSelectExpr))
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
 import Sqel.Sql.Select (
   FragType,
-  SelectExpr (SelectExprAtom, SelectExprList, SelectExprNot, SelectExprSum),
+  SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprNot, SelectExprSum),
   SelectFragment (SelectFragment),
   )
 
@@ -44,6 +44,7 @@ compileSelectExpr expr =
       SelectExprList op sub -> second (Map.mapWithKey (joinFrag op)) (prod i sub)
       SelectExprSum sub -> second (Map.mapWithKey (joinSum i)) (prod (i + 1) sub)
       SelectExprNot _ -> undefined
+      SelectExprIgnore -> (i, mempty)
     prod i sub =
       second (Map.unionsWith (<>) . fmap (fmap pure)) (mapAccumL spin i sub)
 

@@ -7,6 +7,7 @@ import Prettyprinter (Pretty (pretty), hsep, viaShow)
 import Text.Show (show, showParen, showsPrec)
 
 import Sqel.Data.PgTypeName (PgTableName)
+import Sqel.Data.Sql (Sql)
 
 newtype Mods ps = Mods { unMods :: NP I ps }
 
@@ -24,6 +25,18 @@ instance (
 instance All Show ps => Pretty (Mods ps) where
   pretty (Mods ps) =
     hsep (hcollapse (hcmap (Proxy @Show) (K . viaShow) ps))
+
+data Nullable = Nullable
+  deriving stock (Show)
+
+data Unique = Unique
+  deriving stock (Show)
+
+data PrimaryKey = PrimaryKey
+  deriving stock (Show)
+
+data PgDefault = PgDefault Sql
+  deriving stock (Show)
 
 data EnumColumn = EnumColumn
   deriving stock (Eq, Show, Generic)
@@ -50,3 +63,6 @@ data Newtype a w =
 instance Show (Newtype a w) where
   show _ =
     "Newtype"
+
+data Ignore = Ignore
+  deriving stock (Eq, Show, Generic)

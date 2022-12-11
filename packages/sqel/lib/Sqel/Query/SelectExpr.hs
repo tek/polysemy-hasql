@@ -2,9 +2,8 @@ module Sqel.Query.SelectExpr where
 
 import Generics.SOP (All, K (K), NP ((:*)), hcmap, hcollapse)
 
-import Sqel.Mods (defaultWhere)
+import Sqel.Class.Mods (GetMod (getMod), MaybeMod (maybeMod))
 import Sqel.Comp (IndexColumn)
-import Sqel.Class.Mods (GetMod (getMod))
 import Sqel.Data.Dd (
   Comp (Prod, Sum),
   CompInc (Merge, Nest),
@@ -16,15 +15,17 @@ import Sqel.Data.Dd (
   QOp (QAnd),
   Struct (Comp, Prim),
   )
+import Sqel.Data.Mods (Ignore (Ignore))
 import Sqel.Data.Sel (Sel (SelSymbol, SelUnused), SelW (SelWAuto))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
+import Sqel.Mods (defaultWhere)
 import Sqel.Query.Fragments (ColumnPrefix, QFragmentPrefix (qfragmentPrefix), prefixed)
 import Sqel.Sql.Prepared (dollar)
 import Sqel.Sql.Select (
   FragType (Where),
   SelectAtom (SelectAtom),
-  SelectExpr (SelectExprAtom, SelectExprList, SelectExprSum),
+  SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprSum),
   )
 import Sqel.Text.DbIdentifier (dbSymbol)
 
@@ -39,10 +40,13 @@ class ToSelectExpr query where
 
 -- TODO this creates an invalid fragment, but it seems not to be used
 instance (
-    GetMod () SelectAtom ps
+    GetMod () SelectAtom ps,
+    MaybeMod Ignore ps
   ) => ToSelectExpr ('DdK 'SelUnused ps q 'Prim) where
   toSelectExpr _ (Dd _ p DdPrim) =
-    SelectExprAtom type_ (code "")
+    case maybeMod p of
+      Just Ignore -> SelectExprIgnore
+      Nothing -> SelectExprAtom type_ (code "")
     where
       SelectAtom type_ code = getMod @() defaultWhere p
 

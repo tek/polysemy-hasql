@@ -104,7 +104,7 @@ initType ::
   StructureType ->
   Sem r ()
 initType connection (PgColumnName _) = \case
-  StructurePrim _ _ ->
+  StructurePrim _ _ _ ->
     unit
   StructureComp tpe columns ->
     initComp connection tpe columns

@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-db
-version:        0.3.0.0
+version:        0.1.0.0
 synopsis:       Polysemy effects for databases
 description:    See https://hackage.haskell.org/package/polysemy-db/docs/Polysemy-Db.html
 category:       Database

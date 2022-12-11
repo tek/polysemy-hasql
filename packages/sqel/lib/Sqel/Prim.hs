@@ -4,8 +4,7 @@ import Generics.SOP (I (I), NP (Nil, (:*)))
 import Type.Errors.Pretty (type (<>))
 
 import Sqel.Class.Mods (MapMod, SymNP, setMod, symMods)
-import Sqel.Column (Nullable, nullable)
-import Sqel.Data.ColumnOptions (ColumnOptions)
+import Sqel.Column (nullable)
 import Sqel.Data.Dd (ConCol, Dd (Dd), DdK (DdK), DdStruct (DdPrim), DdType, Struct (Prim))
 import Sqel.Data.MigrationParams (
   MigrationDefault (MigrationDefault),
@@ -15,16 +14,18 @@ import Sqel.Data.MigrationParams (
 import Sqel.Data.Mods (
   ArrayColumn (ArrayColumn),
   EnumColumn,
+  Ignore (Ignore),
   Mods (Mods),
   Newtype (Newtype),
   pattern NoMods,
   type NoMods,
+  Nullable,
   ReadShowColumn,
   )
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto))
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWAuto))
 import Sqel.Mods (PrimValueCodec, primEnumMods, primJsonMods, primReadShowMods)
-import Sqel.Names (named)
+import Sqel.Names (named, selAs)
 import Sqel.SOP.Constraint (ProductGCode)
 import Sqel.SOP.Error (Quoted)
 import Sqel.SOP.Newtype (UnwrapNewtype (unwrapNewtype, wrapNewtype))
@@ -58,6 +59,12 @@ prim ::
   Dd ('DdK 'SelAuto NoMods a 'Prim)
 prim =
   column NoMods
+
+ignore ::
+  ∀ a .
+  Dd ('DdK 'SelUnused '[Ignore] a 'Prim)
+ignore =
+  selAs (primMod Ignore)
 
 type NewtypeError =
   Quoted "primNewtype" <> " declares a column for a newtype using " <> Quoted "Generic" <> "."
@@ -100,7 +107,7 @@ readShow =
 
 primNullable ::
   ∀ a .
-  Dd ('DdK 'SelAuto [Nullable, ColumnOptions] (Maybe a) 'Prim)
+  Dd ('DdK 'SelAuto '[Nullable] (Maybe a) 'Prim)
 primNullable =
   nullable (prim @a)
 
@@ -111,13 +118,13 @@ primAs ::
 primAs =
   named @name (prim @a)
 
-primDef ::
+migrateDef ::
   ∀ s0 s1 .
   MapMod (MigrationDefault (DdType s0)) s0 s1 =>
   DdType s0 ->
   Dd s0 ->
   Dd s1
-primDef a =
+migrateDef a =
   setMod (MigrationDefault a)
 
 -- TODO are composite arrays legal?

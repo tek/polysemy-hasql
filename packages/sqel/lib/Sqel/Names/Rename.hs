@@ -4,7 +4,7 @@ import qualified Generics.SOP as SOP
 import Generics.SOP (AllZipN, HTrans (htrans), NP)
 
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), DdStruct (DdComp), Struct (Comp, Prim))
-import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWAuto, SelWSymbol, SelWUnused))
 
 type RenameSel :: Sel -> Sel -> Constraint
 class RenameSel s0 s1 where
@@ -20,6 +20,12 @@ instance (
   ) => RenameSel s0 ('SelSymbol name) where
   renameSel _ = SelWSymbol Proxy
 
+instance RenameSel s0 'SelUnused where
+  renameSel _ = SelWUnused
+
+instance RenameSel s0 'SelAuto where
+  renameSel _ = SelWAuto
+
 type Rename :: DdK -> DdK -> Constraint
 class Rename s0 s1 where
   rename :: Dd s0 -> Dd s1
@@ -27,13 +33,15 @@ class Rename s0 s1 where
 instance (
     RenameSel sel0 sel1
   ) => Rename ('DdK sel0 p t 'Prim) ('DdK sel1 p t 'Prim) where
-  rename (Dd sel p s) = Dd (renameSel sel) p s
+  rename (Dd sel p s) =
+    Dd (renameSel sel) p s
 
 instance (
     RenameSel sel0 sel1,
     RenameSel tsel0 tsel1
   ) => Rename ('DdK sel0 p t ('Comp tsel0 c i sub)) ('DdK sel1 p t ('Comp tsel1 c i sub)) where
-  rename (Dd sel p (DdComp tsel c i s)) = Dd (renameSel sel) p (DdComp (renameSel tsel) c i s)
+    rename (Dd sel p (DdComp tsel c i s)) =
+      Dd (renameSel sel) p (DdComp (renameSel tsel) c i s)
 
 type RenameN :: ((DdK -> Type) -> k -> Type) -> k -> k -> Constraint
 class RenameN h s0 s1 where

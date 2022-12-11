@@ -17,7 +17,7 @@ import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (typeAs)
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (migrateDelete, migrateRename, prim, primAs, primDef, primNullable)
+import Sqel.Prim (migrateDelete, migrateRename, prim, primAs, migrateDef, primNullable)
 import Sqel.Product (prod, uidAs)
 import Sqel.Query (checkQuery)
 
@@ -82,16 +82,16 @@ t0 =
 t1 :: Dd ('DdK _ _ (Uid Int64 Dat1) _)
 t1 =
   uidAs @"dat" prim (
-    migrateDelete (primDef 0 prim) :>
+    migrateDelete (migrateDef 0 prim) :>
     typeAs @"Pord" (prod (
-      primDef 53 prim
+      migrateDef 53 prim
     ))
   )
 
 t2 :: Dd ('DdK _ _ (Uid Int64 Dat2) _)
 t2 =
   uidAs @"dat" prim (
-    primDef 15 prim :>
+    migrateDef 15 prim :>
     typeAs @"Pord" (prod (
       prim :>
       primNullable
@@ -101,7 +101,7 @@ t2 =
 tcur :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 tcur =
   uidAs @"dat" prim (
-    primDef ("vunqach" :: Text) prim :>
+    migrateDef ("vunqach" :: Text) prim :>
     migrateRename @"number" prim :>
     prod (
       prim :>

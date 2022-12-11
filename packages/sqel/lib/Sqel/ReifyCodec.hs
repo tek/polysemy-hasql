@@ -14,7 +14,7 @@ import Sqel.Codec.PrimDecoder (ArrayDecoder (arrayDecoder), enumDecoder, readDec
 import Sqel.Codec.PrimEncoder (arrayEncoder)
 import Sqel.Codec.Product (ProdCodec (prodCodec))
 import Sqel.Codec.Sum (ConCodec (conCodec), SumCodec (sumCodec), ignoreEncoder)
-import Sqel.Column (Nullable (Nullable), ignoreDecoder)
+import Sqel.Column (ignoreDecoder)
 import qualified Sqel.Data.Codec as Codec
 import Sqel.Data.Codec (Codec (Codec), Decoder (Decoder), Encoder (Encoder), FullCodec, ValueCodec)
 import Sqel.Data.Dd (
@@ -30,8 +30,10 @@ import Sqel.Data.Dd (
 import Sqel.Data.Mods (
   ArrayColumn (ArrayColumn),
   EnumColumn (EnumColumn),
+  Ignore (Ignore),
   Mods (Mods),
   Newtype (Newtype),
+  Nullable (Nullable),
   ReadShowColumn (ReadShowColumn),
   )
 import Sqel.Data.Sel (Sel (SelSymbol))
@@ -202,12 +204,28 @@ instance (
       where
         Codec encoder decoder = reifyPrimCodec @ValueCodec ps
 
-instance (
+instance {-# overlappable #-} (
     ReifyPrimCodec c mods w,
     Invariant c
   ) => ReifyPrimCodec c (Newtype a w : mods) a where
   reifyPrimCodec (I (Newtype unwrap wrap) :* mods) =
     invmap wrap unwrap (reifyPrimCodec mods)
+
+instance (
+    ReifyPrimCodec Encoders.Value mods w
+  ) => ReifyPrimCodec Encoders.Value (Newtype a w : mods) a where
+  reifyPrimCodec (I (Newtype unwrap _) :* mods) =
+    unwrap >$< (reifyPrimCodec mods)
+
+instance ReifyPrimCodec FullCodec (Ignore : ps) a where
+  reifyPrimCodec (I Ignore :* _) =
+    Codec (Encoder mempty mempty) (Decoder (fail err) (fail err))
+    where
+      err = "ignored column was used"
+
+instance ReifyPrimCodec Encoder (Ignore : ps) a where
+  reifyPrimCodec (I Ignore :* _) =
+    Encoder mempty mempty
 
 instance (
     DefaultPrimCodec b a

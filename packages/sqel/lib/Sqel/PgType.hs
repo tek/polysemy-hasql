@@ -38,8 +38,8 @@ pgColumn ::
   DdTerm ->
   ([(PgColumnName, ColumnType)], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty Text])
 pgColumn = \case
-  DdTerm name _ (Prim t opt) ->
-    ([(pgColumnName name, ColumnPrim t opt)], [(pgColumnName name, StructurePrim t opt)], mempty, [pure name])
+  DdTerm name _ (Prim t unique constr) ->
+    ([(pgColumnName name, ColumnPrim t unique constr)], [(pgColumnName name, StructurePrim t unique constr)], mempty, [pure name])
   DdTerm name _ (Comp typeName c i sub) ->
     case comp typeName c i sub of
       (compType@(PgComposite cname _), struct, types, False, sels) ->
@@ -78,7 +78,7 @@ mkValues (PgStructure base) =
   snd (mapAccumL mkCol (1 :: Int) base)
   where
     mkCol (n :: Int) = \case
-      (_, StructurePrim _ _) -> (n + 1, [sql|##{dollar n}|])
+      (_, StructurePrim _ _ _) -> (n + 1, [sql|##{dollar n}|])
       (_, StructureComp _ (PgStructure cols)) ->
         (newN, [sql|row(#{Exon.intercalate ", " sub})|])
         where
@@ -100,11 +100,11 @@ mkTable name tableName cols types selectors struct =
 
 toTable :: DdTerm -> PgTable a
 toTable = \case
-  DdTerm name tableName (Prim t opt) ->
+  DdTerm name tableName (Prim t unique constr) ->
     mkTable name tableName cols [] [pure name] struct
     where
-      cols = PgColumns [(pgColumnName name, ColumnPrim t opt)]
-      struct = PgStructure [(pgColumnName name, StructurePrim t opt)]
+      cols = PgColumns [(pgColumnName name, ColumnPrim t unique constr)]
+      struct = PgStructure [(pgColumnName name, StructurePrim t unique constr)]
   DdTerm _ tableName (Comp typeName c i sub) ->
     mkTable typeName tableName cols types paths struct
     where

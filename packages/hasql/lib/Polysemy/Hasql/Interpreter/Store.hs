@@ -11,7 +11,7 @@ import qualified Log
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store, QStore)
+import Polysemy.Db.Effect.Store (QStore, Store)
 import Sqel.Data.Dd (
   Comp (Prod),
   CompInc (Nest),
@@ -21,7 +21,7 @@ import Sqel.Data.Dd (
   DdStruct (DdComp),
   DdVar (DdProd),
   ProdType (Reg),
-  Struct (Comp),
+  Struct (Comp, Prim),
   )
 import Sqel.Data.Migration (Mig (Mig), Migration (Migration, tableFrom), Migrations (Migrations), Migs, noMigrations)
 import Sqel.Data.Mods (pattern NoMods, NoMods)
@@ -42,6 +42,8 @@ import Sqel.Data.Sql (Sql)
 import qualified Sqel.Data.TableSchema as TableSchema
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Data.Uid (Uid)
+import Sqel.Prim (primAs)
+import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (dStatement, iStatement, qStatement, uStatement)
 
 import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
@@ -50,7 +52,6 @@ import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
 import Polysemy.Hasql.Table (createTable, dbColumnsStatement, tableColumnsSql, typeColumnsSql)
-import Sqel.ResultShape (ResultShape)
 
 type EmptyQuery =
   'DdK ('SelSymbol "") NoMods () ('Comp 'SelAuto ('Prod 'Reg) 'Nest '[])
@@ -58,6 +59,10 @@ type EmptyQuery =
 emptyQuery :: Dd EmptyQuery
 emptyQuery =
   Dd (SelWSymbol Proxy) NoMods (DdComp SelWAuto DdProd DdNest Nil)
+
+primIdQuery :: Dd ('DdK ('SelSymbol "id") NoMods a 'Prim)
+primIdQuery =
+  primAs @"id"
 
 type NoResult =
   'DdK ('SelSymbol "") NoMods () ('Comp ('SelSymbol "") ('Prod 'Reg) 'Nest '[])
@@ -153,7 +158,7 @@ typeMatch (PgComposite name (PgColumns cols)) = do
   pure (dbCols == colsByName)
   where
     colsByName = Map.fromList cols <&> \case
-      ColumnPrim n _ -> Right n
+      ColumnPrim n _ _ -> Right n
       ColumnComp n -> Left n
 
 tableMatch ::
@@ -165,7 +170,7 @@ tableMatch (PgTable tableName (PgColumns cols) types _ _ _) = do
   andM (pure (dbCols == colsByName) : (typeMatch <$> Map.elems types))
   where
     colsByName = Map.fromList cols <&> \case
-      ColumnPrim n _ -> Right n
+      ColumnPrim n _ _ -> Right n
       ColumnComp n -> Left n
 
 startMigration ::

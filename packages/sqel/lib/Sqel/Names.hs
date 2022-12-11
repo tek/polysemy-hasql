@@ -6,14 +6,14 @@ module Sqel.Names (
   module Sqel.Names.Set,
 ) where
 
-import Sqel.Text.DbIdentifier (dbSymbol)
-
 import Sqel.Data.Codec (ColumnName (ColumnName))
 import Sqel.Data.Dd (Dd, DdK)
+import Sqel.Data.Sel (Sel)
 import Sqel.Names.Amend
 import Sqel.Names.Comp
 import Sqel.Names.Rename
 import Sqel.Names.Set
+import Sqel.Text.DbIdentifier (dbSymbol)
 
 ddName ::
   ∀ n .
@@ -21,6 +21,14 @@ ddName ::
   ColumnName
 ddName =
   ColumnName (dbSymbol @n)
+
+selAs ::
+  ∀ (sel :: Sel) (s0 :: DdK) .
+  Rename s0 (SetSel s0 sel) =>
+  Dd s0 ->
+  Dd (SetSel s0 sel)
+selAs =
+  rename
 
 named ::
   ∀ (name :: Symbol) (s0 :: DdK) .

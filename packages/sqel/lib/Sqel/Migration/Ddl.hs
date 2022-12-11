@@ -2,8 +2,7 @@ module Sqel.Migration.Ddl where
 
 import Generics.SOP (NP (Nil, (:*)))
 
-import Sqel.Class.Mods (GetMod (getMod))
-import Sqel.Data.ColumnOptions (ColumnOptions)
+import Sqel.ColumnConstraints (ColumnConstraints, columnConstraints)
 import Sqel.Data.Dd (CompInc (Merge, Nest), Dd (Dd), DdK (DdK), DdStruct (DdComp, DdPrim), Struct (Comp, Prim))
 import Sqel.Data.MigrationParams (MigrationDeleteK, MigrationRenameK)
 import Sqel.Data.Mods (Mods (Mods))
@@ -26,16 +25,18 @@ class DdCols s cols types | s -> cols types where
 instance DdCols '[] '[] '[] where
   ddCols Nil = (Nil, Nil)
 
+-- TODO the migration params could be extracted in OldColumnsChanges and passed to OldColumnChanges.
 instance (
-    ReifyPrimName a p,
-    GetMod (Default ColumnOptions) ColumnOptions p,
+    ReifyPrimName a mods,
+    ColumnConstraints mods,
     DdCols ss cols types,
-    rename ~ MigrationRenameK p,
-    delete ~ MigrationDeleteK p
-  ) => DdCols ('DdK ('SelSymbol name) p a 'Prim : ss) ('DdlColumnK name 'Nothing p rename delete a : cols) types where
-    ddCols (Dd (SelWSymbol Proxy) p@(Mods ps) DdPrim :* t) =
-      (DdlColumn (ColumnPrim (reifyPrimName @a ps) (getMod @(Default ColumnOptions) def p)) p :* cols, types)
+    rename ~ MigrationRenameK mods,
+    delete ~ MigrationDeleteK mods
+  ) => DdCols ('DdK ('SelSymbol name) mods a 'Prim : ss) ('DdlColumnK name 'Nothing mods rename delete a : cols) types where
+    ddCols (Dd (SelWSymbol Proxy) m@(Mods mods) DdPrim :* t) =
+      (DdlColumn (ColumnPrim (reifyPrimName @a mods) unique constr) m :* cols, types)
       where
+        (unique, constr) = columnConstraints m
         (cols, types) = ddCols t
 
 instance (

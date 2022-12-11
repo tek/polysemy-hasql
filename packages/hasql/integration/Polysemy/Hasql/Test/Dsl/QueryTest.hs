@@ -2,7 +2,6 @@
 
 module Polysemy.Hasql.Test.Dsl.QueryTest where
 
-import Generics.SOP (NP (Nil, (:*)))
 import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
@@ -21,7 +20,7 @@ import Sqel.Data.Term (DdTerm)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Names (named)
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs, primNewtype)
+import Sqel.Prim (ignore, prim, primAs, primNewtype)
 import Sqel.Product (prod, prodAs, uid)
 import Sqel.Query (checkQuery)
 import qualified Sqel.Query.Combinators as Q
@@ -51,7 +50,8 @@ data Q =
   Q {
     pr :: PordQ,
     params :: Par,
-    n :: TextNt
+    n :: TextNt,
+    ig :: Maybe Int
   }
   deriving stock (Eq, Show, Generic)
 
@@ -107,10 +107,10 @@ interpretQuery =
       qStatement (checkQuery qd td) (tableSchema td)
     qd =
       prod (
-        prodAs @"po" (prim :* Nil) :*
-        prod (nullable Q.limit :* nullable Q.offset :* Nil) :*
-        named @"name" (primNewtype) :*
-        Nil
+        prodAs @"po" prim :>
+        prod (nullable Q.limit :> nullable Q.offset) :>
+        named @"name" primNewtype :>
+        ignore
       )
 
 test_dslQuery :: UnitTest
@@ -120,5 +120,5 @@ test_dslQuery =
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         for_ @[] [1..10] \ i ->
           Store.insert (Uid i (Dat "name" (Pord i (Just (TextNt "hnnnggg")))))
-        r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name")
+        r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name" Nothing)
         [3, 4] === r
