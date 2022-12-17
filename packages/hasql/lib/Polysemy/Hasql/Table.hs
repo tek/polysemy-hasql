@@ -9,12 +9,13 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   PgColumnName (PgColumnName),
+  PgComposite (PgComposite),
   PgStructure (PgStructure),
   PgTable (PgTable),
-  PgTypeRef (PgTypeRef),
   StructureType (StructureComp, StructurePrim),
+  structureToColumns,
   )
-import Sqel.Data.PgTypeName (PgTableName)
+import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
 import Sqel.Data.Sql (Sql)
 import qualified Sqel.Sql.Type as Sql
 import qualified Sqel.Statement as Statement
@@ -68,9 +69,9 @@ typeColumnsSql =
 typeColumns ::
   Members [Embed IO, Stop DbError] r =>
   Connection ->
-  PgTypeRef ->
+  PgCompName ->
   Sem r (Maybe (NonEmpty ExistingColumn))
-typeColumns connection (PgTypeRef name) =
+typeColumns connection (PgTypeName name) =
   dbColumnsFor typeColumnsSql connection (ClientTag name)
 
 -- TODO
@@ -83,7 +84,7 @@ updateType _ =
 initComp ::
   Members [Embed IO, Stop DbError] r =>
   Connection ->
-  PgTypeRef ->
+  PgCompName ->
   PgStructure ->
   Sem r ()
 initComp connection tpe structure = do
@@ -92,7 +93,7 @@ initComp connection tpe structure = do
   where
     createType = do
       initStructure connection structure
-      run (plain (Sql.createProdType tpe structure))
+      run (plain (Sql.createProdType (PgComposite tpe (structureToColumns structure))))
     run =
       runStatement connection ()
 

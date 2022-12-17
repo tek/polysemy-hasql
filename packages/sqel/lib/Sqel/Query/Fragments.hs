@@ -6,15 +6,20 @@ import Exon (exon)
 import Sqel.Data.Codec (ColumnName (ColumnName))
 import Sqel.Data.Dd (QOp (QAnd, QOr))
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWSymbol))
-import Sqel.Data.Sql (Sql)
+import Sqel.Data.Sql (Sql, sql)
 import Sqel.Names (ddName)
 import Sqel.Sql.Prepared (dollar)
 import Sqel.Sql.Select (FragType (Where))
 import Sqel.Text.DbIdentifier (quotedDbId)
+import Data.Composition ((.:))
+
+parens :: Sql -> Sql
+parens s =
+  [sql|(#{s})|]
 
 joinOp :: QOp -> [Sql] -> Sql
 joinOp =
-  Exon.intercalate . sep
+  parens .: Exon.intercalate . sep
   where
     sep = \case
       QAnd -> " and "
@@ -29,7 +34,7 @@ joinFrag op = \case
 
 guardCon :: Int -> Int -> Sql -> Sql
 guardCon index con code =
-  [exon|(#{dollar index} = #{show con} and (#{code}))|]
+  [exon|(#{dollar index} = #{show con} and #{code})|]
 
 joinSum :: Int -> FragType -> [Sql] -> Sql
 joinSum index Where =

@@ -158,7 +158,6 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.ArrayTest
       Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
-      Polysemy.Hasql.Test.DeleteTest
       Polysemy.Hasql.Test.Dsl.DefaultTest
       Polysemy.Hasql.Test.Dsl.MigrationTest
       Polysemy.Hasql.Test.Dsl.QueryTest

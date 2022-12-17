@@ -130,7 +130,6 @@ in {
         "path"
         "polysemy-db"
         "polysemy-hasql"
-        "polysemy-plugin"
         "polysemy-test"
         "sqel"
         "tasty"
@@ -151,7 +150,6 @@ in {
         "polysemy-db"
         "polysemy-hasql"
         "polysemy-log"
-        "polysemy-plugin"
         "polysemy-test"
         "polysemy-time"
         "prettyprinter"
@@ -160,6 +158,39 @@ in {
         "time"
         "uuid"
         "vector"
+      ];
+    };
+
+  };
+
+  polysemy-hasql-test = merge (polysemy "polysemy-hasql-test" "Polysemy-Hasql-Test") {
+    synopsis = "Test utilities for polysemy-hasql";
+
+    library.dependencies = [
+      "hasql >= 1.4.3"
+      "hedgehog"
+      "path"
+      "polysemy-test"
+      "polysemy-db"
+      "polysemy-hasql"
+      "sqel"
+    ];
+
+    tests.polysemy-hasql-test-unit = polysemyExe "polysemy-hasql-test" "test" {
+      dependencies = [
+        "aeson"
+        "chronos"
+        "exon"
+        "first-class-families"
+        "generics-sop"
+        "hasql >= 1.4.3"
+        "path"
+        "polysemy-db"
+        "polysemy-hasql"
+        "polysemy-hasql-test"
+        "polysemy-test"
+        "sqel"
+        "tasty"
       ];
     };
 
@@ -174,16 +205,19 @@ in {
       "containers"
       "contravariant"
       "exon"
+      "extra"
       "first-class-families"
       "generics-sop"
       "hasql >= 1.4.3"
       "invariant"
       "path"
+      "path-io"
       "prettyprinter"
       "scientific"
       "some"
       "template-haskell"
       "time"
+      "transformers"
       "type-errors"
       "type-errors-pretty"
       "uuid"

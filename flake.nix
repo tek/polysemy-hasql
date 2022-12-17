@@ -42,6 +42,7 @@
       sqel = ./packages/sqel;
       polysemy-db = ./packages/db;
       polysemy-hasql = ./packages/hasql;
+      polysemy-hasql-test = ./packages/hasql-test;
     };
     devGhc.compiler = "ghc902";
     ghci = {

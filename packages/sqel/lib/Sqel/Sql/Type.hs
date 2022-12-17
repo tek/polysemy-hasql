@@ -4,12 +4,13 @@ import qualified Exon
 
 import qualified Sqel.Data.PgType as PgTable
 import Sqel.Data.PgType (
+  ColumnType (ColumnComp, ColumnPrim),
   PgColumnName (PgColumnName),
+  PgColumns (PgColumns),
+  PgComposite (PgComposite),
   PgPrimName (PgPrimName),
-  PgStructure (PgStructure),
   PgTable (PgTable),
   PgTypeRef (PgTypeRef),
-  StructureType (StructureComp, StructurePrim),
   )
 import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Data.Sql (Sql, sql)
@@ -18,29 +19,29 @@ import Sqel.Text.Quote (dquote)
 
 columnSpec ::
   PgColumnName ->
-  StructureType ->
+  ColumnType ->
   Sql
 columnSpec (PgColumnName name) = \case
-  StructurePrim (PgPrimName tpe) _ (Exon.intercalate " " -> params) ->
+  ColumnPrim (PgPrimName tpe) _ (Exon.intercalate " " -> params) ->
     [sql|##{dquote name} ##{tpe} #{params}|]
-  StructureComp (PgTypeRef tpe) _ ->
+  ColumnComp (PgTypeRef tpe) ->
     [sql|##{dquote name} ##{tpe}|]
 
 typeColumnSpec ::
   PgColumnName ->
-  StructureType ->
+  ColumnType ->
   Sql
 typeColumnSpec (PgColumnName name) = \case
-  StructurePrim (PgPrimName tpe) _ _ ->
+  ColumnPrim (PgPrimName tpe) _ _ ->
     [sql|##{dquote name} ##{tpe}|]
-  StructureComp (PgTypeRef tpe) _ ->
+  ColumnComp (PgTypeRef tpe) ->
     [sql|##{dquote name} ##{tpe}|]
 
 -- TODO this should use PgColumns, not PgStructure
 createTable ::
   PgTable a ->
   Sql
-createTable PgTable {name, structure = PgStructure cols} =
+createTable PgTable {name, columns = PgColumns cols} =
   [sql|create table ##{name} (##{CommaSep formattedColumns})|]
   where
     formattedColumns = toList (uncurry columnSpec <$> cols)
@@ -53,10 +54,9 @@ dropTable name =
 
 -- TODO make PgTypeRef et al quote automatically by using @ToSegment@
 createProdType ::
-  PgTypeRef ->
-  PgStructure ->
+  PgComposite ->
   Sql
-createProdType name (PgStructure cols) =
+createProdType (PgComposite name (PgColumns cols)) =
   [sql|create type ##{name} as (##{CommaSep formattedColumns})|]
   where
     formattedColumns = toList (uncurry typeColumnSpec <$> cols)

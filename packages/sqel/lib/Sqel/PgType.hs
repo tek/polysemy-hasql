@@ -46,7 +46,7 @@ pgColumn = \case
         (colType, structType, Map.insert ref compType types, (name <|) <$> sels)
         where
           colType = [(pgColumnName name, ColumnComp ref)]
-          structType = [(pgColumnName name, StructureComp ref struct)]
+          structType = [(pgColumnName name, StructureComp cname struct)]
           ref = pgCompRef cname
       (PgComposite _ (PgColumns columns), PgStructure struct, types, True, sels) ->
         (columns, struct, types, sels)

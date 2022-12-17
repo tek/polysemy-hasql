@@ -20,6 +20,8 @@ newtype Sql = Sql { unSql :: Text }
   deriving stock (Eq, Show, Generic, Ord)
   deriving newtype (IsString, Semigroup, Monoid)
 
+json ''Sql
+
 instance ConvertUtf8 Text bs => ConvertUtf8 Sql bs where
   encodeUtf8 = encodeUtf8 . unSql
 

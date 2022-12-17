@@ -33,6 +33,11 @@ import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
 
+newtype TextNt =
+  TextNt { unTextNt :: Text }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)
+
 data PordQ =
   PordQ {
     p2 :: Text
@@ -54,11 +59,6 @@ data Q =
     ig :: Maybe Int
   }
   deriving stock (Eq, Show, Generic)
-
-newtype TextNt =
-  TextNt { unTextNt :: Text }
-  deriving stock (Eq, Show, Generic)
-  deriving newtype (IsString, Ord)
 
 data Pord =
   Pord {

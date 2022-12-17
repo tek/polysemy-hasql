@@ -5,10 +5,10 @@ module Polysemy.Hasql.Test.Dsl.SumTest where
 import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store)
 import qualified Polysemy.Db.Effect.Query as Query
 import Polysemy.Db.Effect.Query (Query (Query))
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
@@ -58,7 +58,7 @@ data SumboQ =
 
 data Q =
   Q {
-    name :: Text,
+    n :: Text,
     sumb :: SumboQ
   }
   deriving stock (Eq, Show, Generic)
@@ -67,11 +67,11 @@ td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 td =
   uid prim (
     prim :>
-    sum (
+    typeAs @"sombo" (sum (
       con prims :>
       con prims :>
       con (prim :> prod prims)
-    )
+    ))
   )
 
 ts :: TableSchema (Uid Int64 Dat)
@@ -81,6 +81,19 @@ idSchema :: QuerySchema Int64 (Uid Int64 Dat)
 idSchema =
   checkQuery (primAs @"id") td
 
+stm :: Statement Q [Uid Int64 Dat]
+stm =
+  qStatement (checkQuery qd td) (tableSchema td)
+  where
+    qd =
+      prod (
+        primAs @"name" :>
+        sum (
+          conAs @"Glorpf" prim :>
+          conAs @"Shwank" prim
+        )
+      )
+
 interpretQuery ::
   Member (Database !! DbError) r =>
   InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
@@ -88,18 +101,6 @@ interpretQuery =
   interpretResumable \case
     Query params ->
       restop (Database.statement params stm)
-  where
-    stm :: Statement Q [Uid Int64 Dat]
-    stm =
-      qStatement (checkQuery qd td) (tableSchema td)
-    qd =
-      prod (
-        primAs @"name" :>
-        typeAs @"Sumbo" (sum (
-          conAs @"Glorpf" prim :>
-          conAs @"Shwank" prim
-        ))
-      )
 
 test_dslSum :: UnitTest
 test_dslSum =
@@ -111,5 +112,5 @@ test_dslSum =
         Store.insert (Uid 3 (Dat "cheerio" (Shwank "gzerq" (Pord 93 "pord"))))
         r1 <- fmap (view #id) <$> Query.query (Q "ellow" (GlorpfQ 5))
         [1] === r1
-        r2 <- fmap (view #id) <$> Query.query (Q "ellow" (ShwankQ "gzerq"))
+        r2 <- fmap (view #id) <$> Query.query (Q "cheerio" (ShwankQ "gzerq"))
         [3] === r2

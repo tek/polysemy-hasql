@@ -4,7 +4,7 @@ module Sqel.Test.Error.NewtypeNoGeneric where
 
 import Generics.SOP (I (I), NP (Nil, (:*)))
 
-import Sqel.Data.Dd
+import Sqel.Data.Dd (Dd (Dd), DdStruct (DdComp), type (:>) ((:>)))
 import Sqel.Data.Mods (Mods (Mods), Newtype (Newtype))
 import Sqel.Prim (prim, primNewtype)
 import Sqel.Product (prod)

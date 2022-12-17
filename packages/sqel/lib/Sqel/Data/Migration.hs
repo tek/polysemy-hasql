@@ -5,9 +5,16 @@ import Generics.SOP (NP (Nil, (:*)), SListI, hmap)
 import Hasql.Encoders (Params)
 
 import Sqel.Data.Dd ((:>) ((:>)))
-import Sqel.Data.PgType (PgColumnName)
-import Sqel.Data.PgType (ColumnType, PgTable)
+import Sqel.Data.PgType (ColumnType, PgColumnName, PgTable)
 import Sqel.Data.PgTypeName (PgTypeName)
+
+data MigrationTypeAction where
+  AddColumn :: PgColumnName -> ColumnType -> Maybe (a, Params a) -> MigrationTypeAction
+  RemoveColumn :: PgColumnName -> ColumnType -> MigrationTypeAction
+  RenameColumn :: PgColumnName -> PgColumnName -> MigrationTypeAction
+
+data MigrationAction =
+  ModifyType Bool (Some PgTypeName) [MigrationTypeAction]
 
 data Mig =
   Mig {
@@ -70,14 +77,6 @@ migrate ::
   Migrations m old cur
 migrate =
   Migrations . mkMigrations
-
-data MigrationTypeAction where
-  AddColumn :: PgColumnName -> ColumnType -> Maybe (a, Params a) -> MigrationTypeAction
-  RemoveColumn :: PgColumnName -> ColumnType -> MigrationTypeAction
-  RenameColumn :: PgColumnName -> PgColumnName -> MigrationTypeAction
-
-data MigrationAction =
-  ModifyType Bool (Some PgTypeName) [MigrationTypeAction]
 
 noMigrations :: Migrations m '[] a
 noMigrations =

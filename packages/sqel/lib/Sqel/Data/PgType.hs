@@ -23,6 +23,8 @@ newtype PgPrimName =
   deriving stock (Eq, Show, Generic)
   deriving newtype (IsString, Ord, Semigroup, Monoid)
 
+json ''PgPrimName
+
 instance Pretty PgPrimName where
   pretty (PgPrimName n) = pretty n
 
@@ -43,6 +45,8 @@ newtype PgColumnName =
   deriving stock (Eq, Show, Generic)
   deriving newtype (IsString, Ord)
 
+json ''PgColumnName
+
 instance Pretty PgColumnName where
   pretty (PgColumnName n) = pretty n
 
@@ -60,6 +64,8 @@ newtype PgTypeRef =
   PgTypeRef { unPgTypeRef :: Text }
   deriving stock (Eq, Show, Generic)
   deriving newtype (IsString, Ord)
+
+json ''PgTypeRef
 
 instance Pretty PgTypeRef where
   pretty (PgTypeRef n) = pretty n
@@ -90,15 +96,24 @@ data ColumnType =
   ColumnComp PgTypeRef
   deriving stock (Eq, Show, Generic)
 
+json ''ColumnType
+
 newtype PgColumns =
   PgColumns { unPgColumns :: [(PgColumnName, ColumnType)] }
   deriving stock (Eq, Show)
+  deriving newtype (FromJSON, ToJSON)
 
 data StructureType =
   StructurePrim { name :: PgPrimName, unique :: Bool, constraints :: [Sql] }
   |
-  StructureComp PgTypeRef PgStructure
+  StructureComp PgCompName PgStructure
   deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+structureToColumn :: StructureType -> ColumnType
+structureToColumn = \case
+  StructurePrim {..} -> ColumnPrim {..}
+  StructureComp (PgTypeName ref) _ -> ColumnComp (PgTypeRef ref)
 
 instance Pretty PgColumns where
   pretty (PgColumns cs) =
@@ -113,6 +128,11 @@ instance ToSql (CommaSep PgColumns) where
 newtype PgStructure =
   PgStructure { unPgColumns :: [(PgColumnName, StructureType)] }
   deriving stock (Eq, Show)
+  deriving newtype (FromJSON, ToJSON)
+
+structureToColumns :: PgStructure -> PgColumns
+structureToColumns (PgStructure cols) =
+  PgColumns (second structureToColumn <$> cols)
 
 data PgComposite =
   PgComposite {
@@ -120,6 +140,7 @@ data PgComposite =
     columns :: PgColumns
   }
   deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
 
 instance Pretty PgComposite where
   pretty PgComposite {..} =

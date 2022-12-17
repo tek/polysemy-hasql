@@ -1,11 +1,9 @@
 module Main where
 
 import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
--- import Polysemy.Hasql.Test.AtomicStateTest (test_atomicStateDb)
--- import Polysemy.Hasql.Test.DeleteTest (test_deleteEmpty)
+import Polysemy.Hasql.Test.AtomicStateTest (test_atomicStateDb)
 import Polysemy.Hasql.Test.DslTest (test_dsl)
 import Polysemy.Hasql.Test.JsonTest (test_json)
--- import Polysemy.Hasql.Test.PKTest (test_pk)
 -- import Polysemy.Hasql.Test.QueryTest (test_query)
 import Polysemy.Hasql.Test.QueueTest (test_queue)
 import Polysemy.Hasql.Test.RetryTest (test_retry)
@@ -33,7 +31,7 @@ tests =
     -- unitTest "upsert" test_upsert,
     unitTest "queue with notifications" test_queue,
     unitTest "retry on error" test_retry,
-    -- unitTest "atomic state as table" test_atomicStateDb,
+    unitTest "atomic state as table" test_atomicStateDb,
     -- unitTest "partial record update" test_partialDbUpdate,
     -- unitTest "sum table" test_sumTable,
     unitTest "json field" test_json,

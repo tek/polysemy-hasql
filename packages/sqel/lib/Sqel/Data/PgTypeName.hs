@@ -1,5 +1,6 @@
 module Sqel.Data.PgTypeName where
 
+import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
 import Exon (exon)
 import Prettyprinter (Pretty (pretty))
 import Text.Show (showParen, showsPrec)
@@ -63,6 +64,15 @@ instance ToSql (From PgTableName) where
 instance ToSql (Into PgTableName) where
   toSql (Into n) =
     [sql|into ##{n}|]
+
+instance FromJSON PgTableName where
+  parseJSON v = UnsafePgTableName <$> parseJSON v
+
+instance FromJSON PgCompName where
+  parseJSON v = UnsafePgCompName <$> parseJSON v
+
+instance ToJSON (PgTypeName t) where
+  toJSON = toJSON . unsafePgTypeName
 
 pgTableName ::
   Text ->

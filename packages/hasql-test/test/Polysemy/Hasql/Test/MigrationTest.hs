@@ -1,32 +1,24 @@
 {-# options_ghc -Wno-partial-type-signatures #-}
 
-module Polysemy.Hasql.Test.Dsl.MigrationTest where
+module Polysemy.Hasql.Test.MigrationTest where
 
-import Lens.Micro.Extras (view)
+import Path (reldir)
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query)
-import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store)
-import Polysemy.Test (UnitTest, assertEq)
+import qualified Polysemy.Test as Test
+import Polysemy.Test (UnitTest, assertJust, runTestAuto)
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
 import Sqel.Data.Migration (Migrations)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel.Data.Uid (Uid)
+import Sqel.Migration.Consistency (migrationConsistency)
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (typeAs)
-import Sqel.PgType (tableSchema)
-import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primAs, primNullable)
+import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primNullable)
 import Sqel.Product (prod, uidAs)
-import Sqel.Query (checkQuery)
 
-import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb, interpretTableMigrations)
 import Polysemy.Hasql.Migration (migrateSem)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.Migration (testMigration)
 
 data PordOld =
   PordOld {
@@ -109,18 +101,6 @@ tcur =
     )
   )
 
-q :: Dd ('DdK _ _ Q _)
-q =
-  prod (primAs @"name")
-
-schemaOld :: TableSchema (Uid Int64 Dat1)
-schemaOld =
-  tableSchema t1
-
-schemaCur :: TableSchema (Uid Int64 Dat)
-schemaCur =
-  tableSchema tcur
-
 migrations ::
   Members [Database !! DbError, Stop DbError] r =>
   Migrations (Sem r) [Uid Int64 Dat2, Uid Int64 Dat1, Uid Int64 Dat0] (Uid Int64 Dat)
@@ -131,20 +111,23 @@ migrations =
     migrateAuto t0 t1
   )
 
-test_dslMigration :: UnitTest
-test_dslMigration =
-  integrationTest do
-    interpretDbTable schemaOld $ interpretStoreDb schemaOld (checkQuery (primAs @"id") t1) $ restop @DbError do
-      Store.insert (Uid 3 (Dat1 11 (PordOld 93)))
-      Store.insert (Uid 4 (Dat1 55 (PordOld 78)))
-    restop @DbError Database.release
-    restop @DbError Database.resetInit
-    interpretTableMigrations schemaCur migrations $
-      interpretStoreDb schemaCur (checkQuery (primAs @"id") tcur) $
-      interpretQueryDd @[_] tcur tcur q $
-      restop @DbError @(Query _ _) $
-      restop @DbError @(Store _ _) do
-        Store.insert (Uid 1 (Dat "1" 5 (Pord 10 (Just "new 1"))))
-        Store.insert (Uid 2 (Dat "2" 5 (Pord 10 (Just "new 2"))))
-        assertEq [3, 4] =<< fmap (view #id) <$> Query.query (Q "vunqach")
-        assertEq [2] =<< fmap (view #id) <$> Query.query (Q "2")
+migrationErrors :: NonEmpty Text
+migrationErrors =
+  [
+    "The migration table 'dat' has mismatched columns:",
+    " • The column 'number' with type 'bigint' was removed.",
+    "The composite type 'ph_type__pord' has mismatched columns:",
+    " • The type of the column 'p1' was changed from 'text' to 'bigint'.",
+    "The type 'ph_type__point' was removed."
+  ]
+
+test_migrationErrors :: UnitTest
+test_migrationErrors =
+  runTestAuto do
+    fixtures <- Test.fixturePath [reldir|migration-error|]
+    assertJust migrationErrors =<< migrationConsistency fixtures (migrations @[Database !! DbError, Stop DbError]) False
+
+test_migrationConsistency :: UnitTest
+test_migrationConsistency =
+  runTestAuto do
+    testMigration migrations False
