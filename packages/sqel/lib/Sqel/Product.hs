@@ -4,7 +4,7 @@ import Generics.SOP (NP (Nil, (:*)))
 
 import Sqel.ProductArg (ProductArg)
 import Sqel.Comp (CompColumn, compFor)
-import Sqel.Data.Dd (Comp (Prod), CompInc (Merge, Nest), Dd, DdK (DdK), ProdType (Reg))
+import Sqel.Data.Dd (Comp (Prod), CompInc (Merge, Nest), Dd (Dd), DdK (DdK), ProdType (Reg), Struct (Comp), DdStruct (DdComp), DdInc (DdNest, DdMerge))
 import Sqel.Data.Sel (Sel (SelAuto))
 import Sqel.Data.Uid (Uid)
 import Sqel.Names.Rename (Rename, rename)
@@ -37,6 +37,13 @@ merge ::
   Dd s1
 merge =
   compFor @"merge" @('Prod 'Reg) @'Merge @a
+
+class AsMerge s0 s1 | s0 -> s1 where
+  asMerge :: Dd s0 -> Dd s1
+
+instance AsMerge ('DdK sel mods a ('Comp tsel c i s)) ('DdK sel mods a ('Comp tsel c 'Merge s)) where
+  asMerge (Dd sel mods (DdComp tsel c _ sub)) =
+    Dd sel mods (DdComp tsel c DdMerge sub)
 
 -- TODO do we need sa0 in the params?
 type UidColumn :: Type -> Type -> DdK -> [DdK] -> DdK -> Type -> Constraint
