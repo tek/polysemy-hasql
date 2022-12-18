@@ -57,7 +57,7 @@ newtypeNoNewtypeMessage =
 cantInferCheckQueryMessage :: [Text]
 cantInferCheckQueryMessage =
   [
-    "wha?"
+    -- "wha?"
   ]
 
 test_errors :: TestTree
@@ -66,6 +66,7 @@ test_errors =
     unitTest "query column mismatch" (typeError queryColumnMismatchMessage queryColumnMismatch),
     unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew),
     unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric),
-    unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype),
-    unitTest "can't infer CheckQuery" (typeError cantInferCheckQueryMessage cantInferCheckQuery)
+    unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype)
+    -- ,
+    -- unitTest "can't infer CheckQuery" (typeError cantInferCheckQueryMessage cantInferCheckQuery)
   ]

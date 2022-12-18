@@ -7,6 +7,8 @@ import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Prim (prim)
 import Sqel.Product (prod)
 import Sqel.Query (CheckQuery (checkQuery))
+import Sqel.Data.Sql (Sql, ToSql (toSql))
+import Sqel.Sql.SelectQuery (SelectQuery(SelectQuery))
 
 data Dat =
   Dat {
@@ -24,10 +26,14 @@ dd :: Dd (_ _ Dat _)
 dd =
   undefined
 
+ddq :: Dd (_ _ Q _)
+ddq =
+  prod prim
+
 qs :: QuerySchema Q Dat
 qs =
-  checkQuery (prod prim) dd
+  checkQuery ddq dd
 
-cantInferCheckQuery :: Text
+cantInferCheckQuery :: Sql
 cantInferCheckQuery =
-  qs
+  toSql (SelectQuery qs)
