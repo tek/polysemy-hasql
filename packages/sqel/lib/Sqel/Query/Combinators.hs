@@ -3,11 +3,11 @@ module Sqel.Query.Combinators where
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), Struct (Prim))
 import Sqel.Data.FragType (FragType (Limit, Offset, Order))
 import Sqel.Data.Order (Order)
-import Sqel.Data.Sel (Sel (SelUnused, SelAuto), mkSel)
+import Sqel.Data.Sel (Sel (SelAuto, SelUnused), mkSel)
 import Sqel.Data.Select (SelectAtom (SelectAtom))
+import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Prim (primMod)
 import Sqel.Sql.Prepared (dollar)
-import Sqel.Data.Selector (Selector(Selector))
 
 nocond :: Dd ('DdK sel p a s) -> Dd ('DdK 'SelUnused p a s)
 nocond (Dd _ p s) =

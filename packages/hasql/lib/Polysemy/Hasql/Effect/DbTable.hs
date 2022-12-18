@@ -1,9 +1,8 @@
 module Polysemy.Hasql.Effect.DbTable where
 
 import Hasql.Statement (Statement)
-import Sqel.Data.Uid (Uid)
-
 import Sqel.Data.TableSchema (TableSchema)
+import Sqel.Data.Uid (Uid)
 
 type DbTable :: Type -> Effect
 data DbTable a :: Effect where

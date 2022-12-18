@@ -9,7 +9,7 @@ import Sqel.Data.Uid (Uid)
 import Sqel.Prim (prim, primAs)
 import Sqel.Product (prod, prodAs, uid)
 import Sqel.Query (checkQuery)
-import Sqel.Sql.Select (SelectFragment)
+import Sqel.Data.Select (SelectFragment)
 
 data Pord =
   Pord {
