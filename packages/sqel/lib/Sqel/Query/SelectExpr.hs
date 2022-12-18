@@ -15,18 +15,18 @@ import Sqel.Data.Dd (
   QOp (QAnd),
   Struct (Comp, Prim),
   )
+import Sqel.Data.FragType (FragType (Where))
 import Sqel.Data.Mods (Ignore (Ignore))
 import Sqel.Data.Sel (Sel (SelSymbol, SelUnused), SelW (SelWAuto))
+import Sqel.Data.Select (
+  SelectAtom (SelectAtom),
+  SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprSum),
+  )
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
 import Sqel.Mods (defaultWhere)
 import Sqel.Query.Fragments (ColumnPrefix, QFragmentPrefix (qfragmentPrefix), prefixed)
 import Sqel.Sql.Prepared (dollar)
-import Sqel.Sql.Select (
-  FragType (Where),
-  SelectAtom (SelectAtom),
-  SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprSum),
-  )
 import Sqel.Text.DbIdentifier (dbSymbol)
 
 guardSum :: SelectExpr -> SelectExpr

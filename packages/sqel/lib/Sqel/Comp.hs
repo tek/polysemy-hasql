@@ -20,8 +20,10 @@ import Sqel.Data.Dd (
   ProdType (Con, Reg),
   Struct (Comp, Prim),
   )
+import Sqel.Data.FragType (FragType (Where))
 import Sqel.Data.Mods (Mods (Mods), NoMods)
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto), mkSel)
+import Sqel.Data.Select (SelectAtom (SelectAtom))
 import Sqel.Data.Sql (sql)
 import Sqel.Names.Comp (ProdNamed, SumNamed)
 import Sqel.Names.Rename (renameN, renameN2)
@@ -29,7 +31,6 @@ import Sqel.Prim (primAs)
 import Sqel.ProductArg (ProductArg (productArg))
 import Sqel.SOP.Constraint (ProductCoded)
 import Sqel.Sql.Prepared (dollar)
-import Sqel.Sql.Select (FragType (Where), SelectAtom (SelectAtom))
 
 type IndexColumn name =
   'DdK ('SelSymbol name) NoMods Int 'Prim

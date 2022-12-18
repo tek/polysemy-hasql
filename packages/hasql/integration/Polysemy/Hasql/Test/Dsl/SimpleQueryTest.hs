@@ -18,7 +18,7 @@ import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs)
 import Sqel.Product (prod, uid)
 import Sqel.Query (checkQuery)
-import Sqel.Statement (qStatement)
+import Sqel.Statement (selectWhere)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -58,7 +58,7 @@ interpretQuery =
     Query params ->
       restop (Database.statement params stm)
       where
-        stm = qStatement (checkQuery (prod (prim :> prim)) td) ts
+        stm = selectWhere (checkQuery (prod (prim :> prim)) td) ts
 
 test_dslSimpleQuery :: UnitTest
 test_dslSimpleQuery =

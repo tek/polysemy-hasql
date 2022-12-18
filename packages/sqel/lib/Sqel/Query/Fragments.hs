@@ -1,17 +1,17 @@
 module Sqel.Query.Fragments where
 
+import Data.Composition ((.:))
 import qualified Exon
 import Exon (exon)
 
 import Sqel.Data.Codec (ColumnName (ColumnName))
 import Sqel.Data.Dd (QOp (QAnd, QOr))
+import Sqel.Data.FragType (FragType (Where))
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWSymbol))
 import Sqel.Data.Sql (Sql, sql)
 import Sqel.Names (ddName)
 import Sqel.Sql.Prepared (dollar)
-import Sqel.Sql.Select (FragType (Where))
 import Sqel.Text.DbIdentifier (quotedDbId)
-import Data.Composition ((.:))
 
 parens :: Sql -> Sql
 parens s =

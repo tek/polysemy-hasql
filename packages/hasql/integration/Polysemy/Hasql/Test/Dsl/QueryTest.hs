@@ -26,7 +26,7 @@ import Sqel.Query (checkQuery)
 import qualified Sqel.Query.Combinators as Q
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
 import Sqel.ReifyDd (ReifyDd (reifyDd))
-import Sqel.Statement (qStatement)
+import Sqel.Statement (selectWhere)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -104,7 +104,7 @@ interpretQuery =
   where
     stm :: Statement Q [Uid Int64 Dat]
     stm =
-      qStatement (checkQuery qd td) (tableSchema td)
+      selectWhere (checkQuery qd td) (tableSchema td)
     qd =
       prod (
         prodAs @"po" prim :>

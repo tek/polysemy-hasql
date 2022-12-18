@@ -20,7 +20,7 @@ import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs, prims)
 import Sqel.Product (prod, uid)
 import Sqel.Query (checkQuery)
-import Sqel.Statement (qStatement)
+import Sqel.Statement (selectWhere)
 import Sqel.Sum (con, conAs, sum)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -83,7 +83,7 @@ idSchema =
 
 stm :: Statement Q [Uid Int64 Dat]
 stm =
-  qStatement (checkQuery qd td) (tableSchema td)
+  selectWhere (checkQuery qd td) (tableSchema td)
   where
     qd =
       prod (

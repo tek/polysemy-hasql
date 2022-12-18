@@ -2,14 +2,14 @@ module Polysemy.Hasql.Interpreter.Query where
 
 import Hasql.Statement (Statement)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Db.Effect.Query (Query (Query))
+import Polysemy.Db.Effect.Query (Query (Query), query)
 import Sqel.Data.Dd (Dd, DdType)
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.PgType (MkTableSchema, tableSchema)
 import Sqel.Query (CheckQuery, checkQuery)
 import Sqel.ResultShape (ResultShape)
-import Sqel.Statement (qStatement)
+import Sqel.Statement (selectWhere)
 
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable)
@@ -21,11 +21,11 @@ interpretQuery ::
   TableSchema proj ->
   QuerySchema query table ->
   InterpreterFor (Query query result !! DbError) r
-interpretQuery proj query =
+interpretQuery proj que =
   interpretResumable \ (Query param) -> restop (DbTable.statement param stmt)
   where
     stmt :: Statement query result
-    stmt = qStatement query proj
+    stmt = selectWhere que proj
 
 interpretQueryDd ::
   ∀ result query proj table r .
@@ -37,8 +37,17 @@ interpretQueryDd ::
   Dd proj ->
   Dd query ->
   InterpreterFor (Query (DdType query) result !! DbError) r
-interpretQueryDd table proj query =
+interpretQueryDd table proj que =
   interpretQuery ps qs
   where
-    qs = checkQuery query table
+    qs = checkQuery que table
     ps = tableSchema proj
+
+mapQuery ::
+  (q1 -> Sem r q2) ->
+  Sem (Query q1 result !! DbError : r) a ->
+  Sem (Query q2 result !! DbError : r) a
+mapQuery f =
+  interpretResumable \case
+    (Query param) -> restop (query =<< insertAt @0 (f param))
+  . raiseUnder

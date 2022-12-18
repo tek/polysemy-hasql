@@ -2,8 +2,8 @@ module Sqel.Data.QuerySchema where
 
 import Sqel.Data.Codec (Encoder)
 import Sqel.Data.Sql (ToSql (toSql))
-import Sqel.Sql.Select (SelectFragment)
 import Sqel.Sql.SelectQuery (SelectQuery (SelectQuery))
+import Sqel.Data.Select (SelectFragment)
 
 data QuerySchema q a =
   QuerySchema {

@@ -31,14 +31,17 @@ library
       Sqel.Comp
       Sqel.Data.Codec
       Sqel.Data.Dd
+      Sqel.Data.FragType
       Sqel.Data.Migration
       Sqel.Data.MigrationParams
       Sqel.Data.Mods
+      Sqel.Data.Order
       Sqel.Data.PgType
       Sqel.Data.PgTypeName
       Sqel.Data.ProjectionSchema
       Sqel.Data.QuerySchema
       Sqel.Data.Sel
+      Sqel.Data.Select
       Sqel.Data.Selector
       Sqel.Data.Sql
       Sqel.Data.TableSchema
@@ -196,11 +199,13 @@ test-suite polysemy-hasql-unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Sqel.Test.Error.CantInferCheckQuery
       Sqel.Test.Error.CompArgs
       Sqel.Test.Error.NewtypeNoGeneric
       Sqel.Test.Error.NewtypeNoNewtype
       Sqel.Test.Error.QueryColumMismatch
       Sqel.Test.ErrorTest
+      Sqel.Test.StatementTest
       Sqel.Test.TableSchemaTest
       Test
   hs-source-dirs:

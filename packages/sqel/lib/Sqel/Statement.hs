@@ -5,9 +5,8 @@ import Hasql.Encoders (Params)
 import Hasql.Statement (Statement (Statement))
 
 import Sqel.Data.Codec (Encoder (Encoder))
-import Sqel.Data.PgType (PgColumnName (PgColumnName))
 import qualified Sqel.Data.PgType as PgTable
-import Sqel.Data.PgType (ColumnType (ColumnPrim), PgColumns (PgColumns), PgTable (PgTable))
+import Sqel.Data.PgType (ColumnType (ColumnPrim), PgColumnName (PgColumnName), PgColumns (PgColumns), PgTable (PgTable))
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
@@ -17,7 +16,7 @@ import Sqel.Sql.CommaSep (CommaSep (CommaSep))
 import Sqel.Sql.Delete (Delete (Delete))
 import Sqel.Sql.Insert (Insert (Insert))
 import Sqel.Sql.Returning (Returning (Returning))
-import Sqel.Sql.Select (Select (Select))
+import qualified Sqel.Sql.Select as Sql
 import Sqel.Sql.Update (Update (Update))
 import Sqel.Text.Quote (dquote)
 
@@ -54,27 +53,27 @@ plain :: Sql -> Statement () ()
 plain s =
   Statement (encodeUtf8 s) mempty noResult False
 
-qStatement ::
+selectWhere ::
   ∀ result proj q table .
   ResultShape proj result =>
   QuerySchema q table ->
   TableSchema proj ->
   Statement q result
-qStatement (QuerySchema query (Encoder qp _)) (TableSchema col row _) =
-  prepared [sql|##{Select col} ##{query}|] row qp
+selectWhere q@(QuerySchema _ (Encoder qp _)) t =
+  prepared (Sql.selectWhere q t) (t ^. #decoder) qp
 
-dStatement ::
+delete ::
   ResultShape a result =>
   QuerySchema q a ->
   TableSchema a ->
   Statement q result
-dStatement (QuerySchema query (Encoder qp _)) (TableSchema col row _) =
+delete (QuerySchema query (Encoder qp _)) (TableSchema col row _) =
   prepared [sql|##{Delete col} ##{query} ##{Returning col}|] row qp
 
-iStatement ::
+insert ::
   TableSchema a ->
   Statement a ()
-iStatement (TableSchema col _ params) =
+insert (TableSchema col _ params) =
   prepared [sql|##{Insert col}|] unit params
 
 uniqueColumn :: (PgColumnName, ColumnType) -> Maybe Selector
@@ -106,8 +105,8 @@ upsertSql tab =
   where
     conflict = conflictFragment tab
 
-uStatement ::
+upsert ::
   TableSchema a ->
   Statement a ()
-uStatement (TableSchema tab _ params) =
+upsert (TableSchema tab _ params) =
   prepared (upsertSql tab) unit params

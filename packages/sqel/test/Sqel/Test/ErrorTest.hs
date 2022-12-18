@@ -54,11 +54,18 @@ newtypeNoNewtypeMessage =
     "The type \8216TextNt\8217 is not a newtype."
   ]
 
+cantInferCheckQueryMessage :: [Text]
+cantInferCheckQueryMessage =
+  [
+    "wha?"
+  ]
+
 test_errors :: TestTree
 test_errors =
   testGroup "type errors" [
     unitTest "query column mismatch" (typeError queryColumnMismatchMessage queryColumnMismatch),
     unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew),
     unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric),
-    unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype)
+    unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype),
+    unitTest "can't infer CheckQuery" (typeError cantInferCheckQueryMessage cantInferCheckQuery)
   ]

@@ -5,17 +5,17 @@ import Prelude hiding (type (@@))
 
 import Sqel.Data.Codec (Encoder)
 import Sqel.Data.Dd (Dd, DdK, DdType)
+import Sqel.Data.FragType (FragType)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
+import Sqel.Data.Select (
+  SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprNot, SelectExprSum),
+  SelectFragment (SelectFragment),
+  )
 import Sqel.Data.Sql (Sql)
 import Sqel.Query.Check (CheckQueryFields)
 import Sqel.Query.Fragments (ColumnPrefix (NoPrefix), joinFrag, joinSum)
 import Sqel.Query.SelectExpr (ToSelectExpr (toSelectExpr))
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
-import Sqel.Sql.Select (
-  FragType,
-  SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprNot, SelectExprSum),
-  SelectFragment (SelectFragment),
-  )
 
 class CheckedQ' (check :: Maybe Constraint) (s :: DdK) where
   checkedQ' :: Dd s -> SelectExpr

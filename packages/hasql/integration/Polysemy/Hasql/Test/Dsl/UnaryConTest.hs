@@ -20,7 +20,7 @@ import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs)
 import Sqel.Product (prod, uid)
 import Sqel.Query (checkQuery)
-import Sqel.Statement (qStatement)
+import Sqel.Statement (selectWhere)
 import Sqel.Sum (con1, sum)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -87,7 +87,7 @@ checkedQ =
 
 checkedQStm :: Statement Q [Uid Int64 Dat]
 checkedQStm =
-  qStatement checkedQ t1d
+  selectWhere checkedQ t1d
 
 interpretQuery ::
   Member (Database !! DbError) r =>

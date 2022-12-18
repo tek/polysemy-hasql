@@ -60,7 +60,7 @@ instance {-# overlappable #-} (
     TypeError (
       "A column of type " <> QuotedType a <> " was declared as primitive," %
       "but there is no instance of " <> Quoted "PrimColumn" <> " for that type." %
-      "If it is a newtype, ensure that it has " <> Quoted "Generic" <> "and use" <> Quoted "primNewtype" <> "."
+      "If it is a newtype, ensure that it has " <> Quoted "Generic" <> " and use " <> Quoted "primNewtype" <> "."
     )
   ) => PrimColumn a where
     primDecoder = error "no instance for PrimColumn"

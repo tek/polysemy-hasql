@@ -5,8 +5,14 @@ module Polysemy.Hasql (
   -- * Hasql Interpreters
   -- $interpreters
 
+  interpretQuery,
+  interpretQueryDd,
+  mapQuery,
+
   -- ** Low-Level Interpreters
   Database,
+  DbTable,
+  StoreTable,
   DbConfig(DbConfig),
 
   -- * Misc
@@ -20,6 +26,8 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 
 import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
 import Polysemy.Hasql.Effect.Database (Database)
+import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
+import Polysemy.Hasql.Interpreter.Query (interpretQuery, interpretQueryDd, mapQuery)
 import Polysemy.Hasql.Reader (interpretReaderDb)
 
 -- $intro

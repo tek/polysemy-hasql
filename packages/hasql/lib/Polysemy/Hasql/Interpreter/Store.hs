@@ -44,7 +44,7 @@ import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Data.Uid (Uid)
 import Sqel.Prim (primAs)
 import Sqel.ResultShape (ResultShape)
-import Sqel.Statement (dStatement, iStatement, qStatement, uStatement)
+import Sqel.Statement (delete, insert, selectWhere, upsert)
 
 import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -93,16 +93,16 @@ interpretQStoreDb table query =
     Store.FetchAll ->
       restop (DbTable.statement () qas)
   where
-    is = iStatement table
-    us = uStatement table
+    is = insert table
+    us = upsert table
     ds :: Statement q (f d)
-    ds = dStatement query table
+    ds = delete query table
     qs :: Statement q (f d)
-    qs = qStatement query table
+    qs = selectWhere query table
     qas :: Statement () [d]
-    qas = qStatement emptyQuerySchema table
+    qas = selectWhere emptyQuerySchema table
     das :: Statement () [d]
-    das = dStatement emptyQuerySchema table
+    das = delete emptyQuerySchema table
 
 interpretStoreDb ::
   ∀ i d e r .
@@ -268,10 +268,10 @@ interpretStoreXa schema@(TableSchema {pg = table@PgTable {name = PgTypeName name
     _ ->
       undefined
   where
-    is = iStatement schema
+    is = insert schema
     qs :: Statement i (Maybe (Uid i d))
-    qs = qStatement query schema
+    qs = selectWhere query schema
     qas :: Statement () [Uid i d]
-    qas = qStatement emptyQuerySchema schema
+    qas = selectWhere emptyQuerySchema schema
     initDb :: InitDb (Sem (Database : Stop DbError : Database !! DbError : Stop DbError : r))
     initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations
