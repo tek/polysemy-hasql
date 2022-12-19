@@ -19,6 +19,7 @@ import Sqel.Query (checkQuery)
 
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Sqel.Product (prod)
 
 data Dat =
   Dat {
@@ -28,20 +29,20 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-td :: Dd _
-td = uid prim (prim :> prim :> pgDefault "13" primNullable)
+dd :: Dd _
+dd = uid prim (prod (prim :> prim :> pgDefault "13" primNullable))
 
 ts :: TableSchema (Uid Int Dat)
-ts = tableSchema td
+ts = tableSchema dd
 
 idSchema :: QuerySchema Int (Uid Int Dat)
 idSchema =
-  checkQuery (primAs @"id") td
+  checkQuery (primAs @"id") dd
 
 -- TODO problem: default value is not used when explicit null is specified. would need to omit the column from the
 -- insert statement, but that would require dynamic statement
-test_dslSimpleQuery :: UnitTest
-test_dslSimpleQuery =
+test_default :: UnitTest
+test_default =
   integrationTest do
     interpretDbTable ts $ interpretStoreDb ts idSchema do
       restop @DbError @(Store _ _) do

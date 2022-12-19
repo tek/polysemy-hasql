@@ -4,6 +4,7 @@ import Polysemy.Test (unitTest)
 import Prelude hiding (sum)
 import Test.Tasty (TestTree, testGroup)
 
+import Polysemy.Hasql.Test.Dsl.DefaultTest (test_default)
 import Polysemy.Hasql.Test.Dsl.MigrationTest (test_dslMigration)
 import Polysemy.Hasql.Test.Dsl.QueryTest (test_dslQuery)
 import Polysemy.Hasql.Test.Dsl.SimpleQueryTest (test_dslSimpleQuery)
@@ -21,5 +22,6 @@ test_dsl =
     unitTest "sum query" test_dslSumQuery,
     unitTest "sum with unary constructor" test_dslUnaryCon,
     unitTest "table schema" test_dslTableSchema,
-    unitTest "migration" test_dslMigration
+    unitTest "migration" test_dslMigration,
+    unitTest "column default" test_default
   ]
