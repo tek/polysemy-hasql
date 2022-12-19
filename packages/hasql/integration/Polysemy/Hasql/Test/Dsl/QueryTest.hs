@@ -21,7 +21,7 @@ import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Names (named)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (ignore, prim, primAs, primNewtype)
-import Sqel.Product (prod, prodAs, uid)
+import Sqel.Product (prod, prodAs)
 import Sqel.Query (checkQuery)
 import qualified Sqel.Query.Combinators as Q
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
@@ -32,6 +32,7 @@ import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
+import Sqel.Uid (uid)
 
 newtype TextNt =
   TextNt { unTextNt :: Text }
@@ -76,10 +77,10 @@ data Dat =
 
 td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 td =
-  uid prim (
+  uid prim (prod (
     prim :>
     prod (prim :> nullable primNewtype)
-  )
+  ))
 
 codec :: FullCodec (Uid Int64 Dat)
 codec =

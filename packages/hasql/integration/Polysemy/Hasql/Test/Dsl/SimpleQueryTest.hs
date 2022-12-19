@@ -4,10 +4,10 @@ module Polysemy.Hasql.Test.Dsl.SimpleQueryTest where
 
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
-import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (Store)
 import qualified Polysemy.Db.Effect.Query as Query
 import Polysemy.Db.Effect.Query (Query (Query))
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, (:>) ((:>)))
@@ -15,10 +15,11 @@ import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod, uid)
+import Sqel.Prim (prim, primAs, prims)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Statement (selectWhere)
+import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -41,7 +42,7 @@ data Dat =
   deriving stock (Eq, Show, Generic)
 
 td :: Dd _
-td = uid prim (prim :> prim :> prim)
+td = uid prim (prod prims)
 
 ts :: TableSchema (Uid Int Dat)
 ts = tableSchema td

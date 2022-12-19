@@ -48,6 +48,7 @@ library
       Sqel.Data.Term
       Sqel.Data.Uid
       Sqel.Fold
+      Sqel.Merge
       Sqel.Migration.Column
       Sqel.Migration.Consistency
       Sqel.Migration.Data.Ddl
@@ -97,6 +98,7 @@ library
       Sqel.Text.Case
       Sqel.Text.DbIdentifier
       Sqel.Text.Quote
+      Sqel.Uid
   hs-source-dirs:
       lib
   default-extensions:

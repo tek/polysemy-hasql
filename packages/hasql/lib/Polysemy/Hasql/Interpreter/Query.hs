@@ -43,11 +43,22 @@ interpretQueryDd table proj que =
     qs = checkQuery que table
     ps = tableSchema proj
 
+queryVia ::
+  (q1 -> Sem (Stop DbError : r) q2) ->
+  (r2 -> Sem (Stop DbError : r) r1) ->
+  Sem (Query q1 r1 !! DbError : r) a ->
+  Sem (Query q2 r2 !! DbError : r) a
+queryVia transQ transR =
+  interpretResumable \case
+    Query param -> do
+      q2 <- raiseUnder (transQ param)
+      r2 <- restop (query q2)
+      raiseUnder (transR r2)
+  . raiseUnder
+
 mapQuery ::
-  (q1 -> Sem r q2) ->
+  (q1 -> Sem (Stop DbError : r) q2) ->
   Sem (Query q1 result !! DbError : r) a ->
   Sem (Query q2 result !! DbError : r) a
 mapQuery f =
-  interpretResumable \case
-    (Query param) -> restop (query =<< insertAt @0 (f param))
-  . raiseUnder
+  queryVia f pure

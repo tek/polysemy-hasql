@@ -17,10 +17,11 @@ import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs, prims)
-import Sqel.Product (uid)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Statement (selectWhere)
 import Sqel.Sum (con1, con1As, sum)
+import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -42,7 +43,7 @@ data NaNu =
 
 td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 td =
-  uid prim prims
+  uid prim (prod prims)
 
 ts :: TableSchema (Uid Int64 Dat)
 ts = tableSchema td

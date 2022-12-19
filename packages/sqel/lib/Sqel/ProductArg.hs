@@ -43,6 +43,7 @@ instance {-# overlappable #-} (
   ) => ProductElem name i arg s where
     productElem = error "unreachable"
 
+-- | The parameter @a@ here is necessary to pass the composite type through to @prims@.
 type ProductElems :: ErrorMessage -> Symbol -> Nat -> Type -> Type -> [DdK] -> Constraint
 class ProductElems err name i a arg s | a arg -> s where
   productElems :: Proxy err -> arg -> NP Dd s

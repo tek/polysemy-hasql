@@ -16,8 +16,9 @@ import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (uid)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
+import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Transaction (Transactions, abort)
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb, interpretStoreXa)
@@ -39,7 +40,7 @@ data Rat =
 
 ddDat :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 ddDat =
-  uid prim prim
+  uid prim (prod prim)
 
 tableDat :: TableSchema (Uid Int64 Dat)
 tableDat = tableSchema ddDat
@@ -53,7 +54,7 @@ queryRat :: QuerySchema Int64 (Uid Int64 Rat)
 (tableRat, queryRat) =
   (tableSchema ddRat, checkQuery (primAs @"id") ddRat)
   where
-    ddRat = uid prim prim
+    ddRat = uid prim (prod prim)
 
 test_transaction :: UnitTest
 test_transaction =

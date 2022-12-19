@@ -63,3 +63,12 @@ sumAs ::
   Dd (SetName s1 name)
 sumAs =
   rename . compFor @"sumAs" @'Sum @'Nest @a
+
+mergeSum ::
+  ∀ (a :: Type) (s0 :: [DdK]) (s1 :: DdK) (arg :: Type) .
+  ProductArg a "mergeSum" arg s0 =>
+  CompColumn 'Sum 'Merge a s0 s1 =>
+  arg ->
+  Dd s1
+mergeSum =
+  compFor @"mergeSum" @'Sum @'Merge @a

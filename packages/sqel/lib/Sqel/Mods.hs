@@ -7,7 +7,6 @@ import qualified Hasql.Encoders as Encoders
 import Text.Show (show)
 
 import Sqel.Data.Codec (Codec (Codec))
-import Sqel.Data.FragType (FragType (Where))
 import Sqel.Data.Mods (
   EnumColumn (EnumColumn),
   Mods (Mods),
@@ -16,13 +15,6 @@ import Sqel.Data.Mods (
   )
 import Sqel.Data.PgType (PgPrimName)
 import Sqel.Data.PgTypeName (PgTableName)
-import Sqel.Data.Select (SelectAtom (SelectAtom))
-import Sqel.Data.Sql (sql)
-import Sqel.Sql.Prepared (dollar)
-
-defaultWhere :: SelectAtom
-defaultWhere =
-  SelectAtom Where (\ sel i -> [sql|##{sel} = #{dollar i}|])
 
 jsonEncoder ::
   ToJSON a =>

@@ -4,12 +4,14 @@ module Sqel.Test.Error.QueryColumMismatch where
 
 import Generics.SOP (NP (Nil, (:*)))
 import Prelude hiding (sum)
+
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
+import Sqel.Data.Select (SelectFragment)
 import Sqel.Data.Uid (Uid)
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod, prodAs, uid)
+import Sqel.Product (prod, prodAs)
 import Sqel.Query (checkQuery)
-import Sqel.Data.Select (SelectFragment)
+import Sqel.Uid (uid)
 
 data Pord =
   Pord {
@@ -40,4 +42,4 @@ queryColumnMismatch =
     qd =
       prod (primAs @"name" :* (prodAs @"pog" (prim :* prim :* Nil)) :* Nil)
     td =
-      uid prim (prim :* (prod (prim :* prim :* Nil)) :* Nil)
+      uid prim (prod (prim :* (prod (prim :* prim :* Nil)) :* Nil))

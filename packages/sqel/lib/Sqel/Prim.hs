@@ -185,3 +185,23 @@ prims ::
   Prims a s
 prims =
   Prims (mkPrims @(PrimProd a))
+
+class MkPrimNewtypes as s | as -> s where
+  mkPrimNewtypes :: NP Dd s
+
+instance MkPrimNewtypes '[] '[] where
+  mkPrimNewtypes = Nil
+
+instance (
+    MkPrimNewtypes as s,
+    err ~ NewtypeError,
+    UnwrapNewtype err a w
+  ) => MkPrimNewtypes (a : as) ('DdK 'SelAuto '[Newtype a w] a 'Prim : s) where
+    mkPrimNewtypes = primNewtype :* mkPrimNewtypes @as @s
+
+primNewtypes ::
+  ∀ (a :: Type) (s :: [DdK]) .
+  MkPrimNewtypes (PrimProd a) s =>
+  Prims a s
+primNewtypes =
+  Prims (mkPrimNewtypes @(PrimProd a))

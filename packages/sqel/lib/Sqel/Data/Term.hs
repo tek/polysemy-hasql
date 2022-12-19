@@ -1,7 +1,7 @@
 module Sqel.Data.Term where
 
 import Sqel.Data.Dd (DdInc (DdMerge, DdNest), DdVar (DdCon, DdProd, DdSum))
-import Sqel.Data.PgType (PgPrimName)
+import Sqel.Data.PgType (PgColumnName, PgPrimName)
 import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Data.Sql (Sql)
 
@@ -32,7 +32,7 @@ data Struct =
 -- TODO would be nice to have a separate type wrapping the root for the table name
 data DdTerm =
   DdTerm {
-    name :: Text,
+    name :: PgColumnName,
     tableName :: Maybe PgTableName,
     struct :: Struct
   }

@@ -14,7 +14,7 @@ import Sqel.Data.Mods (
   SetTableName,
   unSetTableName,
   )
-import Sqel.Data.PgType (PgPrimName)
+import Sqel.Data.PgType (PgPrimName, pgColumnName)
 import Sqel.Data.Sel (ReifySel (reifySel), Sel (SelSymbol), SelW (SelWSymbol))
 import qualified Sqel.Data.Term as Term
 import Sqel.Data.Term (DdTerm (DdTerm), demoteComp, demoteInc)
@@ -63,7 +63,7 @@ instance (
     ReifySel sel
   ) => FoldPrim sel mods a where
     foldPrim (Dd sel mods@(Mods ms) DdPrim) =
-      DdTerm name (unSetTableName <$> maybeMod mods) (uncurry (Term.Prim (reifyPrimName @a ms)) (columnConstraints mods))
+      DdTerm (pgColumnName name) (unSetTableName <$> maybeMod mods) (uncurry (Term.Prim (reifyPrimName @a ms)) (columnConstraints mods))
       where
         name = reifySel sel
 
@@ -79,7 +79,7 @@ instance (
     MaybeMod SetTableName mods
   ) => FoldComp c i sel ('SelSymbol tname) mods a sub where
     foldComp (Dd sel mods (DdComp (SelWSymbol Proxy) c i _)) sub =
-      DdTerm name (unSetTableName <$> maybeMod mods) (Term.Comp typeName (demoteComp c) (demoteInc i) (hcollapse sub))
+      DdTerm (pgColumnName name) (unSetTableName <$> maybeMod mods) (Term.Comp typeName (demoteComp c) (demoteInc i) (hcollapse sub))
       where
         name = case sel of
           SelWSymbol (Proxy :: Proxy name) -> symbolText @name

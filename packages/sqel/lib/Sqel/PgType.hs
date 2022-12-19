@@ -11,7 +11,7 @@ import Sqel.Data.Codec (Codec (Codec), FullCodec)
 import Sqel.Data.Dd (Dd, DdK, DdType)
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
-  PgColumnName,
+  PgColumnName (PgColumnName),
   PgColumns (PgColumns),
   PgComposite (PgComposite),
   PgStructure (PgStructure),
@@ -31,22 +31,21 @@ import Sqel.Data.Term (Comp, CompInc (Merge), DdTerm (DdTerm), Struct (Comp, Pri
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
 import Sqel.ReifyDd (ReifyDd (reifyDd))
 import Sqel.Sql.Prepared (dollar)
-import Sqel.Text.DbIdentifier (dbIdentifierT, quotedDbId)
 import Sqel.Text.Quote (dquote)
 
 pgColumn ::
   DdTerm ->
-  ([(PgColumnName, ColumnType)], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty Text])
+  ([(PgColumnName, ColumnType)], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty PgColumnName])
 pgColumn = \case
   DdTerm name _ (Prim t unique constr) ->
-    ([(pgColumnName name, ColumnPrim t unique constr)], [(pgColumnName name, StructurePrim t unique constr)], mempty, [pure name])
+    ([(name, ColumnPrim t unique constr)], [(name, StructurePrim t unique constr)], mempty, [pure name])
   DdTerm name _ (Comp typeName c i sub) ->
     case comp typeName c i sub of
       (compType@(PgComposite cname _), struct, types, False, sels) ->
         (colType, structType, Map.insert ref compType types, (name <|) <$> sels)
         where
-          colType = [(pgColumnName name, ColumnComp ref)]
-          structType = [(pgColumnName name, StructureComp cname struct)]
+          colType = [(name, ColumnComp ref)]
+          structType = [(name, StructureComp cname struct)]
           ref = pgCompRef cname
       (PgComposite _ (PgColumns columns), PgStructure struct, types, True, sels) ->
         (columns, struct, types, sels)
@@ -56,7 +55,7 @@ comp ::
   Comp ->
   CompInc ->
   [DdTerm] ->
-  (PgComposite, PgStructure, Map PgTypeRef PgComposite, Bool, [NonEmpty Text])
+  (PgComposite, PgStructure, Map PgTypeRef PgComposite, Bool, [NonEmpty PgColumnName])
 comp typeName _ i sub =
   (compType, structType, Map.unions (view _3 <$> cols), i == Merge, view _4 =<< cols)
   where
@@ -66,11 +65,11 @@ comp typeName _ i sub =
     cols = pgColumn <$> sub
 
 -- TODO this used to dquote the @names@ as well but it appears to fail for the sum index field
-mkSelector :: NonEmpty Text -> Selector
+mkSelector :: NonEmpty PgColumnName -> Selector
 mkSelector =
   Selector . Sql . \case
-    [name] -> quotedDbId name
-    root :| names -> [exon|(#{dquote root}).#{Text.intercalate "." (dbIdentifierT <$> names)}|]
+    [PgColumnName name] -> dquote name
+    root :| names -> [exon|(##{dquote root}).##{Text.intercalate "." (coerce names)}|]
 
 -- TODO use CommaSep
 mkValues :: PgStructure -> [Sql]
@@ -86,14 +85,14 @@ mkValues (PgStructure base) =
             mapAccumL mkCol n cols
 
 mkTable ::
-  Text ->
+  PgColumnName ->
   Maybe PgTableName ->
   PgColumns ->
   Map PgTypeRef PgComposite ->
-  [NonEmpty Text] ->
+  [NonEmpty PgColumnName] ->
   PgStructure ->
   PgTable a
-mkTable name tableName cols types selectors struct =
+mkTable (PgColumnName name) tableName cols types selectors struct =
   PgTable (fromMaybe (pgTableName name) tableName) cols types (TableSelectors (mkSelector <$> selectors)) values struct
   where
     values = TableValues (mkValues struct)
@@ -103,10 +102,10 @@ toTable = \case
   DdTerm name tableName (Prim t unique constr) ->
     mkTable name tableName cols [] [pure name] struct
     where
-      cols = PgColumns [(pgColumnName name, ColumnPrim t unique constr)]
-      struct = PgStructure [(pgColumnName name, StructurePrim t unique constr)]
+      cols = PgColumns [(name, ColumnPrim t unique constr)]
+      struct = PgStructure [(name, StructurePrim t unique constr)]
   DdTerm _ tableName (Comp typeName c i sub) ->
-    mkTable typeName tableName cols types paths struct
+    mkTable (pgColumnName typeName) tableName cols types paths struct
     where
       (PgComposite _ cols, struct, types, _, paths) = comp typeName c i sub
 

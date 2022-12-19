@@ -17,8 +17,9 @@ import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
 import qualified Sqel.Prim as Sqel
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (uid)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
+import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Database as Database
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
@@ -43,7 +44,7 @@ data Dat =
 
 table :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 table =
-  uid prim (prim :> prim :> Sqel.json)
+  uid prim (prod (prim :> prim :> Sqel.json))
 
 ts :: TableSchema (Uid Int64 Dat)
 ts =

@@ -1,11 +1,11 @@
 module Sqel.Text.Quote where
 
-import Exon (exon)
+import Exon (Exon, exon)
 
-squote :: Text -> Text
+squote :: Exon a => a -> a
 squote a =
   [exon|'#{a}'|]
 
-dquote :: Text -> Text
+dquote :: Exon a => a -> a
 dquote a =
   [exon|"#{a}"|]

@@ -16,8 +16,9 @@ import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uid (Uid), Uuid)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (array, enum, prim, primAs, readShow)
-import Sqel.Product (uid)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
+import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
@@ -39,7 +40,7 @@ query :: QuerySchema UUID (Uuid ArrayField)
 (table, query) =
   (tableSchema dd, checkQuery (primAs @"id") dd)
   where
-    dd = uid prim (nullable (array enum) :> array readShow :> array prim :> array prim)
+    dd = uid prim (prod (nullable (array enum) :> array readShow :> array prim :> array prim))
 
 id' :: UUID
 id' =

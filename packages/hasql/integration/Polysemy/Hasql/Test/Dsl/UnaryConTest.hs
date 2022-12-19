@@ -18,10 +18,11 @@ import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod, uid)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Statement (selectWhere)
 import Sqel.Sum (con1, sum)
+import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -57,14 +58,14 @@ data Q =
 
 t1C :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 t1C =
-  uid prim (
+  uid prim (prod (
     prim :*
     sum (
       con1 prim :*
       con1 (prod (primAs @"desc" :* prim :* Nil)) :* Nil
     ) :*
     Nil
-  )
+  ))
 
 q :: Dd ('DdK _ _ Q _)
 q =

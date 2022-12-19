@@ -13,8 +13,9 @@ import Sqel.Data.Uid (Uuid)
 import Sqel.PgType (tableSchema)
 import qualified Sqel.Prim as Sqel
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (uid)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
+import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
@@ -36,7 +37,7 @@ instance (
       ts = tableSchema table
       qs = checkQuery query table
       query = primAs @"id"
-      table = uid prim (prim :* Sqel.json :* Nil)
+      table = uid prim (prod (prim :* Sqel.json :* Nil))
 
 interpretQueueStoreDb ::
   ∀ d t dt r .

@@ -18,8 +18,9 @@ import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (typeAs)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primAs, primNullable)
-import Sqel.Product (prod, uidAs)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
+import Sqel.Uid (uidAs)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -77,37 +78,37 @@ data Q =
 
 t0 :: Dd ('DdK _ _ (Uid Int64 Dat0) _)
 t0 =
-  uidAs @"dat" prim (migrateDelete prim)
+  uidAs @"dat" prim (prod (migrateDelete prim))
 
 t1 :: Dd ('DdK _ _ (Uid Int64 Dat1) _)
 t1 =
-  uidAs @"dat" prim (
+  uidAs @"dat" prim (prod (
     migrateDelete (migrateDef 0 prim) :>
     typeAs @"Pord" (prod (
       migrateDef 53 prim
     ))
-  )
+  ))
 
 t2 :: Dd ('DdK _ _ (Uid Int64 Dat2) _)
 t2 =
-  uidAs @"dat" prim (
+  uidAs @"dat" prim (prod (
     migrateDef 15 prim :>
     typeAs @"Pord" (prod (
       prim :>
       primNullable
     ))
-  )
+  ))
 
 tcur :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 tcur =
-  uidAs @"dat" prim (
+  uidAs @"dat" prim (prod (
     migrateDef ("vunqach" :: Text) prim :>
     migrateRename @"number" prim :>
     prod (
       prim :>
       primNullable
     )
-  )
+  ))
 
 q :: Dd ('DdK _ _ Q _)
 q =

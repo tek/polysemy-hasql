@@ -23,8 +23,8 @@ import Sqel.Data.Select (
   )
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
-import Sqel.Mods (defaultWhere)
 import Sqel.Prim (IndexColumn)
+import Sqel.Query.Combinators (whereEq)
 import Sqel.Query.Fragments (ColumnPrefix, QFragmentPrefix (qfragmentPrefix), prefixed)
 import Sqel.Sql.Prepared (dollar)
 import Sqel.Text.DbIdentifier (dbSymbol)
@@ -48,7 +48,7 @@ instance (
       Just Ignore -> SelectExprIgnore
       Nothing -> SelectExprAtom type_ (code "")
     where
-      SelectAtom type_ code = getMod @() defaultWhere p
+      SelectAtom type_ code = getMod @() whereEq p
 
 instance (
     KnownSymbol n,
@@ -57,7 +57,7 @@ instance (
   toSelectExpr pre (Dd _ p DdPrim) =
     SelectExprAtom type_ (code (Selector (Sql (prefixed (dbSymbol @n) pre))))
     where
-      SelectAtom type_ code = getMod @() defaultWhere p
+      SelectAtom type_ code = getMod @() whereEq p
 
 prodSelectExpr ::
   ∀ sel s .
