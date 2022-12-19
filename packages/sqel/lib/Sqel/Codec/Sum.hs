@@ -60,7 +60,7 @@ readNulls cons =
 sumRows ::
   All2 Top ass =>
   NP (ConB Decoder) ass ->
-  Int ->
+  Int64 ->
   Row (NS (NP I) ass)
 sumRows (ConB con :* cons) 0 =
   Z <$> (con ^. #decodeValue) <* readNulls cons
@@ -118,13 +118,13 @@ instance (
 
 encodeValue ::
   ConstructSOP a ass =>
-  Encoder Int ->
+  Encoder Int64 ->
   NP (ConB Encoder) ass ->
   Params a
 encodeValue (Encoder indexParams _) wrapped =
   unSOP . gfrom >$< (indexEncoder <> sumParams wrapped)
   where
-    indexEncoder = hindex >$< indexParams
+    indexEncoder = (fromIntegral . hindex) >$< indexParams
 
 type SumCodec :: (Type -> Type) -> Type -> [Type] -> Constraint
 class SumCodec b a as | a -> as where
@@ -135,7 +135,7 @@ instance (
     ReifySOP a ass,
     ConstructSOP a ass,
     WrapConB FullCodec ass as
-  ) => SumCodec FullCodec a (Int : as) where
+  ) => SumCodec FullCodec a (Int64 : as) where
     sumCodec (Codec index (Decoder indexRow _) :* conCodecs) =
       Codec {
         decoder = Decoder decodeValue unit,
@@ -152,7 +152,7 @@ instance (
 instance (
     ConstructSOP a ass,
     WrapConB Encoder ass as
-  ) => SumCodec Encoder a (Int : as) where
+  ) => SumCodec Encoder a (Int64 : as) where
     sumCodec (index :* conCodecs) =
       Encoder (encodeValue index wrapped) mempty
       where

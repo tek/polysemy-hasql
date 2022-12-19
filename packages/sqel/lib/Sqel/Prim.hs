@@ -23,12 +23,15 @@ import Sqel.Data.Mods (
   ReadShowColumn,
   )
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWAuto))
+import Sqel.Data.Sel (Sel (SelAuto, SelIndex, SelSymbol, SelUnused), SelW (SelWAuto, SelWIndex))
 import Sqel.Mods (PrimValueCodec, primEnumMods, primJsonMods, primReadShowMods)
 import Sqel.Names (named, selAs)
 import Sqel.SOP.Constraint (ProductGCode)
 import Sqel.SOP.Error (Quoted)
 import Sqel.SOP.Newtype (UnwrapNewtype (unwrapNewtype, wrapNewtype))
+
+type IndexColumn name =
+  'DdK ('SelIndex name) NoMods Int64 'Prim
 
 column :: Mods p -> Dd ('DdK 'SelAuto p a 'Prim)
 column m =
@@ -83,6 +86,12 @@ primCoerce ::
   Dd ('DdK 'SelAuto '[Newtype a w] a 'Prim)
 primCoerce =
   primMod (Newtype coerce coerce)
+
+primIndex ::
+  KnownSymbol name =>
+  Dd (IndexColumn name)
+primIndex =
+  Dd (SelWIndex Proxy) NoMods DdPrim
 
 -- TODO move aeson to reify
 json ::

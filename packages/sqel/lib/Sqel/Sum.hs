@@ -2,11 +2,12 @@ module Sqel.Sum where
 
 import Generics.SOP (NP (Nil, (:*)))
 
-import Sqel.ProductArg (ProductArg)
 import Sqel.Comp (CompColumn (compColumn), compFor)
 import Sqel.Data.Dd (Comp (Prod, Sum), CompInc (Merge, Nest), ConCol, Dd, DdK, ProdType (Con))
-import Sqel.Names.Rename (Rename, rename)
+import Sqel.Names.Comp (SetCon1Name)
+import Sqel.Names.Rename (Rename, Rename2 (rename2), rename)
 import Sqel.Names.Set (SetName)
+import Sqel.ProductArg (ProductArg)
 
 con ::
   ∀ (as :: [Type]) (s0 :: [DdK]) (s1 :: DdK) (arg :: Type) .
@@ -34,6 +35,15 @@ con1 ::
   Dd s1
 con1 dd =
   compColumn @('Prod ('Con '[a])) @'Merge @(ConCol '[a]) (dd :* Nil)
+
+con1As ::
+  ∀ (sel :: Symbol) (a :: Type) (s0 :: DdK) (s1 :: DdK) .
+  CompColumn ('Prod ('Con '[a])) 'Merge (ConCol '[a]) '[s0] s1 =>
+  Rename2 s1 (SetCon1Name s1 sel) =>
+  Dd s0 ->
+  Dd (SetCon1Name s1 sel)
+con1As =
+  rename2 . con1 @a
 
 sum ::
   ∀ (a :: Type) (s0 :: [DdK]) (s1 :: DdK) (arg :: Type) .

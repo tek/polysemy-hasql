@@ -5,7 +5,7 @@ import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
 import Type.Errors.Pretty (type (%), type (<>))
 
-import Sqel.Data.Dd (Comp (Sum), DdK (DdK), Struct (Comp, Prim))
+import Sqel.Data.Dd (DdK (DdK), Struct (Comp, Prim))
 import Sqel.Data.Sel (Sel (SelSymbol))
 import Sqel.Names.Error (CountMismatch, NoPrimType)
 
@@ -28,10 +28,11 @@ type family SetNamesFor desc a ss names where
   SetNamesFor desc a ss names =
     SetNames (CountMismatch desc a (Length @@ ss) (Length @@ names)) ss names
 
+-- TODO is that case for the index relevant anymore?
 type SetTypeName :: DdK -> Symbol -> DdK
 type family SetTypeName s name where
-  SetTypeName ('DdK sel p t ('Comp _ 'Sum i (index : sub))) n =
-    'DdK sel p t ('Comp ('SelSymbol n) 'Sum i (SetName index (AppendSymbol "ph_sum_index__" n) : sub))
+  -- SetTypeName ('DdK sel p t ('Comp _ 'Sum i (index : sub))) n =
+  --   'DdK sel p t ('Comp ('SelSymbol n) 'Sum i (SetName index (AppendSymbol "ph_sum_index__" n) : sub))
   SetTypeName ('DdK sel p t ('Comp _ c i sub)) n =
     'DdK sel p t ('Comp ('SelSymbol n) c i sub)
   SetTypeName ('DdK _ _ t 'Prim) _ =

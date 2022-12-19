@@ -5,9 +5,9 @@ import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
 
 import Sqel.Data.Mods (Mods)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol), SelW (SelWAuto, SelWPath, SelWSymbol, SelWUnused), showSelW)
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol), SelW, showSelW)
 import Sqel.Data.Uid (Uid)
-import Sqel.SOP.Constraint (IsDataT, symbolText)
+import Sqel.SOP.Constraint (IsDataT)
 
 newtype ConCol as =
   ConCol { unConCol :: NP I as }
@@ -105,22 +105,13 @@ typeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> SelW tsel
 typeSel (Dd _ _ (DdComp s _ _ _)) =
   s
 
--- TODO path: store witness
 showSel :: Dd s -> Text
 showSel =
-  sel >>> \case
-    SelWAuto -> "<auto>"
-    SelWPath -> "<path>"
-    SelWUnused -> "<unused>"
-    SelWSymbol (Proxy :: Proxy sel) -> symbolText @sel
+  showSelW . sel
 
 showTypeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> Text
 showTypeSel =
-  typeSel >>> \case
-    SelWAuto -> "<auto>"
-    SelWPath -> "<path>"
-    SelWUnused -> "<unused>"
-    SelWSymbol (Proxy :: Proxy sel) -> symbolText @sel
+  showSelW . typeSel
 
 class MatchDdType s a | s -> a
 instance MatchDdType ('DdK sel p a s) a

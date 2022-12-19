@@ -7,7 +7,7 @@ import Prelude hiding (type (@@))
 import Type.Errors.Pretty (type (<>))
 
 import Sqel.Data.Dd (Comp (Sum), CompInc (Merge), DdK (DdK), Struct (Comp, Prim))
-import Sqel.Data.Sel (Sel (SelAuto, SelPath, SelSymbol, SelUnused))
+import Sqel.Data.Sel (Sel (SelAuto, SelPath, SelSymbol, SelUnused, SelIndex))
 import Sqel.SOP.Error (JoinSym, QuotedError, QuotedType)
 
 data CheckField =
@@ -21,6 +21,7 @@ type family CheckFieldPrim prefix sel t where
   CheckFieldPrim prefix ('SelSymbol name) t = '[ 'CheckField (prefix ++ '[name]) t]
   CheckFieldPrim _ ('SelPath path) t = '[ 'CheckField path t]
   CheckFieldPrim _ 'SelUnused _ = '[]
+  CheckFieldPrim _ ('SelIndex _) _ = '[]
   CheckFieldPrim _ 'SelAuto t =
     TypeError ("Internal error: A field with type " <> t <> " was not automatically renamed.")
 

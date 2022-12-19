@@ -38,7 +38,7 @@ data F2 =
 data S =
   S1 { f1 :: Text }
   |
-  S2 { f2 :: F2 }
+  S2 F2
   deriving stock (Eq, Show, Generic)
 
 data Dat =

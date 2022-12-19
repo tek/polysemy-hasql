@@ -27,13 +27,10 @@ import Sqel.Data.Select (SelectAtom (SelectAtom))
 import Sqel.Data.Sql (sql)
 import Sqel.Names.Comp (ProdNamed, SumNamed)
 import Sqel.Names.Rename (renameN, renameN2)
-import Sqel.Prim (primAs)
+import Sqel.Prim (IndexColumn, primIndex)
 import Sqel.ProductArg (ProductArg (productArg))
 import Sqel.SOP.Constraint (ProductCoded)
 import Sqel.Sql.Prepared (dollar)
-
-type IndexColumn name =
-  'DdK ('SelSymbol name) NoMods Int 'Prim
 
 -- TODO this recurses through the entire subtree.
 -- can we replace this with a check for the index column? i.e. ($1 != 2 or foo = $2)
@@ -72,7 +69,7 @@ instance (
 instance (
     as ~ ConCoded a,
     AllZip MatchDdType s as
-  ) => CompCoded 'Sum i s a (Int : as) where
+  ) => CompCoded 'Sum i s a (Int64 : as) where
 
 type CompName :: Type -> Sel -> Constraint
 class CompName a sel | a -> sel where
@@ -87,7 +84,7 @@ instance {-# overlappable #-} (
 instance CompName (ConCol as) 'SelAuto where
   compName = mkSel
 
-class CompFields c a s0 s1 | a s0 -> s1 where
+class CompFields c a s0 s1 | c a s0 -> s1 where
   compFields :: NP Dd s0 -> NP Dd s1
 
 instance ProdNamed a s0 s1 => CompFields ('Prod 'Reg) a s0 s1 where
@@ -97,16 +94,12 @@ instance ProdNamed a s0 s1 => CompFields ('Prod 'Reg) a s0 s1 where
 instance {-# overlappable #-} CompFields ('Prod ('Con as)) (ConCol as) s0 s0 where
   compFields = id
 
--- TODO this hardcoded symbol won't work if the root type needs to be prefixed. since we're not checking this field in
--- sum queries anyway (it's not user defined), this can just be a special constructor in Sel
 instance (
     CompName a ('SelSymbol name),
-    iname ~ AppendSymbol "ph_sum_index__" name,
-    KnownSymbol iname,
-    SumNamed a s0 s1,
-    i ~ IndexColumn iname
-  ) => CompFields 'Sum a s0 (i : s1) where
-    compFields np = primAs @iname :* renameN2 np
+    KnownSymbol name,
+    SumNamed a s0 s1
+  ) => CompFields 'Sum a s0 (IndexColumn name : s1) where
+    compFields np = primIndex :* renameN2 np
 
 type CompColumn' :: Comp -> CompInc -> Type -> [DdK] -> DdK -> Constraint
 class CompColumn' c i a s0 s1 | c i a s0 -> s1 where

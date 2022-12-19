@@ -3,7 +3,6 @@ module Sqel.Query.SelectExpr where
 import Generics.SOP (All, K (K), NP ((:*)), hcmap, hcollapse)
 
 import Sqel.Class.Mods (GetMod (getMod), MaybeMod (maybeMod))
-import Sqel.Comp (IndexColumn)
 import Sqel.Data.Dd (
   Comp (Prod, Sum),
   CompInc (Merge, Nest),
@@ -25,6 +24,7 @@ import Sqel.Data.Select (
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
 import Sqel.Mods (defaultWhere)
+import Sqel.Prim (IndexColumn)
 import Sqel.Query.Fragments (ColumnPrefix, QFragmentPrefix (qfragmentPrefix), prefixed)
 import Sqel.Sql.Prepared (dollar)
 import Sqel.Text.DbIdentifier (dbSymbol)

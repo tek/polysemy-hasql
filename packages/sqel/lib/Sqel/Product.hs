@@ -2,13 +2,22 @@ module Sqel.Product where
 
 import Generics.SOP (NP (Nil, (:*)))
 
-import Sqel.ProductArg (ProductArg)
 import Sqel.Comp (CompColumn, compFor)
-import Sqel.Data.Dd (Comp (Prod), CompInc (Merge, Nest), Dd (Dd), DdK (DdK), ProdType (Reg), Struct (Comp), DdStruct (DdComp), DdInc (DdNest, DdMerge))
+import Sqel.Data.Dd (
+  Comp (Prod),
+  CompInc (Merge, Nest),
+  Dd (Dd),
+  DdInc (DdMerge),
+  DdK (DdK),
+  DdStruct (DdComp),
+  ProdType (Reg),
+  Struct (Comp),
+  )
 import Sqel.Data.Sel (Sel (SelAuto))
 import Sqel.Data.Uid (Uid)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetName, SetTypeName)
+import Sqel.ProductArg (ProductArg)
 
 prod ::
   ∀ (a :: Type) (s0 :: [DdK]) (s1 :: DdK) (arg :: Type) .

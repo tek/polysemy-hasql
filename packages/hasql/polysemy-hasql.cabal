@@ -162,6 +162,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.Dsl.MigrationTest
       Polysemy.Hasql.Test.Dsl.QueryTest
       Polysemy.Hasql.Test.Dsl.SimpleQueryTest
+      Polysemy.Hasql.Test.Dsl.SumQueryTest
       Polysemy.Hasql.Test.Dsl.SumTest
       Polysemy.Hasql.Test.Dsl.TableSchemaTest
       Polysemy.Hasql.Test.Dsl.UnaryConTest

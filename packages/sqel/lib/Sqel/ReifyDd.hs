@@ -15,7 +15,7 @@ import Sqel.Data.Mods (
   unSetTableName,
   )
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
+import Sqel.Data.Sel (ReifySel (reifySel), Sel (SelSymbol), SelW (SelWSymbol))
 import qualified Sqel.Data.Term as Term
 import Sqel.Data.Term (DdTerm (DdTerm), demoteComp, demoteInc)
 import Sqel.Fold (FoldDd, foldDd)
@@ -59,12 +59,13 @@ class FoldPrim sel p a where
 instance (
     ColumnConstraints mods,
     MaybeMod SetTableName mods,
-    ReifyPrimName a mods
-  ) => FoldPrim ('SelSymbol name) mods a where
-    foldPrim (Dd (SelWSymbol Proxy) mods@(Mods ms) DdPrim) =
+    ReifyPrimName a mods,
+    ReifySel sel
+  ) => FoldPrim sel mods a where
+    foldPrim (Dd sel mods@(Mods ms) DdPrim) =
       DdTerm name (unSetTableName <$> maybeMod mods) (uncurry (Term.Prim (reifyPrimName @a ms)) (columnConstraints mods))
       where
-        name = symbolText @name
+        name = reifySel sel
 
 type FoldComp :: Comp -> CompInc -> Sel -> Sel -> [Type] -> Type -> [DdK] -> Constraint
 class FoldComp c i sel tsel p a sub where
