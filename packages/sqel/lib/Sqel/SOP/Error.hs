@@ -17,6 +17,11 @@ type family ErrorWithType2 part1 d part2 d' :: k where
   ErrorWithType2 part1 d part2 d' =
     TypeError ('Text part1 <> 'Text " " <> 'ShowType d <> 'Text " " <> 'Text part2 <> 'Text " " <> 'ShowType d')
 
+type family JoinSep (sep :: Symbol) (ss :: [Symbol]) :: Symbol where
+  JoinSep _ '[] = "<empty>"
+  JoinSep _ '[s] = s
+  JoinSep sep (s : ss) = AppendSymbol (AppendSymbol s sep) (JoinSep sep ss)
+
 type family JoinError (sep :: ErrorMessage) (ns :: [ErrorMessage]) :: ErrorMessage where
   JoinError _ '[] = 'Text "<empty>"
   JoinError sep (n : n1 : ns) = n <> sep <> JoinError sep (n1 : ns)

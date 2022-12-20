@@ -7,7 +7,8 @@ import Prelude hiding (sum)
 import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
-import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
+import Sqel.Combinators (Merge)
+import Sqel.Data.Dd (DbTypeName (dbTypeName), Dd, DdK (DdK), DdType, MatchDdType, type (:>) ((:>)))
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.Select (Select (Select))
@@ -15,13 +16,15 @@ import Sqel.Data.Sql (Sql, sql, toSql)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)
+import Sqel.Names.Amend (AmendName)
+import Sqel.Names.Rename (Rename)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, prims)
 import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Query.Combinators (order)
 import qualified Sqel.Sql.Select as Sql
-import Sqel.Sum (con, sum)
+import Sqel.Sum (con, con1, sum)
 import Sqel.Uid (uid)
 
 data Prod =
@@ -43,21 +46,22 @@ data Q =
   }
   deriving stock (Eq, Show, Generic)
 
+ddProd :: Dd ('DdK _ _ Prod _)
+ddProd =
+  prod prims
+
 target_order :: Sql
 target_order =
   [sql|select "num" from "dat" order by "num" desc|]
 
-qs :: QuerySchema Q Dat
-qs =
-  checkQuery (prod (order Desc)) (prod prim)
-
-ts :: TableSchema Dat
-ts =
-  tableSchema (prod prim)
-
 test_statement_order :: TestT IO ()
 test_statement_order =
   target_order === Sql.selectWhere qs ts
+  where
+    ts :: TableSchema Dat
+    ts = tableSchema (prod prim)
+    qs :: QuerySchema Q Dat
+    qs = checkQuery (prod (order Desc)) (prod prim)
 
 target_mergeSum :: Sql
 target_mergeSum =
@@ -99,10 +103,69 @@ test_statement_merge_prod :: TestT IO ()
 test_statement_merge_prod =
   target_merge_prod === toSql (Select (tableSchema dd_merge_prod))
 
+data Wrap a =
+  Wrap { wrapped :: a, length :: Int64 }
+  deriving stock (Eq, Show, Generic)
+
+instance DbTypeName a name => DbTypeName (Wrap a) name where
+  dbTypeName = dbTypeName @a
+
+data Merge1 =
+  One { one :: Prod }
+  |
+  Two { two :: Prod }
+  deriving stock (Eq, Show, Generic)
+
+data QHo =
+  QHo { name :: Text }
+  deriving stock (Eq, Show, Generic)
+
+data QWrap =
+  QWrap { two :: QHo }
+  deriving stock (Eq, Show, Generic)
+
+ddWrap ::
+  ∀ a s0 s1 name .
+  DdType s0 ~ a =>
+  MatchDdType s1 a =>
+  KnownSymbol name =>
+  DbTypeName a name =>
+  Merge a s0 s1 =>
+  Rename s1 (AmendName s1 "wrapped") =>
+  Dd s0 ->
+  Dd ('DdK _ _ (Uid Int64 (Wrap a)) _)
+ddWrap wrapped =
+  uid prim (prod (merge @a wrapped :> prim))
+
+ddMerge1 :: Dd ('DdK _ _ Merge1 _)
+ddMerge1 =
+  sum (con1 ddProd :> con1 ddProd)
+
+dd_merge_higherOrder :: Dd ('DdK _ _ (Uid Int64 (Wrap Merge1)) _)
+dd_merge_higherOrder =
+  ddWrap ddMerge1
+
+query_merge_higherOrder :: Dd ('DdK _ _ QWrap _)
+query_merge_higherOrder =
+  prod (prod prim)
+
+target_merge_query_higherOrder :: Sql
+target_merge_query_higherOrder =
+  [sql|select "id", "ph_sum_index__merge1", ("one").num, ("one").name, ("two").num, ("two").name, "length"
+       from "merge1" where ((("two")."name" = $1))|]
+
+test_statement_merge_query_higherOrder :: TestT IO ()
+test_statement_merge_query_higherOrder =
+  target_merge_query_higherOrder === Sql.selectWhere qs ts
+  where
+    ts = tableSchema dd_merge_higherOrder
+    qs = checkQuery query_merge_higherOrder dd_merge_higherOrder
+
 test_statement :: TestTree
 test_statement =
   testGroup "statement" [
     unitTest "order" test_statement_order,
     unitTest "merge sum" test_statement_merge_sum,
-    unitTest "merge prod" test_statement_merge_prod
+    unitTest "merge prod" test_statement_merge_prod,
+    unitTest "higher-order merge query" test_statement_merge_query_higherOrder
   ]
