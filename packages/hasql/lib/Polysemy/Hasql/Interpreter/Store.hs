@@ -1,14 +1,9 @@
 module Polysemy.Hasql.Interpreter.Store where
 
 import Conc (interpretScopedRWith)
-import Control.Monad.Extra (andM)
-import qualified Data.Map.Strict as Map
-import Exon (exon)
-import Generics.SOP (NP (Nil, (:*)))
+import Generics.SOP (NP (Nil))
 import Hasql.Connection (Connection)
 import Hasql.Statement (Statement)
-import qualified Log
-import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (QStore, Store)
@@ -23,22 +18,13 @@ import Sqel.Data.Dd (
   ProdType (Reg),
   Struct (Comp, Prim),
   )
-import Sqel.Data.Migration (Mig (Mig), Migration (Migration, tableFrom), Migrations (Migrations), Migs, noMigrations)
+import Sqel.Data.Migration (noMigrations)
 import Sqel.Data.Mods (pattern NoMods, NoMods)
 import qualified Sqel.Data.PgType as PgType
-import Sqel.Data.PgType (
-  ColumnType (ColumnComp, ColumnPrim),
-  PgColumnName (PgColumnName),
-  PgColumns (PgColumns),
-  PgComposite (PgComposite),
-  PgPrimName (PgPrimName),
-  PgTable (PgTable),
-  PgTypeRef (PgTypeRef),
-  )
-import Sqel.Data.PgTypeName (PgTableName, pattern PgTypeName, PgTypeName)
+import Sqel.Data.PgType (PgTable (PgTable))
+import Sqel.Data.PgTypeName (pattern PgTypeName)
 import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto, SelWSymbol))
-import Sqel.Data.Sql (Sql)
 import qualified Sqel.Data.TableSchema as TableSchema
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Data.Uid (Uid)
@@ -51,7 +37,7 @@ import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
-import Polysemy.Hasql.Table (createTable, dbColumnsStatement, tableColumnsSql, typeColumnsSql)
+import Polysemy.Hasql.Interpreter.DbTable (initTable)
 
 type EmptyQuery =
   'DdK ('SelSymbol "") NoMods () ('Comp 'SelAuto ('Prod 'Reg) 'Nest '[])
@@ -113,126 +99,6 @@ interpretStoreDb ::
 interpretStoreDb table query =
   interpretQStoreDb table query
 
--- TODO lots of duplication in this module
-interpretDbTable ::
-  ∀ d r .
-  Members [Database !! DbError, Log, Embed IO] r =>
-  TableSchema d ->
-  InterpreterFor (DbTable d !! DbError) r
-interpretDbTable schema@(TableSchema table@PgTable {name = PgTypeName name} _ _) =
-  interpretResumable \case
-    DbTable.Schema ->
-      pure schema
-    DbTable.Statement q stmt ->
-      restop (Database.withInit initDb (Database.statement q stmt))
-  where
-    initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations
-
-typeColumns ::
-  Member Database r =>
-  Sql ->
-  PgTypeName table ->
-  Sem r (Map PgColumnName (Either PgTypeRef PgPrimName))
-typeColumns code (PgTypeName name) =
-  Map.fromList . fmap mktype <$> Database.statement name (dbColumnsStatement code)
-  where
-    mktype = \case
-      (col, "USER-DEFINED", n) ->
-        (PgColumnName col, Left (PgTypeRef n))
-      (col, n, _) ->
-        (PgColumnName col, Right (PgPrimName n))
-
-tableColumns ::
-  Member Database r =>
-  PgTableName ->
-  Sem r (Map PgColumnName (Either PgTypeRef PgPrimName))
-tableColumns =
-  typeColumns tableColumnsSql
-
-typeMatch ::
-  Member Database r =>
-  PgComposite ->
-  Sem r Bool
-typeMatch (PgComposite name (PgColumns cols)) = do
-  dbCols <- typeColumns typeColumnsSql name
-  pure (dbCols == colsByName)
-  where
-    colsByName = Map.fromList cols <&> \case
-      ColumnPrim n _ _ -> Right n
-      ColumnComp n -> Left n
-
-tableMatch ::
-  Member Database r =>
-  PgTable d ->
-  Sem r Bool
-tableMatch (PgTable tableName (PgColumns cols) types _ _ _) = do
-  dbCols <- tableColumns tableName
-  andM (pure (dbCols == colsByName) : (typeMatch <$> Map.elems types))
-  where
-    colsByName = Map.fromList cols <&> \case
-      ColumnPrim n _ _ -> Right n
-      ColumnComp n -> Left n
-
-startMigration ::
-  Member Log r =>
-  Migration (Sem r) ('Mig from to) ->
-  Sem r ()
-startMigration (Migration _ _ _ action) = do
-  Log.info [exon|Starting migration|]
-  action
-
--- TODO is it necessary for migrations to be stored as an NP? there's no type stuff going on here anymore
-class RunMigrations d migs r where
-  runMigrations ::
-    PgTable d ->
-    NP (Migration (Sem r)) migs ->
-    Sem r ()
-
-instance (
-    Member (Stop DbError) r
-  ) => RunMigrations d '[] r where
-  runMigrations (PgTable (PgTypeName name) _ _ _ _ _) Nil =
-    stop (DbError.Table [exon|No migration fits the current table layout for #{name}|])
-
-instance (
-    Members [Database, Log] r,
-    RunMigrations d migs r
-  ) => RunMigrations d ('Mig from to : migs) r where
-  runMigrations table (h :* t) =
-    ifM (tableMatch (tableFrom h)) (startMigration h) nextMigration
-    where
-      nextMigration = runMigrations table t *> startMigration h
-
-initTable ::
-  Members [Database, Stop DbError, Log, Embed IO] r =>
-  RunMigrations d (Migs ds d) r =>
-  PgTable d ->
-  Migrations (Sem r) ds d ->
-  Sem r ()
-initTable table (Migrations migrations) =
-  ifM (Map.null <$> tableColumns (table ^. #name))
-  do
-    Database.use \ c -> createTable c table
-  do
-    unlessM (tableMatch table) do
-      runMigrations table migrations
-
-interpretTableMigrations ::
-  ∀ d ds r .
-  RunMigrations d (Migs ds d) (Database : Stop DbError : r) =>
-  Members [Database !! DbError, Log, Embed IO] r =>
-  TableSchema d ->
-  Migrations (Sem (Database : Stop DbError : r)) ds d ->
-  InterpreterFor (DbTable d !! DbError) r
-interpretTableMigrations schema@(TableSchema table@PgTable {name = PgTypeName name} _ _) migrations =
-  interpretResumable \case
-    DbTable.Schema ->
-      pure schema
-    DbTable.Statement q stmt -> do
-      restop (Database.withInit initDb (Database.statement q stmt))
-  where
-    initDb = InitDb (ClientTag name) True \ _ -> initTable table migrations
-
 tableDatabaseScoped ::
   Members [Scoped conn (Database !! DbError), Stop DbError, Log, Embed IO] r =>
   conn ->
@@ -251,6 +117,7 @@ storeScope conn use =
     insertAt @1 (use ())
 
 -- TODO move withInit to scope?
+-- TODO local DbTable?
 interpretStoreXa ::
   ∀ i d r .
   Members [Scoped ConnectionSource (Database !! DbError), Log, Embed IO] r =>

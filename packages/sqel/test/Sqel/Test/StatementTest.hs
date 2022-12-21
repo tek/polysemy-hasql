@@ -7,14 +7,19 @@ import Prelude hiding (sum)
 import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
+import Sqel.Class.MatchView (MatchViewPath)
 import Sqel.Combinators (Merge)
+import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (DbTypeName (dbTypeName), Dd, DdK (DdK), DdType, MatchDdType, type (:>) ((:>)))
+import Sqel.Data.FieldPath (FieldPath (FieldPath), FieldPathsSub)
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Sql (Sql, sql, toSql)
 import Sqel.Data.TableSchema (TableSchema)
+import Sqel.Data.Term (DdTerm)
 import Sqel.Data.Uid (Uid)
+import Sqel.Fold (FoldDd)
 import Sqel.Merge (merge)
 import Sqel.Names.Amend (AmendName)
 import Sqel.Names.Rename (Rename)
@@ -23,6 +28,8 @@ import Sqel.Prim (prim, prims)
 import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Query.Combinators (order)
+import Sqel.ReifyCodec (ReifyCodec)
+import Sqel.ReifyDd (FoldComp, FoldPrim)
 import qualified Sqel.Sql.Select as Sql
 import Sqel.Sum (con, con1, sum)
 import Sqel.Uid (uid)
@@ -138,28 +145,38 @@ ddWrap wrapped =
   uid prim (prod (merge @a wrapped :> prim))
 
 ddMerge1 :: Dd ('DdK _ _ Merge1 _)
-ddMerge1 =
-  sum (con1 ddProd :> con1 ddProd)
-
-dd_merge_higherOrder :: Dd ('DdK _ _ (Uid Int64 (Wrap Merge1)) _)
-dd_merge_higherOrder =
-  ddWrap ddMerge1
-
-query_merge_higherOrder :: Dd ('DdK _ _ QWrap _)
-query_merge_higherOrder =
-  prod (prod prim)
+ddMerge1 = sum (con1 ddProd :> con1 ddProd)
 
 target_merge_query_higherOrder :: Sql
 target_merge_query_higherOrder =
   [sql|select "id", "ph_sum_index__merge1", ("one").num, ("one").name, ("two").num, ("two").name, "length"
        from "merge1" where ((("two")."name" = $1))|]
 
+statement_query_higherOrder ::
+  ∀ a s0 s1 s2 name .
+  MatchDdType s1 a =>
+  KnownSymbol name =>
+  DbTypeName a name =>
+  Merge a s0 s1 =>
+  s2 ~ AmendName s1 "wrapped" =>
+  Rename s1 (AmendName s1 "wrapped") =>
+  ReifyCodec FullCodec s2 a =>
+  FoldDd FoldPrim FoldComp DdTerm s2 =>
+  MatchViewPath ('FieldPath ["two", "name"] Text) ((FieldPathsSub '[] s2 ++ '[ 'FieldPath '["length"] Int64 ]) ++ '[]) 'True =>
+  Dd s0 ->
+  Sql
+statement_query_higherOrder wrapped =
+  Sql.selectWhere qs ts
+  where
+    ts :: TableSchema (Uid Int64 (Wrap a))
+    ts = tableSchema dd
+    qs :: QuerySchema QWrap (Uid Int64 (Wrap a))
+    qs = checkQuery (prod (prod prim)) dd
+    dd = uid prim (prod (merge @a wrapped :> prim))
+
 test_statement_merge_query_higherOrder :: TestT IO ()
 test_statement_merge_query_higherOrder =
-  target_merge_query_higherOrder === Sql.selectWhere qs ts
-  where
-    ts = tableSchema dd_merge_higherOrder
-    qs = checkQuery query_merge_higherOrder dd_merge_higherOrder
+  target_merge_query_higherOrder === statement_query_higherOrder ddMerge1
 
 test_statement :: TestTree
 test_statement =

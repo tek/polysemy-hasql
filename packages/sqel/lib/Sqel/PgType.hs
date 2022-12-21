@@ -6,7 +6,10 @@ import qualified Data.Text as Text
 import qualified Exon
 import Exon (exon)
 import Lens.Micro.Extras (view)
+import Type.Errors (ErrorMessage)
+import Type.Errors.Pretty (type (%), type (<>))
 
+import Sqel.Class.MatchView (MatchProjection)
 import Sqel.Data.Codec (Codec (Codec), FullCodec)
 import Sqel.Data.Dd (Dd, DdK, DdType)
 import Sqel.Data.PgType (
@@ -24,12 +27,14 @@ import Sqel.Data.PgType (
   pgCompRef,
   )
 import Sqel.Data.PgTypeName (PgTableName, pgCompName, pgTableName)
+import Sqel.Data.ProjectionSchema (ProjectionSchema (ProjectionSchema))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Data.Term (Comp, CompInc (Merge), DdTerm (DdTerm), Struct (Comp, Prim))
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
 import Sqel.ReifyDd (ReifyDd (reifyDd))
+import Sqel.SOP.Error (Quoted)
 import Sqel.Sql.Prepared (dollar)
 import Sqel.Text.Quote (dquote)
 
@@ -129,3 +134,32 @@ instance (
     TableSchema (pgTable tab) (row ^. #decodeValue) (params ^. #encodeValue)
     where
       Codec params row = reifyCodec @FullCodec tab
+
+class CheckedProjection' (check :: Maybe Void) (s :: DdK) where
+  checkedProjection' :: Dd s -> ProjectionSchema (DdType s) table
+
+instance CheckedProjection' 'Nothing s where
+  checkedProjection' _ = ProjectionSchema
+
+class CheckedProjection (query :: DdK) (table :: DdK) where
+  checkedProjection :: Dd query -> ProjectionSchema (DdType query) (DdType table)
+
+type CheckProjectionStuck :: ErrorMessage
+type CheckProjectionStuck =
+  "Could not validate projection fields since there is not enough type information available." %
+  "You are most likely missing a constraint for " <> Quoted "CheckedProjection" <> "."
+
+instance (
+    MatchProjection proj table match,
+    CheckedProjection' match proj
+  ) => CheckedProjection proj table where
+    checkedProjection = checkedProjection' @match
+
+projectionSchema ::
+  ∀ proj table .
+  CheckedProjection proj table =>
+  Dd proj ->
+  Dd table ->
+  ProjectionSchema (DdType proj) (DdType table)
+projectionSchema proj _ =
+  checkedProjection @proj @table proj

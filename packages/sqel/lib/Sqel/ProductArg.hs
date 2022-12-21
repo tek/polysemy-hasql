@@ -28,6 +28,9 @@ type InvalidArg name arg =
 
 class Dummy arg s | arg -> s where
 
+-- TODO use this instead
+class FundepError (err :: Void) arg s | arg -> s where
+
 type ProductElem :: Symbol -> Nat -> Type -> DdK -> Constraint
 class ProductElem name i arg s | arg -> s where
   productElem :: arg -> Dd s

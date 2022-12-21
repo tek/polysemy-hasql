@@ -24,8 +24,9 @@ import Sqel.Uid (uidAs)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable, interpretTableMigrations)
 import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb, interpretTableMigrations)
+import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Migration (migrateSem)
 import Polysemy.Hasql.Test.Run (integrationTest)
 

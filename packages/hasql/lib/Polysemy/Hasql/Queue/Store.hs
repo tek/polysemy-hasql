@@ -18,7 +18,8 @@ import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
 
 class StoreTable t d where

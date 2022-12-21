@@ -9,7 +9,7 @@ import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
 import Sqel.PgType (MkTableSchema(tableSchema))
 import Sqel.Product (prod)
 import Sqel.Prim (prims)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 
 data Cat =
   Cat {

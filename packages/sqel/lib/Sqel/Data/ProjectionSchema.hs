@@ -1,12 +1,11 @@
 module Sqel.Data.ProjectionSchema where
 
-import Hasql.Decoders (Row)
+data ProjectionSchema proj table =
+  ProjectionSchema
 
-import Sqel.Data.Selector (Selector)
-
-data ProjectionSchema a =
-  ProjectionSchema {
-    column :: [Selector],
-    decoder :: Row a
-  }
-  deriving stock (Generic)
+-- data ProjectionSchema proj table =
+--   ProjectionSchema {
+--     column :: [Selector],
+--     decoder :: Row proj
+--   }
+--   deriving stock (Generic)

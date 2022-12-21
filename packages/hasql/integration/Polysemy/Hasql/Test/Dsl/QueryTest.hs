@@ -27,12 +27,13 @@ import qualified Sqel.Query.Combinators as Q
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
 import Sqel.ReifyDd (ReifyDd (reifyDd))
 import Sqel.Statement (selectWhere)
+import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.Run (integrationTest)
-import Sqel.Uid (uid)
 
 newtype TextNt =
   TextNt { unTextNt :: Text }

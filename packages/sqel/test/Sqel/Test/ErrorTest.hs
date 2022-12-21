@@ -16,11 +16,12 @@ typeError ::
   [Text] ->
   a ->
   TestT IO ()
-typeError msg t = do
-  e <- liftIO (Base.try @SomeException (evaluate t))
-  case e of
-    Right _ -> fail "Test did not produce an error."
-    Left err -> msg === (trunc (drop 1 (lines (show err))))
+typeError msg t =
+  withFrozenCallStack do
+    e <- liftIO (Base.try @SomeException (evaluate t))
+    case e of
+      Right _ -> fail "Test did not produce an error."
+      Left err -> msg === trunc (drop 1 (lines (show err)))
   where
     trunc =
       if null msg
@@ -29,7 +30,14 @@ typeError msg t = do
 
 queryColumnMismatchMessage :: [Text]
 queryColumnMismatchMessage =
-    ["\8226 The query column \8216pog.p1\8217 with type \8216Int\8217 does not correspond to a table column."]
+    [
+      "\8226 The query column \8216pog.p1\8217 with type \8216Int\8217 does not correspond to a table column.",
+        "Available fields:",
+        "name [Text]",
+        "po.p1 [Int]",
+        "po.p2 [Text]",
+        "id [Int64]"
+    ]
 
 prodTooFewMessage :: [Text]
 prodTooFewMessage =

@@ -21,10 +21,11 @@ import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Transaction (Transactions, abort)
-import Polysemy.Hasql.Interpreter.Store (interpretDbTable, interpretStoreDb, interpretStoreXa)
+import Polysemy.Hasql.Interpreter.Store (interpretStoreDb, interpretStoreXa)
 import Polysemy.Hasql.Interpreter.Transaction (interpretTransactions)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Transaction (transactStores)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 
 data Dat =
   Dat {
