@@ -3,6 +3,7 @@ module Sqel.Data.Dd where
 import Generics.SOP (I, NP (Nil, (:*)))
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
+import Type.Errors.Pretty (type (<>))
 
 import Sqel.Data.Mods (Mods)
 import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol), SelW, showSelW)
@@ -95,15 +96,25 @@ type family DdTypes s where
 
 type DdSel :: DdK -> Sel
 type family DdSel s where
-  DdSel ('DdK s _ _ _) = s
+  DdSel ('DdK sel _ _ _) = sel
+
+type family DdName (s :: DdK) :: Symbol where
+  DdName ('DdK ('SelSymbol name) _ _ _) = name
+  DdName ('DdK _ _ a _) = TypeError ("This Dd for type " <> a <> " has no name")
+
+type DdTypeSel :: DdK -> Sel
+type family DdTypeSel s where
+  DdSel ('DdK _ _ _ ('Comp sel _ _ _)) = sel
+
+type family DdTypeName (s :: DdK) :: Symbol where
+  DdTypeName ('DdK _ _ _ ('Comp ('SelSymbol name) _ _ _)) = name
+  DdTypeName ('DdK _ _ a _) = TypeError ("This Dd for type " <> a <> " has no type name")
 
 sel :: Dd s -> SelW (DdSel s)
-sel (Dd s _ _) =
-  s
+sel (Dd s _ _) = s
 
 typeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> SelW tsel
-typeSel (Dd _ _ (DdComp s _ _ _)) =
-  s
+typeSel (Dd _ _ (DdComp s _ _ _)) = s
 
 showSel :: Dd s -> Text
 showSel =
@@ -117,7 +128,7 @@ class MatchDdType s a | s -> a
 instance MatchDdType ('DdK sel p a s) a
 
 type DbTypeName :: Type -> Symbol -> Constraint
-class DbTypeName a name | a -> name where
+class MkSel ('SelSymbol name) => DbTypeName a name | a -> name where
   dbTypeName :: SelW ('SelSymbol name)
 
 instance {-# overlappable #-} (
