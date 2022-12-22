@@ -41,6 +41,8 @@ instance (
 
 instance MatchViewPath view '[] 'False where
 
+-------------------------------------------------------------------------------------------------------
+
 type CheckViewPathError :: Symbol -> FieldPath -> [FieldPath] -> [FieldPath] -> Bool -> Maybe ErrorMessage -> Constraint
 class CheckViewPathError viewType vfield vfields table match error | viewType vfield vfields table match -> error where
 
@@ -80,3 +82,13 @@ type MatchQuery view table error =
 
 type MatchProjection view table error =
   MatchView "projection" view table error
+
+-------------------------------------------------------------------------------------------------------
+
+class (
+    MatchViewPath ('FieldPath path t) (FieldPaths table) 'True
+  ) => HasColumn path t table where
+
+instance (
+    MatchViewPath ('FieldPath path t) (FieldPaths table) 'True
+  ) => HasColumn path t table where
