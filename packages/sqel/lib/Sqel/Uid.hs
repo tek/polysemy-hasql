@@ -3,13 +3,18 @@ module Sqel.Uid where
 import Generics.SOP (NP (Nil, (:*)))
 
 import Sqel.Comp (CompColumn)
-import Sqel.Data.Dd (Comp (Prod), CompInc (Nest), Dd, DdK (DdK), ProdType (Reg))
+import Sqel.Data.Dd (Comp (Prod), CompInc (Nest), Dd, DdK (DdK), DdType, DdTypeName, ProdType (Reg))
 import Sqel.Data.Sel (Sel (SelAuto))
 import Sqel.Data.Uid (Uid)
 import Sqel.Merge (Merge, merge)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetTypeName)
 import Sqel.Product (prod)
+import qualified Sqel.Type as T
+import Sqel.Type (type (*>), type (>))
+
+type UidDd si sa =
+  T.TypeName (DdTypeName sa) (T.Prod (Uid (DdType si) (DdType sa))) *> (T.Name "id" si > T.Name "payload" (T.Merge sa))
 
 type UidColumn :: Type -> Type -> DdK -> DdK -> DdK -> Constraint
 class UidColumn i a si sa s | i a si sa -> s where
