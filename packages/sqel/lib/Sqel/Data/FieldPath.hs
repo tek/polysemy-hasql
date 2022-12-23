@@ -6,7 +6,7 @@ import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Data.Dd (Comp (Sum), CompInc (Merge), Dd, DdK (DdK), Struct (Comp, Prim))
 import Sqel.Data.Sel (Sel (SelAuto, SelIndex, SelPath, SelSymbol, SelUnused))
-import Sqel.SOP.Error (JoinSep, Unlines)
+import Sqel.SOP.Error (JoinSep, QuotedType, Unlines)
 
 data FieldPath =
   FieldPath {
@@ -29,7 +29,7 @@ type family FieldPathsComp prefix name c i t sub where
   FieldPathsComp prefix ('SelSymbol name) 'Sum _ _ (_ : sub) = FieldPathsProd (prefix ++ '[name]) sub
   FieldPathsComp prefix ('SelSymbol name) _ _ _ sub = FieldPathsProd (prefix ++ '[name]) sub
   FieldPathsComp _ 'SelAuto _ _ t _ =
-    TypeError ("Internal error: A composite column with type " <> t <> " was not automatically renamed.")
+    TypeError ("Internal error: A composite column with type " <> QuotedType t <> " was not automatically renamed.")
 
 type FieldPathsSub :: [Symbol] -> DdK -> [FieldPath]
 type family FieldPathsSub prefix s where

@@ -1,12 +1,15 @@
 module Sqel.Type where
 
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
+import Generics.SOP.Type.Metadata (ConstructorInfo (Record), DatatypeInfo (ADT), FieldInfo (FieldInfo))
+import Type.Errors.Pretty (type (<>))
+
 import qualified Sqel.Data.Dd as Kind
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp))
-import Sqel.Data.Sel (Sel(SelAuto, SelSymbol))
-import Sqel.Data.Mods (NoMods)
+import Sqel.Data.Mods (Newtype, NoMods)
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol))
 import Sqel.SOP.Constraint (DataNameF)
-import Generics.SOP.Type.Metadata (DatatypeInfo (ADT), ConstructorInfo (Record), FieldInfo (FieldInfo))
-import Generics.SOP.GGP (GDatatypeInfoOf, GCode)
+import Sqel.SOP.Error (QuotedType)
 
 type family Prod (a :: Type) :: DdK where
   Prod a =
@@ -16,22 +19,37 @@ type family Merge (dd :: DdK) :: DdK where
   Merge ('DdK sel mods a ('Comp tsel c _ sub)) = 'DdK sel mods a ('Comp tsel c 'Kind.Merge sub)
 
 -- TODO this could accept the type on the lhs and call Prod
-type family (*>) (base :: DdK) (sub :: [DdK]) :: DdK where
-  ('DdK sel mods a ('Comp tsel c i '[])) *> sub =
-    'DdK sel mods a ('Comp tsel c i sub)
+type (*>) :: DdK -> k -> DdK
+type family (*>) base sub
+
+type instance ('DdK sel mods a ('Comp tsel c i '[])) *> (sub :: [DdK]) =
+  'DdK sel mods a ('Comp tsel c i sub)
+
+type instance ('DdK sel mods a ('Comp tsel c i '[])) *> (sub :: DdK) =
+  'DdK sel mods a ('Comp tsel c i '[sub])
 
 infix 4 *>
 
-type family (>) (a :: DdK) (b :: k) :: [DdK]
-
+type (>) :: DdK -> k -> [DdK]
+type family (>) a b
 type instance a > (b :: [DdK]) = a : b
-
 type instance a > (b :: DdK) = [a, b]
 
 infixr 5 >
 
 type family Prim (name :: Symbol) (a :: Type) :: DdK where
   Prim name a = 'DdK ('SelSymbol name) NoMods a 'Kind.Prim
+
+type family NewtypeWrapped' (a :: Type) (ass :: [[Type]]) :: Type where
+  NewtypeWrapped' _ '[ '[w]] = w
+  NewtypeWrapped' a _ =
+    TypeError (QuotedType a <> " is not a newtype.")
+
+type family NewtypeWrapped (a :: Type) :: Type where
+  NewtypeWrapped a = NewtypeWrapped' a (GCode a)
+
+type family PrimNewtype (name :: Symbol) (a :: Type) :: DdK where
+  PrimNewtype name a = Mods '[Newtype a (NewtypeWrapped a)] (Prim name a)
 
 type family Name (name :: Symbol) (dd :: DdK) :: DdK where
   Name name ('DdK _ mods a s) =
