@@ -3,7 +3,6 @@ module Sqel.Names.Set where
 import Fcf (Length, type (@@))
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp, Prim))
 import Sqel.Data.Sel (Sel (SelSymbol))

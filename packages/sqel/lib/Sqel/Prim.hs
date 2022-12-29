@@ -1,7 +1,6 @@
 module Sqel.Prim where
 
 import Generics.SOP (I (I), NP (Nil, (:*)))
-import Type.Errors.Pretty (type (<>))
 
 import Sqel.Class.Mods (MapMod, SymNP, setMod, symMods)
 import Sqel.Column (nullable)
@@ -176,7 +175,7 @@ instance (
     mkPrims = prim :* mkPrims @as @s
 
 type family PrimProd (a :: Type) :: [Type] where
-  PrimProd (ConCol as) = as
+  PrimProd (ConCol _ _ _ as) = as
   PrimProd a = ProductGCode a
 
 prims ::

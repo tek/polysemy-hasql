@@ -8,7 +8,6 @@ import Generics.SOP.Type.Metadata (
   )
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
-import Type.Errors.Pretty (type (<>))
 
 type NatSymbol :: Nat -> Symbol
 type family NatSymbol n where
@@ -22,7 +21,17 @@ type family NatSymbol n where
   NatSymbol 7 = "7"
   NatSymbol 8 = "8"
   NatSymbol 9 = "9"
-  NatSymbol _ = TypeError ('Text "Constructors with 10 or more fields not supported")
+  NatSymbol 10 = "10"
+  NatSymbol 11 = "11"
+  NatSymbol 12 = "12"
+  NatSymbol 13 = "13"
+  NatSymbol 14 = "14"
+  NatSymbol 15 = "15"
+  NatSymbol 16 = "16"
+  NatSymbol 17 = "17"
+  NatSymbol 18 = "18"
+  NatSymbol 19 = "19"
+  NatSymbol _ = TypeError ('Text "Constructors with more than 20 fields not supported")
 
 type ConNsEnum :: Symbol -> Nat -> [Type] -> [Symbol]
 type family ConNsEnum con n fs where

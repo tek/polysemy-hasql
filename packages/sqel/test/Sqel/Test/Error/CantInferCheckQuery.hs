@@ -5,7 +5,7 @@ module Sqel.Test.Error.CantInferCheckQuery where
 import Sqel.Data.Dd
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Prim (prim)
-import Sqel.Product (prod)
+import Sqel.Product2 (prod)
 import Sqel.Query (CheckQuery (checkQuery))
 import Sqel.Data.Sql (Sql, ToSql (toSql))
 import Sqel.Sql.SelectQuery (SelectQuery(SelectQuery))

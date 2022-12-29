@@ -3,7 +3,6 @@ module Sqel.Query where
 import qualified Data.Map.Strict as Map
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Class.MatchView (MatchQuery)
 import Sqel.Data.Codec (Encoder)

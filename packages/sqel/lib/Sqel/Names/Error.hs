@@ -3,7 +3,6 @@ module Sqel.Names.Error where
 import Sqel.SOP.Error (QuotedError)
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (<>))
 
 type CountMismatch :: Symbol -> ErrorMessage -> Nat -> Nat -> ErrorMessage
 type family CountMismatch desc a spec actual where

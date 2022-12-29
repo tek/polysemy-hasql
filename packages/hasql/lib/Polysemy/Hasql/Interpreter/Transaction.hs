@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Interpreter.Transaction where
 
-import Conc (interpretScopedResumableWithH)
 import Hasql.Connection (Connection)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)

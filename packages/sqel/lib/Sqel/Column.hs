@@ -64,3 +64,9 @@ pgDefault ::
   Dd s1
 pgDefault v =
   addMod (PgDefault v)
+
+class Unnamed s0 s1 where
+
+unnamed :: Dd s0 -> Dd s1
+unnamed =
+  undefined

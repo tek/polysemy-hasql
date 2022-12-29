@@ -1,6 +1,5 @@
 module Polysemy.Hasql.Interpreter.Store where
 
-import Conc (interpretScopedRWith)
 import Generics.SOP (NP (Nil))
 import Hasql.Connection (Connection)
 import Hasql.Statement (Statement)
@@ -140,5 +139,7 @@ interpretStoreXa schema@(TableSchema {pg = table@PgTable {name = PgTypeName name
     qs = selectWhere query schema
     qas :: Statement () [Uid i d]
     qas = selectWhere emptyQuerySchema schema
-    initDb :: InitDb (Sem (Database : Stop DbError : Database !! DbError : Stop DbError : r))
+    initDb ::
+      Members [Database, Stop DbError, Log, Embed IO] r' =>
+      InitDb (Sem r')
     initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations

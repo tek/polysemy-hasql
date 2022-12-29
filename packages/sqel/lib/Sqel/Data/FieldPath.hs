@@ -2,7 +2,6 @@ module Sqel.Data.FieldPath where
 
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Data.Dd (Comp (Sum), CompInc (Merge), Dd, DdK (DdK), Struct (Comp, Prim))
 import Sqel.Data.Sel (Sel (SelAuto, SelIndex, SelPath, SelSymbol, SelUnused))

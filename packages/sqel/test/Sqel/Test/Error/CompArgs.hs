@@ -8,7 +8,7 @@ import Sqel.Data.PgType (PgTable)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim)
-import Sqel.Product (prod)
+import Sqel.Product2 (prod)
 
 data Pr =
   Pr {
@@ -25,17 +25,32 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-cdd1 :: Dd ('DdK _ _ Dat _)
-cdd1 =
+ddTooFew :: Dd ('DdK _ _ Dat _)
+ddTooFew =
   prod (
     nullable prim :>
     prod prim
   )
 
-table :: TableSchema Dat
-table =
-  tableSchema cdd1
+tableTooFew :: TableSchema Dat
+tableTooFew =
+  tableSchema ddTooFew
 
 prodTooFew :: PgTable Dat
 prodTooFew =
-  table ^. #pg
+  tableTooFew ^. #pg
+
+ddTooMany :: Dd ('DdK _ _ Dat _)
+ddTooMany =
+  prod (
+    nullable prim :>
+    prod (prim :> prim :> prim :> prim :> prim)
+  )
+
+tableTooMany :: TableSchema Dat
+tableTooMany =
+  tableSchema ddTooMany
+
+prodTooMany :: PgTable Dat
+prodTooMany =
+  tableTooMany ^. #pg

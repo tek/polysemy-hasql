@@ -47,7 +47,7 @@ let
 
   dependencies = [
     { name = "base"; version = ">= 4.12 && < 5"; mixin = "hiding (Prelude)"; }
-    { name = "prelate"; version = ">= 0.2"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
+    { name = "prelate"; version = ">= 0.4"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
   ];
 
   project = name: doc: merge (meta // { library = paths name; } // options) {
@@ -93,7 +93,6 @@ in {
       "sqel"
       "time"
       "type-errors"
-      "type-errors-pretty"
       "uuid"
     ];
   };
@@ -219,7 +218,6 @@ in {
       "time"
       "transformers"
       "type-errors"
-      "type-errors-pretty"
       "uuid"
       "vector"
     ];

@@ -2,7 +2,6 @@ module Sqel.Type where
 
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo (Record), DatatypeInfo (ADT), FieldInfo (FieldInfo))
-import Type.Errors.Pretty (type (<>))
 
 import qualified Sqel.Data.Dd as Kind
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp))
@@ -17,6 +16,7 @@ type family Prod (a :: Type) :: DdK where
 
 type family Merge (dd :: DdK) :: DdK where
   Merge ('DdK sel mods a ('Comp tsel c _ sub)) = 'DdK sel mods a ('Comp tsel c 'Kind.Merge sub)
+  Merge s = s
 
 -- TODO this could accept the type on the lhs and call Prod
 type (*>) :: DdK -> k -> DdK
@@ -42,8 +42,7 @@ type family Prim (name :: Symbol) (a :: Type) :: DdK where
 
 type family NewtypeWrapped' (a :: Type) (ass :: [[Type]]) :: Type where
   NewtypeWrapped' _ '[ '[w]] = w
-  NewtypeWrapped' a _ =
-    TypeError (QuotedType a <> " is not a newtype.")
+  NewtypeWrapped' a _ = TypeError (QuotedType a <> " is not a newtype.")
 
 type family NewtypeWrapped (a :: Type) :: Type where
   NewtypeWrapped a = NewtypeWrapped' a (GCode a)
@@ -70,6 +69,18 @@ type family ProdPrims' (a :: Type) (code :: [[Type]]) (info :: DatatypeInfo) :: 
 
 type family ProdPrims (a :: Type) :: DdK where
   ProdPrims a = ProdPrims' a (GCode a) (GDatatypeInfoOf a)
+
+type family ProdPrimNewtypeFields (as :: [Type]) (fields :: [FieldInfo]) :: [DdK] where
+  ProdPrimNewtypeFields '[] '[] = '[]
+  ProdPrimNewtypeFields (a : as) ('FieldInfo name : fields) =
+    PrimNewtype name a : ProdPrimNewtypeFields as fields
+
+type family ProdPrimsNewtype' (a :: Type) (code :: [[Type]]) (info :: DatatypeInfo) :: DdK where
+  ProdPrimsNewtype' a '[as] ('ADT _ name '[ 'Record _ fields] _) =
+    'DdK 'SelAuto NoMods a ('Comp ('SelSymbol name) ('Kind.Prod 'Kind.Reg) 'Kind.Nest (ProdPrimNewtypeFields as fields))
+
+type family ProdPrimsNewtype (a :: Type) :: DdK where
+  ProdPrimsNewtype a = ProdPrimsNewtype' a (GCode a) (GDatatypeInfoOf a)
 
 type family Mods (mods :: [Type]) (dd :: DdK) :: DdK where
   Mods mods ('DdK sel _ a s) = 'DdK sel mods a s

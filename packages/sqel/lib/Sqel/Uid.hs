@@ -1,31 +1,31 @@
 module Sqel.Uid where
 
-import Generics.SOP (NP (Nil, (:*)))
-
-import Sqel.Comp (CompColumn)
-import Sqel.Data.Dd (Comp (Prod), CompInc (Nest), Dd, DdK (DdK), DdType, DdTypeName, ProdType (Reg))
-import Sqel.Data.Sel (Sel (SelAuto))
+import Sqel.Data.Dd (Dd, DdK, DdType, DdTypeName, type (:>) ((:>)))
 import Sqel.Data.Uid (Uid)
-import Sqel.Merge (Merge, merge)
+import Sqel.Merge (merge)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetTypeName)
-import Sqel.Product (prod)
+import Sqel.Product2 (Product2 (prod))
 import qualified Sqel.Type as T
 import Sqel.Type (type (*>), type (>))
 
 type UidDd si sa =
-  T.TypeName (DdTypeName sa) (T.Prod (Uid (DdType si) (DdType sa))) *> (T.Name "id" si > T.Name "payload" (T.Merge sa))
+  T.TypeName (DdTypeName sa) (T.Prod (Uid (DdType si) (DdType sa))) *> T.Name "id" si > T.Merge sa
 
 type UidColumn :: Type -> Type -> DdK -> DdK -> DdK -> Constraint
-class UidColumn i a si sa s | i a si sa -> s where
-  uidColumn :: Dd si -> Dd sa -> Dd s
+class (
+    DdType si ~ i,
+    DdType sa ~ a
+  ) => UidColumn i a si sa s | i a si sa -> s where
+    uidColumn :: Dd si -> Dd sa -> Dd s
 
 instance (
-    Merge a sa0 sa1,
-    CompColumn ('Prod 'Reg) 'Nest (Uid i a) [si, sa1] ('DdK 'SelAuto p (Uid i a) s)
-  ) => UidColumn i a si sa0 (('DdK 'SelAuto p (Uid i a) s)) where
+    DdType si ~ i,
+    DdType sa ~ a,
+    Product2 (Uid i a) (Dd si :> Dd (T.Merge sa)) s
+  ) => UidColumn i a si sa s where
     uidColumn i a =
-      prod @(Uid i a) (i :* merge @a a :* Nil)
+      prod (i :> merge a)
 
 uid ::
   ∀ (i :: Type) (a :: Type) (si :: DdK) (sa :: DdK) (s :: DdK) .
@@ -44,4 +44,4 @@ uidAs ::
   Dd sa ->
   Dd (SetTypeName s name)
 uidAs i a =
-  rename (uidColumn i a :: Dd s)
+  rename (uidColumn i a)

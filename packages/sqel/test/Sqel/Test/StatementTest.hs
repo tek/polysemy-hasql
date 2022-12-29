@@ -10,6 +10,7 @@ import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
 import Sqel.Class.MatchView (HasColumn)
+import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (
   DbTypeName (dbTypeName),
   Dd (Dd),
@@ -19,42 +20,49 @@ import Sqel.Data.Dd (
   DdType,
   DdTypeName,
   DdVar (DdProd),
+  ProductField (ProductField),
   Struct (Comp),
   type (:>) ((:>)),
   )
 import Sqel.Data.Mods (pattern NoMods)
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol), SelW (SelWAuto))
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelSymbol), SelW (SelWAuto))
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Sql (Sql, sql, toSql)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid)
-import Sqel.Merge (Merge, merge)
+import Sqel.Merge (merge)
 import Sqel.PgType (MkTableSchema, tableSchema)
-import Sqel.Prim (prim, primAs, prims)
-import Sqel.Product (prod)
+import Sqel.Prim (prim, primAs, primNewtypes, prims)
+import Sqel.Product2 (ConColumn (con), ProductItem, con1, prod, sum)
 import Sqel.Query (checkQuery)
 import Sqel.Query.Combinators (order)
+import Sqel.ReifyCodec (ReifyCodec)
+import Sqel.ReifyDd (ReifyDd)
 import qualified Sqel.Sql.Select as Sql
-import Sqel.Sum (con, con1, sum)
+import Sqel.Test.Bug ()
 import qualified Sqel.Type as T
-import Sqel.Type (Prim, Prod, ProdPrims, TypeName, type (*>), type (>))
+import Sqel.Type (Merge, Prim, PrimNewtype, Prod, ProdPrimsNewtype, TypeName, type (*>), type (>))
 import Sqel.Uid (UidDd, uid)
+
+newtype IntNt =
+  IntNt { unIntNt :: Int }
+  deriving stock (Eq, Show, Generic)
 
 data Three =
   Three {
-    a :: Int,
-    b :: Int,
-    c :: Int
+    a :: IntNt,
+    b :: IntNt,
+    c :: IntNt
   }
   deriving stock (Eq, Show, Generic)
 
 type ThreeTableGen =
-  ProdPrims Three
+  ProdPrimsNewtype Three
 
 type ThreeTable =
-  Prod Three *> Prim "a" Int > Prim "b" Int > Prim "c" Int
+  Prod Three *> PrimNewtype "a" IntNt > PrimNewtype "b" IntNt > PrimNewtype "c" IntNt
 
 test_prodGen :: TestT IO ()
 test_prodGen =
@@ -63,7 +71,7 @@ test_prodGen =
 
 ddThree :: Dd ThreeTableGen
 ddThree =
-  prod prims
+  prod primNewtypes
 
 data Pro =
   Pro {
@@ -161,7 +169,6 @@ schema_higherOrder ::
   ∀ s0 table a sel mods s .
   s0 ~ 'DdK sel mods a s =>
   table ~ WrapDd s0 =>
-  Merge a s0 (T.Merge s0) =>
   MkSel ('SelSymbol (DdTypeName s0)) =>
   MkTableSchema table =>
   Dd s0 ->
@@ -171,7 +178,7 @@ schema_higherOrder wrapped =
   where
     dd :: Dd table
     dd = Dd SelWAuto NoMods (DdComp mkSel DdProd DdNest fields)
-    fields = merge @a wrapped :* primAs @"length" :* Nil
+    fields = merge wrapped :* primAs @"length" :* Nil
 
 target_higherOrder :: Sql
 target_higherOrder =
@@ -182,10 +189,9 @@ test_statement_higherOrder =
   target_higherOrder === toSql (Select (schema_higherOrder ddPro))
 
 statement_query_higherOrder ::
-  ∀ a s0 table sel mods tsel c i s .
-  s0 ~ 'DdK sel mods a ('Comp ('SelSymbol tsel) c i s) =>
+  ∀ a s0 table mods tsel c i s .
+  s0 ~ 'DdK 'SelAuto mods a ('Comp ('SelSymbol tsel) c i s) =>
   table ~ UidDd (Prim "id" Int64) (WrapDd s0) =>
-  KnownSymbol tsel =>
   DbTypeName a tsel =>
   MkTableSchema table =>
   HasColumn ["two", "name"] Text table =>
@@ -227,6 +233,71 @@ test_statement_merge_query_higherOrder :: TestT IO ()
 test_statement_merge_query_higherOrder =
   target_merge_query_higherOrder === statement_query_higherOrder ddMerge1
 
+ddWrap ::
+  DbTypeName (DdType s) (DdTypeName s) =>
+  ProductItem ('ProductField "wrapped" (DdType s)) (Dd (Merge s)) (Merge s) =>
+  Dd s ->
+  Dd (WrapDd s)
+ddWrap wrapped =
+  prod (merge wrapped :> prim)
+
+ddHigherOrder2 ::
+  ∀ s merged .
+  merged ~ T.Merge s =>
+  DbTypeName (DdType s) (DdTypeName s) =>
+  ProductItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
+  Dd s ->
+  Dd (UidDd (Prim "id" Int64) (WrapDd s))
+ddHigherOrder2 wrapped =
+  uid prim (prod (merge wrapped :> prim))
+
+ddUidWrapPro :: Dd (UidDd (Prim "id" Int64) (WrapDd ProdTable))
+ddUidWrapPro =
+  ddHigherOrder2 ddPro
+
+higherOrder2 ::
+  ∀ a s merged .
+  merged ~ T.Merge s =>
+  DbTypeName a (DdTypeName s) =>
+  ProductItem ('ProductField "wrapped" a) (Dd merged) merged =>
+  ReifyDd merged =>
+  ReifyCodec FullCodec merged a =>
+  Dd s ->
+  Sql
+higherOrder2 wrapped =
+  toSql (Select ts)
+  where
+    ts :: TableSchema (Wrap a)
+    ts = tableSchema dd
+    dd = prod (merge wrapped :> prim)
+
+test_higherOrder2 :: TestT IO ()
+test_higherOrder2 =
+  [sql|select "num", "name", "length" from "pro"|] === higherOrder2 ddPro
+
+data NaNu =
+  Na { name :: Text }
+  |
+  Nu Int64
+  deriving stock (Eq, Show, Generic)
+
+ddNaNu :: Dd ('DdK _ _ NaNu _)
+ddNaNu =
+  sum (con1 prim :> con1 prim)
+
+statement_con1 :: Sql
+statement_con1 =
+  toSql (Select (tableSchema ddNaNu))
+
+test_statement_con1 :: TestT IO ()
+test_statement_con1 =
+  [sql|select "ph_sum_index__na_nu", "name", "nu" from "na_nu"|] === statement_con1
+
+newtype TextNt =
+  TextNt { unTextNt :: Text }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)
+
 test_statement :: TestTree
 test_statement =
   testGroup "statement" [
@@ -234,5 +305,7 @@ test_statement =
     unitTest "merge sum" test_statement_merge_sum,
     unitTest "merge prod" test_statement_merge_prod,
     unitTest "higher-order merge statement" test_statement_higherOrder,
-    unitTest "higher-order double merge query" test_statement_merge_query_higherOrder
+    unitTest "higher-order double merge query" test_statement_merge_query_higherOrder,
+    unitTest "higher-order with new product class" test_higherOrder2,
+    unitTest "unary con with record and positional fields" test_statement_con1
   ]

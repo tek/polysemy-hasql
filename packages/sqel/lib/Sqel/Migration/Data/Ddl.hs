@@ -3,7 +3,6 @@ module Sqel.Migration.Data.Ddl where
 import Exon (exon)
 import Generics.SOP (All, Compose, NP)
 import Prelude hiding (Compose)
-import Text.Show (showParen, showsPrec)
 
 import Sqel.Data.Mods (Mods)
 import Sqel.Data.PgType (ColumnType)

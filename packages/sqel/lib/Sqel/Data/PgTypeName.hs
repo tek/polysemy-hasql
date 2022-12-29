@@ -3,7 +3,6 @@ module Sqel.Data.PgTypeName where
 import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
 import Exon (exon)
 import Prettyprinter (Pretty (pretty))
-import Text.Show (showParen, showsPrec)
 
 import Sqel.Data.Sql (ToSql (toSql), sql, sqlQuote)
 import Sqel.SOP.Constraint (symbolText)

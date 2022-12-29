@@ -3,7 +3,6 @@ module Sqel.Data.TableSchema where
 import Exon (exon)
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Text.Show (showParen, showsPrec)
 
 import Sqel.Data.PgType (PgTable)
 import Sqel.Data.Select (Select (Select))

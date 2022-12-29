@@ -5,7 +5,6 @@ import Fcf (Eval, Exp, Pure1, type (@@))
 import Fcf.Class.Functor (FMap)
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
-import Type.Errors.Pretty (type (<>))
 
 import Sqel.SOP.Constraint (symbolString, symbolText)
 import Sqel.SOP.Error (JoinComma)

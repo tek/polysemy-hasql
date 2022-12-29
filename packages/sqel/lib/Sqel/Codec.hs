@@ -9,7 +9,6 @@ import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Path (Path)
 import Prelude hiding (sum)
-import Type.Errors.Pretty (type (<>), type (%))
 
 import qualified Sqel.Codec.PrimDecoder as PrimDecoder
 import Sqel.Codec.PrimDecoder (PrimDecoder)

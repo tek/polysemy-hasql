@@ -7,18 +7,21 @@ import Hedgehog (TestT, (===))
 import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
-import Sqel.Test.Error.CompArgs (prodTooFew)
+import Sqel.Test.Error.CompArgs (prodTooFew, prodTooMany)
 import Sqel.Test.Error.NewtypeNoGeneric (newtypeNoGeneric)
 import Sqel.Test.Error.NewtypeNoNewtype (newtypeNoNewtype)
 import Sqel.Test.Error.QueryColumMismatch (queryColumnMismatch)
 
 typeError ::
+  Show a =>
   [Text] ->
   a ->
   TestT IO ()
 typeError msg t =
   withFrozenCallStack do
-    e <- liftIO (Base.try @SomeException (evaluate t))
+    e <- liftIO $ Base.try @SomeException do
+      !a <- show @Text <$> evaluate t
+      pure a
     case e of
       Right _ -> fail "Test did not produce an error."
       Left err -> msg === trunc (drop 1 (lines (show err)))
@@ -32,7 +35,7 @@ queryColumnMismatchMessage :: [Text]
 queryColumnMismatchMessage =
     [
       "\8226 The query column \8216pog.p1\8217 with type \8216Int\8217 does not correspond to a table column.",
-        "Available fields:",
+        "The specified table contains these fields:",
         "name [Text]",
         "po.p1 [Int]",
         "po.p2 [Text]",
@@ -43,6 +46,12 @@ prodTooFewMessage :: [Text]
 prodTooFewMessage =
   [
     "\8226 The product type \8216Pr\8217 has 3 fields, but the expression specifies 1."
+  ]
+
+prodTooManyMessage :: [Text]
+prodTooManyMessage =
+  [
+    "\8226 The product type \8216Pr\8217 has 3 fields, but the expression specifies 5."
   ]
 
 newtypeNoGenericMessage :: [Text]
@@ -73,6 +82,7 @@ test_errors =
   testGroup "type errors" [
     unitTest "query column mismatch" (typeError queryColumnMismatchMessage queryColumnMismatch),
     unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew),
+    unitTest "too many product fields" (typeError prodTooManyMessage prodTooMany),
     unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric),
     unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype)
     -- ,

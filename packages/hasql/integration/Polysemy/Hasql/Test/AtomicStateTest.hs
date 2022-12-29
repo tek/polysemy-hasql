@@ -7,7 +7,7 @@ import Polysemy.Test (UnitTest, (===))
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
 import Sqel.PgType (MkTableSchema(tableSchema))
-import Sqel.Product (prod)
+import Sqel.Product2 (prod)
 import Sqel.Prim (prims)
 import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 

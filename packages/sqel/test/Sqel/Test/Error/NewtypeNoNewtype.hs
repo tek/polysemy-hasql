@@ -7,7 +7,7 @@ import Generics.SOP (I (I), NP (Nil, (:*)))
 import Sqel.Data.Dd
 import Sqel.Data.Mods (Mods (Mods), Newtype (Newtype))
 import Sqel.Prim (prim, primNewtype)
-import Sqel.Product (prod)
+import Sqel.Product2 (prod)
 
 data TextNt = TextNt { unTextNt :: Text }
   deriving stock (Eq, Show, Generic)

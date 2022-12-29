@@ -7,7 +7,6 @@ import qualified Exon
 import Exon (exon)
 import Lens.Micro.Extras (view)
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Class.MatchView (MatchProjection)
 import Sqel.Data.Codec (Codec (Codec), FullCodec)

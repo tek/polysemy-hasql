@@ -3,7 +3,6 @@ module Sqel.SOP.Error where
 import Fcf (Eval, Exp, UnList, type (@@))
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage (Text))
-import Type.Errors.Pretty (type (%), type (<>))
 
 type family MessageWithType message d :: ErrorMessage where
   MessageWithType message d =

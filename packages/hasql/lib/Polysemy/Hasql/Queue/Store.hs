@@ -13,7 +13,7 @@ import Sqel.Data.Uid (Uuid)
 import Sqel.PgType (tableSchema)
 import qualified Sqel.Prim as Sqel
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod)
+import Sqel.Product2 (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 

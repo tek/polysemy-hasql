@@ -3,9 +3,8 @@ module Sqel.Names.Amend where
 import Fcf (Length, type (@@))
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
-import Sqel.Data.Dd (DdK (DdK), Struct (Comp, Prim))
+import Sqel.Data.Dd (CompInc (Merge), DdK (DdK), Struct (Comp, Prim))
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol))
 import Sqel.Names.Error (CountMismatch, NoPrimType)
 
@@ -20,6 +19,7 @@ type family AmendSelWithName s name where
 
 type AmendName :: DdK -> Symbol -> DdK
 type family AmendName s name where
+  AmendName ('DdK sel p t ('Comp tsel c 'Merge s)) _ = 'DdK sel p t ('Comp tsel c 'Merge s)
   AmendName ('DdK sel p t s) n = 'DdK (AmendSelWithName sel n) p t s
 
 type AmendNames :: ErrorMessage -> [DdK] -> [Symbol] -> [DdK]

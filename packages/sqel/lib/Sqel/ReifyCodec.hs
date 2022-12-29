@@ -41,7 +41,7 @@ import Sqel.Mods (PrimCodec (PrimCodec), PrimValueCodec, PrimValueEncoder)
 import Sqel.SOP.Enum (EnumTable)
 
 type CompCodec :: Comp -> CompInc -> Type -> (Type -> Type) -> [Type] -> Constraint
-class CompCodec c i a b as | a -> as where
+class CompCodec c i a b as where
   compCodec :: NP b as -> b a
 
 instance (
@@ -51,7 +51,7 @@ instance (
 
 instance (
     ConCodec b as
-  ) => CompCodec ('Prod ('Con as)) i (ConCol as) b as where
+  ) => CompCodec ('Prod ('Con as)) i (ConCol name record fields as) b as where
     compCodec = conCodec
 
 instance (
@@ -97,7 +97,7 @@ instance (
     defaultPrimCodec = primEncoder
 
 type DefaultCompCodec :: Comp -> CompInc -> (Type -> Type) -> Type -> [Type] -> Constraint
-class DefaultCompCodec c i b a as | a -> as where
+class DefaultCompCodec c i b a as where
   defaultCompCodec :: NP b as -> b a
 
 instance (

@@ -1,7 +1,7 @@
 module Sqel.Names (
   module Sqel.Names,
   module Sqel.Names.Rename,
-  module Sqel.Names.Comp,
+  -- module Sqel.Names.Comp,
   module Sqel.Names.Amend,
   module Sqel.Names.Set,
 ) where
@@ -10,7 +10,7 @@ import Sqel.Data.Codec (ColumnName (ColumnName))
 import Sqel.Data.Dd (Dd, DdK)
 import Sqel.Data.Sel (Sel)
 import Sqel.Names.Amend
-import Sqel.Names.Comp
+-- import Sqel.Names.Comp
 import Sqel.Names.Rename
 import Sqel.Names.Set
 import Sqel.Text.DbIdentifier (dbSymbol)

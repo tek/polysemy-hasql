@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -95,7 +95,7 @@ library
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.2
+    , prelate >=0.4
     , sqel
   mixins:
       base hiding (Prelude)
@@ -189,7 +189,7 @@ test-suite polysemy-hasql-test-unit
     , polysemy-hasql-test
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.2
+    , prelate >=0.4
     , sqel
     , tasty
   mixins:

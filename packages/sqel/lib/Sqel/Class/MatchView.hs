@@ -1,7 +1,6 @@
 module Sqel.Class.MatchView where
 
 import Type.Errors (ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Data.Dd (DdK)
 import Sqel.Data.FieldPath (FieldPath (FieldPath), FieldPaths, PathEq, ShowFields)
@@ -12,7 +11,7 @@ type family NoViewMatch viewType avail path where
   NoViewMatch viewType avail ('FieldPath path tpe) =
     "The " <> viewType <> " column " <> QuotedError (JoinSym "." path) <> " with type " <> QuotedType tpe <>
     " does not correspond to a table column." %
-    "Available fields:" %
+    "The specified table contains these fields:" %
     Unlines (ShowFields avail)
 
 type MatchPath :: FieldPath -> FieldPath -> Bool -> Constraint

@@ -103,7 +103,7 @@ sumParams = \case
     mempty
 
 type WrapConB :: (Type -> Type) -> [[Type]] -> [Type] -> Constraint
-class WrapConB b ass as | ass -> as where
+class WrapConB b ass as where
   wrapConB :: NP b as -> NP (ConB b) ass
 
 instance WrapConB b '[] '[] where
@@ -112,7 +112,7 @@ instance WrapConB b '[] '[] where
 instance (
     Invariant b,
     WrapConB b ass as
-  ) => WrapConB b (as' : ass) (ConCol as' : as) where
+  ) => WrapConB b (as' : ass) (ConCol name record fields as' : as) where
     wrapConB (b :* bs) =
       ConB (invmap unConCol ConCol b) :* wrapConB bs
 
@@ -127,7 +127,7 @@ encodeValue (Encoder indexParams _) wrapped =
     indexEncoder = (fromIntegral . hindex) >$< indexParams
 
 type SumCodec :: (Type -> Type) -> Type -> [Type] -> Constraint
-class SumCodec b a as | a -> as where
+class SumCodec b a as where
   sumCodec :: NP b as -> b a
 
 -- TODO add null builders
@@ -160,7 +160,7 @@ instance (
 
 type ConCodec :: (Type -> Type) -> [Type] -> Constraint
 class ConCodec b as where
-  conCodec :: NP b as -> b (ConCol as)
+  conCodec :: NP b as -> b (ConCol name record fields as)
 
 instance SListI as => ConCodec FullCodec as where
   conCodec np =

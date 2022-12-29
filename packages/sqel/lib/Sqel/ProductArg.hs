@@ -2,7 +2,6 @@ module Sqel.ProductArg where
 
 import Generics.SOP (NP (Nil, (:*)))
 import Type.Errors (DelayError, ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 
 import Sqel.Data.Dd (Dd, DdK, (:>) ((:>)))
 import Sqel.Prim (Prims, unPrims)
@@ -19,8 +18,8 @@ type InvalidElem name i arg =
 type InvalidArg name arg =
   DelayError (
     "The argument to " <> Quoted name <> " has type " <> QuotedType arg <> "." %
-    "Composite type combinators should be applied to a sequence of columns combined by " <> Quoted ":>" <> ":" %
-    ">>> " <> name <> " (prim :> columnAs @\"name\" prim :> prim)" %
+    "Composite type combinators should be applied to a sequence of columns combined by " <> Quoted ":>" <> " like:" %
+    ">>> " <> name <> " (prim :> primAs @\"name\" :> primNewtype)" %
     "or, for a type consisting solely of primitive fields:" %
     ">>> " <> name <> " prims" %
     "Consult the module " <> Quoted "Sqel.Combinators" <> " for the full API."

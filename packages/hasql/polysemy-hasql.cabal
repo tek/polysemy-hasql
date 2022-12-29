@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -139,7 +139,7 @@ library
     , polysemy-plugin
     , polysemy-time
     , postgresql-libpq
-    , prelate >=0.2
+    , prelate >=0.4
     , sqel
     , stm-chans
     , torsor
@@ -264,7 +264,7 @@ test-suite polysemy-hasql-integration
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
-    , prelate >=0.2
+    , prelate >=0.4
     , prettyprinter
     , sqel
     , tasty
@@ -364,7 +364,7 @@ test-suite polysemy-hasql-unit
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.2
+    , prelate >=0.4
     , sqel
     , tasty
   mixins:

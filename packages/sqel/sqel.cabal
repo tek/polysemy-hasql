@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.7.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -69,6 +69,7 @@ library
       Sqel.PgType
       Sqel.Prim
       Sqel.Product
+      Sqel.Product2
       Sqel.ProductArg
       Sqel.Projection
       Sqel.Query
@@ -183,7 +184,7 @@ library
     , invariant
     , path
     , path-io
-    , prelate >=0.2
+    , prelate >=0.4
     , prettyprinter
     , scientific
     , some
@@ -191,7 +192,6 @@ library
     , time
     , transformers
     , type-errors
-    , type-errors-pretty
     , uuid
     , vector
   mixins:
@@ -204,6 +204,7 @@ test-suite polysemy-hasql-unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
+      Sqel.Test.Bug
       Sqel.Test.Error.CantInferCheckQuery
       Sqel.Test.Error.CompArgs
       Sqel.Test.Error.NewtypeNoGeneric
@@ -291,7 +292,7 @@ test-suite polysemy-hasql-unit
     , path
     , polysemy
     , polysemy-plugin
-    , prelate >=0.2
+    , prelate >=0.4
     , prettyprinter
     , sqel
     , tasty

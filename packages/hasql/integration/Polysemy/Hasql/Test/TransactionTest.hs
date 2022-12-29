@@ -16,16 +16,16 @@ import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod)
+import Sqel.Product2 (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Transaction (Transactions, abort)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb, interpretStoreXa)
 import Polysemy.Hasql.Interpreter.Transaction (interpretTransactions)
 import Polysemy.Hasql.Test.Run (integrationTest)
 import Polysemy.Hasql.Transaction (transactStores)
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 
 data Dat =
   Dat {

@@ -1,24 +1,29 @@
 module Sqel.Data.Dd where
 
 import Generics.SOP (I, NP (Nil, (:*)))
-import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
+import Generics.SOP.GGP (GDatatypeInfoOf)
 import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
-import Type.Errors.Pretty (type (<>))
 
 import Sqel.Data.Mods (Mods)
 import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol), SelW, showSelW)
 import Sqel.Data.Uid (Uid)
 import Sqel.SOP.Constraint (IsDataT)
 
-newtype ConCol as =
+data ProductField =
+  ProductField {
+    name :: Symbol,
+    tpe :: Type
+  }
+
+newtype ConCol (name :: Symbol) (record :: Bool) (fields :: [ProductField]) as =
   ConCol { unConCol :: NP I as }
 
-type family ConCoded' (ass :: [[Type]]) :: [Type] where
-  ConCoded' '[] = '[]
-  ConCoded' (as : ass) = ConCol as : ConCoded' ass
+-- type family ConCoded' (ass :: [[Type]]) :: [Type] where
+--   ConCoded' '[] = '[]
+--   ConCoded' (as : ass) = ConCol "obsolete" '[] as : ConCoded' ass
 
-type family ConCoded (a :: Type) :: [Type] where
-  ConCoded a = ConCoded' (GCode a)
+-- type family ConCoded (a :: Type) :: [Type] where
+--   ConCoded a = ConCoded' (GCode a)
 
 data ProdType = Reg | Con [Type]
 
@@ -104,7 +109,7 @@ type family DdName (s :: DdK) :: Symbol where
 
 type DdTypeSel :: DdK -> Sel
 type family DdTypeSel s where
-  DdSel ('DdK _ _ _ ('Comp sel _ _ _)) = sel
+  DdTypeSel ('DdK _ _ _ ('Comp sel _ _ _)) = sel
 
 type family DdTypeName (s :: DdK) :: Symbol where
   DdTypeName ('DdK _ _ _ ('Comp ('SelSymbol name) _ _ _)) = name

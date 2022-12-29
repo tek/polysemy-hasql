@@ -3,7 +3,6 @@ module Sqel.SOP.Newtype where
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (DatatypeInfo (Newtype))
 import Type.Errors (DelayError, ErrorMessage)
-import Type.Errors.Pretty (type (%), type (<>))
 import Unsafe.Coerce (unsafeCoerce)
 
 import Sqel.SOP.Error (Quoted, QuotedType)

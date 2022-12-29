@@ -57,7 +57,7 @@ instance (
     DdCols ss cols types,
     allCols ~ mergeCols ++ cols,
     allTypes ~ subTypes ++ types
-  ) => DdCols ('DdK ('SelSymbol name) p a ('Comp ('SelSymbol tname) c 'Merge sub) : ss) allCols allTypes where
+  ) => DdCols ('DdK sel p a ('Comp ('SelSymbol tname) c 'Merge sub) : ss) allCols allTypes where
     ddCols (Dd _ _ (DdComp _ _ _ sub) :* t) =
       (appendNP subCols tailCols, appendNP subTypes tailTypes)
       where
