@@ -2,11 +2,13 @@ module Sqel.Type where
 
 import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
 import Generics.SOP.Type.Metadata (ConstructorInfo (Record), DatatypeInfo (ADT), FieldInfo (FieldInfo))
+import Prelude hiding (Mod)
 
 import qualified Sqel.Data.Dd as Kind
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp))
 import Sqel.Data.Mods (Newtype, NoMods)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol))
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused))
+import Sqel.Data.Select (SelectAtom)
 import Sqel.SOP.Constraint (DataNameF)
 import Sqel.SOP.Error (QuotedType)
 
@@ -37,8 +39,14 @@ type instance a > (b :: DdK) = [a, b]
 
 infixr 5 >
 
+type family PrimSel (sel :: Sel) (a :: Type) :: DdK where
+  PrimSel sel a = 'DdK sel NoMods a 'Kind.Prim
+
+type family PrimUnused (a :: Type) :: DdK where
+  PrimUnused a = PrimSel 'SelUnused a
+
 type family Prim (name :: Symbol) (a :: Type) :: DdK where
-  Prim name a = 'DdK ('SelSymbol name) NoMods a 'Kind.Prim
+  Prim name a = PrimSel ('SelSymbol name) a
 
 type family NewtypeWrapped' (a :: Type) (ass :: [[Type]]) :: Type where
   NewtypeWrapped' _ '[ '[w]] = w
@@ -48,7 +56,7 @@ type family NewtypeWrapped (a :: Type) :: Type where
   NewtypeWrapped a = NewtypeWrapped' a (GCode a)
 
 type family PrimNewtype (name :: Symbol) (a :: Type) :: DdK where
-  PrimNewtype name a = Mods '[Newtype a (NewtypeWrapped a)] (Prim name a)
+  PrimNewtype name a = Mod (Newtype a (NewtypeWrapped a)) (Prim name a)
 
 type family Name (name :: Symbol) (dd :: DdK) :: DdK where
   Name name ('DdK _ mods a s) =
@@ -83,4 +91,13 @@ type family ProdPrimsNewtype (a :: Type) :: DdK where
   ProdPrimsNewtype a = ProdPrimsNewtype' a (GCode a) (GDatatypeInfoOf a)
 
 type family Mods (mods :: [Type]) (dd :: DdK) :: DdK where
-  Mods mods ('DdK sel _ a s) = 'DdK sel mods a s
+  Mods new ('DdK sel old a s) = 'DdK sel (new ++ old) a s
+
+type family ModsR (mods :: [Type]) (dd :: DdK) :: DdK where
+  ModsR new ('DdK sel old a s) = 'DdK sel (old ++ new) a s
+
+type family Mod (mod :: Type) (dd :: DdK) :: DdK where
+  Mod mod dd = Mods '[mod] dd
+
+type family MSelect (dd :: DdK) :: DdK where
+  MSelect dd = Mod SelectAtom dd
