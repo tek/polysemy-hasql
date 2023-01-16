@@ -79,6 +79,7 @@ pgTableName ::
 pgTableName =
   UnsafePgTableName . dbIdentifierT
 
+-- TODO store prefix in Sel like SelIndex
 pgCompName ::
   Text ->
   PgTypeName 'False

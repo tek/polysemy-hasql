@@ -114,7 +114,7 @@ test_statement_order =
 
 target_mergeSum :: Sql
 target_mergeSum =
-  [sql|select "id", "ph_sum_index__merge_sum", ("merge_sum1").num1, ("merge_sum1").name1, ("merge_sum2").num2,
+  [sql|select "id", "sqel_sum_index__merge_sum", ("merge_sum1").num1, ("merge_sum1").name1, ("merge_sum2").num2,
        ("merge_sum2").name2 from "merge_sum"|]
 
 data MergeSum =
@@ -226,7 +226,7 @@ ddMerge1 = sum (con1 ddPro :> con1 ddPro)
 
 target_merge_query_higherOrder :: Sql
 target_merge_query_higherOrder =
-  [sql|select "id", "ph_sum_index__merge1", ("one").num, ("one").name, ("two").num, ("two").name, "length"
+  [sql|select "id", "sqel_sum_index__merge1", ("one").num, ("one").name, ("two").num, ("two").name, "length"
        from "merge1" where ((("two")."name" = $1))|]
 
 test_statement_merge_query_higherOrder :: TestT IO ()
@@ -291,7 +291,7 @@ statement_con1 =
 
 test_statement_con1 :: TestT IO ()
 test_statement_con1 =
-  [sql|select "ph_sum_index__na_nu", "name", "nu" from "na_nu"|] === statement_con1
+  [sql|select "sqel_sum_index__na_nu", "name", "nu" from "na_nu"|] === statement_con1
 
 newtype TextNt =
   TextNt { unTextNt :: Text }

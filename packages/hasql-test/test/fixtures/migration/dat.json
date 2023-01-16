@@ -1,1 +1,251 @@
-[{"name":"dat","statements":["create table \"dat\" (\"id\" bigint, \"old\" text)"],"table":[["id",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}],["old",{"constraints":[],"name":"text","tag":"ColumnPrim","unique":false}]],"types":[]},{"name":"dat","statements":["create table \"dat\" (\"id\" bigint, \"size\" bigint, \"pord\" ph_type__pord)","create type \"ph_type__pord\" as (\"p1\" bigint)"],"table":[["id",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}],["size",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}],["pord",{"contents":"ph_type__pord","tag":"ColumnComp"}]],"types":[{"columns":[["p1",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}]],"name":"ph_type__pord"}]},{"name":"dat","statements":["create table \"dat\" (\"id\" bigint, \"number\" bigint, \"pord\" ph_type__pord)","create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"],"table":[["id",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}],["number",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}],["pord",{"contents":"ph_type__pord","tag":"ColumnComp"}]],"types":[{"columns":[["p1",{"constraints":[],"name":"bigint","tag":"ColumnPrim","unique":false}],["p2",{"constraints":[],"name":"text","tag":"ColumnPrim","unique":false}]],"name":"ph_type__pord"}]}]
+[
+  {
+    "name": "dat",
+    "statementsMigration": [
+      "alter table dat drop column old",
+      "alter table dat add column size bigint",
+      "update dat set size = $1",
+      "alter table dat alter column size set not null",
+      "alter table dat add column pord ph_type__pord"
+    ],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"old\" text not null)"
+    ],
+    "table": [
+      [
+        "id",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "old",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "text",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ]
+    ],
+    "types": []
+  },
+  {
+    "name": "dat",
+    "statementsMigration": [
+      "alter table dat drop column size",
+      "alter table dat add column number bigint",
+      "update dat set number = $1",
+      "alter table dat alter column number set not null",
+      "alter type ph_type__pord add attribute p2 text"
+    ],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"size\" bigint not null, \"pord\" ph_type__pord)",
+      "create type \"ph_type__pord\" as (\"p1\" bigint)"
+    ],
+    "table": [
+      [
+        "id",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "size",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "pord",
+        {
+          "contents": "ph_type__pord",
+          "tag": "ColumnComp"
+        }
+      ]
+    ],
+    "types": [
+      {
+        "columns": [
+          [
+            "p1",
+            {
+              "constraints": [
+                "not null"
+              ],
+              "name": "bigint",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          ]
+        ],
+        "name": "ph_type__pord"
+      }
+    ]
+  },
+  {
+    "name": "dat",
+    "statementsMigration": [
+      "alter table dat rename column number to num",
+      "alter table dat add column name text",
+      "update dat set name = $1",
+      "alter table dat alter column name set not null"
+    ],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"number\" bigint not null, \"pord\" ph_type__pord)",
+      "create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+    ],
+    "table": [
+      [
+        "id",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "number",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "pord",
+        {
+          "contents": "ph_type__pord",
+          "tag": "ColumnComp"
+        }
+      ]
+    ],
+    "types": [
+      {
+        "columns": [
+          [
+            "p1",
+            {
+              "constraints": [
+                "not null"
+              ],
+              "name": "bigint",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          ],
+          [
+            "p2",
+            {
+              "constraints": [],
+              "name": "text",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          ]
+        ],
+        "name": "ph_type__pord"
+      }
+    ]
+  },
+  {
+    "name": "dat",
+    "statementsMigration": [],
+    "statementsTable": [
+      "create table \"dat\" (\"id\" bigint not null, \"name\" text not null, \"num\" bigint not null, \"pord\" ph_type__pord)",
+      "create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+    ],
+    "table": [
+      [
+        "id",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "name",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "text",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "num",
+        {
+          "constraints": [
+            "not null"
+          ],
+          "name": "bigint",
+          "tag": "ColumnPrim",
+          "unique": false
+        }
+      ],
+      [
+        "pord",
+        {
+          "contents": "ph_type__pord",
+          "tag": "ColumnComp"
+        }
+      ]
+    ],
+    "types": [
+      {
+        "columns": [
+          [
+            "p1",
+            {
+              "constraints": [
+                "not null"
+              ],
+              "name": "bigint",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          ],
+          [
+            "p2",
+            {
+              "constraints": [],
+              "name": "text",
+              "tag": "ColumnPrim",
+              "unique": false
+            }
+          ]
+        ],
+        "name": "ph_type__pord"
+      }
+    ]
+  }
+]

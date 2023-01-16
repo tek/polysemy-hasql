@@ -9,6 +9,7 @@ import Sqel.Data.MigrationParams (
   MigrationDefault (MigrationDefault),
   MigrationDelete (MigrationDelete),
   MigrationRename (MigrationRename),
+  MigrationRenameType (MigrationRenameType),
   )
 import Sqel.Data.Mods (
   ArrayColumn (ArrayColumn),
@@ -22,15 +23,18 @@ import Sqel.Data.Mods (
   ReadShowColumn,
   )
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.Data.Sel (Sel (SelAuto, SelIndex, SelSymbol, SelUnused), SelW (SelWAuto, SelWIndex))
+import Sqel.Data.Sel (IndexName, Sel (SelAuto, SelIndex, SelSymbol, SelUnused), SelW (SelWAuto, SelWIndex))
 import Sqel.Mods (PrimValueCodec, primEnumMods, primJsonMods, primReadShowMods)
 import Sqel.Names (named, selAs)
 import Sqel.SOP.Constraint (ProductGCode)
 import Sqel.SOP.Error (Quoted)
 import Sqel.SOP.Newtype (UnwrapNewtype (unwrapNewtype, wrapNewtype))
 
+type IndexColumnWith prefix name =
+  'DdK ('SelIndex prefix name) NoMods Int64 'Prim
+
 type IndexColumn name =
-  'DdK ('SelIndex name) NoMods Int64 'Prim
+  IndexColumnWith 'Nothing name
 
 column :: Mods p -> Dd ('DdK 'SelAuto p a 'Prim)
 column m =
@@ -87,8 +91,9 @@ primCoerce =
   primMod (Newtype coerce coerce)
 
 primIndex ::
-  KnownSymbol name =>
-  Dd (IndexColumn name)
+  ∀ tpe name .
+  IndexName 'Nothing tpe name =>
+  Dd (IndexColumn tpe)
 primIndex =
   Dd (SelWIndex Proxy) NoMods DdPrim
 
@@ -150,6 +155,14 @@ migrateRename ::
   Dd s1
 migrateRename =
   setMod (MigrationRename @name)
+
+migrateRenameType ::
+  ∀ name s0 s1 .
+  MapMod (MigrationRenameType name) s0 s1 =>
+  Dd s0 ->
+  Dd s1
+migrateRenameType =
+  setMod (MigrationRenameType @name)
 
 migrateDelete ::
   ∀ s0 s1 .

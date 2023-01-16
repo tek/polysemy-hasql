@@ -27,6 +27,7 @@ interpretQuery proj que =
     stmt :: Statement query result
     stmt = selectWhere que proj
 
+-- TODO check the projection against the table
 interpretQueryDd ::
   ∀ result query proj table r .
   MkTableSchema proj =>

@@ -4,11 +4,11 @@ import Generics.SOP (NP (Nil, (:*)))
 
 import Sqel.ColumnConstraints (ColumnConstraints, columnConstraints)
 import Sqel.Data.Dd (CompInc (Merge, Nest), Dd (Dd), DdK (DdK), DdStruct (DdComp, DdPrim), Struct (Comp, Prim))
-import Sqel.Data.MigrationParams (MigrationDeleteK, MigrationRenameK)
+import Sqel.Data.MigrationParams (MigrationDeleteK, MigrationRenameK, MigrationRenameTypeK)
 import Sqel.Data.Mods (Mods (Mods))
 import Sqel.Data.PgType (ColumnType (ColumnComp, ColumnPrim), pgTypeRefSym)
 import Sqel.Data.PgTypeName (MkPgTypeName (pgTypeName))
-import Sqel.Data.Sel (Sel (SelSymbol), SelW (SelWSymbol))
+import Sqel.Data.Sel (ReifySel, Sel (SelSymbol), SelW (SelWSymbol))
 import Sqel.Migration.Data.Ddl (DdlColumn (DdlColumn), DdlColumnK (DdlColumnK), DdlType (DdlType), DdlTypeK (DdlTypeK))
 import Sqel.ReifyDd (ReifyPrimName (reifyPrimName))
 
@@ -27,13 +27,14 @@ instance DdCols '[] '[] '[] where
 
 -- TODO the migration params could be extracted in OldColumnsChanges and passed to OldColumnChanges.
 instance (
+    ReifySel sel name,
     ReifyPrimName a mods,
     ColumnConstraints mods,
     DdCols ss cols types,
     rename ~ MigrationRenameK mods,
     delete ~ MigrationDeleteK mods
-  ) => DdCols ('DdK ('SelSymbol name) mods a 'Prim : ss) ('DdlColumnK name 'Nothing mods rename delete a : cols) types where
-    ddCols (Dd (SelWSymbol Proxy) m@(Mods mods) DdPrim :* t) =
+  ) => DdCols ('DdK sel mods a 'Prim : ss) ('DdlColumnK name 'Nothing mods rename delete a : cols) types where
+    ddCols (Dd _ m@(Mods mods) DdPrim :* t) =
       (DdlColumn (ColumnPrim (reifyPrimName @a mods) unique constr) m :* cols, types)
       where
         (unique, constr) = columnConstraints m
@@ -70,8 +71,9 @@ class DdlTypes table s types | table s -> types where
 
 instance (
     DdCols sub cols types,
+    rename ~ MigrationRenameTypeK p,
     MkPgTypeName tname table
-  ) => DdlTypes table ('DdK sel p a ('Comp ('SelSymbol tname) c i sub)) ('DdlTypeK table tname cols : types) where
+  ) => DdlTypes table ('DdK sel p a ('Comp ('SelSymbol tname) c i sub)) ('DdlTypeK table tname rename cols : types) where
   ddTypes (Dd _ _ (DdComp (SelWSymbol Proxy) _ _ sub)) =
     DdlType (pgTypeName @tname) cols :* types
     where

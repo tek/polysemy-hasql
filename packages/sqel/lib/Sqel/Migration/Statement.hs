@@ -1,10 +1,12 @@
 module Sqel.Migration.Statement where
 
+import qualified Control.Monad.Trans.Writer.Strict as Mtl
 import Data.Some (Some, withSome)
 import qualified Exon
 import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session
 import Hasql.Session (Session)
+import qualified Text.Show as Show
 
 import Sqel.Data.Migration (MigrationAction (ModifyType), MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
 import Sqel.Data.PgType (
@@ -17,14 +19,24 @@ import Sqel.Data.PgTypeName (pattern PgCompName, pattern PgTableName, pattern Pg
 import Sqel.Data.Sql (Sql (Sql), sql)
 import Sqel.Statement (unprepared)
 
+data MigrationStatement where
+  MigrationStatement :: p -> Params p -> Sql -> MigrationStatement
+
+instance Show MigrationStatement where
+  show (MigrationStatement _ _ s) = show s
+
+migrationStatementSql :: MigrationStatement -> Sql
+migrationStatementSql (MigrationStatement _ _ s) =
+  s
+
 alterStatement ::
   Some PgTypeName ->
   p ->
   Params p ->
   (Sql -> Sql -> Sql) ->
-  Session ()
+  Mtl.Writer [MigrationStatement] ()
 alterStatement typeName p enc f =
-  Session.statement p (unprepared (f [sql|alter #{entity} ##{Sql name}|] attr) unit enc)
+  Mtl.tell [MigrationStatement p enc (f [sql|alter #{entity} ##{Sql name}|] attr)]
   where
     (entity, attr, name) = withSome typeName \case
       PgTableName n -> ("table", "column", n)
@@ -36,7 +48,7 @@ columnStatements ::
   Bool ->
   Some PgTypeName ->
   MigrationTypeAction ->
-  Session ()
+  Mtl.Writer [MigrationStatement] ()
 columnStatements table typeName = \case
   AddColumn (PgColumnName colName) tpe md -> do
     alter_ \ alter attr -> [sql|#{alter} add #{attr} ##{colName} #{colTypeName}|]
@@ -58,10 +70,19 @@ columnStatements table typeName = \case
     alter_ = alterStatement typeName () mempty
     comp = withSome typeName \ (PgTypeName n) -> Sql n
 
-actionStatements :: MigrationAction -> Session ()
+actionStatements :: MigrationAction -> Mtl.Writer [MigrationStatement] ()
 actionStatements (ModifyType table name cols) =
   traverse_ (columnStatements table name) cols
 
-migrationStatements :: [MigrationAction] -> Session ()
+migrationStatements :: [MigrationAction] -> [MigrationStatement]
 migrationStatements =
+  snd .
+  runIdentity .
+  Mtl.runWriterT .
   traverse_ actionStatements
+
+migrationSession :: [MigrationAction] ->  Session ()
+migrationSession =
+  traverse_ runS . migrationStatements
+  where
+    runS (MigrationStatement p enc stmt) = Session.statement p (unprepared @() stmt unit enc)

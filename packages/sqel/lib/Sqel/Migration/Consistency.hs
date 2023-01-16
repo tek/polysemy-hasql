@@ -14,7 +14,7 @@ import Path.IO (createDirIfMissing, doesFileExist)
 import Prelude hiding (tryIO)
 import System.IO.Error (IOError)
 
-import Sqel.Data.Migration (Migration (Migration), Migrations (Migrations), tableFrom)
+import Sqel.Data.Migration (Migration (Migration), Migrations (Migrations), changes, tableFrom, tableTo)
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
@@ -27,6 +27,7 @@ import Sqel.Data.PgType (
   )
 import Sqel.Data.PgTypeName (PgTableName, pattern PgTypeName)
 import Sqel.Data.Sql (Sql)
+import Sqel.Migration.Statement (migrationStatementSql, migrationStatements)
 import qualified Sqel.Sql.Type as Sql
 import Sqel.Text.Quote (squote)
 
@@ -39,35 +40,51 @@ data MigrationMetadata =
     name :: PgTableName,
     table :: PgColumns,
     types :: [PgComposite],
-    statements :: [Sql]
+    statementsTable :: [Sql],
+    statementsMigration :: [Sql]
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
-tableStatements :: PgTable a -> [PgComposite] -> [Sql]
-tableStatements table types =
+tableStatements :: PgTable a -> [Sql]
+tableStatements table =
   Sql.createTable table : (Sql.createProdType <$> types)
+  where
+    types = snd <$> Map.toAscList (table ^. #types)
 
-migrationMetadata :: Migration m mig -> MigrationMetadata
-migrationMetadata (Migration {tableFrom}) =
+tableMetadata :: PgTable a -> MigrationMetadata
+tableMetadata table =
   MigrationMetadata {
-    name = tableFrom ^. #name,
-    table,
+    name = table ^. #name,
+    table = table ^. #columns,
     types,
-    statements = tableStatements tableFrom types
+    statementsTable = tableStatements table,
+    statementsMigration = []
   }
   where
-    table = tableFrom ^. #columns
-    types = snd <$> Map.toAscList (tableFrom ^. #types)
+    types = snd <$> Map.toAscList (table ^. #types)
+
+migrationMetadata :: Migration m mig -> MigrationMetadata
+migrationMetadata Migration {tableFrom, changes} =
+  tableMetadata tableFrom & #statementsMigration .~ (migrationStatementSql <$> migrationStatements changes)
+
+currentMetadata :: Migration m mig -> MigrationMetadata
+currentMetadata Migration {tableTo} =
+  tableMetadata tableTo
 
 migrationMetadatas :: NP (Migration m) migs -> [MigrationMetadata]
 migrationMetadatas = \case
   Nil -> []
   m :* ms -> migrationMetadata m : migrationMetadatas ms
 
+headMigrationMetadata :: NP (Migration m) migs -> Maybe MigrationMetadata
+headMigrationMetadata = \case
+  Nil -> Nothing
+  mig :* _ -> Just (currentMetadata mig)
+
 migrationsMetadata :: Migrations m old cur -> [MigrationMetadata]
 migrationsMetadata (Migrations migs) =
-  reverse (migrationMetadatas migs)
+  reverse (maybeToList (headMigrationMetadata migs) <> migrationMetadatas migs)
 
 jsonFile :: PgTable a -> String
 jsonFile PgTable {name = PgTypeName name} =
@@ -219,5 +236,6 @@ migrationConsistency dir migs =
       single (writeMigrationMetadata dir migs)
     False ->
       single (readMigrationMetadata dir migs) >>= \case
-        Just golden -> ExceptT (pure (checkMigrationConsistency golden (migrationsMetadata migs)))
+        Just golden ->
+          ExceptT (pure (checkMigrationConsistency golden (migrationsMetadata migs)))
         Nothing -> single (writeMigrationMetadata dir migs)

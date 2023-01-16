@@ -4,6 +4,22 @@ import Exon (exon)
 
 import Sqel.SOP.Constraint (symbolText)
 
+type IndexPrefix :: Maybe Symbol -> Symbol -> Constraint
+class IndexPrefix spec prefix | spec -> prefix where
+
+instance IndexPrefix 'Nothing "sqel_sum_index__" where
+
+instance IndexPrefix ('Just prefix) prefix where
+
+type IndexName :: Maybe Symbol -> Symbol -> Symbol -> Constraint
+class KnownSymbol name => IndexName prefix tpe name | prefix tpe -> name where
+
+instance (
+    IndexPrefix prefixSpec prefix,
+    name ~ AppendSymbol prefix tpe,
+    KnownSymbol name
+  ) => IndexName prefixSpec tpe name where
+
 data Sel =
   SelSymbol Symbol
   |
@@ -13,7 +29,7 @@ data Sel =
   |
   SelUnused
   |
-  SelIndex Symbol
+  SelIndex (Maybe Symbol) Symbol
 
 type SelW :: Sel -> Type
 data SelW sel where
@@ -21,7 +37,7 @@ data SelW sel where
   SelWPath :: SelW ('SelPath path)
   SelWAuto :: SelW 'SelAuto
   SelWUnused :: SelW 'SelUnused
-  SelWIndex :: KnownSymbol name => Proxy name -> SelW ('SelIndex name)
+  SelWIndex :: IndexName prefix tpe name => Proxy name -> SelW ('SelIndex prefix tpe)
 
 type MkSel :: Sel -> Constraint
 class MkSel sel where
@@ -50,12 +66,16 @@ showSelW = \case
   SelWSymbol (Proxy :: Proxy sel) -> symbolText @sel
   SelWIndex (Proxy :: Proxy sel) -> [exon|<index for #{symbolText @sel}>|]
 
-type ReifySel :: Sel -> Constraint
-class ReifySel sel where
+type ReifySel :: Sel -> Symbol -> Constraint
+class KnownSymbol name => ReifySel sel name | sel -> name where
   reifySel :: SelW sel -> Text
 
-instance ReifySel ('SelSymbol sel) where
-  reifySel (SelWSymbol Proxy) = symbolText @sel
+instance KnownSymbol name => ReifySel ('SelSymbol name) name where
+  reifySel (SelWSymbol Proxy) = symbolText @name
 
-instance ReifySel ('SelIndex sel) where
-  reifySel (SelWIndex Proxy) = [exon|ph_sum_index__#{symbolText @sel}|]
+instance (
+    IndexPrefix prefixSpec prefix,
+    name ~ AppendSymbol prefix sel,
+    KnownSymbol name
+  ) => ReifySel ('SelIndex prefixSpec sel) name where
+  reifySel (SelWIndex Proxy) = symbolText @name

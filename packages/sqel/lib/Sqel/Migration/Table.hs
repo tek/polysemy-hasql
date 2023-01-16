@@ -1,10 +1,13 @@
 module Sqel.Migration.Table where
 
+import Hasql.Session (Session)
+
 import qualified Sqel.Data.Dd as Dd
 import Sqel.Data.Dd (Dd)
 import Sqel.Data.Migration (Mig (Mig), Migration (Migration), MigrationAction)
 import Sqel.Data.PgType (PgTable)
 import Sqel.Migration.Ddl (DdlTypes, ddTable)
+import Sqel.Migration.Statement (MigrationStatement, migrationSession, migrationStatements)
 import Sqel.Migration.Type (TypeChange (typeChange), TypeChanges (changes))
 import Sqel.PgType (pgTable)
 import Sqel.ReifyDd (ReifyDd)
@@ -26,6 +29,12 @@ instance (
 
 class AutoMigrationEffect m where
   autoMigrationEffect :: PgTable a -> PgTable b -> [MigrationAction] -> m ()
+
+instance AutoMigrationEffect Session where
+  autoMigrationEffect _ _ = migrationSession
+
+instance AutoMigrationEffect (Const [MigrationStatement]) where
+  autoMigrationEffect _ _ = Const . migrationStatements
 
 class DdMigrations m old new where
   ddMigrations :: Dd old -> Dd new -> Migration m ('Mig (Dd.DdType old) (Dd.DdType new))

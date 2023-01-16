@@ -19,7 +19,7 @@ import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdMerge, DdNest),
   DdK (DdK),
-  DdStruct (DdComp),
+  DdStruct (DdComp, DdPrim),
   DdType,
   DdVar (DdCon, DdProd, DdSum),
   ProdType (Con, Reg),
@@ -28,13 +28,18 @@ import Sqel.Data.Dd (
   type (:>) ((:>)),
   )
 import Sqel.Data.Mods (pattern NoMods, NoMods)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWAuto))
+import Sqel.Data.Sel (
+  IndexName,
+  MkSel (mkSel),
+  Sel (SelAuto, SelIndex, SelSymbol, SelUnused),
+  SelW (SelWAuto, SelWIndex),
+  )
 import Sqel.Merge (merge)
 import Sqel.Names.Data (NatSymbol)
 import Sqel.Names.Error (CountMismatch)
 import Sqel.Names.Rename (Rename (rename))
 import Sqel.Names.Set (SetName)
-import Sqel.Prim (IndexColumn, Prims (Prims), primIndex)
+import Sqel.Prim (IndexColumn, IndexColumnWith, Prims (Prims), primIndex)
 import qualified Sqel.Type as T
 
 type family RecordFields (fields :: [FieldInfo]) (ass :: [Type]) :: [ProductField] where
@@ -190,12 +195,38 @@ type family SumFields (info :: DatatypeInfo) (ass :: [[Type]]) :: [ProductField]
   SumFields info _ =
     TypeError ("SumFields:" % info)
 
-class DdType s ~ a => Sum2 a arg s | a arg -> s where
+class DdType s ~ a => SumWith a isel imods arg s | a isel imods arg -> s where
+  sumWith :: Dd ('DdK isel imods Int64 'Prim) -> arg -> Dd s
+
+-- TODO b ~ a is not needed here, apparently, but it is for ConColumn. investigate and remove here
+instance (
+    b ~ a,
+    CompName a ('SelSymbol name),
+    fields ~ SumFields (GDatatypeInfoOf a) (GCode a),
+    meta ~ MetaFor "sum type" ('ShowType a) "sum",
+    CompColumn meta fields a arg s
+  ) => SumWith b isel imods arg ('DdK 'SelAuto NoMods a ('Comp ('SelSymbol name) 'Sum 'Nest ('DdK isel imods Int64 'Prim : s))) where
+  sumWith index arg =
+    Dd SelWAuto NoMods (DdComp (compName @a) DdSum DdNest (index :* compColumn @meta @fields @a arg))
+
+class DdType s ~ a => Sum a arg s | a arg -> s where
   sum :: arg -> Dd s
+
+-- TODO b ~ a is not needed here, apparently, but it is for ConColumn. investigate and remove here
+instance (
+    b ~ a,
+    CompName a ('SelSymbol name),
+    IndexName 'Nothing name iname,
+    fields ~ SumFields (GDatatypeInfoOf a) (GCode a),
+    meta ~ MetaFor "sum type" ('ShowType a) "sum",
+    CompColumn meta fields a arg s
+  ) => Sum b arg ('DdK 'SelAuto NoMods a ('Comp ('SelSymbol name) 'Sum 'Nest (IndexColumn name : s))) where
+  sum =
+    sumWith primIndex
 
 sumAs ::
   ∀ (name :: Symbol) (a :: Type) (s :: DdK) (arg :: Type) .
-  Sum2 a arg s =>
+  Sum a arg s =>
   Rename s (SetName s name) =>
   arg ->
   Dd (SetName s name)
@@ -204,23 +235,11 @@ sumAs =
 
 mergeSum ::
   ∀ (a :: Type) (s :: DdK) (arg :: Type) .
-  Sum2 a arg s =>
+  Sum a arg s =>
   arg ->
   Dd (T.Merge s)
 mergeSum =
   merge . sum @a @_ @s
-
--- TODO b ~ a is not needed here, apparently, but it is for ConColumn. investigate and remove here
-instance (
-    b ~ a,
-    CompName a ('SelSymbol name),
-    KnownSymbol name,
-    fields ~ SumFields (GDatatypeInfoOf a) (GCode a),
-    meta ~ MetaFor "sum type" ('ShowType a) "sum",
-    CompColumn meta fields a arg s
-  ) => Sum2 b arg ('DdK 'SelAuto NoMods a ('Comp ('SelSymbol name) 'Sum 'Nest (IndexColumn name : s))) where
-  sum arg =
-    Dd SelWAuto NoMods (DdComp (compName @a) DdSum DdNest (primIndex :* compColumn @meta @fields @a arg))
 
 class DdType s ~ a => ConColumn a arg s | a arg -> s where
   con :: arg -> Dd s
@@ -277,3 +296,26 @@ instance (
   ) => Con1AsColumn name a arg ('DdK 'SelAuto NoMods a ('Comp ('SelSymbol name) ('Prod ('Con as)) 'Merge s)) where
   con1As arg =
     Dd SelWAuto NoMods (DdComp mkSel DdCon DdMerge (compColumn @meta @fields @a arg))
+
+class OverIndex s0 s1 | s0 -> s1 where
+  overIndex :: Dd s0 -> Dd s1
+
+type SetIndexPrefix :: Symbol -> DdK -> DdK -> Constraint
+class SetIndexPrefix prefix s0 s1 | prefix s0 -> s1 where
+  setIndexPrefix :: Dd s0 -> Dd s1
+
+instance (
+    IndexName ('Just prefix) tpe iname
+  ) => SetIndexPrefix prefix ('DdK sel mods a ('Comp tsel 'Sum i ('DdK ('SelIndex oldPrefix tpe) NoMods Int64 'Prim : cons))) ('DdK sel mods a ('Comp tsel 'Sum i (IndexColumnWith ('Just prefix) tpe : cons))) where
+    setIndexPrefix (Dd sel mods (DdComp tsel DdSum i (Dd (SelWIndex Proxy) NoMods DdPrim :* cons))) =
+      Dd sel mods (DdComp tsel DdSum i (Dd (SelWIndex Proxy) NoMods DdPrim :* cons))
+    setIndexPrefix _ =
+      error "ghc bug?"
+
+indexPrefix ::
+  ∀ prefix s0 s1 .
+  SetIndexPrefix prefix s0 s1 =>
+  Dd s0 ->
+  Dd s1
+indexPrefix =
+  setIndexPrefix @prefix

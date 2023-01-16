@@ -16,17 +16,19 @@ testMigration' ::
   Migrations r' old cur ->
   Bool ->
   Sem r ()
-testMigration' migs write = do
-  dir <- Test.fixturePath [reldir|migration|]
-  migrationConsistency dir migs write >>= \case
-    Just errors ->
-      liftH (failWith Nothing (toString (Text.intercalate "\n" (toList errors))))
-    Nothing -> unit
+testMigration' migs write =
+  withFrozenCallStack do
+    dir <- Test.fixturePath [reldir|migration|]
+    migrationConsistency dir migs write >>= \case
+      Just errors ->
+        liftH (failWith Nothing (toString (Text.intercalate "\n" (toList errors))))
+      Nothing -> unit
 
 testMigration ::
   Members [Test, Hedgehog IO, Embed IO] r =>
   Migrations (Sem (Database !! DbError : Stop DbError : r)) old cur ->
   Bool ->
   Sem r ()
-testMigration =
-  testMigration'
+testMigration write =
+  withFrozenCallStack do
+    testMigration' write

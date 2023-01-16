@@ -82,7 +82,7 @@ data DdStruct s where
 -- also to stuff different metadata in there, like DdlColumn?
 type Dd :: DdK -> Type
 data Dd s where
-  Dd :: SelW sel -> Mods p -> DdStruct s -> Dd ('DdK sel p a s)
+  Dd :: SelW sel -> Mods mods -> DdStruct s -> Dd ('DdK sel mods a s)
 
 data QOp =
   QAnd

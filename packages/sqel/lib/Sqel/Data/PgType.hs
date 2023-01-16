@@ -43,7 +43,7 @@ newtype PgProdName =
 newtype PgColumnName =
   PgColumnName { unPgColumnName :: Text }
   deriving stock (Eq, Show, Generic)
-  deriving newtype (IsString, Ord)
+  deriving newtype (Ord)
 
 json ''PgColumnName
 
@@ -60,6 +60,9 @@ pgColumnName ::
 pgColumnName n =
   PgColumnName (dbIdentifierT n)
 
+instance IsString PgColumnName where
+  fromString = pgColumnName . fromString
+
 newtype PgTypeRef =
   PgTypeRef { unPgTypeRef :: Text }
   deriving stock (Eq, Show, Generic)
@@ -73,6 +76,7 @@ instance Pretty PgTypeRef where
 instance ToSql PgTypeRef where
   toSql = sqlQuote . unPgTypeRef
 
+-- TODO store prefix in Sel like SelIndex
 pgTypeRef ::
   Text ->
   PgTypeRef

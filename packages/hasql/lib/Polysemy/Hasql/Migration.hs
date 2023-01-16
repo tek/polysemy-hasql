@@ -3,7 +3,7 @@ module Polysemy.Hasql.Migration where
 import Generics.SOP (SListI)
 import Polysemy.Db.Data.DbError (DbError)
 import Sqel.Data.Migration (Migrations, Migs, MkMigrations, hoistMigrations, migrate)
-import Sqel.Migration.Statement (migrationStatements)
+import Sqel.Migration.Statement (migrationSession)
 import Sqel.Migration.Table (AutoMigrationEffect (autoMigrationEffect))
 
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -17,7 +17,7 @@ instance (
     Members [Database !! DbError, Stop DbError] r
   ) => AutoMigrationEffect (MigrateSem r) where
     autoMigrationEffect _ _ actions =
-      MigrateSem (restop (Database.session (migrationStatements actions)))
+      MigrateSem (restop (Database.session (migrationSession actions)))
 
 migrateSem ::
   SListI (Migs old cur) =>

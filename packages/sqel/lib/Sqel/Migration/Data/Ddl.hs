@@ -37,15 +37,16 @@ data DdlTypeK =
   DdlTypeK {
     table :: Bool,
     tname :: Symbol,
+    rename :: Maybe Symbol,
     columns :: [DdlColumnK]
   }
 
 type DdlType :: DdlTypeK -> Type
 data DdlType s where
-  DdlType :: KnownSymbol tname => PgTypeName table -> NP DdlColumn cols -> DdlType ('DdlTypeK table tname cols)
+  DdlType :: KnownSymbol tname => PgTypeName table -> NP DdlColumn cols -> DdlType ('DdlTypeK table tname rename cols)
 
 instance (
     All (Compose Show DdlColumn) cols
-  ) => Show (DdlType ('DdlTypeK pgName tname cols)) where
+  ) => Show (DdlType ('DdlTypeK pgName tname rename cols)) where
   showsPrec d (DdlType name cols) =
     showParen (d > 10) [exon|DdlType #{showsPrec 11 name} #{showsPrec 11 cols}|]

@@ -58,7 +58,7 @@ instance (
     ColumnConstraints mods,
     MaybeMod SetTableName mods,
     ReifyPrimName a mods,
-    ReifySel sel
+    ReifySel sel name
   ) => ReifyDd ('DdK sel mods a 'Prim) where
   reifyDd (Dd sel mods@(Mods ms) DdPrim) =
     DdTerm (pgColumnName name) (unSetTableName <$> maybeMod mods) (uncurry (Term.Prim (reifyPrimName @a ms)) (columnConstraints mods))
@@ -76,8 +76,3 @@ instance (
           SelWSymbol (Proxy :: Proxy name) -> symbolText @name
           _ -> symbolText @tname
         typeName = symbolText @tname
-
--- instance (
---     FoldDd FoldPrim FoldComp DdTerm s
---   ) => ReifyDd s where
---     reifyDd dd = foldDd @FoldPrim @FoldComp foldPrim foldComp dd

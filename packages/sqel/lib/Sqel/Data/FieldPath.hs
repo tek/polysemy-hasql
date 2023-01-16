@@ -18,7 +18,7 @@ type family FieldPathPrim prefix sel t where
   FieldPathPrim prefix ('SelSymbol name) t = '[ 'FieldPath (prefix ++ '[name]) t]
   FieldPathPrim _ ('SelPath path) t = '[ 'FieldPath path t]
   FieldPathPrim _ 'SelUnused _ = '[]
-  FieldPathPrim _ ('SelIndex _) _ = '[]
+  FieldPathPrim _ ('SelIndex _ _) _ = '[]
   FieldPathPrim _ 'SelAuto t =
     TypeError ("Internal error: A field with type " <> t <> " was not automatically renamed.")
 

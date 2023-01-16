@@ -7,7 +7,8 @@ import Sqel.Class.Mods (OptMod (optMod))
 import Sqel.Codec (PrimColumn (primEncoder))
 import Sqel.Data.Migration (MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
 import Sqel.Data.MigrationParams (MigrationDefault (MigrationDefault))
-import Sqel.Data.PgType (ColumnType, PgColumnName (PgColumnName), pgColumnName)
+import Sqel.Data.Mods (Mods)
+import Sqel.Data.PgType (ColumnType, PgColumnName, pgColumnName)
 import Sqel.Migration.Data.Ddl (DdlColumn (DdlColumn), DdlColumnK (DdlColumnK))
 import Sqel.SOP.Constraint (symbolText)
 
@@ -21,6 +22,11 @@ instance ColumnChange ('DdlColumnK name 'Nothing modsOld renameOld deleteOld typ
 instance ColumnChange ('DdlColumnK name ('Just tname) modsOld renameOld deleteOld typeOld) ('DdlColumnK name ('Just tname) modsNew renameNew deleteNew typeNew) where
   columnChange _ _ = mempty
 
+type ModsColumnChange :: [Type] -> DdlColumnK -> DdlColumnK -> Constraint
+class ModsColumnChange mods old new where
+  modsColumnChange :: Mods mods -> DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
+
+-- TODO error message when no column match was found for remove or rename
 type OldColumnChanges :: DdlColumnK -> [DdlColumnK] -> Constraint
 class OldColumnChanges old new where
   oldColumnChanges :: DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
@@ -99,7 +105,7 @@ instance (
     ColumnAddition comp def
   ) => NewColumnChanges '[] ('DdlColumnK name comp mods rename delete tpe) where
     newColumnChanges Nil (DdlColumn t mods) =
-      columnAddition @comp @def (optMod @(MigrationDefault tpe) mods) (PgColumnName (symbolText @name)) t
+      columnAddition @comp @def (optMod @(MigrationDefault tpe) mods) (pgColumnName (symbolText @name)) t
 
 instance {-# overlappable #-} (
     NewColumnChanges old new

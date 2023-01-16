@@ -44,6 +44,7 @@ type family MigList as where
 type Migs :: [Type] -> Type -> [Mig]
 type family Migs old cur where
   Migs '[] _ = '[]
+  Migs '[o] cur = '[ 'Mig o cur]
   Migs (o : os) cur = 'Mig o cur : MigList (o : os)
 
 type Migrations :: (Type -> Type) -> [Type] -> Type -> Type

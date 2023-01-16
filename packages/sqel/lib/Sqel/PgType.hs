@@ -154,6 +154,9 @@ instance (
   ) => CheckedProjection proj table where
     checkedProjection = checkedProjection' @match
 
+-- TODO check that the table name matches, otherwise a query using the projection will use the wrong name.
+-- also possible to automatically set it, but that might be incompatible with the db view interpreter feature, since
+-- the name there can't be propagated here. but it would be possible to check only there and do it automatically here.
 projectionSchema ::
   ∀ proj table .
   CheckedProjection proj table =>

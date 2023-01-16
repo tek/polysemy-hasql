@@ -14,7 +14,8 @@ import Sqel.Migration.Consistency (migrationConsistency)
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (typeAs)
 import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primNullable)
-import Sqel.Product2 (prod, uidAs)
+import Sqel.Product2 (prod)
+import Sqel.Uid (uidAs)
 
 import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Migration (migrateSem)
@@ -69,37 +70,37 @@ data Q =
 
 t0 :: Dd ('DdK _ _ (Uid Int64 Dat0) _)
 t0 =
-  uidAs @"dat" prim (migrateDelete prim)
+  uidAs @"dat" prim (prod (migrateDelete prim))
 
 t1 :: Dd ('DdK _ _ (Uid Int64 Dat1) _)
 t1 =
-  uidAs @"dat" prim (
+  uidAs @"dat" prim (prod (
     migrateDelete (migrateDef 0 prim) :>
     typeAs @"Pord" (prod (
       migrateDef 53 prim
     ))
-  )
+  ))
 
 t2 :: Dd ('DdK _ _ (Uid Int64 Dat2) _)
 t2 =
-  uidAs @"dat" prim (
+  uidAs @"dat" prim (prod (
     migrateDef 15 prim :>
     typeAs @"Pord" (prod (
       prim :>
       primNullable
     ))
-  )
+  ))
 
 tcur :: Dd ('DdK _ _ (Uid Int64 Dat) _)
 tcur =
-  uidAs @"dat" prim (
+  uidAs @"dat" prim (prod (
     migrateDef ("vunqach" :: Text) prim :>
     migrateRename @"number" prim :>
     prod (
       prim :>
       primNullable
     )
-  )
+  ))
 
 migrations ::
   Members [Database !! DbError, Stop DbError] r =>
@@ -127,6 +128,7 @@ test_migrationErrors =
     fixtures <- Test.fixturePath [reldir|migration-error|]
     assertJust migrationErrors =<< migrationConsistency fixtures (migrations @[Database !! DbError, Stop DbError]) False
 
+-- TODO error message claims type change if a column constraint differs
 test_migrationConsistency :: UnitTest
 test_migrationConsistency =
   runTestAuto do

@@ -53,7 +53,7 @@ class ColumnConstraints mods where
   collectConstraints :: NP I mods -> Constraints
 
 instance ColumnConstraints '[] where
-  collectConstraints Nil = Constraints False True []
+  collectConstraints Nil = Constraints False False []
 
 instance (
     ColumnConstraint mod,

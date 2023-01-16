@@ -12,14 +12,16 @@ type TypeChange :: DdlTypeK -> DdlTypeK -> Constraint
 class TypeChange old new where
   typeChange :: DdlType old -> DdlType new -> [MigrationAction]
 
-instance TypeChange ('DdlTypeK table tname cols) ('DdlTypeK table tname cols) where
+-- TODO add an error message for when the name is mismatched, which might happen when the migration history type isn't
+-- renamed
+instance TypeChange ('DdlTypeK table tname renameOld cols) ('DdlTypeK table tname 'Nothing cols) where
   typeChange _ _ = mempty
 
 instance {-# overlappable #-} (
     BoolVal table,
     OldColumnsChanges colsOld colsNew,
     NewColumnsChanges colsOld colsNew
-  ) => TypeChange ('DdlTypeK table tname colsOld) ('DdlTypeK table tname colsNew) where
+  ) => TypeChange ('DdlTypeK table tname renameOld colsOld) ('DdlTypeK table tname renameNew colsNew) where
   typeChange (DdlType name colsOld) (DdlType _ colsNew) =
     [ModifyType (boolVal @table) (Some name) (oldColumnsChanges colsOld colsNew <> newColumnsChanges colsOld colsNew)]
 
@@ -28,8 +30,8 @@ class OldTypeChanges old new where
   oldTypeChanges :: DdlType old -> NP DdlType new -> [MigrationAction]
 
 instance (
-    TypeChange ('DdlTypeK table tname colsOld) ('DdlTypeK table tname colsNew)
-  ) => OldTypeChanges ('DdlTypeK table tname colsOld) ('DdlTypeK table tname colsNew : new) where
+    TypeChange ('DdlTypeK table tname renameOld colsOld) ('DdlTypeK table tname renameNew colsNew)
+  ) => OldTypeChanges ('DdlTypeK table tname renameOld colsOld) ('DdlTypeK table tname renameNew colsNew : new) where
     oldTypeChanges old (new :* _) =
       typeChange old new
 

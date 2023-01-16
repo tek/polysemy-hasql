@@ -211,6 +211,7 @@ test-suite polysemy-hasql-unit
       Sqel.Test.Error.NewtypeNoNewtype
       Sqel.Test.Error.QueryColumMismatch
       Sqel.Test.ErrorTest
+      Sqel.Test.MigrationTest
       Sqel.Test.StatementTest
       Sqel.Test.TableSchemaTest
       Test
