@@ -7,7 +7,6 @@ import Sqel.Class.Mods (OptMod (optMod))
 import Sqel.Codec (PrimColumn (primEncoder))
 import Sqel.Data.Migration (MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
 import Sqel.Data.MigrationParams (MigrationDefault (MigrationDefault))
-import Sqel.Data.Mods (Mods)
 import Sqel.Data.PgType (ColumnType, PgColumnName, pgColumnName)
 import Sqel.Migration.Data.Ddl (DdlColumn (DdlColumn), DdlColumnK (DdlColumnK))
 import Sqel.SOP.Constraint (symbolText)
@@ -16,33 +15,40 @@ type ColumnChange :: DdlColumnK -> DdlColumnK -> Constraint
 class ColumnChange old new where
   columnChange :: DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
 
-instance ColumnChange ('DdlColumnK name 'Nothing modsOld renameOld deleteOld typeOld) ('DdlColumnK name 'Nothing modsNew renameNew deleteNew typeOld) where
+instance ColumnChange ('DdlColumnK name 'Nothing modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name 'Nothing modsNew renameNew renameTNew deleteNew typeOld) where
   columnChange _ _ = mempty
 
-instance ColumnChange ('DdlColumnK name ('Just tname) modsOld renameOld deleteOld typeOld) ('DdlColumnK name ('Just tname) modsNew renameNew deleteNew typeNew) where
+instance ColumnChange ('DdlColumnK name ('Just tname) modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name ('Just tname) modsNew renameNew renameTNew deleteNew typeNew) where
   columnChange _ _ = mempty
 
-type ModsColumnChange :: [Type] -> DdlColumnK -> DdlColumnK -> Constraint
-class ModsColumnChange mods old new where
-  modsColumnChange :: Mods mods -> DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
+instance (
+    -- KnownSymbol compNew
+  ) => ColumnChange ('DdlColumnK name ('Just compOld) modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name ('Just compNew) modsNew renameNew ('Just compOld) delNew typeNew) where
+    columnChange (DdlColumn _ _) (DdlColumn _ _) =
+      mempty
+      -- [RenameColumnType (pgColumnName (symbolText @name)) (pgCompName (symbolText @compNew))]
 
 -- TODO error message when no column match was found for remove or rename
 type OldColumnChanges :: DdlColumnK -> [DdlColumnK] -> Constraint
 class OldColumnChanges old new where
   oldColumnChanges :: DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
 
+-- TODO this needs the fields to be preprocessed by a tyfam
 instance (
-    ColumnChange ('DdlColumnK name compOld modsOld renameOld deleteOld typeOld) ('DdlColumnK name compNew modsNew renameNew deleteNew typeNew)
-  ) => OldColumnChanges ('DdlColumnK name compOld modsOld renameOld deleteOld typeOld) ('DdlColumnK name compNew modsNew renameNew deleteNew typeNew : new) where
+    ColumnChange ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name compNew modsNew renameNew renameTNew deleteNew typeNew)
+  ) => OldColumnChanges ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name compNew modsNew renameNew renameTNew deleteNew typeNew : new) where
     oldColumnChanges old (new :* _) =
       columnChange old new
 
-instance OldColumnChanges ('DdlColumnK name compOld modsOld renameOld deleteOld typeOld) ('DdlColumnK nameNew compNew modsNew ('Just name) delNew typeNew : new) where
+-- TODO this should probably continue with the rest of the mods, specifying the new name, so that for example both type
+-- and column may be renamed
+-- this would require a flag indicating whether the column was matched, to be used by the removal instance
+instance OldColumnChanges ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK nameNew compNew modsNew ('Just name) renameTNew delNew typeNew : new) where
     oldColumnChanges (DdlColumn _ _) (DdlColumn _ _ :* _) =
       [RenameColumn (pgColumnName (symbolText @name)) (pgColumnName (symbolText @nameNew))]
 
 -- TODO error message when delete is False
-instance OldColumnChanges ('DdlColumnK name comp modsOld rename 'True tpe) '[] where
+instance OldColumnChanges ('DdlColumnK name comp modsOld rename renameT 'True tpe) '[] where
   oldColumnChanges (DdlColumn t _) Nil =
     [RemoveColumn (pgColumnName (symbolText @name)) t]
 
@@ -91,19 +97,23 @@ class NewColumnChanges old new where
 
 -- TODO matching the name here is duplicated in ColumnChange, should be ignored there?
 instance (
-    ColumnChange ('DdlColumnK tname comp modsOld renameOld deleteOld typeOld) ('DdlColumnK tname comp modsNew 'Nothing deleteNew typeNew)
-  ) => NewColumnChanges ('DdlColumnK tname comp modsOld renameOld deleteOld typeOld : old) ('DdlColumnK tname comp modsNew 'Nothing deleteNew typeNew) where
+    ColumnChange ('DdlColumnK tname comp modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK tname comp modsNew 'Nothing renameTNew deleteNew typeNew)
+  ) => NewColumnChanges ('DdlColumnK tname comp modsOld renameOld renameTOld deleteOld typeOld : old) ('DdlColumnK tname comp modsNew 'Nothing renameTNew deleteNew typeNew) where
     newColumnChanges (old :* _) new =
       columnChange old new
 
-instance NewColumnChanges ('DdlColumnK tnameOld comp modsOld renameOld deleteOld typeOld : old) ('DdlColumnK tnameNew comp modsNew ('Just tnameOld) deleteNew typeNew) where
+instance NewColumnChanges ('DdlColumnK tname ('Just compOld) modsOld renameOld renameTOld deleteOld typeOld : old) ('DdlColumnK tname compNew modsNew renameNew ('Just compOld) deleteNew typeNew) where
+    newColumnChanges _ _ =
+      mempty
+
+instance NewColumnChanges ('DdlColumnK tnameOld comp modsOld renameOld renameTOld deleteOld typeOld : old) ('DdlColumnK tnameNew comp modsNew ('Just tnameOld) renameTNew deleteNew typeNew) where
     newColumnChanges _ _ =
       mempty
 
 instance (
     OptMod (MigrationDefault tpe) mods def,
     ColumnAddition comp def
-  ) => NewColumnChanges '[] ('DdlColumnK name comp mods rename delete tpe) where
+  ) => NewColumnChanges '[] ('DdlColumnK name comp mods rename renameT delete tpe) where
     newColumnChanges Nil (DdlColumn t mods) =
       columnAddition @comp @def (optMod @(MigrationDefault tpe) mods) (pgColumnName (symbolText @name)) t
 

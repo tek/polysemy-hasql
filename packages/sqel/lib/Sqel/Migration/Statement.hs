@@ -1,14 +1,17 @@
 module Sqel.Migration.Statement where
 
 import qualified Control.Monad.Trans.Writer.Strict as Mtl
-import Data.Some (Some, withSome)
+import Data.Some (Some (Some), withSome)
 import qualified Exon
 import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session
 import Hasql.Session (Session)
 import qualified Text.Show as Show
 
-import Sqel.Data.Migration (MigrationAction (ModifyType), MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
+import Sqel.Data.Migration (
+  MigrationAction (ModifyType, RenameType),
+  MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn, RenameColumnType),
+  )
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
   PgColumnName (PgColumnName),
@@ -62,17 +65,22 @@ columnStatements table typeName = \case
       (optFrag, colTypeName) = case tpe of
         ColumnPrim (PgPrimName n) _ opt -> (opt, Sql n)
         ColumnComp (PgTypeRef n) -> (mempty, Sql n)
-  RenameColumn (PgColumnName old) (PgColumnName new) ->
-    alter_ \ alter attr -> [sql|#{alter} rename #{attr} ##{old} to ##{new}|]
   RemoveColumn (PgColumnName name) _ ->
     alter_ \ alter attr -> [sql|#{alter} drop #{attr} ##{name}|]
+  RenameColumn (PgColumnName old) (PgColumnName new) ->
+    alter_ \ alter attr -> [sql|#{alter} rename #{attr} ##{old} to ##{new}|]
+  RenameColumnType (PgColumnName old) (PgTypeName new) ->
+    alter_ \ alter attr -> [sql|#{alter} alter #{attr} ##{old} set data type ##{new}|]
   where
     alter_ = alterStatement typeName () mempty
     comp = withSome typeName \ (PgTypeName n) -> Sql n
 
 actionStatements :: MigrationAction -> Mtl.Writer [MigrationStatement] ()
-actionStatements (ModifyType table name cols) =
-  traverse_ (columnStatements table name) cols
+actionStatements = \case
+  ModifyType table name cols ->
+    traverse_ (columnStatements table name) cols
+  RenameType name (PgTypeName new) ->
+    alterStatement (Some name) () mempty \ alter _ -> [sql|#{alter} rename to ##{new}|]
 
 migrationStatements :: [MigrationAction] -> [MigrationStatement]
 migrationStatements =

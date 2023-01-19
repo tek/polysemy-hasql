@@ -15,6 +15,7 @@ data DdlColumnK =
     compName :: Maybe Symbol,
     params :: [Type],
     rename :: Maybe Symbol,
+    renameType :: Maybe Symbol,
     delete :: Bool,
     tpe :: Type
   }
@@ -25,11 +26,11 @@ data DdlColumn k where
     KnownSymbol name =>
     ColumnType ->
     Mods p ->
-    DdlColumn ('DdlColumnK name comp p rename delete a)
+    DdlColumn ('DdlColumnK name comp p rename renameType delete a)
 
 instance (
     Show (Mods p)
-  ) => Show (DdlColumn ('DdlColumnK name comp p rename delete a)) where
+  ) => Show (DdlColumn ('DdlColumnK name comp p rename renameType delete a)) where
   showsPrec d (DdlColumn ctype p) =
     showParen (d > 10) [exon|DdlColumn #{showsPrec 11 (symbolString @name)} #{showsPrec 11 ctype} #{showsPrec 11 p}|]
 

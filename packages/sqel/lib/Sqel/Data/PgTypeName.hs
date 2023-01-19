@@ -1,6 +1,7 @@
 module Sqel.Data.PgTypeName where
 
 import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
+import Data.GADT.Show (GShow (gshowsPrec))
 import Exon (exon)
 import Prettyprinter (Pretty (pretty))
 
@@ -14,6 +15,8 @@ type PgTypeName :: Bool -> Type
 data PgTypeName table where
   UnsafePgTableName :: Text -> PgTypeName 'True
   UnsafePgCompName :: Text -> PgTypeName 'False
+
+instance GShow PgTypeName where gshowsPrec = showsPrec
 
 type PgTableName =
   PgTypeName 'True

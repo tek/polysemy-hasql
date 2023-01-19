@@ -1,20 +1,44 @@
 module Sqel.Data.Migration where
 
 import Data.Some (Some)
+import Exon (exon)
 import Generics.SOP (NP (Nil, (:*)), SListI, hmap)
 import Hasql.Encoders (Params)
 
 import Sqel.Data.Dd ((:>) ((:>)))
 import Sqel.Data.PgType (ColumnType, PgColumnName, PgTable)
-import Sqel.Data.PgTypeName (PgTypeName)
+import Sqel.Data.PgTypeName (PgCompName, PgTypeName)
 
 data MigrationTypeAction where
   AddColumn :: PgColumnName -> ColumnType -> Maybe (a, Params a) -> MigrationTypeAction
   RemoveColumn :: PgColumnName -> ColumnType -> MigrationTypeAction
   RenameColumn :: PgColumnName -> PgColumnName -> MigrationTypeAction
+  RenameColumnType :: PgColumnName -> PgCompName -> MigrationTypeAction
+
+instance Show MigrationTypeAction where
+  showsPrec d =
+    showParen (d > 10) . \case
+      AddColumn name tpe _ ->
+        [exon|AddColumn #{showsPrec 11 name} #{showsPrec 11 tpe}|]
+      RemoveColumn name tpe ->
+        [exon|RemoveColumn #{showsPrec 11 name} #{showsPrec 11 tpe}|]
+      RenameColumn old new ->
+        [exon|RenameColumn #{showsPrec 11 old} #{showsPrec 11 new}|]
+      RenameColumnType name new ->
+        [exon|RenameColumnType #{showsPrec 11 name} #{showsPrec 11 new}|]
 
 data MigrationAction =
   ModifyType Bool (Some PgTypeName) [MigrationTypeAction]
+  |
+  RenameType PgCompName PgCompName
+
+instance Show MigrationAction where
+  showsPrec d =
+    showParen (d > 10) . \case
+      ModifyType table name actions ->
+        [exon|ModifyType #{showsPrec 11 table} #{showsPrec 11 name} #{showsPrec 11 actions}|]
+      RenameType old new ->
+        [exon|RenameType #{showsPrec 11 old} #{showsPrec 11 new}|]
 
 data Mig =
   Mig {
