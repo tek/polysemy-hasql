@@ -30,8 +30,8 @@
   {
     "name": "dat",
     "statementsTable": [
-      "create table \"dat\" (\"id\" bigint, \"size\" bigint, \"pord\" ph_type__pord)",
-      "create type \"ph_type__pord\" as (\"p1\" bigint)"
+      "create table \"dat\" (\"id\" bigint, \"size\" bigint, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint)"
     ],
     "statementsMigration": [],
     "table": [
@@ -56,7 +56,7 @@
       [
         "pord",
         {
-          "contents": "ph_type__pord",
+          "contents": "sqel_type__pord",
           "tag": "ColumnComp"
         }
       ],
@@ -83,15 +83,15 @@
             }
           ]
         ],
-        "name": "ph_type__pord"
+        "name": "sqel_type__pord"
       }
     ]
   },
   {
     "name": "dat",
     "statementsTable": [
-      "create table \"dat\" (\"id\" bigint, \"number\" bigint, \"pord\" ph_type__pord)",
-      "create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+      "create table \"dat\" (\"id\" bigint, \"number\" bigint, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint, \"p2\" text)"
     ],
     "statementsMigration": [],
     "table": [
@@ -116,7 +116,7 @@
       [
         "pord",
         {
-          "contents": "ph_type__pord",
+          "contents": "sqel_type__pord",
           "tag": "ColumnComp"
         }
       ]
@@ -143,7 +143,7 @@
             }
           ]
         ],
-        "name": "ph_type__pord"
+        "name": "sqel_type__pord"
       },
       {
         "columns": [
@@ -166,7 +166,7 @@
             }
           ]
         ],
-        "name": "ph_type__point"
+        "name": "sqel_type__point"
       }
     ]
   },
@@ -174,8 +174,8 @@
     "name": "dat",
     "statementsMigration": [],
     "statementsTable": [
-      "create table \"dat\" (\"id\" bigint, \"name\" text, \"num\" bigint, \"pord\" ph_type__pord)",
-      "create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+      "create table \"dat\" (\"id\" bigint, \"name\" text, \"num\" bigint, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint, \"p2\" text)"
     ],
     "table": [
       [
@@ -208,7 +208,7 @@
       [
         "pord",
         {
-          "contents": "ph_type__pord",
+          "contents": "sqel_type__pord",
           "tag": "ColumnComp"
         }
       ]
@@ -235,7 +235,7 @@
             }
           ]
         ],
-        "name": "ph_type__pord"
+        "name": "sqel_type__pord"
       }
     ]
   }

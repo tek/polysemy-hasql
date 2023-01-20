@@ -6,7 +6,7 @@
       "alter table dat add column size bigint",
       "update dat set size = $1",
       "alter table dat alter column size set not null",
-      "alter table dat add column pord ph_type__pord"
+      "alter table dat add column pord sqel_type__pord"
     ],
     "statementsTable": [
       "create table \"dat\" (\"id\" bigint not null, \"old\" text not null)"
@@ -44,11 +44,11 @@
       "alter table dat add column number bigint",
       "update dat set number = $1",
       "alter table dat alter column number set not null",
-      "alter type ph_type__pord add attribute p2 text"
+      "alter type sqel_type__pord add attribute p2 text"
     ],
     "statementsTable": [
-      "create table \"dat\" (\"id\" bigint not null, \"size\" bigint not null, \"pord\" ph_type__pord)",
-      "create type \"ph_type__pord\" as (\"p1\" bigint)"
+      "create table \"dat\" (\"id\" bigint not null, \"size\" bigint not null, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint)"
     ],
     "table": [
       [
@@ -76,7 +76,7 @@
       [
         "pord",
         {
-          "contents": "ph_type__pord",
+          "contents": "sqel_type__pord",
           "tag": "ColumnComp"
         }
       ]
@@ -96,7 +96,7 @@
             }
           ]
         ],
-        "name": "ph_type__pord"
+        "name": "sqel_type__pord"
       }
     ]
   },
@@ -109,8 +109,8 @@
       "alter table dat alter column name set not null"
     ],
     "statementsTable": [
-      "create table \"dat\" (\"id\" bigint not null, \"number\" bigint not null, \"pord\" ph_type__pord)",
-      "create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+      "create table \"dat\" (\"id\" bigint not null, \"number\" bigint not null, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint, \"p2\" text)"
     ],
     "table": [
       [
@@ -138,7 +138,7 @@
       [
         "pord",
         {
-          "contents": "ph_type__pord",
+          "contents": "sqel_type__pord",
           "tag": "ColumnComp"
         }
       ]
@@ -167,7 +167,7 @@
             }
           ]
         ],
-        "name": "ph_type__pord"
+        "name": "sqel_type__pord"
       }
     ]
   },
@@ -175,8 +175,8 @@
     "name": "dat",
     "statementsMigration": [],
     "statementsTable": [
-      "create table \"dat\" (\"id\" bigint not null, \"name\" text not null, \"num\" bigint not null, \"pord\" ph_type__pord)",
-      "create type \"ph_type__pord\" as (\"p1\" bigint, \"p2\" text)"
+      "create table \"dat\" (\"id\" bigint not null, \"name\" text not null, \"num\" bigint not null, \"pord\" sqel_type__pord)",
+      "create type \"sqel_type__pord\" as (\"p1\" bigint, \"p2\" text)"
     ],
     "table": [
       [
@@ -215,7 +215,7 @@
       [
         "pord",
         {
-          "contents": "ph_type__pord",
+          "contents": "sqel_type__pord",
           "tag": "ColumnComp"
         }
       ]
@@ -244,7 +244,7 @@
             }
           ]
         ],
-        "name": "ph_type__pord"
+        "name": "sqel_type__pord"
       }
     ]
   }

@@ -117,9 +117,9 @@ migrationErrors =
   [
     "The migration table 'dat' has mismatched columns:",
     " • The column 'number' with type 'bigint' was removed.",
-    "The composite type 'ph_type__pord' has mismatched columns:",
+    "The composite type 'sqel_type__pord' has mismatched columns:",
     " • The type of the column 'p1' was changed from 'text' to 'bigint'.",
-    "The type 'ph_type__point' was removed."
+    "The type 'sqel_type__point' was removed."
   ]
 
 test_migrationErrors :: UnitTest

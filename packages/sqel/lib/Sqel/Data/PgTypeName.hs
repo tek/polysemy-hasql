@@ -87,7 +87,7 @@ pgCompName ::
   Text ->
   PgTypeName 'False
 pgCompName name =
-  UnsafePgCompName [exon|ph_type__#{dbIdentifierT name}|]
+  UnsafePgCompName [exon|sqel_type__#{dbIdentifierT name}|]
 
 instance IsString PgTableName where
   fromString =

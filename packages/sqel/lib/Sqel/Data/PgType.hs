@@ -81,7 +81,7 @@ pgTypeRef ::
   Text ->
   PgTypeRef
 pgTypeRef n =
-  PgTypeRef [exon|ph_type__#{dbIdentifierT n}|]
+  PgTypeRef [exon|sqel_type__#{dbIdentifierT n}|]
 
 pgCompRef :: PgCompName -> PgTypeRef
 pgCompRef (PgTypeName n) =
