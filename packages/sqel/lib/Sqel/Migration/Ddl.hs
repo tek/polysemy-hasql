@@ -36,7 +36,7 @@ instance (
     delete ~ MigrationDeleteK mods
   ) => DdCols ('DdK sel mods a 'Prim : ss) ('DdlColumnK name 'Nothing mods rename renameType delete a : cols) types where
     ddCols (Dd _ m@(Mods mods) DdPrim :* t) =
-      (DdlColumn (ColumnPrim (reifyPrimName @a mods) unique constr) m :* cols, types)
+      (DdlColumn Proxy (ColumnPrim (reifyPrimName @a mods) unique constr) m :* cols, types)
       where
         (unique, constr) = columnConstraints m
         (cols, types) = ddCols t
@@ -50,7 +50,7 @@ instance (
     delete ~ MigrationDeleteK mods
   ) => DdCols ('DdK ('SelSymbol name) mods a ('Comp ('SelSymbol tname) c 'Nest sub) : ss) ('DdlColumnK name ('Just tname) mods rename renameType delete a : cols) allTypes where
     ddCols (h@(Dd (SelWSymbol Proxy) mods (DdComp (SelWSymbol Proxy) _ _ _)) :* t) =
-      (DdlColumn (ColumnComp (pgTypeRefSym @tname)) mods :* tailCols, appendNP subTypes tailTypes)
+      (DdlColumn Proxy (ColumnComp (pgTypeRefSym @tname)) mods :* tailCols, appendNP subTypes tailTypes)
       where
         subTypes = ddTypes @'False @_ @hTypes h
         (tailCols, tailTypes) = ddCols t

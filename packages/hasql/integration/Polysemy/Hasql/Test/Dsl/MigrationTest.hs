@@ -51,7 +51,7 @@ data Dat0 =
 data Dat1 =
   Dat1 {
     size :: Int64,
-    pord :: PordOld
+    pordOld :: PordOld
   }
   deriving stock (Eq, Show, Generic)
 
@@ -93,10 +93,10 @@ t2 :: Dd ('DdK _ _ (Uid Int64 Dat2) _)
 t2 =
   uidAs @"dat" prim (prod (
     migrateDef 15 prim :>
-    migrateRenameType @"PordOld" (prod (
+    migrateRename @"pordOld" (migrateRenameType @"PordOld" (prod (
       prim :>
       primNullable
-    ))
+    )))
   ))
 
 tcur :: Dd ('DdK _ _ (Uid Int64 Dat) _)

@@ -1,6 +1,6 @@
 module Sqel.Migration.Column where
 
-import Generics.SOP (NP (Nil, (:*)))
+import Generics.SOP (NP (Nil, (:*)), hd, tl)
 import qualified Hasql.Encoders as Encoders
 
 import Sqel.Class.Mods (OptMod (optMod))
@@ -11,66 +11,79 @@ import Sqel.Data.PgType (ColumnType, PgColumnName, pgColumnName)
 import Sqel.Migration.Data.Ddl (DdlColumn (DdlColumn), DdlColumnK (DdlColumnK))
 import Sqel.SOP.Constraint (symbolText)
 
-type ColumnChange :: DdlColumnK -> DdlColumnK -> Constraint
-class ColumnChange old new where
-  columnChange :: DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
+data OldK =
+  OldK {
+    name :: Symbol,
+    comp :: Maybe Symbol,
+    delete :: Bool
+  }
 
-instance ColumnChange ('DdlColumnK name 'Nothing modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name 'Nothing modsNew renameNew renameTNew deleteNew typeOld) where
-  columnChange _ _ = mempty
+data NewK =
+  NewK {
+    index :: Nat,
+    name :: Symbol,
+    comp :: Maybe Symbol,
+    rename :: Maybe Symbol,
+    renameType :: Maybe Symbol
+  }
 
-instance ColumnChange ('DdlColumnK name ('Just tname) modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name ('Just tname) modsNew renameNew renameTNew deleteNew typeNew) where
-  columnChange _ _ = mempty
+data ModK =
+  KeepK
+  |
+  AddK
+  |
+  RenameK
 
-instance (
-    -- KnownSymbol compNew
-  ) => ColumnChange ('DdlColumnK name ('Just compOld) modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name ('Just compNew) modsNew renameNew ('Just compOld) delNew typeNew) where
-    columnChange (DdlColumn _ _) (DdlColumn _ _) =
-      mempty
-      -- [RenameColumnType (pgColumnName (symbolText @name)) (pgCompName (symbolText @compNew))]
+data ActionK =
+  ActionK {
+    mod :: ModK,
+    index :: Nat
+  }
+  |
+  RemoveK
 
--- TODO error message when no column match was found for remove or rename
-type OldColumnChanges :: DdlColumnK -> [DdlColumnK] -> Constraint
-class OldColumnChanges old new where
-  oldColumnChanges :: DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+type family OldKs (index :: Nat) (cols :: [DdlColumnK]) :: [OldK] where
+  OldKs _ '[] = '[]
+  OldKs index ('DdlColumnK name comp _ _ _ delete _ : cols) =
+    'OldK name comp delete : OldKs (index + 1) cols
 
--- TODO this needs the fields to be preprocessed by a tyfam
-instance (
-    ColumnChange ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name compNew modsNew renameNew renameTNew deleteNew typeNew)
-  ) => OldColumnChanges ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK name compNew modsNew renameNew renameTNew deleteNew typeNew : new) where
-    oldColumnChanges old (new :* _) =
-      columnChange old new
+type family NewKs (index :: Nat) (cols :: [DdlColumnK]) :: [NewK] where
+  NewKs _ '[] = '[]
+  NewKs index ('DdlColumnK name comp _ rename renameType _ _ : cols) =
+    'NewK index name comp rename renameType : NewKs (index + 1) cols
 
--- TODO this should probably continue with the rest of the mods, specifying the new name, so that for example both type
--- and column may be renamed
--- this would require a flag indicating whether the column was matched, to be used by the removal instance
-instance OldColumnChanges ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK nameNew compNew modsNew ('Just name) renameTNew delNew typeNew : new) where
-    oldColumnChanges (DdlColumn _ _) (DdlColumn _ _ :* _) =
-      [RenameColumn (pgColumnName (symbolText @name)) (pgColumnName (symbolText @nameNew))]
+-- TODO this reverses the other list every time
+type family MkMigrationAction (old :: OldK) (check :: [NewK]) (other :: [NewK]) :: (ActionK, [NewK]) where
+  MkMigrationAction ('OldK _ _ 'True) '[] other =
+    '( 'RemoveK, other)
+  MkMigrationAction ('OldK name comp 'False) ('NewK index name comp 'Nothing 'Nothing : news) other =
+    '( 'ActionK 'KeepK index, news ++ other)
+  MkMigrationAction ('OldK oldName comp 'False) ('NewK index _ comp ('Just oldName) 'Nothing : news) other =
+    '( 'ActionK 'RenameK index, news ++ other)
+  MkMigrationAction ('OldK oldName ('Just oldComp) 'False) ('NewK index newName _ rename ('Just oldComp) : news) other =
+    MkMigrationAction ('OldK oldName ('Just oldComp) 'False) ('NewK index newName ('Just oldComp) rename 'Nothing : news) other
+  MkMigrationAction old (new : news) other =
+    MkMigrationAction old news (new : other)
+  MkMigrationAction old '[] other =
+    TypeError ("MkMigrationAction:" % old % other)
 
--- TODO error message when delete is False
-instance OldColumnChanges ('DdlColumnK name comp modsOld rename renameT 'True tpe) '[] where
-  oldColumnChanges (DdlColumn t _) Nil =
-    [RemoveColumn (pgColumnName (symbolText @name)) t]
+type family NewMigrationActions (cols :: [NewK]) :: [ActionK] where
+  NewMigrationActions '[] = '[]
+  NewMigrationActions ('NewK index _ _ 'Nothing 'Nothing : news) =
+    'ActionK 'AddK index : NewMigrationActions news
+  NewMigrationActions cols = TypeError ("NewMigrationActions:" % cols)
 
-instance {-# overlappable #-} (
-    OldColumnChanges old new
-  ) => OldColumnChanges old (n : new) where
-    oldColumnChanges old (_ :* new) =
-      oldColumnChanges old new
+type family MigrationActionsCont (cur :: (ActionK, [NewK])) (old :: [OldK]) :: [ActionK] where
+  MigrationActionsCont '(cur, new) old = cur : MigrationActions old new
 
-type OldColumnsChanges :: [DdlColumnK] -> [DdlColumnK] -> Constraint
-class OldColumnsChanges old new where
-  oldColumnsChanges :: NP DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
-
-instance OldColumnsChanges '[] new where
-  oldColumnsChanges _ _ = mempty
-
-instance (
-    OldColumnChanges o new,
-    OldColumnsChanges old new
-  ) => OldColumnsChanges (o : old) new where
-    oldColumnsChanges (o :* old) new =
-      oldColumnChanges o new <> oldColumnsChanges old new
+-- TODO removing could be done implicitly, given that only renaming really _necessitates_ explicit marking.
+-- The only reason to not do that is to avoid mistakes, but that seems exaggerated since we use unit tests for checking
+-- consistency anyway, and integration tests to ensure the tables work
+type family MigrationActions (old :: [OldK]) (new :: [NewK]) :: [ActionK] where
+  MigrationActions '[] rest =
+    NewMigrationActions rest
+  MigrationActions (old : olds) new =
+    MigrationActionsCont (MkMigrationAction old new '[]) olds
 
 class ColumnAddition (comp :: Maybe Symbol) (def :: Type) where
   columnAddition :: def -> PgColumnName -> ColumnType -> [MigrationTypeAction]
@@ -91,51 +104,90 @@ instance (
     where
       md = Just (a, Encoders.param (Encoders.nonNullable (primEncoder @a)))
 
-type NewColumnChanges :: [DdlColumnK] -> DdlColumnK -> Constraint
-class NewColumnChanges old new where
-  newColumnChanges :: NP DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
+class ColIndex index cols col | index cols -> col where
+  colIndex :: NP f cols -> f col
 
--- TODO matching the name here is duplicated in ColumnChange, should be ignored there?
-instance (
-    ColumnChange ('DdlColumnK tname comp modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK tname comp modsNew 'Nothing renameTNew deleteNew typeNew)
-  ) => NewColumnChanges ('DdlColumnK tname comp modsOld renameOld renameTOld deleteOld typeOld : old) ('DdlColumnK tname comp modsNew 'Nothing renameTNew deleteNew typeNew) where
-    newColumnChanges (old :* _) new =
-      columnChange old new
-
-instance NewColumnChanges ('DdlColumnK tname ('Just compOld) modsOld renameOld renameTOld deleteOld typeOld : old) ('DdlColumnK tname compNew modsNew renameNew ('Just compOld) deleteNew typeNew) where
-    newColumnChanges _ _ =
-      mempty
-
-instance NewColumnChanges ('DdlColumnK tnameOld comp modsOld renameOld renameTOld deleteOld typeOld : old) ('DdlColumnK tnameNew comp modsNew ('Just tnameOld) renameTNew deleteNew typeNew) where
-    newColumnChanges _ _ =
-      mempty
-
-instance (
-    OptMod (MigrationDefault tpe) mods def,
-    ColumnAddition comp def
-  ) => NewColumnChanges '[] ('DdlColumnK name comp mods rename renameT delete tpe) where
-    newColumnChanges Nil (DdlColumn t mods) =
-      columnAddition @comp @def (optMod @(MigrationDefault tpe) mods) (pgColumnName (symbolText @name)) t
+instance ColIndex 0 (col : cols) col where
+  colIndex = hd
 
 instance {-# overlappable #-} (
-    NewColumnChanges old new
-  ) => NewColumnChanges (o : old) new where
-    newColumnChanges (_ :* old) new =
-      newColumnChanges old new
+    ColIndex (n - 1) cols col
+  ) => ColIndex n (c : cols) col where
+  colIndex = colIndex @(n - 1) . tl
 
--- TODO this has to check that new columns in composite types are
--- a) at the end of the list
--- b) Maybe
-type NewColumnsChanges :: [DdlColumnK] -> [DdlColumnK] -> Constraint
-class NewColumnsChanges old new where
-  newColumnsChanges :: NP DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+type ReifyModAction :: ModK -> DdlColumnK -> DdlColumnK -> Constraint
+class ReifyModAction action old new where
+  reifyModAction :: DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
 
-instance NewColumnsChanges old '[] where
-  newColumnsChanges _ _ = mempty
+instance ReifyModAction 'KeepK old new where
+  reifyModAction _ _ = []
+
+instance ReifyModAction 'RenameK ('DdlColumnK name compOld modsOld renameOld renameTOld deleteOld typeOld) ('DdlColumnK nameNew compNew modsNew ('Just name) renameTNew delNew typeNew) where
+  reifyModAction (DdlColumn Proxy _ _) (DdlColumn Proxy _ _) =
+    [RenameColumn (pgColumnName (symbolText @name)) (pgColumnName (symbolText @nameNew))]
+
+type ReifyOldAction :: ActionK -> DdlColumnK -> [DdlColumnK] -> Constraint
+class ReifyOldAction action old new where
+  reifyOldAction :: DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
 
 instance (
-    NewColumnChanges old n,
-    NewColumnsChanges old new
-  ) => NewColumnsChanges old (n : new) where
-    newColumnsChanges old (n :* new) =
-      newColumnChanges old n <> newColumnsChanges old new
+    ColIndex index news new,
+    ReifyModAction mod old new
+  ) => ReifyOldAction ('ActionK mod index) old news where
+  reifyOldAction old news =
+    reifyModAction @mod old new
+    where
+      new = colIndex @index news
+
+instance ReifyOldAction 'RemoveK old new where
+  reifyOldAction (DdlColumn (Proxy :: Proxy name) t _) _ =
+    [RemoveColumn (pgColumnName (symbolText @name)) t]
+
+-- -- TODO this has to check that new columns in composite types are
+-- -- a) at the end of the list
+-- -- b) Maybe
+type ReifyNewAction :: ActionK -> [DdlColumnK] -> Constraint
+class ReifyNewAction action new where
+  reifyNewAction :: NP DdlColumn new -> [MigrationTypeAction]
+
+instance (
+    ColIndex index news ('DdlColumnK name comp mods rename renameT delete tpe),
+    OptMod (MigrationDefault tpe) mods def,
+    ColumnAddition comp def
+  ) => ReifyNewAction ('ActionK 'AddK index) news where
+  reifyNewAction news =
+    case colIndex @index news of
+      DdlColumn (Proxy :: Proxy name) t mods ->
+        columnAddition @comp @def (optMod @(MigrationDefault tpe) mods) (pgColumnName (symbolText @name)) t
+
+type ReifyActions :: [ActionK] -> [DdlColumnK] -> [DdlColumnK] -> Constraint
+class ReifyActions actions old new where
+  reifyActions :: NP DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+
+instance ReifyActions '[] '[] new where
+  reifyActions _ _ =
+    mempty
+
+instance (
+    ReifyNewAction action new,
+    ReifyActions actions '[] new
+  ) => ReifyActions (action : actions) '[] new where
+  reifyActions Nil new =
+    reifyNewAction @action new <> reifyActions @actions Nil new
+
+instance (
+    ReifyOldAction action o new,
+    ReifyActions actions old new
+  ) => ReifyActions (action : actions) (o : old) new where
+    reifyActions (o :* old) new =
+      reifyOldAction @action o new <> reifyActions @actions old new
+
+type ColumnsChanges :: [DdlColumnK] -> [DdlColumnK] -> Constraint
+class ColumnsChanges old new where
+  columnsChanges :: NP DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+
+instance (
+    actions ~ MigrationActions (OldKs 0 old) (NewKs 0 new),
+    ReifyActions actions old new
+  ) => ColumnsChanges old new where
+      columnsChanges = reifyActions @actions

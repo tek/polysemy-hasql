@@ -3,19 +3,10 @@ module Sqel.Migration.Type where
 import Data.Some (Some (Some))
 import Generics.SOP (NP ((:*)))
 
-import Sqel.Data.Migration (MigrationAction (ModifyType, RenameType), MigrationTypeAction)
-import Sqel.Migration.Column (NewColumnsChanges (newColumnsChanges), OldColumnsChanges (oldColumnsChanges))
-import Sqel.Migration.Data.Ddl (DdlColumn, DdlType (DdlType), DdlTypeK (DdlTypeK))
+import Sqel.Data.Migration (MigrationAction (ModifyType, RenameType))
+import Sqel.Migration.Column (ColumnsChanges (columnsChanges))
+import Sqel.Migration.Data.Ddl (DdlType (DdlType), DdlTypeK (DdlTypeK))
 import Sqel.SOP.HasGeneric (BoolVal (boolVal))
-
-typeColsChanges ::
-  OldColumnsChanges old new =>
-  NewColumnsChanges old new =>
-  NP DdlColumn old ->
-  NP DdlColumn new ->
-  [MigrationTypeAction]
-typeColsChanges colsOld colsNew =
-  oldColumnsChanges colsOld colsNew <> newColumnsChanges colsOld colsNew
 
 type TypeChange :: DdlTypeK -> DdlTypeK -> Constraint
 class TypeChange old new where
@@ -28,11 +19,10 @@ instance TypeChange ('DdlTypeK table tname renameOld cols) ('DdlTypeK table tnam
 
 instance {-# overlappable #-} (
     BoolVal table,
-    OldColumnsChanges colsOld colsNew,
-    NewColumnsChanges colsOld colsNew
+    ColumnsChanges colsOld colsNew
   ) => TypeChange ('DdlTypeK table tname renameOld colsOld) ('DdlTypeK table tname renameNew colsNew) where
   typeChange (DdlType name colsOld) (DdlType _ colsNew) =
-    [ModifyType (boolVal @table) (Some name) (typeColsChanges colsOld colsNew)]
+    [ModifyType (boolVal @table) (Some name) (columnsChanges colsOld colsNew)]
 
 type OldTypeChanges :: DdlTypeK -> [DdlTypeK] -> Constraint
 class OldTypeChanges old new where
@@ -45,11 +35,10 @@ instance (
       typeChange old new
 
 instance (
-    OldColumnsChanges colsOld colsNew,
-    NewColumnsChanges colsOld colsNew
+    ColumnsChanges colsOld colsNew
   ) => OldTypeChanges ('DdlTypeK 'False tnameOld renameOld colsOld) ('DdlTypeK 'False tnameNew ('Just tnameOld) colsNew : new) where
     oldTypeChanges (DdlType nameOld colsOld) (DdlType nameNew colsNew :* _) =
-      RenameType nameOld nameNew : [ModifyType False (Some nameNew) (typeColsChanges colsOld colsNew)]
+      RenameType nameOld nameNew : [ModifyType False (Some nameNew) (columnsChanges colsOld colsNew)]
 
 instance {-# overlappable #-} (
     OldTypeChanges old new

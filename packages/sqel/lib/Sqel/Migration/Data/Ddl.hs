@@ -24,6 +24,7 @@ type DdlColumn :: DdlColumnK -> Type
 data DdlColumn k where
   DdlColumn ::
     KnownSymbol name =>
+    Proxy name ->
     ColumnType ->
     Mods p ->
     DdlColumn ('DdlColumnK name comp p rename renameType delete a)
@@ -31,7 +32,7 @@ data DdlColumn k where
 instance (
     Show (Mods p)
   ) => Show (DdlColumn ('DdlColumnK name comp p rename renameType delete a)) where
-  showsPrec d (DdlColumn ctype p) =
+  showsPrec d (DdlColumn Proxy ctype p) =
     showParen (d > 10) [exon|DdlColumn #{showsPrec 11 (symbolString @name)} #{showsPrec 11 ctype} #{showsPrec 11 p}|]
 
 data DdlTypeK =
