@@ -15,7 +15,7 @@ import Sqel.Data.Mods (
   unSetTableName,
   )
 import Sqel.Data.PgType (PgPrimName, pgColumnName)
-import Sqel.Data.Sel (ReifySel (reifySel), Sel (SelSymbol), SelW (SelWSymbol))
+import Sqel.Data.Sel (ReifySel (reifySel), Sel (SelType), SelW (SelWSymbol, SelWType))
 import qualified Sqel.Data.Term as Term
 import Sqel.Data.Term (DdTerm (DdTerm), demoteComp, demoteInc)
 import Sqel.SOP.Constraint (symbolText)
@@ -68,11 +68,11 @@ instance (
 instance (
     MaybeMod SetTableName mods,
     All ReifyDd sub
-  ) => ReifyDd ('DdK sel mods a ('Comp ('SelSymbol tname) c i sub)) where
-    reifyDd (Dd sel mods (DdComp (SelWSymbol Proxy) c i sub)) =
+  ) => ReifyDd ('DdK sel mods a ('Comp ('SelType tprefix tname) c i sub)) where
+    reifyDd (Dd sel mods (DdComp (SelWType (Proxy :: Proxy '(tname, tpe))) c i sub)) =
       DdTerm (pgColumnName name) (unSetTableName <$> maybeMod mods) (Term.Comp typeName (demoteComp c) (demoteInc i) (hcfoldMap (Proxy @ReifyDd) (pure . reifyDd) sub))
       where
         name = case sel of
           SelWSymbol (Proxy :: Proxy name) -> symbolText @name
           _ -> symbolText @tname
-        typeName = symbolText @tname
+        typeName = symbolText @tpe

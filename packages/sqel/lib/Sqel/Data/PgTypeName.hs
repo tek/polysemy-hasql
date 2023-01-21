@@ -5,6 +5,7 @@ import Data.GADT.Show (GShow (gshowsPrec))
 import Exon (exon)
 import Prettyprinter (Pretty (pretty))
 
+import Sqel.Data.Sel (SelPrefix (DefaultPrefix), TypeName)
 import Sqel.Data.Sql (ToSql (toSql), sql, sqlQuote)
 import Sqel.SOP.Constraint (symbolText)
 import Sqel.Sql.From (From (From))
@@ -82,12 +83,11 @@ pgTableName ::
 pgTableName =
   UnsafePgTableName . dbIdentifierT
 
--- TODO store prefix in Sel like SelIndex
 pgCompName ::
   Text ->
   PgTypeName 'False
 pgCompName name =
-  UnsafePgCompName [exon|sqel_type__#{dbIdentifierT name}|]
+  UnsafePgCompName (dbIdentifierT name)
 
 instance IsString PgTableName where
   fromString =
@@ -100,16 +100,16 @@ instance IsString PgCompName where
 instance Ord (PgTypeName table) where
   compare = comparing unsafePgTypeName
 
-type MkPgTypeName :: Symbol -> Bool -> Constraint
-class MkPgTypeName name table where
+type MkPgTypeName :: SelPrefix -> Symbol -> Bool -> Symbol -> Constraint
+class KnownSymbol tname => MkPgTypeName prefix name table tname | prefix name table -> tname where
   pgTypeName :: PgTypeName table
 
 instance (
     KnownSymbol name
-  ) => MkPgTypeName name 'True where
+  ) => MkPgTypeName 'DefaultPrefix name 'True name where
     pgTypeName = pgTableName (symbolText @name)
 
 instance (
-    KnownSymbol name
-  ) => MkPgTypeName name 'False where
-    pgTypeName = pgCompName (symbolText @name)
+    TypeName prefix name tname
+  ) => MkPgTypeName prefix name 'False tname where
+    pgTypeName = pgCompName (symbolText @tname)

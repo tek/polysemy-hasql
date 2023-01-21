@@ -60,8 +60,6 @@ library
       Sqel.Migration.Type
       Sqel.Mods
       Sqel.Names
-      Sqel.Names.Amend
-      Sqel.Names.Comp
       Sqel.Names.Data
       Sqel.Names.Error
       Sqel.Names.Rename

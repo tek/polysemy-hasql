@@ -5,7 +5,7 @@ import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
 
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp, Prim))
-import Sqel.Data.Sel (Sel (SelIndex, SelSymbol))
+import Sqel.Data.Sel (Sel (SelIndex, SelSymbol, SelType), SelPrefix (DefaultPrefix))
 import Sqel.Names.Error (CountMismatch, NoPrimType)
 
 type SetSel :: DdK -> Sel -> DdK
@@ -31,7 +31,7 @@ type family SetNamesFor desc a ss names where
 type SetTypeName :: DdK -> Symbol -> DdK
 type family SetTypeName s name where
   SetTypeName ('DdK sel p t ('Comp _ c i sub)) n =
-    'DdK sel p t ('Comp ('SelSymbol n) c i sub)
+    'DdK sel p t ('Comp ('SelType 'DefaultPrefix n) c i sub)
   SetTypeName ('DdK _ _ t 'Prim) _ =
     NoPrimType t
   SetTypeName s _ =

@@ -22,7 +22,6 @@ import Sqel.Data.PgType (
   StructureType (StructureComp, StructurePrim),
   TableSelectors (TableSelectors),
   TableValues (TableValues),
-  pgColumnName,
   pgCompRef,
   )
 import Sqel.Data.PgTypeName (PgTableName, pgCompName, pgTableName)
@@ -108,8 +107,8 @@ toTable = \case
     where
       cols = PgColumns [(name, ColumnPrim t unique constr)]
       struct = PgStructure [(name, StructurePrim t unique constr)]
-  DdTerm _ tableName (Comp typeName c i sub) ->
-    mkTable (pgColumnName typeName) tableName cols types paths struct
+  DdTerm name tableName (Comp typeName c i sub) ->
+    mkTable name tableName cols types paths struct
     where
       (PgComposite _ cols, struct, types, _, paths) = comp typeName c i sub
 

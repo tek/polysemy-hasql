@@ -6,8 +6,9 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Effect.Store (Store)
 import Prelude hiding (Queue, listen)
 import Sqel.Codec (PrimColumn)
-import Sqel.Data.Dd (DbTypeName)
+import Sqel.Comp (CompName)
 import Sqel.Data.QuerySchema (QuerySchema)
+import Sqel.Data.Sel (Sel (SelType))
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uuid)
 import Sqel.PgType (tableSchema)
@@ -29,7 +30,7 @@ instance (
     ToJSON d,
     FromJSON d,
     PrimColumn t,
-    DbTypeName d name,
+    CompName d ('SelType prefix name),
     KnownSymbol (AppendSymbol "Queued" name)
   ) => StoreTable t d where
   storeTable =

@@ -1,7 +1,7 @@
 module Polysemy.Hasql.Queue.Data.Queued where
 
-import Sqel.Data.Dd (DbTypeName (dbTypeName))
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol))
+import Sqel.Comp (CompName (compName))
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelType), SelPrefix (NoPrefix))
 
 data Queued t a =
   Queued {
@@ -11,8 +11,9 @@ data Queued t a =
   deriving stock (Eq, Show, Generic)
 
 instance (
-    DbTypeName d inner,
+    CompName d ('SelType prefix inner),
     name ~ AppendSymbol "Queued" inner,
-    MkSel ('SelSymbol name)
-  ) => DbTypeName (Queued t d) name where
-    dbTypeName = mkSel
+    sel ~ 'SelType 'NoPrefix name,
+    MkSel sel
+  ) => CompName (Queued t d) sel where
+  compName = mkSel

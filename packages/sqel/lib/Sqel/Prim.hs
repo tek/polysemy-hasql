@@ -23,7 +23,12 @@ import Sqel.Data.Mods (
   ReadShowColumn,
   )
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.Data.Sel (IndexName, Sel (SelAuto, SelIndex, SelSymbol, SelUnused), SelW (SelWAuto, SelWIndex))
+import Sqel.Data.Sel (
+  IndexName,
+  Sel (SelAuto, SelIndex, SelSymbol, SelUnused),
+  SelPrefix (DefaultPrefix),
+  SelW (SelWAuto, SelWIndex),
+  )
 import Sqel.Mods (PrimValueCodec, primEnumMods, primJsonMods, primReadShowMods)
 import Sqel.Names (named, selAs)
 import Sqel.SOP.Constraint (ProductGCode)
@@ -34,7 +39,7 @@ type IndexColumnWith prefix name =
   'DdK ('SelIndex prefix name) NoMods Int64 'Prim
 
 type IndexColumn name =
-  IndexColumnWith 'Nothing name
+  IndexColumnWith 'DefaultPrefix name
 
 column :: Mods p -> Dd ('DdK 'SelAuto p a 'Prim)
 column m =
@@ -92,7 +97,7 @@ primCoerce =
 
 primIndex ::
   ∀ tpe name .
-  IndexName 'Nothing tpe name =>
+  IndexName 'DefaultPrefix tpe name =>
   Dd (IndexColumn tpe)
 primIndex =
   Dd (SelWIndex Proxy) NoMods DdPrim

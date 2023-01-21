@@ -8,7 +8,7 @@ import Sqel.Data.MigrationParams (MigrationDeleteK, MigrationRenameK, MigrationR
 import Sqel.Data.Mods (Mods (Mods))
 import Sqel.Data.PgType (ColumnType (ColumnComp, ColumnPrim), pgTypeRefSym)
 import Sqel.Data.PgTypeName (MkPgTypeName (pgTypeName))
-import Sqel.Data.Sel (ReifySel, Sel (SelSymbol), SelW (SelWSymbol))
+import Sqel.Data.Sel (ReifySel, Sel (SelSymbol, SelType), SelW (SelWSymbol, SelWType), TypeName)
 import Sqel.Migration.Data.Ddl (DdlColumn (DdlColumn), DdlColumnK (DdlColumnK), DdlType (DdlType), DdlTypeK (DdlTypeK))
 import Sqel.ReifyDd (ReifyPrimName (reifyPrimName))
 
@@ -42,15 +42,16 @@ instance (
         (cols, types) = ddCols t
 
 instance (
-    DdlTypes 'False ('DdK ('SelSymbol name) mods a ('Comp ('SelSymbol tname) c 'Nest sub)) hTypes,
+    DdlTypes 'False ('DdK ('SelSymbol name) mods a ('Comp ('SelType tprefix tname) c 'Nest sub)) hTypes,
     DdCols ss cols types,
     allTypes ~ hTypes ++ types,
     rename ~ MigrationRenameK mods,
     renameType ~ MigrationRenameTypeK mods,
-    delete ~ MigrationDeleteK mods
-  ) => DdCols ('DdK ('SelSymbol name) mods a ('Comp ('SelSymbol tname) c 'Nest sub) : ss) ('DdlColumnK name ('Just tname) mods rename renameType delete a : cols) allTypes where
-    ddCols (h@(Dd (SelWSymbol Proxy) mods (DdComp (SelWSymbol Proxy) _ _ _)) :* t) =
-      (DdlColumn Proxy (ColumnComp (pgTypeRefSym @tname)) mods :* tailCols, appendNP subTypes tailTypes)
+    delete ~ MigrationDeleteK mods,
+    TypeName tprefix tname pgName
+  ) => DdCols ('DdK ('SelSymbol name) mods a ('Comp ('SelType tprefix tname) c 'Nest sub) : ss) ('DdlColumnK name ('Just pgName) mods rename renameType delete a : cols) allTypes where
+    ddCols (h@(Dd (SelWSymbol Proxy) mods (DdComp (SelWType Proxy) _ _ _)) :* t) =
+      (DdlColumn Proxy (ColumnComp (pgTypeRefSym @pgName)) mods :* tailCols, appendNP subTypes tailTypes)
       where
         subTypes = ddTypes @'False @_ @hTypes h
         (tailCols, tailTypes) = ddCols t
@@ -60,7 +61,7 @@ instance (
     DdCols ss cols types,
     allCols ~ mergeCols ++ cols,
     allTypes ~ subTypes ++ types
-  ) => DdCols ('DdK sel mods a ('Comp ('SelSymbol tname) c 'Merge sub) : ss) allCols allTypes where
+  ) => DdCols ('DdK sel mods a ('Comp ('SelType tprefix tname) c 'Merge sub) : ss) allCols allTypes where
     ddCols (Dd _ _ (DdComp _ _ _ sub) :* t) =
       (appendNP subCols tailCols, appendNP subTypes tailTypes)
       where
@@ -74,10 +75,10 @@ class DdlTypes table s types | table s -> types where
 instance (
     DdCols sub cols types,
     rename ~ MigrationRenameTypeK mods,
-    MkPgTypeName tname table
-  ) => DdlTypes table ('DdK sel mods a ('Comp ('SelSymbol tname) c i sub)) ('DdlTypeK table tname rename cols : types) where
-  ddTypes (Dd _ _ (DdComp (SelWSymbol Proxy) _ _ sub)) =
-    DdlType (pgTypeName @tname) cols :* types
+    MkPgTypeName tprefix tname table pgName
+  ) => DdlTypes table ('DdK sel mods a ('Comp ('SelType tprefix tname) c i sub)) ('DdlTypeK table pgName rename cols : types) where
+  ddTypes (Dd _ _ (DdComp (SelWType Proxy) _ _ sub)) =
+    DdlType (pgTypeName @tprefix @tname) cols :* types
     where
       (cols, types) = ddCols sub
 

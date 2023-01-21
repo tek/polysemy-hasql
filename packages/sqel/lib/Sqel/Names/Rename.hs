@@ -4,7 +4,11 @@ import qualified Generics.SOP as SOP
 import Generics.SOP (AllZipN, HTrans (htrans), NP)
 
 import Sqel.Data.Dd (CompInc (Merge), Dd (Dd), DdK (DdK), DdStruct (DdComp), Struct (Comp, Prim))
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelW (SelWAuto, SelWSymbol, SelWUnused))
+import Sqel.Data.Sel (
+  Sel (SelAuto, SelSymbol, SelType, SelUnused),
+  SelW (SelWAuto, SelWSymbol, SelWType, SelWUnused),
+  TypeName,
+  )
 
 type RenameSel :: Sel -> Sel -> Constraint
 class RenameSel s0 s1 where
@@ -26,6 +30,11 @@ instance RenameSel s0 'SelUnused where
 instance RenameSel s0 'SelAuto where
   renameSel _ = SelWAuto
 
+instance (
+    TypeName prefix tpe name
+  ) => RenameSel s0 ('SelType prefix tpe) where
+  renameSel _ = SelWType Proxy
+
 type Rename :: DdK -> DdK -> Constraint
 class Rename s0 s1 where
   rename :: Dd s0 -> Dd s1
@@ -45,7 +54,7 @@ instance {-# overlappable #-} (
 
 instance Rename ('DdK sel p t ('Comp tsel c 'Merge sub)) ('DdK sel p t ('Comp tsel c 'Merge sub)) where
     rename (Dd sel p (DdComp tsel c i s)) =
-      Dd (renameSel sel) p (DdComp (renameSel tsel) c i s)
+      Dd sel p (DdComp tsel c i s)
 
 type RenameN :: ((DdK -> Type) -> k -> Type) -> k -> k -> Constraint
 class RenameN h s0 s1 where

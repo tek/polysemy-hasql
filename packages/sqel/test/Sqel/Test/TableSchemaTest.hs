@@ -28,5 +28,5 @@ schema =
 
 test_tableSchema :: TestT IO ()
 test_tableSchema = do
-  "tab" === showTypeSel dd
+  "<type name for sqel_type__tab>" === showTypeSel dd
   "tab" === schema ^. #pg . #name

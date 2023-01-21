@@ -36,7 +36,7 @@ import Sqel.Data.Mods (
   Nullable (Nullable),
   ReadShowColumn (ReadShowColumn),
   )
-import Sqel.Data.Sel (Sel (SelSymbol))
+import Sqel.Data.Sel (Sel (SelType))
 import Sqel.Mods (PrimCodec (PrimCodec), PrimValueCodec, PrimValueEncoder)
 import Sqel.SOP.Enum (EnumTable)
 
@@ -253,6 +253,6 @@ instance (
 instance (
     AllZip (ReifyCodec b) sub as,
     ReifyCompCodec b c i ps as a
-  ) => ReifyCodec b ('DdK sel ps a ('Comp ('SelSymbol tname) c i sub)) a where
+  ) => ReifyCodec b ('DdK sel ps a ('Comp ('SelType tprefix tname) c i sub)) a where
     reifyCodec (Dd _ (Mods ps) (DdComp _ _ _ sub)) =
       reifyCompCodec @b @c @i @ps @as ps (htrans (Proxy @(ReifyCodec b)) reifyCodec sub)

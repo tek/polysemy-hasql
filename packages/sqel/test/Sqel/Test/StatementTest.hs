@@ -10,9 +10,9 @@ import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
 import Sqel.Class.MatchView (HasColumn)
+import Sqel.Comp (CompName (compName))
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (
-  DbTypeName (dbTypeName),
   Dd (Dd),
   DdInc (DdNest),
   DdK (DdK),
@@ -27,7 +27,7 @@ import Sqel.Data.Dd (
 import Sqel.Data.Mods (pattern NoMods)
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelSymbol), SelW (SelWAuto))
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelType), SelW (SelWAuto), SelPrefix (DefaultPrefix))
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Sql (Sql, sql, toSql)
 import Sqel.Data.TableSchema (TableSchema)
@@ -156,8 +156,8 @@ data Wrap a =
   Wrap { wrapped :: a, length :: Int64 }
   deriving stock (Eq, Show, Generic)
 
-instance DbTypeName a name => DbTypeName (Wrap a) name where
-  dbTypeName = dbTypeName @a
+instance CompName a name => CompName (Wrap a) name where
+  compName = compName @a
 
 type WrapDd sa =
   TypeName (DdTypeName sa) (Prod (Wrap (DdType sa))) *> (
@@ -169,7 +169,7 @@ schema_higherOrder ::
   ∀ s0 table a sel mods s .
   s0 ~ 'DdK sel mods a s =>
   table ~ WrapDd s0 =>
-  MkSel ('SelSymbol (DdTypeName s0)) =>
+  MkSel ('SelType 'DefaultPrefix (DdTypeName s0)) =>
   MkTableSchema table =>
   Dd s0 ->
   TableSchema (Wrap a)
@@ -190,9 +190,9 @@ test_statement_higherOrder =
 
 statement_query_higherOrder ::
   ∀ a s0 table mods tsel c i s .
-  s0 ~ 'DdK 'SelAuto mods a ('Comp ('SelSymbol tsel) c i s) =>
+  s0 ~ 'DdK 'SelAuto mods a ('Comp ('SelType 'DefaultPrefix tsel) c i s) =>
   table ~ UidDd (Prim "id" Int64) (WrapDd s0) =>
-  DbTypeName a tsel =>
+  CompName a ('SelType 'DefaultPrefix tsel) =>
   MkTableSchema table =>
   HasColumn ["two", "name"] Text table =>
   Dd s0 ->
@@ -203,7 +203,8 @@ statement_query_higherOrder wrapped@(Dd _ _ (DdComp tsel _ _ _)) =
     ts :: TableSchema (Uid Int64 (Wrap a))
     ts = tableSchema dd
     qs :: QuerySchema QWrap (Uid Int64 (Wrap a))
-    qs = checkQuery (prod (prod prim)) dd
+    qs = checkQuery q dd
+    q = prod (prod prim)
     dd :: Dd table
     dd = uid prim pro
     pro = Dd SelWAuto NoMods (DdComp tsel DdProd DdNest fields)
@@ -234,7 +235,7 @@ test_statement_merge_query_higherOrder =
   target_merge_query_higherOrder === statement_query_higherOrder ddMerge1
 
 ddWrap ::
-  DbTypeName (DdType s) (DdTypeName s) =>
+  CompName (DdType s) ('SelType 'DefaultPrefix (DdTypeName s)) =>
   ProductItem ('ProductField "wrapped" (DdType s)) (Dd (Merge s)) (Merge s) =>
   Dd s ->
   Dd (WrapDd s)
@@ -244,7 +245,7 @@ ddWrap wrapped =
 ddHigherOrder2 ::
   ∀ s merged .
   merged ~ T.Merge s =>
-  DbTypeName (DdType s) (DdTypeName s) =>
+  CompName (DdType s) ('SelType 'DefaultPrefix (DdTypeName s)) =>
   ProductItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
@@ -258,7 +259,7 @@ ddUidWrapPro =
 higherOrder2 ::
   ∀ a s merged .
   merged ~ T.Merge s =>
-  DbTypeName a (DdTypeName s) =>
+  CompName a ('SelType 'DefaultPrefix (DdTypeName s)) =>
   ProductItem ('ProductField "wrapped" a) (Dd merged) merged =>
   ReifyDd merged =>
   ReifyCodec FullCodec merged a =>

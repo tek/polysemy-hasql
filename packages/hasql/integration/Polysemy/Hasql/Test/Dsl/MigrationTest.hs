@@ -93,7 +93,7 @@ t2 :: Dd ('DdK _ _ (Uid Int64 Dat2) _)
 t2 =
   uidAs @"dat" prim (prod (
     migrateDef 15 prim :>
-    migrateRename @"pordOld" (migrateRenameType @"PordOld" (prod (
+    migrateRename @"pordOld" (migrateRenameType @"sqel_type__PordOld" (prod (
       prim :>
       primNullable
     )))

@@ -1,7 +1,6 @@
 module Sqel.Data.PgType where
 
 import qualified Data.Map.Strict as Map
-import Exon (exon)
 import Prettyprinter (Pretty (pretty), nest, sep, vsep, (<+>))
 
 import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
@@ -76,12 +75,11 @@ instance Pretty PgTypeRef where
 instance ToSql PgTypeRef where
   toSql = sqlQuote . unPgTypeRef
 
--- TODO store prefix in Sel like SelIndex
 pgTypeRef ::
   Text ->
   PgTypeRef
 pgTypeRef n =
-  PgTypeRef [exon|sqel_type__#{dbIdentifierT n}|]
+  PgTypeRef (dbIdentifierT n)
 
 pgCompRef :: PgCompName -> PgTypeRef
 pgCompRef (PgTypeName n) =
