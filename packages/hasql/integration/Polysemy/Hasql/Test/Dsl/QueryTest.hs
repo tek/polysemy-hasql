@@ -21,7 +21,7 @@ import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Names (named)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (ignore, prim, primAs, primNewtype)
-import Sqel.Product2 (prod, prodAs)
+import Sqel.Product (prod, prodAs)
 import Sqel.Query (checkQuery)
 import qualified Sqel.Query.Combinators as Q
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))

@@ -1,9 +1,33 @@
 module Sqel.Comp where
 
+import Fcf (Length, type (@@))
+import Generics.SOP (NP (Nil, (:*)))
 import Generics.SOP.GGP (GDatatypeInfoOf)
+import Generics.SOP.Type.Metadata (ConstructorInfo (Record), DatatypeInfo (ADT), FieldInfo (FieldInfo))
+import Prelude hiding (sum, type (@@))
+import Type.Errors (DelayError, ErrorMessage)
 
-import Sqel.Data.Sel (MkSel, Sel (SelType), SelPrefix (DefaultPrefix), SelW, mkSel)
+import Sqel.Data.Dd (
+  CompInc (Merge, Nest),
+  Dd (Dd),
+  DdK (DdK),
+  DdStruct (DdComp),
+  ProductField (ProductField),
+  Struct (Comp, Prim),
+  type (:>) ((:>)),
+  )
+import Sqel.Data.Sel (
+  MkSel (mkSel),
+  Sel (SelAuto, SelSymbol, SelType, SelUnused),
+  SelPrefix (DefaultPrefix, SelPrefix),
+  SelW (SelWType),
+  TypeName,
+  )
 import Sqel.Data.Uid (Uid)
+import Sqel.Names.Data (NatSymbol)
+import Sqel.Names.Error (CountMismatch)
+import Sqel.Names.Rename (Rename (rename))
+import Sqel.Prim (Prims (Prims))
 import Sqel.SOP.Constraint (IsDataT)
 
 -- TODO reimplement for new class structure
@@ -45,3 +69,141 @@ instance CompName a sel => CompName (Uid i a) sel where
 -- -- TODO this can now use @name@
 -- instance CompName (ConCol name record fields as) 'SelAuto where
 --   compName = mkSel
+
+type family RecordFields (fields :: [FieldInfo]) (ass :: [Type]) :: [ProductField] where
+  RecordFields '[] '[] = '[]
+  RecordFields ('FieldInfo name : fields) (a : as) = 'ProductField name a : RecordFields fields as
+
+type family ConstructorFields (name :: Symbol) (index :: Nat) (ass :: [Type]) :: [ProductField] where
+  ConstructorFields _ _ '[] = '[]
+  ConstructorFields name n (a : as) = 'ProductField (AppendSymbol name (NatSymbol n)) a : ConstructorFields name (n + 1) as
+
+type family ProductFields (info :: DatatypeInfo) (ass :: [[Type]]) :: [ProductField] where
+  ProductFields ('ADT _ _ '[ 'Record _ fields] _) '[ass] = RecordFields fields ass
+
+-- TODO check if the sel cases can be refactored into another class that does the rename/id distinction
+-- First add an error test case for the higher-order constraint of ProductIten
+class CompItem field arg s | field arg -> s where
+  compItem :: arg -> Dd s
+
+instance (
+    a ~ b,
+    KnownSymbol name
+  ) => CompItem ('ProductField name a) (Dd ('DdK 'SelAuto mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
+  compItem = rename
+
+instance (
+    a ~ b
+  ) => CompItem ('ProductField fname a) (Dd ('DdK ('SelSymbol name) mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
+  compItem = id
+
+instance (
+    a ~ b
+  ) => CompItem ('ProductField name a) (Dd ('DdK 'SelUnused mods b 'Prim)) ('DdK 'SelUnused mods a 'Prim) where
+  compItem = id
+
+instance (
+    a ~ b,
+    KnownSymbol name
+  ) => CompItem ('ProductField name a) (Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
+  compItem = rename
+
+instance (
+    a ~ b
+  ) => CompItem ('ProductField fname a) (Dd ('DdK ('SelSymbol name) mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
+  compItem = id
+
+instance (
+    a ~ b
+  ) => CompItem ('ProductField name a)(Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Merge s))) ('DdK 'SelAuto mods a ('Comp tsel c 'Merge s)) where
+  compItem = id
+
+data CompMeta =
+  CompMeta {
+    desc :: Symbol,
+    name :: ErrorMessage,
+    combinator :: Symbol,
+    index :: Nat
+  }
+  deriving stock (Generic)
+
+type family MetaNext (meta :: CompMeta) :: CompMeta where
+  MetaNext ('CompMeta desc name combinator index) = 'CompMeta desc name combinator (index + 1)
+
+type family MetaFor (desc :: Symbol) (name :: ErrorMessage) (combinator :: Symbol) :: CompMeta where
+  MetaFor desc name combinator = 'CompMeta desc name combinator 1
+
+data SpecType = SpecNP | SpecDsl | SpecPrims
+
+type family CheckFields (meta :: CompMeta) (len :: Nat) (fieldLen :: Nat) (t :: SpecType) :: Either Void SpecType where
+  CheckFields _ n n t = 'Right t
+  CheckFields ('CompMeta desc name _ _) arg f _ = 'Left (DelayError (CountMismatch desc name arg f))
+
+type family DslSize (arg :: Type) :: Nat where
+  DslSize (_ :> as) = 1 + DslSize as
+  DslSize _ = 1
+
+type family TriageComp (meta :: CompMeta) (arg :: Type) (fields :: [ProductField]) :: Either Void SpecType where
+  TriageComp _ (Prims _ _) _ = 'Right 'SpecPrims
+  TriageComp meta (NP _ s) fs = CheckFields meta (Length @@ s) (Length @@ fs) 'SpecNP
+  TriageComp meta args fs = CheckFields meta (DslSize args) (Length @@ fs) 'SpecDsl
+
+type CompColumn' :: CompMeta -> Either Void SpecType -> [ProductField] -> Type -> Type -> [DdK] -> Constraint
+class CompColumn' meta spec fields a arg s | fields arg -> s where
+  compColumn' :: arg -> NP Dd s
+
+instance CompColumn' meta ('Right 'SpecNP) '[] a (NP f '[]) '[] where
+  compColumn' Nil = Nil
+
+instance (
+    CompItem field (f arg0) s0,
+    CompColumn' (MetaNext meta) ('Right 'SpecNP) fields a (NP f args) s1
+  ) => CompColumn' meta ('Right 'SpecNP) (field : fields) a (NP f (arg0 : args)) (s0 : s1) where
+    compColumn' (arg0 :* args) =
+      compItem @field arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecNP) @fields @a args
+
+instance (
+    CompItem field arg0 s0,
+    CompColumn' (MetaNext meta) ('Right 'SpecDsl) fields a args s1
+  ) => CompColumn' meta ('Right 'SpecDsl) (field : fields) a (arg0 :> args) (s0 : s1) where
+  compColumn' (arg0 :> args) =
+    compItem @field arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecDsl) @fields @a args
+
+instance (
+    CompItem field arg s
+  ) => CompColumn' meta ('Right 'SpecDsl) '[field] a arg '[s] where
+    compColumn' arg = compItem @field arg :* Nil
+
+instance (
+    a ~ b,
+    CompColumn' meta ('Right 'SpecNP) fields a (NP Dd s0) s1
+  ) => CompColumn' meta ('Right 'SpecPrims) fields a (Prims b s0) s1 where
+  compColumn' (Prims np) = compColumn' @meta @('Right 'SpecNP) @fields @a np
+
+type CompColumn :: CompMeta -> [ProductField] -> Type -> Type -> [DdK] -> Constraint
+class CompColumn meta fields a arg s | fields arg -> s where
+  compColumn :: arg -> NP Dd s
+
+instance (
+    spec ~ TriageComp meta arg fields,
+    CompColumn' meta spec fields a arg s
+  ) => CompColumn meta fields a arg s where
+    compColumn = compColumn' @meta @spec @fields @a
+
+type SetTypePrefix :: Symbol -> DdK -> DdK -> Constraint
+class SetTypePrefix prefix s0 s1 | prefix s0 -> s1 where
+  setTypePrefix :: Dd s0 -> Dd s1
+
+instance (
+    TypeName ('SelPrefix prefix) tpe tname
+  ) => SetTypePrefix prefix ('DdK sel mods a ('Comp ('SelType oldPrefix tpe) c i s)) ('DdK sel mods a ('Comp ('SelType ('SelPrefix prefix) tpe) c i s)) where
+    setTypePrefix (Dd sel mods (DdComp _ c i s)) =
+      Dd sel mods (DdComp (SelWType Proxy) c i s)
+
+typePrefix ::
+  ∀ prefix s0 s1 .
+  SetTypePrefix prefix s0 s1 =>
+  Dd s0 ->
+  Dd s1
+typePrefix =
+  setTypePrefix @prefix

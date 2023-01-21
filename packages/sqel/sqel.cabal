@@ -67,7 +67,6 @@ library
       Sqel.PgType
       Sqel.Prim
       Sqel.Product
-      Sqel.Product2
       Sqel.ProductArg
       Sqel.Projection
       Sqel.Query

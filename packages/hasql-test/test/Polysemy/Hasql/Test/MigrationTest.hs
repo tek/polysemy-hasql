@@ -14,7 +14,7 @@ import Sqel.Migration.Consistency (migrationConsistency)
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (typeAs)
 import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primNullable)
-import Sqel.Product2 (prod)
+import Sqel.Product (prod)
 import Sqel.Uid (uidAs)
 
 import Polysemy.Hasql.Effect.Database (Database)

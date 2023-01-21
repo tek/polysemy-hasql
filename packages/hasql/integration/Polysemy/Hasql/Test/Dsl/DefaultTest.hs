@@ -14,7 +14,7 @@ import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs, primNullable)
-import Sqel.Product2 (prod)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 

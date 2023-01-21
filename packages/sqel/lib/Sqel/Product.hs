@@ -1,26 +1,43 @@
 module Sqel.Product where
 
--- import Sqel.Comp (CompColumn, compFor)
--- import Sqel.Data.Dd (Comp (Prod), CompInc (Nest), Dd, DdK, ProdType (Reg))
--- import Sqel.Names.Rename (Rename, rename)
--- import Sqel.Names.Set (SetName)
--- import Sqel.ProductArg (ProductArg)
+import Generics.SOP.GGP (GCode, GDatatypeInfoOf)
+import Prelude hiding (sum, type (@@))
 
--- prod ::
---   ∀ (a :: Type) (s0 :: [DdK]) (s1 :: DdK) (arg :: Type) .
---   ProductArg a "prod" arg s0 =>
---   CompColumn ('Prod 'Reg) 'Nest a s0 s1 =>
---   arg ->
---   Dd s1
--- prod =
---   compFor @"prod" @('Prod 'Reg) @'Nest @a
+import Sqel.Comp (CompColumn (compColumn), CompName (compName), MetaFor, ProductFields)
+import Sqel.Data.Dd (
+  Comp (Prod),
+  CompInc (Nest),
+  Dd (Dd),
+  DdInc (DdNest),
+  DdK (DdK),
+  DdStruct (DdComp),
+  DdType,
+  DdVar (DdProd),
+  ProdType (Reg),
+  Struct (Comp),
+  )
+import Sqel.Data.Mods (pattern NoMods, NoMods)
+import Sqel.Data.Sel (Sel (SelAuto), SelW (SelWAuto))
+import Sqel.Names.Rename (Rename (rename))
+import Sqel.Names.Set (SetName)
 
--- prodAs ::
---   ∀ (name :: Symbol) (a :: Type) (s0 :: [DdK]) (s1 :: DdK) (arg :: Type) .
---   ProductArg a "prodAs" arg s0 =>
---   Rename s1 (SetName s1 name) =>
---   CompColumn ('Prod 'Reg) 'Nest a s0 s1 =>
---   arg ->
---   Dd (SetName s1 name)
--- prodAs =
---   rename . compFor @"prodAs" @('Prod 'Reg) @'Nest @a
+class DdType s ~ a => Product a arg s | a arg -> s where
+  prod :: arg -> Dd s
+
+instance (
+    CompName a sel,
+    fields ~ ProductFields (GDatatypeInfoOf a) (GCode a),
+    meta ~ MetaFor "product type" ('ShowType a) "prod",
+    CompColumn meta fields a arg s
+  ) => Product a arg ('DdK 'SelAuto NoMods a ('Comp sel ('Prod 'Reg) 'Nest s)) where
+    prod arg =
+      Dd SelWAuto NoMods (DdComp (compName @a) DdProd DdNest (compColumn @meta @fields @a arg))
+
+prodAs ::
+  ∀ (name :: Symbol) (a :: Type) (s :: DdK) (arg :: Type) .
+  Product a arg s =>
+  Rename s (SetName s name) =>
+  arg ->
+  Dd (SetName s name)
+prodAs =
+  rename . prod @_ @_ @s

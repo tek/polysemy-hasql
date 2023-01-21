@@ -7,7 +7,7 @@ import Hedgehog (TestT, (===))
 import Sqel.Data.Dd (Dd, DdK (DdK), showTypeSel, (:>) ((:>)))
 import Sqel.Names (typeAs)
 import Sqel.Prim (prim)
-import Sqel.Product2 (prod)
+import Sqel.Product (prod)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.PgType (tableSchema)
 

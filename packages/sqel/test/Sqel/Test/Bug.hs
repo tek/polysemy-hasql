@@ -2,13 +2,14 @@
 
 module Sqel.Test.Bug where
 
+import Sqel.Comp (CompItem)
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (Dd, DdType, ProductField (ProductField), type (:>) ((:>)))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Merge (merge)
 import Sqel.Names (named)
 import Sqel.Prim (prim, prims)
-import Sqel.Product2 (ProductItem, prod)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.ReifyCodec (reifyCodec)
 import Sqel.Type (Merge, Prim, Prod, type (*>), type (>))
@@ -26,7 +27,7 @@ type DdWrap2 s = (Prod (Wrap2 (DdType s))) *> Prim "id" Text > Merge s
 ddWrap2 ::
   ∀ d s merged .
   merged ~ Merge s =>
-  ProductItem ('ProductField "w" d) (Dd merged) merged =>
+  CompItem ('ProductField "w" d) (Dd merged) merged =>
   Dd s ->
   Dd (DdWrap2 (DdWrap d s))
 ddWrap2 w =

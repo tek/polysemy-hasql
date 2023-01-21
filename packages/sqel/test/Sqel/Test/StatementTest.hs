@@ -10,7 +10,7 @@ import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
 import Sqel.Class.MatchView (HasColumn)
-import Sqel.Comp (CompName (compName))
+import Sqel.Comp (CompItem, CompName (compName))
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (
   Dd (Dd),
@@ -27,7 +27,7 @@ import Sqel.Data.Dd (
 import Sqel.Data.Mods (pattern NoMods)
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelType), SelW (SelWAuto), SelPrefix (DefaultPrefix))
+import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelType), SelPrefix (DefaultPrefix), SelW (SelWAuto))
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Sql (Sql, sql, toSql)
 import Sqel.Data.TableSchema (TableSchema)
@@ -35,12 +35,13 @@ import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)
 import Sqel.PgType (MkTableSchema, tableSchema)
 import Sqel.Prim (prim, primAs, primNewtypes, prims)
-import Sqel.Product2 (ConColumn (con), ProductItem, con1, prod, sum)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Query.Combinators (order)
 import Sqel.ReifyCodec (ReifyCodec)
 import Sqel.ReifyDd (ReifyDd)
 import qualified Sqel.Sql.Select as Sql
+import Sqel.Sum (ConColumn (con), con1, sum)
 import Sqel.Test.Bug ()
 import qualified Sqel.Type as T
 import Sqel.Type (Merge, Prim, PrimNewtype, Prod, ProdPrimsNewtype, TypeName, type (*>), type (>))
@@ -236,7 +237,7 @@ test_statement_merge_query_higherOrder =
 
 ddWrap ::
   CompName (DdType s) ('SelType 'DefaultPrefix (DdTypeName s)) =>
-  ProductItem ('ProductField "wrapped" (DdType s)) (Dd (Merge s)) (Merge s) =>
+  CompItem ('ProductField "wrapped" (DdType s)) (Dd (Merge s)) (Merge s) =>
   Dd s ->
   Dd (WrapDd s)
 ddWrap wrapped =
@@ -246,7 +247,7 @@ ddHigherOrder2 ::
   ∀ s merged .
   merged ~ T.Merge s =>
   CompName (DdType s) ('SelType 'DefaultPrefix (DdTypeName s)) =>
-  ProductItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
+  CompItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
 ddHigherOrder2 wrapped =
@@ -260,7 +261,7 @@ higherOrder2 ::
   ∀ a s merged .
   merged ~ T.Merge s =>
   CompName a ('SelType 'DefaultPrefix (DdTypeName s)) =>
-  ProductItem ('ProductField "wrapped" a) (Dd merged) merged =>
+  CompItem ('ProductField "wrapped" a) (Dd merged) merged =>
   ReifyDd merged =>
   ReifyCodec FullCodec merged a =>
   Dd s ->

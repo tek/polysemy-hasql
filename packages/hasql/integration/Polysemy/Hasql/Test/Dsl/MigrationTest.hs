@@ -17,7 +17,7 @@ import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (migrateDef, migrateDelete, migrateRename, migrateRenameType, prim, primAs, primNullable)
-import Sqel.Product2 (Product2 (prod))
+import Sqel.Product (Product (prod))
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uidAs)
 

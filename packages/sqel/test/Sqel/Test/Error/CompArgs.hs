@@ -8,7 +8,7 @@ import Sqel.Data.PgType (PgTable)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim)
-import Sqel.Product2 (prod)
+import Sqel.Product (prod)
 
 data Pr =
   Pr {

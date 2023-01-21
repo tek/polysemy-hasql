@@ -18,10 +18,10 @@ import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Names (typeAs)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim, primAs, prims)
-import Sqel.Product2 (prod)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Statement (selectWhere)
-import Sqel.Product2 (con, conAs, sum)
+import Sqel.Sum (con, conAs, sum)
 import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database

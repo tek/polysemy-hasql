@@ -16,7 +16,7 @@ import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uid (Uid), Uuid)
 import Sqel.PgType (tableSchema)
 import Sqel.Prim (array, enum, prim, primAs, readShow)
-import Sqel.Product2 (prod)
+import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
