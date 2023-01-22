@@ -1,16 +1,16 @@
 module Sqel.Uid where
 
-import Sqel.Data.Dd (Dd, DdK, DdType, DdTypeName, type (:>) ((:>)))
+import Sqel.Data.Dd (Dd, DdK, DdType, DdTypeSel, type (:>) ((:>)))
 import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetTypeName)
-import Sqel.Product (Product (prod))
+import Sqel.Product (ProductNamed (prodNamed))
 import qualified Sqel.Type as T
 import Sqel.Type (type (*>), type (>))
 
 type UidDd si sa =
-  T.TypeName (DdTypeName sa) (T.Prod (Uid (DdType si) (DdType sa))) *> T.Name "id" si > T.Merge sa
+  T.TypeSel (DdTypeSel sa) (T.Prod (Uid (DdType si) (DdType sa))) *> T.Name "id" si > T.Merge sa
 
 type UidColumn :: Type -> Type -> DdK -> DdK -> DdK -> Constraint
 class (
@@ -22,10 +22,11 @@ class (
 instance (
     DdType si ~ i,
     DdType sa ~ a,
-    Product (Uid i a) (Dd si :> Dd (T.Merge sa)) s
+    DdTypeSel sa ~ sel,
+    ProductNamed sel (Uid i a) (Dd si :> Dd (T.Merge sa)) s
   ) => UidColumn i a si sa s where
     uidColumn i a =
-      prod (i :> merge a)
+      prodNamed @sel (i :> merge a)
 
 uid ::
   ∀ (i :: Type) (a :: Type) (si :: DdK) (sa :: DdK) (s :: DdK) .

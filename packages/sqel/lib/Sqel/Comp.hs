@@ -28,7 +28,6 @@ import Sqel.Names.Data (NatSymbol)
 import Sqel.Names.Error (CountMismatch)
 import Sqel.Names.Rename (Rename (rename))
 import Sqel.Prim (Prims (Prims))
-import Sqel.SOP.Constraint (IsDataT)
 
 -- TODO reimplement for new class structure
 -- -- TODO this recurses through the entire subtree.
@@ -56,8 +55,13 @@ type CompName :: Type -> Sel -> Constraint
 class CompName a sel | a -> sel where
   compName :: SelW sel
 
+type CompNameData :: Type -> DatatypeInfo -> Symbol
+type family CompNameData a info where
+  CompNameData _ ('ADT _ name _ _) = name
+  CompNameData a _ = TypeError ("The type " <> a <> " is not an ADT.")
+
 instance {-# overlappable #-} (
-    IsDataT (GDatatypeInfoOf a) name,
+    name ~ CompNameData a (GDatatypeInfoOf a),
     sel ~ 'SelType 'DefaultPrefix name,
     MkSel sel
   ) => CompName a sel where
@@ -67,6 +71,7 @@ instance CompName a sel => CompName (Uid i a) sel where
   compName = compName @a
 
 -- -- TODO this can now use @name@
+-- TODO are the constructors now called con_col without this?
 -- instance CompName (ConCol name record fields as) 'SelAuto where
 --   compName = mkSel
 

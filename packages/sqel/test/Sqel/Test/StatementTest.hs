@@ -1,4 +1,4 @@
-{-# options_ghc -Wno-partial-type-signatures -fconstraint-solver-iterations=100 #-}
+{-# options_ghc -Wno-partial-type-signatures -fconstraint-solver-iterations=10 #-}
 
 module Sqel.Test.StatementTest where
 
@@ -18,10 +18,9 @@ import Sqel.Data.Dd (
   DdK (DdK),
   DdStruct (DdComp),
   DdType,
-  DdTypeName,
+  DdTypeSel,
   DdVar (DdProd),
   ProductField (ProductField),
-  Struct (Comp),
   type (:>) ((:>)),
   )
 import Sqel.Data.Mods (pattern NoMods)
@@ -35,7 +34,7 @@ import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)
 import Sqel.PgType (MkTableSchema, tableSchema)
 import Sqel.Prim (prim, primAs, primNewtypes, prims)
-import Sqel.Product (prod)
+import Sqel.Product (prod, prodNamed)
 import Sqel.Query (checkQuery)
 import Sqel.Query.Combinators (order)
 import Sqel.ReifyCodec (ReifyCodec)
@@ -44,7 +43,7 @@ import qualified Sqel.Sql.Select as Sql
 import Sqel.Sum (ConColumn (con), con1, sum)
 import Sqel.Test.Bug ()
 import qualified Sqel.Type as T
-import Sqel.Type (Merge, Prim, PrimNewtype, Prod, ProdPrimsNewtype, TypeName, type (*>), type (>))
+import Sqel.Type (Prim, PrimNewtype, Prod, ProdPrimsNewtype, TypeSel, type (*>), type (>))
 import Sqel.Uid (UidDd, uid)
 
 newtype IntNt =
@@ -161,7 +160,7 @@ instance CompName a name => CompName (Wrap a) name where
   compName = compName @a
 
 type WrapDd sa =
-  TypeName (DdTypeName sa) (Prod (Wrap (DdType sa))) *> (
+  TypeSel (DdTypeSel sa) (Prod (Wrap (DdType sa))) *> (
     T.Merge sa >
     Prim "length" Int64
   )
@@ -170,7 +169,7 @@ schema_higherOrder ::
   ∀ s0 table a sel mods s .
   s0 ~ 'DdK sel mods a s =>
   table ~ WrapDd s0 =>
-  MkSel ('SelType 'DefaultPrefix (DdTypeName s0)) =>
+  MkSel (DdTypeSel s0) =>
   MkTableSchema table =>
   Dd s0 ->
   TableSchema (Wrap a)
@@ -189,28 +188,6 @@ test_statement_higherOrder :: TestT IO ()
 test_statement_higherOrder =
   target_higherOrder === toSql (Select (schema_higherOrder ddPro))
 
-statement_query_higherOrder ::
-  ∀ a s0 table mods tsel c i s .
-  s0 ~ 'DdK 'SelAuto mods a ('Comp ('SelType 'DefaultPrefix tsel) c i s) =>
-  table ~ UidDd (Prim "id" Int64) (WrapDd s0) =>
-  CompName a ('SelType 'DefaultPrefix tsel) =>
-  MkTableSchema table =>
-  HasColumn ["two", "name"] Text table =>
-  Dd s0 ->
-  Sql
-statement_query_higherOrder wrapped@(Dd _ _ (DdComp tsel _ _ _)) =
-  Sql.selectWhere qs ts
-  where
-    ts :: TableSchema (Uid Int64 (Wrap a))
-    ts = tableSchema dd
-    qs :: QuerySchema QWrap (Uid Int64 (Wrap a))
-    qs = checkQuery q dd
-    q = prod (prod prim)
-    dd :: Dd table
-    dd = uid prim pro
-    pro = Dd SelWAuto NoMods (DdComp tsel DdProd DdNest fields)
-    fields = merge wrapped :* primAs @"length" :* Nil
-
 data Merge1 =
   One { one :: Pro }
   |
@@ -222,6 +199,28 @@ data QHo = QHo { name :: Text }
 
 data QWrap = QWrap { two :: QHo }
   deriving stock (Eq, Show, Generic)
+
+statement_query_higherOrder ::
+  ∀ a s0 table mods s .
+  s0 ~ 'DdK 'SelAuto mods a s =>
+  MkSel (DdTypeSel s0) =>
+  table ~ UidDd (Prim "id" Int64) (WrapDd s0) =>
+  MkTableSchema table =>
+  HasColumn ["two", "name"] Text table =>
+  Dd s0 ->
+  Sql
+statement_query_higherOrder wrapped =
+  Sql.selectWhere qs ts
+  where
+    ts :: TableSchema (Uid Int64 (Wrap a))
+    ts = tableSchema dd
+    qs :: QuerySchema QWrap (Uid Int64 (Wrap a))
+    qs = checkQuery q dd
+    q = prod (prod prim)
+    dd :: Dd table
+    dd = uid prim pro
+    pro = Dd SelWAuto NoMods (DdComp mkSel DdProd DdNest fields)
+    fields = merge wrapped :* primAs @"length" :* Nil
 
 ddMerge1 :: Dd ('DdK _ _ Merge1 _)
 ddMerge1 = sum (con1 ddPro :> con1 ddPro)
@@ -235,32 +234,25 @@ test_statement_merge_query_higherOrder :: TestT IO ()
 test_statement_merge_query_higherOrder =
   target_merge_query_higherOrder === statement_query_higherOrder ddMerge1
 
-ddWrap ::
-  CompName (DdType s) ('SelType 'DefaultPrefix (DdTypeName s)) =>
-  CompItem ('ProductField "wrapped" (DdType s)) (Dd (Merge s)) (Merge s) =>
-  Dd s ->
-  Dd (WrapDd s)
-ddWrap wrapped =
-  prod (merge wrapped :> prim)
-
 ddHigherOrder2 ::
   ∀ s merged .
   merged ~ T.Merge s =>
-  CompName (DdType s) ('SelType 'DefaultPrefix (DdTypeName s)) =>
+  MkSel (DdTypeSel s) =>
   CompItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
 ddHigherOrder2 wrapped =
-  uid prim (prod (merge wrapped :> prim))
+  uid prim (prodNamed @(DdTypeSel s) (merge wrapped :> prim))
 
 ddUidWrapPro :: Dd (UidDd (Prim "id" Int64) (WrapDd ProdTable))
 ddUidWrapPro =
   ddHigherOrder2 ddPro
 
 higherOrder2 ::
-  ∀ a s merged .
+  ∀ a s merged name .
   merged ~ T.Merge s =>
-  CompName a ('SelType 'DefaultPrefix (DdTypeName s)) =>
+  DdTypeSel s ~ 'SelType 'DefaultPrefix name =>
+  MkSel (DdTypeSel s) =>
   CompItem ('ProductField "wrapped" a) (Dd merged) merged =>
   ReifyDd merged =>
   ReifyCodec FullCodec merged a =>
@@ -271,7 +263,7 @@ higherOrder2 wrapped =
   where
     ts :: TableSchema (Wrap a)
     ts = tableSchema dd
-    dd = prod (merge wrapped :> prim)
+    dd = prodNamed @(DdTypeSel s) (merge wrapped :> prim)
 
 test_higherOrder2 :: TestT IO ()
 test_higherOrder2 =

@@ -62,6 +62,10 @@ type family Name (name :: Symbol) (dd :: DdK) :: DdK where
   Name name ('DdK _ mods a s) =
     'DdK ('SelSymbol name) mods a s
 
+type family TypeSel (tsel :: Sel) (dd :: DdK) :: DdK where
+  TypeSel tsel ('DdK sel mods a ('Comp _ c i sub)) =
+    'DdK sel mods a ('Comp tsel c i sub)
+
 -- TODO this will result in a double prefix when used with DdTypeName and manually set prefix
 type family TypeName (name :: Symbol) (dd :: DdK) :: DdK where
   TypeName name ('DdK sel mods a ('Comp _ c i sub)) =
