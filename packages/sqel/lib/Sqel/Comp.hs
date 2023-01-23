@@ -29,6 +29,7 @@ import Sqel.Names.Data (NatSymbol)
 import Sqel.Names.Error (CountMismatch)
 import Sqel.Names.Rename (Rename (rename))
 import Sqel.Prim (Prims (Prims))
+import Sqel.SOP.Error (Quoted, QuotedType)
 
 -- TODO reimplement for new class structure
 -- -- TODO this recurses through the entire subtree.
@@ -71,11 +72,6 @@ instance {-# overlappable #-} (
 instance CompName a sel => CompName (Uid i a) sel where
   compName = compName @a
 
--- -- TODO this can now use @name@
--- TODO are the constructors now called con_col without this?
--- instance CompName (ConCol name record fields as) 'SelAuto where
---   compName = mkSel
-
 type family RecordFields (fields :: [FieldInfo]) (ass :: [Type]) :: [ProductField] where
   RecordFields '[] '[] = '[]
   RecordFields ('FieldInfo name : fields) (a : as) = 'ProductField name a : RecordFields fields as
@@ -88,41 +84,44 @@ type family ProductFields (info :: DatatypeInfo) (ass :: [[Type]]) :: [ProductFi
   ProductFields ('ADT _ _ '[ 'Record _ fields] _) '[ass] = RecordFields fields ass
 
 -- TODO check if the sel cases can be refactored into another class that does the rename/id distinction
--- First add an error test case for the higher-order constraint of CompItem
-type CompItem :: Type -> Symbol -> Type -> DdK -> Constraint
-class CompItem a fieldName arg s | a fieldName arg -> s where
-  compItem :: arg -> Dd s
+-- First add an error test case for the higher-order constraint of Column
+--
+-- Maybe add a class layer before this that separates Dd and others, so that Column is the one in the error when Dd
+-- is able to be inferred and the other one has a custom error
+type Column :: Type -> Symbol -> DdK -> DdK -> Constraint
+class Column a fieldName s0 s | a fieldName s0 -> s where
+  compItem :: Dd s0 -> Dd s
 
 instance (
     a ~ b,
     KnownSymbol name
-  ) => CompItem a name (Dd ('DdK 'SelAuto mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
+  ) => Column a name ('DdK 'SelAuto mods b 'Prim) ('DdK ('SelSymbol name) mods a 'Prim) where
   compItem = rename
 
 instance (
     a ~ b
-  ) => CompItem a fname (Dd ('DdK ('SelSymbol name) mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
+  ) => Column a fname ('DdK ('SelSymbol name) mods b 'Prim) ('DdK ('SelSymbol name) mods a 'Prim) where
   compItem = id
 
 instance (
     a ~ b
-  ) => CompItem a name (Dd ('DdK 'SelUnused mods b 'Prim)) ('DdK 'SelUnused mods a 'Prim) where
+  ) => Column a name ('DdK 'SelUnused mods b 'Prim) ('DdK 'SelUnused mods a 'Prim) where
   compItem = id
 
 instance (
     a ~ b,
     KnownSymbol name
-  ) => CompItem a name (Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
+  ) => Column a name ('DdK 'SelAuto mods b ('Comp tsel c 'Nest s)) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
   compItem = rename
 
 instance (
     a ~ b
-  ) => CompItem a fname (Dd ('DdK ('SelSymbol name) mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
+  ) => Column a fname ('DdK ('SelSymbol name) mods b ('Comp tsel c 'Nest s)) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
   compItem = id
 
 instance (
     a ~ b
-  ) => CompItem a name (Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Merge s))) ('DdK 'SelAuto mods a ('Comp tsel c 'Merge s)) where
+  ) => Column a name ('DdK 'SelAuto mods b ('Comp tsel c 'Merge s)) ('DdK 'SelAuto mods a ('Comp tsel c 'Merge s)) where
   compItem = id
 
 data CompMeta =
@@ -133,6 +132,35 @@ data CompMeta =
     index :: Nat
   }
   deriving stock (Generic)
+
+type InvalidElem :: Symbol -> Nat -> Type -> Void
+type InvalidElem name i arg =
+  DelayError (
+    "Element number " <> i <> " in the call to " <> Quoted name <> " has type " <> QuotedType arg <> "." %
+    "Columns should only be constructed with combinators like " <> Quoted "prim" <> ", " <> Quoted "prod" <> "," %
+    Quoted "column" <> " that return the proper type, " <> Quoted "Dd" <> "." %
+    "Consult the module " <> Quoted "Sqel.Combinators" <> " for the full API."
+  )
+
+type CompItemOrError :: Void -> ProductField -> Type -> DdK -> Constraint
+class CompItemOrError err field arg s | field arg -> s where
+  compItemOrError :: Proxy err -> arg -> Dd s
+
+instance (
+    Column a fieldName s0 s1
+  ) => CompItemOrError err ('ProductField fieldName a) (Dd s0) s1 where
+    compItemOrError Proxy = compItem @a @fieldName
+
+type CheckCompItem :: CompMeta -> ProductField -> Type -> DdK -> Constraint
+class CheckCompItem meta field arg s | field arg -> s where
+  checkCompItem :: arg -> Dd s
+
+instance (
+    meta ~ 'CompMeta desc name combinator index,
+    error ~ InvalidElem combinator index arg,
+    CompItemOrError error field arg s1
+  ) => CheckCompItem meta field arg s1 where
+    checkCompItem = compItemOrError @error @field Proxy
 
 type family MetaNext (meta :: CompMeta) :: CompMeta where
   MetaNext ('CompMeta desc name combinator index) = 'CompMeta desc name combinator (index + 1)
@@ -163,23 +191,23 @@ instance CompColumn' meta ('Right 'SpecNP) '[] a (NP f '[]) '[] where
   compColumn' Nil = Nil
 
 instance (
-    CompItem t fieldName (f arg0) s0,
+    CheckCompItem meta field (f arg0) s0,
     CompColumn' (MetaNext meta) ('Right 'SpecNP) fields a (NP f args) s1
-  ) => CompColumn' meta ('Right 'SpecNP) ('ProductField fieldName t : fields) a (NP f (arg0 : args)) (s0 : s1) where
+  ) => CompColumn' meta ('Right 'SpecNP) (field : fields) a (NP f (arg0 : args)) (s0 : s1) where
     compColumn' (arg0 :* args) =
-      compItem @t @fieldName arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecNP) @fields @a args
+      checkCompItem @meta @field arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecNP) @fields @a args
 
 instance (
-    CompItem t fieldName arg0 s0,
+    CheckCompItem meta field arg0 s0,
     CompColumn' (MetaNext meta) ('Right 'SpecDsl) fields a args s1
-  ) => CompColumn' meta ('Right 'SpecDsl) ('ProductField fieldName t : fields) a (arg0 :> args) (s0 : s1) where
+  ) => CompColumn' meta ('Right 'SpecDsl) (field : fields) a (arg0 :> args) (s0 : s1) where
   compColumn' (arg0 :> args) =
-    compItem @t @fieldName arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecDsl) @fields @a args
+    checkCompItem @meta @field arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecDsl) @fields @a args
 
 instance (
-    CompItem t fieldName arg s
-  ) => CompColumn' meta ('Right 'SpecDsl) '[ 'ProductField fieldName t] a arg '[s] where
-    compColumn' arg = compItem @t @fieldName arg :* Nil
+    CheckCompItem meta field arg s
+  ) => CompColumn' meta ('Right 'SpecDsl) '[ field] a arg '[s] where
+    compColumn' arg = checkCompItem @meta @field arg :* Nil
 
 instance (
     a ~ b,

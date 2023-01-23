@@ -7,10 +7,11 @@ import Hedgehog (TestT, (===))
 import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
-import Sqel.Test.Error.CompArgs (prodTooFew, prodTooMany)
+import Sqel.Test.Error.CompArgs (prodTooFew, prodTooMany, prodBadType)
 import Sqel.Test.Error.NewtypeNoGeneric (newtypeNoGeneric)
 import Sqel.Test.Error.NewtypeNoNewtype (newtypeNoNewtype)
 import Sqel.Test.Error.QueryColumMismatch (queryColumnMismatch)
+import Sqel.Test.Error.HigherOrderColumn (higherOrderColumn)
 
 typeError ::
   Show a =>
@@ -54,6 +55,22 @@ prodTooManyMessage =
     "\8226 The product type \8216Pr\8217 has 3 fields, but the expression specifies 5."
   ]
 
+prodBadTypeMessage :: [Text]
+prodBadTypeMessage =
+  [
+    "\8226 Element number 2 in the call to \8216prod\8217 has type \8216Bool\8217.",
+    "Columns should only be constructed with combinators like \8216prim\8217, \8216prod\8217,",
+    "\8216column\8217 that return the proper type, \8216Dd\8217.",
+    "Consult the module \8216Sqel.Combinators\8217 for the full API."
+  ]
+
+higherOrderColumnMessage :: [Text]
+higherOrderColumnMessage =
+  [
+    "\8226 Could not deduce (Sqel.Comp.Column",
+    "(DdType s) \"wrapped\" merged merged)"
+  ]
+
 newtypeNoGenericMessage :: [Text]
 newtypeNoGenericMessage =
   [
@@ -83,6 +100,8 @@ test_errors =
     unitTest "query column mismatch" (typeError queryColumnMismatchMessage queryColumnMismatch),
     unitTest "too few product fields" (typeError prodTooFewMessage prodTooFew),
     unitTest "too many product fields" (typeError prodTooManyMessage prodTooMany),
+    unitTest "bad type for product field" (typeError prodBadTypeMessage prodBadType),
+    unitTest "higher-order column constraint" (typeError higherOrderColumnMessage higherOrderColumn),
     unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric),
     unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype)
     -- ,

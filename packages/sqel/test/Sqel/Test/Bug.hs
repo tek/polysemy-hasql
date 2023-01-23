@@ -2,7 +2,7 @@
 
 module Sqel.Test.Bug where
 
-import Sqel.Comp (CompItem)
+import Sqel.Comp (Column)
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (Dd, DdType, type (:>) ((:>)))
 import Sqel.Data.QuerySchema (QuerySchema)
@@ -27,7 +27,7 @@ type DdWrap2 s = (Prod (Wrap2 (DdType s))) *> Prim "id" Text > Merge s
 ddWrap2 ::
   ∀ d s merged .
   merged ~ Merge s =>
-  CompItem d "w" (Dd merged) merged =>
+  Column d "w" merged merged =>
   Dd s ->
   Dd (DdWrap2 (DdWrap d s))
 ddWrap2 w =

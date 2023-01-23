@@ -10,7 +10,7 @@ import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
 import Sqel.Class.MatchView (HasColumn)
-import Sqel.Comp (CompItem, CompName (compName))
+import Sqel.Comp (Column, CompName (compName))
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (
   Dd (Dd),
@@ -237,7 +237,7 @@ ddHigherOrder2 ::
   ∀ s merged .
   merged ~ T.Merge s =>
   MkTSel (DdTypeSel s) =>
-  CompItem (DdType s) "wrapped" (Dd merged) merged =>
+  Column (DdType s) "wrapped" merged merged =>
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
 ddHigherOrder2 wrapped =
@@ -251,7 +251,7 @@ higherOrder2 ::
   ∀ a s merged .
   merged ~ T.Merge s =>
   MkTSel (DdTypeSel s) =>
-  CompItem a "wrapped" (Dd merged) merged =>
+  Column a "wrapped" merged merged =>
   ReifyDd merged =>
   ReifyCodec FullCodec merged a =>
   Dd s ->

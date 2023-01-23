@@ -2,8 +2,10 @@
 
 module Sqel.Test.Error.CompArgs where
 
+import Generics.SOP (NP (Nil, (:*)))
+
 import Sqel.Column (nullable)
-import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
+import Sqel.Data.Dd (Dd (Dd), DdK (DdK), DdStruct (DdComp), (:>) ((:>)))
 import Sqel.Data.PgType (PgTable)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.PgType (tableSchema)
@@ -54,3 +56,16 @@ tableTooMany =
 prodTooMany :: PgTable Dat
 prodTooMany =
   tableTooMany ^. #pg
+
+ddBadType :: Dd ('DdK _ _ Dat _)
+ddBadType =
+  prod (
+    nullable prim :>
+    prod (prim :> False :> prim)
+  )
+
+prodBadType :: ()
+prodBadType =
+  case ddBadType of
+    Dd _ _ (DdComp _ _ _ (_ :* (Dd _ _ (DdComp _ _ _ (_ :* (Dd _ _ _) :* _ :* Nil))) :* Nil)) ->
+      ()

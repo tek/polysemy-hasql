@@ -2,7 +2,7 @@ module Sqel.Data.Sel where
 
 import Exon (exon)
 
-import Sqel.SOP.Constraint (symbolText)
+import Sqel.SOP.Constraint (symbolText, symbolString)
 
 data SelPrefix =
   DefaultPrefix
@@ -109,6 +109,10 @@ data TSelW sel where
 showTSelW :: TSelW s -> Text
 showTSelW (TSelW (Proxy :: Proxy '(tpe, name))) =
   [exon|<type name for #{symbolText @name}>|]
+
+instance Show (TSelW s) where
+  showsPrec d (TSelW (Proxy :: Proxy '(tpe, name))) =
+    showParen (d > 10) [exon|TSelW #{showString (symbolString @name)}|]
 
 type ReifyTSel :: TSel -> Symbol -> Constraint
 class KnownSymbol name => ReifyTSel sel name | sel -> name where
