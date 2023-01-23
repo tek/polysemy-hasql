@@ -26,7 +26,7 @@ import Sqel.Data.Dd (
 import Sqel.Data.Mods (pattern NoMods)
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto, SelType), SelPrefix (DefaultPrefix), SelW (SelWAuto))
+import Sqel.Data.Sel (MkTSel (mkTSel), Sel (SelAuto), SelW (SelWAuto))
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Sql (Sql, sql, toSql)
 import Sqel.Data.TableSchema (TableSchema)
@@ -169,7 +169,7 @@ schema_higherOrder ::
   ∀ s0 table a sel mods s .
   s0 ~ 'DdK sel mods a s =>
   table ~ WrapDd s0 =>
-  MkSel (DdTypeSel s0) =>
+  MkTSel (DdTypeSel s0) =>
   MkTableSchema table =>
   Dd s0 ->
   TableSchema (Wrap a)
@@ -177,7 +177,7 @@ schema_higherOrder wrapped =
   tableSchema dd
   where
     dd :: Dd table
-    dd = Dd SelWAuto NoMods (DdComp mkSel DdProd DdNest fields)
+    dd = Dd SelWAuto NoMods (DdComp mkTSel DdProd DdNest fields)
     fields = merge wrapped :* primAs @"length" :* Nil
 
 target_higherOrder :: Sql
@@ -203,7 +203,7 @@ data QWrap = QWrap { two :: QHo }
 statement_query_higherOrder ::
   ∀ a s0 table mods s .
   s0 ~ 'DdK 'SelAuto mods a s =>
-  MkSel (DdTypeSel s0) =>
+  MkTSel (DdTypeSel s0) =>
   table ~ UidDd (Prim "id" Int64) (WrapDd s0) =>
   MkTableSchema table =>
   HasColumn ["two", "name"] Text table =>
@@ -219,7 +219,7 @@ statement_query_higherOrder wrapped =
     q = prod (prod prim)
     dd :: Dd table
     dd = uid prim pro
-    pro = Dd SelWAuto NoMods (DdComp mkSel DdProd DdNest fields)
+    pro = Dd SelWAuto NoMods (DdComp mkTSel DdProd DdNest fields)
     fields = merge wrapped :* primAs @"length" :* Nil
 
 ddMerge1 :: Dd ('DdK _ _ Merge1 _)
@@ -237,7 +237,7 @@ test_statement_merge_query_higherOrder =
 ddHigherOrder2 ::
   ∀ s merged .
   merged ~ T.Merge s =>
-  MkSel (DdTypeSel s) =>
+  MkTSel (DdTypeSel s) =>
   CompItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
@@ -249,10 +249,9 @@ ddUidWrapPro =
   ddHigherOrder2 ddPro
 
 higherOrder2 ::
-  ∀ a s merged name .
+  ∀ a s merged .
   merged ~ T.Merge s =>
-  DdTypeSel s ~ 'SelType 'DefaultPrefix name =>
-  MkSel (DdTypeSel s) =>
+  MkTSel (DdTypeSel s) =>
   CompItem ('ProductField "wrapped" a) (Dd merged) merged =>
   ReifyDd merged =>
   ReifyCodec FullCodec merged a =>

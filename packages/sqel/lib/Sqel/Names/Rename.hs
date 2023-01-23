@@ -5,8 +5,10 @@ import Generics.SOP (AllZipN, HTrans (htrans), NP)
 
 import Sqel.Data.Dd (CompInc (Merge), Dd (Dd), DdK (DdK), DdStruct (DdComp), Struct (Comp, Prim))
 import Sqel.Data.Sel (
-  Sel (SelAuto, SelSymbol, SelType, SelUnused),
-  SelW (SelWAuto, SelWSymbol, SelWType, SelWUnused),
+  Sel (SelAuto, SelSymbol, SelUnused),
+  SelW (SelWAuto, SelWSymbol, SelWUnused),
+  TSel (TSel),
+  TSelW (TSelW),
   TypeName,
   )
 
@@ -30,10 +32,19 @@ instance RenameSel s0 'SelUnused where
 instance RenameSel s0 'SelAuto where
   renameSel _ = SelWAuto
 
+type RenameTSel :: TSel -> TSel -> Constraint
+class RenameTSel s0 s1 where
+  renameTSel :: TSelW s0 -> TSelW s1
+
+instance {-# overlappable #-} (
+    s0 ~ s1
+  ) => RenameTSel s0 s1 where
+  renameTSel = id
+
 instance (
     TypeName prefix tpe name
-  ) => RenameSel s0 ('SelType prefix tpe) where
-  renameSel _ = SelWType Proxy
+  ) => RenameTSel s0 ('TSel prefix tpe) where
+  renameTSel _ = TSelW Proxy
 
 type Rename :: DdK -> DdK -> Constraint
 class Rename s0 s1 where
@@ -47,10 +58,10 @@ instance (
 
 instance {-# overlappable #-} (
     RenameSel sel0 sel1,
-    RenameSel tsel0 tsel1
+    RenameTSel tsel0 tsel1
   ) => Rename ('DdK sel0 p t ('Comp tsel0 c i sub)) ('DdK sel1 p t ('Comp tsel1 c i sub)) where
     rename (Dd sel p (DdComp tsel c i s)) =
-      Dd (renameSel sel) p (DdComp (renameSel tsel) c i s)
+      Dd (renameSel sel) p (DdComp (renameTSel tsel) c i s)
 
 instance Rename ('DdK sel p t ('Comp tsel c 'Merge sub)) ('DdK sel p t ('Comp tsel c 'Merge sub)) where
     rename (Dd sel p (DdComp tsel c i s)) =
@@ -77,7 +88,7 @@ instance (
 
 instance (
     RenameSel sel0 sel1,
-    RenameSel tsel0 tsel1,
+    RenameTSel tsel0 tsel1,
     RenameN NP s0 s1
   ) => Rename2 ('DdK sel0 p t ('Comp tsel0 c i s0)) ('DdK sel1 p t ('Comp tsel1 c i s1)) where
-  rename2 (Dd sel p (DdComp tsel c i sub)) = Dd (renameSel sel) p (DdComp (renameSel tsel) c i (renameN sub))
+  rename2 (Dd sel p (DdComp tsel c i sub)) = Dd (renameSel sel) p (DdComp (renameTSel tsel) c i (renameN sub))

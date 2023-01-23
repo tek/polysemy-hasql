@@ -24,10 +24,11 @@ import Sqel.Data.Dd (
 import Sqel.Data.Mods (pattern NoMods, NoMods)
 import Sqel.Data.Sel (
   IndexName,
-  MkSel (mkSel),
-  Sel (SelAuto, SelIndex, SelType),
+  MkTSel (mkTSel),
+  Sel (SelAuto, SelIndex),
   SelPrefix (DefaultPrefix, SelPrefix),
   SelW (SelWAuto, SelWIndex),
+  TSel (TSel),
   TypeName,
   )
 import Sqel.Merge (merge)
@@ -54,11 +55,11 @@ class DdType s ~ a => SumWith a isel imods arg s | a isel imods arg -> s where
 -- TODO b ~ a is not needed here, apparently, but it is for ConColumn. investigate and remove here
 instance (
     b ~ a,
-    CompName a ('SelType prefix name),
+    CompName a ('TSel prefix name),
     fields ~ SumFields (GDatatypeInfoOf a) (GCode a),
     meta ~ MetaFor "sum type" ('ShowType a) "sum",
     CompColumn meta fields a arg s
-  ) => SumWith b isel imods arg ('DdK 'SelAuto NoMods a ('Comp ('SelType prefix name) 'Sum 'Nest ('DdK isel imods Int64 'Prim : s))) where
+  ) => SumWith b isel imods arg ('DdK 'SelAuto NoMods a ('Comp ('TSel prefix name) 'Sum 'Nest ('DdK isel imods Int64 'Prim : s))) where
   sumWith index arg =
     Dd SelWAuto NoMods (DdComp (compName @a) DdSum DdNest (index :* compColumn @meta @fields @a arg))
 
@@ -68,12 +69,12 @@ class DdType s ~ a => Sum a arg s | a arg -> s where
 -- TODO b ~ a is not needed here, apparently, but it is for ConColumn. investigate and remove here
 instance (
     b ~ a,
-    CompName a ('SelType prefix name),
+    CompName a ('TSel prefix name),
     IndexName 'DefaultPrefix name iname,
     fields ~ SumFields (GDatatypeInfoOf a) (GCode a),
     meta ~ MetaFor "sum type" ('ShowType a) "sum",
     CompColumn meta fields a arg s
-  ) => Sum b arg ('DdK 'SelAuto NoMods a ('Comp ('SelType prefix name) 'Sum 'Nest (IndexColumn name : s))) where
+  ) => Sum b arg ('DdK 'SelAuto NoMods a ('Comp ('TSel prefix name) 'Sum 'Nest (IndexColumn name : s))) where
   sum =
     sumWith primIndex
 
@@ -99,12 +100,12 @@ class DdType s ~ a => ConColumn a arg s | a arg -> s where
 
 instance (
     a ~ ConCol name record fields as,
-    MkSel ('SelType 'DefaultPrefix name),
+    MkTSel ('TSel 'DefaultPrefix name),
     meta ~ MetaFor "constructor" ('Text name) "con",
     CompColumn meta fields a arg s
-  ) => ConColumn a arg ('DdK 'SelAuto NoMods (ConCol name record fields as) ('Comp ('SelType 'DefaultPrefix name) ('Prod ('Con as)) 'Nest s)) where
+  ) => ConColumn a arg ('DdK 'SelAuto NoMods (ConCol name record fields as) ('Comp ('TSel 'DefaultPrefix name) ('Prod ('Con as)) 'Nest s)) where
   con arg =
-    Dd SelWAuto NoMods (DdComp mkSel DdCon DdNest (compColumn @meta @fields @(ConCol name record fields as) arg))
+    Dd SelWAuto NoMods (DdComp mkTSel DdCon DdNest (compColumn @meta @fields @(ConCol name record fields as) arg))
 
 conAs ::
   ∀ (name :: Symbol) (a :: Type) (s :: DdK) (arg :: Type) .
@@ -127,9 +128,9 @@ instance (
     TypeName 'DefaultPrefix name tname,
     meta ~ MetaFor "constructor" ('Text name) "con1",
     CompColumn meta (Con1Fields a) a arg s
-  ) => Con1Column a arg ('DdK 'SelAuto NoMods (ConCol name record fields as) ('Comp ('SelType 'DefaultPrefix name) ('Prod ('Con as)) 'Merge s)) where
+  ) => Con1Column a arg ('DdK 'SelAuto NoMods (ConCol name record fields as) ('Comp ('TSel 'DefaultPrefix name) ('Prod ('Con as)) 'Merge s)) where
   con1 arg =
-    Dd SelWAuto NoMods (DdComp mkSel DdCon DdMerge (compColumn @meta @(Con1Fields a) @(ConCol name record fields as) arg))
+    Dd SelWAuto NoMods (DdComp mkTSel DdCon DdMerge (compColumn @meta @(Con1Fields a) @(ConCol name record fields as) arg))
 
 type family RenameCon1 (name :: Symbol) (a :: Type) :: Type where
   RenameCon1 name (ConCol _ record '[ 'ProductField _ a] as) =
@@ -146,9 +147,9 @@ instance (
     fields ~ Con1Fields (RenameCon1 name a),
     meta ~ MetaFor "constructor" ('Text name) "con1As",
     CompColumn meta fields a arg s
-  ) => Con1AsColumn name a arg ('DdK 'SelAuto NoMods a ('Comp ('SelType 'DefaultPrefix name) ('Prod ('Con as)) 'Merge s)) where
+  ) => Con1AsColumn name a arg ('DdK 'SelAuto NoMods a ('Comp ('TSel 'DefaultPrefix name) ('Prod ('Con as)) 'Merge s)) where
   con1As arg =
-    Dd SelWAuto NoMods (DdComp mkSel DdCon DdMerge (compColumn @meta @fields @a arg))
+    Dd SelWAuto NoMods (DdComp mkTSel DdCon DdMerge (compColumn @meta @fields @a arg))
 
 type SetIndexPrefix :: Symbol -> DdK -> DdK -> Constraint
 class SetIndexPrefix prefix s0 s1 | prefix s0 -> s1 where

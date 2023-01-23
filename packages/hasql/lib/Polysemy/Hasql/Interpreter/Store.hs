@@ -39,7 +39,7 @@ import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
 import Polysemy.Hasql.Interpreter.DbTable (initTable)
 
 type EmptyQuery =
-  'DdK ('SelSymbol "") NoMods () ('Comp 'SelAuto ('Prod 'Reg) 'Nest '[])
+  'DdK ('SelSymbol "") NoMods () ('Comp 'TSelAuto ('Prod 'Reg) 'Nest '[])
 
 emptyQuery :: Dd EmptyQuery
 emptyQuery =

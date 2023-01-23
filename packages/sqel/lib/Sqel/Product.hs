@@ -17,7 +17,7 @@ import Sqel.Data.Dd (
   Struct (Comp),
   )
 import Sqel.Data.Mods (pattern NoMods, NoMods)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelAuto), SelW (SelWAuto))
+import Sqel.Data.Sel (MkTSel (mkTSel), Sel (SelAuto), SelW (SelWAuto))
 import Sqel.Names.Rename (Rename (rename))
 import Sqel.Names.Set (SetName)
 
@@ -25,13 +25,13 @@ class DdType s ~ a => ProductNamed sel a arg s | sel a arg -> s where
   prodNamed :: arg -> Dd s
 
 instance (
-    MkSel sel,
+    MkTSel sel,
     fields ~ ProductFields (GDatatypeInfoOf a) (GCode a),
     meta ~ MetaFor "product type" ('ShowType a) "prod",
     CompColumn meta fields a arg s
   ) => ProductNamed sel a arg ('DdK 'SelAuto NoMods a ('Comp sel ('Prod 'Reg) 'Nest s)) where
     prodNamed arg =
-      Dd SelWAuto NoMods (DdComp mkSel DdProd DdNest (compColumn @meta @fields @a arg))
+      Dd SelWAuto NoMods (DdComp mkTSel DdProd DdNest (compColumn @meta @fields @a arg))
 
 class DdType s ~ a => Product a arg s | a arg -> s where
   prod :: arg -> Dd s

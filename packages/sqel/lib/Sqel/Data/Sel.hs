@@ -51,8 +51,6 @@ data Sel =
   SelUnused
   |
   SelIndex SelPrefix Symbol
-  |
-  SelType SelPrefix Symbol
 
 type SelW :: Sel -> Type
 data SelW sel where
@@ -61,7 +59,6 @@ data SelW sel where
   SelWAuto :: SelW 'SelAuto
   SelWUnused :: SelW 'SelUnused
   SelWIndex :: IndexName prefix tpe name => Proxy name -> SelW ('SelIndex prefix tpe)
-  SelWType :: TypeName prefix tpe name => Proxy '(tpe, name) -> SelW ('SelType prefix tpe)
 
 type MkSel :: Sel -> Constraint
 class MkSel sel where
@@ -81,11 +78,6 @@ instance MkSel 'SelUnused where
 instance MkSel ('SelPath p) where
   mkSel = SelWPath
 
-instance (
-    TypeName prefix tpe name
-  ) => MkSel ('SelType prefix tpe) where
-  mkSel = SelWType Proxy
-
 -- TODO path: store witness
 showSelW :: SelW s -> Text
 showSelW = \case
@@ -94,7 +86,6 @@ showSelW = \case
   SelWUnused -> "<unused>"
   SelWSymbol (Proxy :: Proxy sel) -> symbolText @sel
   SelWIndex (Proxy :: Proxy sel) -> [exon|<index for #{symbolText @sel}>|]
-  SelWType (Proxy :: Proxy '(tpe, name)) -> [exon|<type name for #{symbolText @name}>|]
 
 type ReifySel :: Sel -> Symbol -> Constraint
 class KnownSymbol name => ReifySel sel name | sel -> name where
@@ -108,7 +99,31 @@ instance (
   ) => ReifySel ('SelIndex prefixSpec sel) name where
   reifySel (SelWIndex Proxy) = symbolText @name
 
+data TSel =
+  TSel SelPrefix Symbol
+
+type TSelW :: TSel -> Type
+data TSelW sel where
+  TSelW :: TypeName prefix tpe name => Proxy '(tpe, name) -> TSelW ('TSel prefix tpe)
+
+showTSelW :: TSelW s -> Text
+showTSelW (TSelW (Proxy :: Proxy '(tpe, name))) =
+  [exon|<type name for #{symbolText @name}>|]
+
+type ReifyTSel :: TSel -> Symbol -> Constraint
+class KnownSymbol name => ReifyTSel sel name | sel -> name where
+  reifyTSel :: TSelW sel -> Text
+
 instance (
     TypeName prefixSpec sel name
-  ) => ReifySel ('SelType prefixSpec sel) name where
-  reifySel (SelWType Proxy) = symbolText @name
+  ) => ReifyTSel ('TSel prefixSpec sel) name where
+  reifyTSel (TSelW Proxy) = symbolText @name
+
+type MkTSel :: TSel -> Constraint
+class MkTSel sel where
+  mkTSel :: TSelW sel
+
+instance (
+    TypeName prefix tpe name
+  ) => MkTSel ('TSel prefix tpe) where
+  mkTSel = TSelW Proxy

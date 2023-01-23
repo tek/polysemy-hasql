@@ -1,13 +1,10 @@
 module Sqel.Data.Dd where
 
 import Generics.SOP (I, NP (Nil, (:*)))
-import Generics.SOP.GGP (GDatatypeInfoOf)
 import Prettyprinter (Doc, Pretty (pretty), brackets, nest, parens, vsep, (<+>))
 
 import Sqel.Data.Mods (Mods)
-import Sqel.Data.Sel (MkSel (mkSel), Sel (SelSymbol, SelType), SelPrefix (DefaultPrefix), SelW, showSelW)
-import Sqel.Data.Uid (Uid)
-import Sqel.SOP.Constraint (IsDataT)
+import Sqel.Data.Sel (Sel (SelSymbol), SelW, TSel, TSelW, showSelW, showTSelW)
 
 data ProductField =
   ProductField {
@@ -28,7 +25,7 @@ data Struct =
   Prim
   |
   Comp {
-    typeName :: Sel,
+    typeName :: TSel,
     compKind :: Comp,
     compInc :: CompInc,
     sub :: [DdK]
@@ -69,7 +66,7 @@ instance MkDdInc 'Nest where ddInc = DdNest
 type DdStruct :: Struct -> Type
 data DdStruct s where
   DdPrim :: DdStruct 'Prim
-  DdComp :: SelW sel -> DdVar c -> DdInc i -> NP Dd sub -> DdStruct ('Comp sel c i sub)
+  DdComp :: TSelW sel -> DdVar c -> DdInc i -> NP Dd sub -> DdStruct ('Comp sel c i sub)
 
 -- TODO maybe this could be a data family so that after using the dsl, the index is changed so that all Sels are present
 -- also to stuff different metadata in there, like DdlColumn?
@@ -100,20 +97,14 @@ type family DdName (s :: DdK) :: Symbol where
   DdName ('DdK ('SelSymbol name) _ _ _) = name
   DdName ('DdK _ _ a _) = TypeError ("This Dd for type " <> a <> " has no name")
 
-type DdTypeSel :: DdK -> Sel
+type DdTypeSel :: DdK -> TSel
 type family DdTypeSel s where
   DdTypeSel ('DdK _ _ _ ('Comp sel _ _ _)) = sel
-
--- TODO remove this, the type prefix doesn't work
-type family DdTypeName (s :: DdK) :: Symbol where
-  DdTypeName ('DdK _ _ _ ('Comp ('SelSymbol name) _ _ _)) = name
-  DdTypeName ('DdK _ _ _ ('Comp ('SelType _ name) _ _ _)) = name
-  DdTypeName ('DdK _ _ a _) = TypeError ("This Dd for type " <> a <> " has no type name")
 
 sel :: Dd s -> SelW (DdSel s)
 sel (Dd s _ _) = s
 
-typeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> SelW tsel
+typeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> TSelW tsel
 typeSel (Dd _ _ (DdComp s _ _ _)) = s
 
 showSel :: Dd s -> Text
@@ -122,23 +113,23 @@ showSel =
 
 showTypeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> Text
 showTypeSel =
-  showSelW . typeSel
+  showTSelW . typeSel
 
 class MatchDdType s a | s -> a
 instance MatchDdType ('DdK sel p a s) a
 
-type DbTypeName :: Type -> Symbol -> Constraint
-class MkSel ('SelType 'DefaultPrefix name) => DbTypeName a name | a -> name where
-  dbTypeName :: SelW ('SelType 'DefaultPrefix name)
+-- type DbTypeName :: Type -> Symbol -> Constraint
+-- class MkSel ('SelType 'DefaultPrefix name) => DbTypeName a name | a -> name where
+--   dbTypeName :: SelW ('SelType 'DefaultPrefix name)
 
-instance {-# overlappable #-} (
-    IsDataT (GDatatypeInfoOf a) name,
-    MkSel ('SelType 'DefaultPrefix name)
-  ) => DbTypeName a name where
-    dbTypeName = mkSel
+-- instance {-# overlappable #-} (
+--     IsDataT (GDatatypeInfoOf a) name,
+--     MkSel ('SelType 'DefaultPrefix name)
+--   ) => DbTypeName a name where
+--     dbTypeName = mkSel
 
-instance DbTypeName a name => DbTypeName (Uid i a) name where
-  dbTypeName = dbTypeName @a
+-- instance DbTypeName a name => DbTypeName (Uid i a) name where
+--   dbTypeName = dbTypeName @a
 
 data a :> b = a :> b
 infixr 3 :>
@@ -163,7 +154,7 @@ instance (
     PrettyNP sub
   ) => Pretty (Dd ('DdK sel p a ('Comp tsel c i sub))) where
   pretty (Dd s _ (DdComp ts c i sub)) =
-    nest 2 (vsep ((var <> brackets (pretty (showSelW ts)) <+> pretty (showSelW s) <+> parens inc) : prettyNP sub))
+    nest 2 (vsep ((var <> brackets (pretty (showTSelW ts)) <+> pretty (showSelW s) <+> parens inc) : prettyNP sub))
     where
       var = case c of
         DdProd -> "prod"

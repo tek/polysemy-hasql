@@ -17,10 +17,11 @@ import Sqel.Data.Dd (
   type (:>) ((:>)),
   )
 import Sqel.Data.Sel (
-  MkSel (mkSel),
-  Sel (SelAuto, SelSymbol, SelType, SelUnused),
+  MkTSel (mkTSel),
+  Sel (SelAuto, SelSymbol, SelUnused),
   SelPrefix (DefaultPrefix, SelPrefix),
-  SelW (SelWType),
+  TSel (TSel),
+  TSelW (TSelW),
   TypeName,
   )
 import Sqel.Data.Uid (Uid)
@@ -51,9 +52,9 @@ import Sqel.Prim (Prims (Prims))
 --     guardSumPrim (Dd sel p (DdComp tsel DdProd DdNest sub)) =
 --       Dd sel p (DdComp tsel DdProd DdNest (hcmap (Proxy @GuardSumPrim) guardSumPrim sub))
 
-type CompName :: Type -> Sel -> Constraint
+type CompName :: Type -> TSel -> Constraint
 class CompName a sel | a -> sel where
-  compName :: SelW sel
+  compName :: TSelW sel
 
 type CompNameData :: Type -> DatatypeInfo -> Symbol
 type family CompNameData a info where
@@ -62,10 +63,10 @@ type family CompNameData a info where
 
 instance {-# overlappable #-} (
     name ~ CompNameData a (GDatatypeInfoOf a),
-    sel ~ 'SelType 'DefaultPrefix name,
-    MkSel sel
+    sel ~ 'TSel 'DefaultPrefix name,
+    MkTSel sel
   ) => CompName a sel where
-    compName = mkSel
+    compName = mkTSel
 
 instance CompName a sel => CompName (Uid i a) sel where
   compName = compName @a
@@ -87,7 +88,7 @@ type family ProductFields (info :: DatatypeInfo) (ass :: [[Type]]) :: [ProductFi
   ProductFields ('ADT _ _ '[ 'Record _ fields] _) '[ass] = RecordFields fields ass
 
 -- TODO check if the sel cases can be refactored into another class that does the rename/id distinction
--- First add an error test case for the higher-order constraint of ProductIten
+-- First add an error test case for the higher-order constraint of CompItem
 class CompItem field arg s | field arg -> s where
   compItem :: arg -> Dd s
 
@@ -201,9 +202,9 @@ class SetTypePrefix prefix s0 s1 | prefix s0 -> s1 where
 
 instance (
     TypeName ('SelPrefix prefix) tpe tname
-  ) => SetTypePrefix prefix ('DdK sel mods a ('Comp ('SelType oldPrefix tpe) c i s)) ('DdK sel mods a ('Comp ('SelType ('SelPrefix prefix) tpe) c i s)) where
+  ) => SetTypePrefix prefix ('DdK sel mods a ('Comp ('TSel oldPrefix tpe) c i s)) ('DdK sel mods a ('Comp ('TSel ('SelPrefix prefix) tpe) c i s)) where
     setTypePrefix (Dd sel mods (DdComp _ c i s)) =
-      Dd sel mods (DdComp (SelWType Proxy) c i s)
+      Dd sel mods (DdComp (TSelW Proxy) c i s)
 
 typePrefix ::
   ∀ prefix s0 s1 .

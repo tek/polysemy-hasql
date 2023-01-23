@@ -7,14 +7,14 @@ import Prelude hiding (Mod)
 import qualified Sqel.Data.Dd as Kind
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp))
 import Sqel.Data.Mods (Newtype, NoMods)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelType, SelUnused), SelPrefix (DefaultPrefix))
+import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelPrefix (DefaultPrefix), TSel (TSel))
 import Sqel.Data.Select (SelectAtom)
 import Sqel.SOP.Constraint (DataNameF)
 import Sqel.SOP.Error (QuotedType)
 
 type family Prod (a :: Type) :: DdK where
   Prod a =
-    'DdK 'SelAuto NoMods a ('Comp ('SelType 'DefaultPrefix (DataNameF a)) ('Kind.Prod 'Kind.Reg) 'Kind.Nest '[])
+    'DdK 'SelAuto NoMods a ('Comp ('TSel 'DefaultPrefix (DataNameF a)) ('Kind.Prod 'Kind.Reg) 'Kind.Nest '[])
 
 type family Merge (dd :: DdK) :: DdK where
   Merge ('DdK sel mods a ('Comp tsel c _ sub)) = 'DdK sel mods a ('Comp tsel c 'Kind.Merge sub)
@@ -62,14 +62,14 @@ type family Name (name :: Symbol) (dd :: DdK) :: DdK where
   Name name ('DdK _ mods a s) =
     'DdK ('SelSymbol name) mods a s
 
-type family TypeSel (tsel :: Sel) (dd :: DdK) :: DdK where
+type family TypeSel (tsel :: TSel) (dd :: DdK) :: DdK where
   TypeSel tsel ('DdK sel mods a ('Comp _ c i sub)) =
     'DdK sel mods a ('Comp tsel c i sub)
 
--- TODO this will result in a double prefix when used with DdTypeName and manually set prefix
-type family TypeName (name :: Symbol) (dd :: DdK) :: DdK where
-  TypeName name ('DdK sel mods a ('Comp _ c i sub)) =
-    'DdK sel mods a ('Comp ('SelType 'DefaultPrefix name) c i sub)
+-- -- TODO this will result in a double prefix when used with DdTypeName and manually set prefix
+-- type family TypeName (name :: Symbol) (dd :: DdK) :: DdK where
+--   TypeName name ('DdK sel mods a ('Comp _ c i sub)) =
+--     'DdK sel mods a ('Comp ('SelType 'DefaultPrefix name) c i sub)
 
 type family ProdPrimFields (as :: [Type]) (fields :: [FieldInfo]) :: [DdK] where
   ProdPrimFields '[] '[] = '[]
@@ -78,7 +78,7 @@ type family ProdPrimFields (as :: [Type]) (fields :: [FieldInfo]) :: [DdK] where
 
 type family ProdPrims' (a :: Type) (code :: [[Type]]) (info :: DatatypeInfo) :: DdK where
   ProdPrims' a '[as] ('ADT _ name '[ 'Record _ fields] _) =
-    'DdK 'SelAuto NoMods a ('Comp ('SelType 'DefaultPrefix name) ('Kind.Prod 'Kind.Reg) 'Kind.Nest (ProdPrimFields as fields))
+    'DdK 'SelAuto NoMods a ('Comp ('TSel 'DefaultPrefix name) ('Kind.Prod 'Kind.Reg) 'Kind.Nest (ProdPrimFields as fields))
 
 type family ProdPrims (a :: Type) :: DdK where
   ProdPrims a = ProdPrims' a (GCode a) (GDatatypeInfoOf a)
@@ -90,7 +90,7 @@ type family ProdPrimNewtypeFields (as :: [Type]) (fields :: [FieldInfo]) :: [DdK
 
 type family ProdPrimsNewtype' (a :: Type) (code :: [[Type]]) (info :: DatatypeInfo) :: DdK where
   ProdPrimsNewtype' a '[as] ('ADT _ name '[ 'Record _ fields] _) =
-    'DdK 'SelAuto NoMods a ('Comp ('SelType 'DefaultPrefix name) ('Kind.Prod 'Kind.Reg) 'Kind.Nest (ProdPrimNewtypeFields as fields))
+    'DdK 'SelAuto NoMods a ('Comp ('TSel 'DefaultPrefix name) ('Kind.Prod 'Kind.Reg) 'Kind.Nest (ProdPrimNewtypeFields as fields))
 
 type family ProdPrimsNewtype (a :: Type) :: DdK where
   ProdPrimsNewtype a = ProdPrimsNewtype' a (GCode a) (GDatatypeInfoOf a)

@@ -49,7 +49,6 @@ library
       Sqel.Data.TableSchema
       Sqel.Data.Term
       Sqel.Data.Uid
-      Sqel.Fold
       Sqel.Merge
       Sqel.Migration.Column
       Sqel.Migration.Consistency
