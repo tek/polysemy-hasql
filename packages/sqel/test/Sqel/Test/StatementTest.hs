@@ -20,7 +20,6 @@ import Sqel.Data.Dd (
   DdType,
   DdTypeSel,
   DdVar (DdProd),
-  ProductField (ProductField),
   type (:>) ((:>)),
   )
 import Sqel.Data.Mods (pattern NoMods)
@@ -238,7 +237,7 @@ ddHigherOrder2 ::
   ∀ s merged .
   merged ~ T.Merge s =>
   MkTSel (DdTypeSel s) =>
-  CompItem ('ProductField "wrapped" (DdType s)) (Dd merged) merged =>
+  CompItem (DdType s) "wrapped" (Dd merged) merged =>
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
 ddHigherOrder2 wrapped =
@@ -252,7 +251,7 @@ higherOrder2 ::
   ∀ a s merged .
   merged ~ T.Merge s =>
   MkTSel (DdTypeSel s) =>
-  CompItem ('ProductField "wrapped" a) (Dd merged) merged =>
+  CompItem a "wrapped" (Dd merged) merged =>
   ReifyDd merged =>
   ReifyCodec FullCodec merged a =>
   Dd s ->

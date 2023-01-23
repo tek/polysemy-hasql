@@ -89,39 +89,40 @@ type family ProductFields (info :: DatatypeInfo) (ass :: [[Type]]) :: [ProductFi
 
 -- TODO check if the sel cases can be refactored into another class that does the rename/id distinction
 -- First add an error test case for the higher-order constraint of CompItem
-class CompItem field arg s | field arg -> s where
+type CompItem :: Type -> Symbol -> Type -> DdK -> Constraint
+class CompItem a fieldName arg s | a fieldName arg -> s where
   compItem :: arg -> Dd s
 
 instance (
     a ~ b,
     KnownSymbol name
-  ) => CompItem ('ProductField name a) (Dd ('DdK 'SelAuto mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
+  ) => CompItem a name (Dd ('DdK 'SelAuto mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
   compItem = rename
 
 instance (
     a ~ b
-  ) => CompItem ('ProductField fname a) (Dd ('DdK ('SelSymbol name) mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
+  ) => CompItem a fname (Dd ('DdK ('SelSymbol name) mods b 'Prim)) ('DdK ('SelSymbol name) mods a 'Prim) where
   compItem = id
 
 instance (
     a ~ b
-  ) => CompItem ('ProductField name a) (Dd ('DdK 'SelUnused mods b 'Prim)) ('DdK 'SelUnused mods a 'Prim) where
+  ) => CompItem a name (Dd ('DdK 'SelUnused mods b 'Prim)) ('DdK 'SelUnused mods a 'Prim) where
   compItem = id
 
 instance (
     a ~ b,
     KnownSymbol name
-  ) => CompItem ('ProductField name a) (Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
+  ) => CompItem a name (Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
   compItem = rename
 
 instance (
     a ~ b
-  ) => CompItem ('ProductField fname a) (Dd ('DdK ('SelSymbol name) mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
+  ) => CompItem a fname (Dd ('DdK ('SelSymbol name) mods b ('Comp tsel c 'Nest s))) ('DdK ('SelSymbol name) mods a ('Comp tsel c 'Nest s)) where
   compItem = id
 
 instance (
     a ~ b
-  ) => CompItem ('ProductField name a)(Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Merge s))) ('DdK 'SelAuto mods a ('Comp tsel c 'Merge s)) where
+  ) => CompItem a name (Dd ('DdK 'SelAuto mods b ('Comp tsel c 'Merge s))) ('DdK 'SelAuto mods a ('Comp tsel c 'Merge s)) where
   compItem = id
 
 data CompMeta =
@@ -162,23 +163,23 @@ instance CompColumn' meta ('Right 'SpecNP) '[] a (NP f '[]) '[] where
   compColumn' Nil = Nil
 
 instance (
-    CompItem field (f arg0) s0,
+    CompItem t fieldName (f arg0) s0,
     CompColumn' (MetaNext meta) ('Right 'SpecNP) fields a (NP f args) s1
-  ) => CompColumn' meta ('Right 'SpecNP) (field : fields) a (NP f (arg0 : args)) (s0 : s1) where
+  ) => CompColumn' meta ('Right 'SpecNP) ('ProductField fieldName t : fields) a (NP f (arg0 : args)) (s0 : s1) where
     compColumn' (arg0 :* args) =
-      compItem @field arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecNP) @fields @a args
+      compItem @t @fieldName arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecNP) @fields @a args
 
 instance (
-    CompItem field arg0 s0,
+    CompItem t fieldName arg0 s0,
     CompColumn' (MetaNext meta) ('Right 'SpecDsl) fields a args s1
-  ) => CompColumn' meta ('Right 'SpecDsl) (field : fields) a (arg0 :> args) (s0 : s1) where
+  ) => CompColumn' meta ('Right 'SpecDsl) ('ProductField fieldName t : fields) a (arg0 :> args) (s0 : s1) where
   compColumn' (arg0 :> args) =
-    compItem @field arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecDsl) @fields @a args
+    compItem @t @fieldName arg0 :* compColumn' @(MetaNext meta) @('Right 'SpecDsl) @fields @a args
 
 instance (
-    CompItem field arg s
-  ) => CompColumn' meta ('Right 'SpecDsl) '[field] a arg '[s] where
-    compColumn' arg = compItem @field arg :* Nil
+    CompItem t fieldName arg s
+  ) => CompColumn' meta ('Right 'SpecDsl) '[ 'ProductField fieldName t] a arg '[s] where
+    compColumn' arg = compItem @t @fieldName arg :* Nil
 
 instance (
     a ~ b,
