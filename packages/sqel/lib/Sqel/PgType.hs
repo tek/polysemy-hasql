@@ -40,15 +40,15 @@ pgColumn ::
   DdTerm ->
   ([(PgColumnName, ColumnType)], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty PgColumnName])
 pgColumn = \case
-  DdTerm name _ (Prim t unique constr) ->
+  DdTerm name _ unique constr (Prim t) ->
     ([(name, ColumnPrim t unique constr)], [(name, StructurePrim t unique constr)], mempty, [pure name])
-  DdTerm name _ (Comp typeName c i sub) ->
+  DdTerm name _ unique constr (Comp typeName c i sub) ->
     case comp typeName c i sub of
       (compType@(PgComposite cname _), struct, types, False, sels) ->
         (colType, structType, Map.insert ref compType types, (name <|) <$> sels)
         where
-          colType = [(name, ColumnComp ref)]
-          structType = [(name, StructureComp cname struct)]
+          colType = [(name, ColumnComp ref unique constr)]
+          structType = [(name, StructureComp cname struct unique constr)]
           ref = pgCompRef cname
       (PgComposite _ (PgColumns columns), PgStructure struct, types, True, sels) ->
         (columns, struct, types, sels)
@@ -81,7 +81,7 @@ mkValues (PgStructure base) =
   where
     mkCol (n :: Int) = \case
       (_, StructurePrim _ _ _) -> (n + 1, [sql|##{dollar n}|])
-      (_, StructureComp _ (PgStructure cols)) ->
+      (_, StructureComp _ (PgStructure cols) _ _) ->
         (newN, [sql|row(#{Exon.intercalate ", " sub})|])
         where
           (newN, sub) =
@@ -102,12 +102,12 @@ mkTable (PgColumnName name) tableName cols types selectors struct =
 
 toTable :: DdTerm -> PgTable a
 toTable = \case
-  DdTerm name tableName (Prim t unique constr) ->
+  DdTerm name tableName unique constr (Prim t) ->
     mkTable name tableName cols [] [pure name] struct
     where
       cols = PgColumns [(name, ColumnPrim t unique constr)]
       struct = PgStructure [(name, StructurePrim t unique constr)]
-  DdTerm name tableName (Comp typeName c i sub) ->
+  DdTerm name tableName _ _ (Comp typeName c i sub) ->
     mkTable name tableName cols types paths struct
     where
       (PgComposite _ cols, struct, types, _, paths) = comp typeName c i sub

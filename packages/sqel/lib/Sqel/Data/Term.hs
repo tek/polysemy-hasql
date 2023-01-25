@@ -24,7 +24,7 @@ data CompInc =
   deriving stock (Eq, Show, Generic)
 
 data Struct =
-  Prim PgPrimName Bool [Sql]
+  Prim PgPrimName
   |
   Comp Text Comp CompInc [DdTerm]
   deriving stock (Eq, Show, Generic)
@@ -34,6 +34,8 @@ data DdTerm =
   DdTerm {
     name :: PgColumnName,
     tableName :: Maybe PgTableName,
+    unique :: Bool,
+    constraints :: [Sql],
     struct :: Struct
   }
   deriving stock (Eq, Show, Generic)

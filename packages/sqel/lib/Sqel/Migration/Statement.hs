@@ -64,7 +64,7 @@ columnStatements table typeName = \case
     where
       (optFrag, colTypeName) = case tpe of
         ColumnPrim (PgPrimName n) _ opt -> (opt, Sql n)
-        ColumnComp (PgTypeRef n) -> (mempty, Sql n)
+        ColumnComp (PgTypeRef n) _ opt -> (opt, Sql n)
   RemoveColumn (PgColumnName name) _ ->
     alter_ \ alter attr -> [sql|#{alter} drop #{attr} ##{name}|]
   RenameColumn (PgColumnName old) (PgColumnName new) ->

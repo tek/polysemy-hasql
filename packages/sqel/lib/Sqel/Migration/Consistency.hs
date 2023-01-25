@@ -152,7 +152,7 @@ showType :: ColumnType -> Text
 showType =
   squote . \case
     ColumnPrim {name = PgPrimName name} -> name
-    ColumnComp (PgTypeRef name) -> name
+    ColumnComp { pgType = PgTypeRef name } -> name
 
 columnMismatch :: Maybe (PgColumnName, ColumnType) -> Maybe (PgColumnName, ColumnType) -> Text
 columnMismatch Nothing (Just (name, tpe)) =

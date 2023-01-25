@@ -76,7 +76,7 @@ typeMatch (PgComposite name (PgColumns cols)) = do
   where
     colsByName = Map.fromList cols <&> \case
       ColumnPrim n _ _ -> Right n
-      ColumnComp n -> Left n
+      ColumnComp n _ _ -> Left n
 
 tableMatch ::
   Member Database r =>
@@ -88,7 +88,7 @@ tableMatch (PgTable tableName (PgColumns cols) types _ _ _) = do
   where
     colsByName = Map.fromList cols <&> \case
       ColumnPrim n _ _ -> Right n
-      ColumnComp n -> Left n
+      ColumnComp n _ _ -> Left n
 
 startMigration ::
   Member Log r =>

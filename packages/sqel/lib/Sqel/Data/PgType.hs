@@ -95,7 +95,7 @@ pgTypeRefSym =
 data ColumnType =
   ColumnPrim { name :: PgPrimName, unique :: Bool, constraints :: [Sql] }
   |
-  ColumnComp PgTypeRef
+  ColumnComp { pgType :: PgTypeRef, unique :: Bool, constraints :: [Sql] }
   deriving stock (Eq, Show, Generic)
 
 json ''ColumnType
@@ -108,20 +108,20 @@ newtype PgColumns =
 data StructureType =
   StructurePrim { name :: PgPrimName, unique :: Bool, constraints :: [Sql] }
   |
-  StructureComp PgCompName PgStructure
+  StructureComp { compName :: PgCompName, struct :: PgStructure, unique :: Bool, constraints :: [Sql] }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 structureToColumn :: StructureType -> ColumnType
 structureToColumn = \case
   StructurePrim {..} -> ColumnPrim {..}
-  StructureComp (PgTypeName ref) _ -> ColumnComp (PgTypeRef ref)
+  StructureComp (PgTypeName ref) _ unique constr -> ColumnComp (PgTypeRef ref) unique constr
 
 instance Pretty PgColumns where
   pretty (PgColumns cs) =
     vsep $ cs <&> \case
       (n, ColumnPrim t _ opt) -> "*" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
-      (n, ColumnComp t) -> "+" <+> pretty n <+> pretty t
+      (n, ColumnComp t _ opt) -> "+" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
 
 instance ToSql (CommaSep PgColumns) where
   toSql (CommaSep (PgColumns cols)) =

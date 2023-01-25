@@ -17,6 +17,7 @@ import Sqel.Data.Sql (Sql, sql)
 import Sqel.Sql.CommaSep (CommaSep (CommaSep))
 import Sqel.Text.Quote (dquote)
 
+-- TODO why is unique not used?
 columnSpec ::
   PgColumnName ->
   ColumnType ->
@@ -24,8 +25,8 @@ columnSpec ::
 columnSpec (PgColumnName name) = \case
   ColumnPrim (PgPrimName tpe) _ (Exon.intercalate " " -> params) ->
     [sql|##{dquote name} ##{tpe} #{params}|]
-  ColumnComp (PgTypeRef tpe) ->
-    [sql|##{dquote name} ##{tpe}|]
+  ColumnComp (PgTypeRef tpe) _ (Exon.intercalate " " -> params) ->
+    [sql|##{dquote name} ##{tpe} #{params}|]
 
 typeColumnSpec ::
   PgColumnName ->
@@ -34,7 +35,7 @@ typeColumnSpec ::
 typeColumnSpec (PgColumnName name) = \case
   ColumnPrim (PgPrimName tpe) _ _ ->
     [sql|##{dquote name} ##{tpe}|]
-  ColumnComp (PgTypeRef tpe) ->
+  ColumnComp (PgTypeRef tpe) _ _ ->
     [sql|##{dquote name} ##{tpe}|]
 
 -- TODO this should use PgColumns, not PgStructure

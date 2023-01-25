@@ -85,14 +85,16 @@ stmtsTarget =
     "alter table dat add column ph_sum_index__thing bigint",
     "alter table dat alter column ph_sum_index__thing set not null",
     "alter table dat add column thing1 sqel_type__thing1",
+    "alter table dat alter column thing1 set not null",
     "alter table dat add column thing2 sqel_type__thing2",
+    "alter table dat alter column thing2 set not null",
     "alter table dat add column num bigint"
   ]
 
 tableStmtsTarget :: [Sql]
 tableStmtsTarget =
   [
-    [exon|create table "dat" ("num" bigint, "name" text not null, "ph_sum_index__thing" bigint not null, "thing1" sqel_type__thing1, "thing2" sqel_type__thing2)|],
+    [exon|create table "dat" ("num" bigint, "name" text not null, "ph_sum_index__thing" bigint not null, "thing1" sqel_type__thing1 not null, "thing2" sqel_type__thing2 not null)|],
     [exon|create type "sqel_type__thing1" as ("x" bigint, "y" bigint)|],
     [exon|create type "sqel_type__thing2" as ("z" bigint, "a" bigint)|],
     [exon|create table "dat" ("name" text not null)|]

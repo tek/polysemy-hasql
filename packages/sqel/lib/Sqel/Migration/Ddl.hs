@@ -42,6 +42,7 @@ instance (
         (cols, types) = ddCols t
 
 instance (
+    ColumnConstraints mods,
     DdlTypes 'False ('DdK ('SelSymbol name) mods a ('Comp ('TSel tprefix tname) c 'Nest sub)) hTypes,
     DdCols ss cols types,
     allTypes ~ hTypes ++ types,
@@ -51,8 +52,9 @@ instance (
     TypeName tprefix tname pgName
   ) => DdCols ('DdK ('SelSymbol name) mods a ('Comp ('TSel tprefix tname) c 'Nest sub) : ss) ('DdlColumnK name ('Just pgName) mods rename renameType delete a : cols) allTypes where
     ddCols (h@(Dd (SelWSymbol Proxy) mods (DdComp (TSelW Proxy) _ _ _)) :* t) =
-      (DdlColumn Proxy (ColumnComp (pgTypeRefSym @pgName)) mods :* tailCols, appendNP subTypes tailTypes)
+      (DdlColumn Proxy (ColumnComp (pgTypeRefSym @pgName) unique constr) mods :* tailCols, appendNP subTypes tailTypes)
       where
+        (unique, constr) = columnConstraints mods
         subTypes = ddTypes @'False @_ @hTypes h
         (tailCols, tailTypes) = ddCols t
 
