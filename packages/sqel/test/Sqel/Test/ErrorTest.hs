@@ -7,11 +7,11 @@ import Hedgehog (TestT, (===))
 import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
-import Sqel.Test.Error.CompArgs (prodTooFew, prodTooMany, prodBadType)
+import Sqel.Test.Error.CompArgs (prodBadType, prodTooFew, prodTooMany)
+import Sqel.Test.Error.HigherOrderColumn (higherOrderColumn)
 import Sqel.Test.Error.NewtypeNoGeneric (newtypeNoGeneric)
 import Sqel.Test.Error.NewtypeNoNewtype (newtypeNoNewtype)
 import Sqel.Test.Error.QueryColumMismatch (queryColumnMismatch)
-import Sqel.Test.Error.HigherOrderColumn (higherOrderColumn)
 
 typeError ::
   Show a =>

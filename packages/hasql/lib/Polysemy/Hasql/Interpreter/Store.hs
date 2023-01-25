@@ -23,7 +23,7 @@ import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (PgTable (PgTable))
 import Sqel.Data.PgTypeName (pattern PgTypeName)
 import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
-import Sqel.Data.Sel (Sel (SelAuto, SelSymbol), SelW (SelWAuto, SelWSymbol))
+import Sqel.Data.Sel (Sel (SelSymbol), SelPrefix (DefaultPrefix), SelW (SelWSymbol), TSel (TSel), mkTSel)
 import qualified Sqel.Data.TableSchema as TableSchema
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Data.Uid (Uid)
@@ -39,22 +39,22 @@ import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
 import Polysemy.Hasql.Interpreter.DbTable (initTable)
 
 type EmptyQuery =
-  'DdK ('SelSymbol "") NoMods () ('Comp 'TSelAuto ('Prod 'Reg) 'Nest '[])
+  'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
 
 emptyQuery :: Dd EmptyQuery
 emptyQuery =
-  Dd (SelWSymbol Proxy) NoMods (DdComp SelWAuto DdProd DdNest Nil)
+  Dd (SelWSymbol Proxy) NoMods (DdComp mkTSel DdProd DdNest Nil)
 
 primIdQuery :: Dd ('DdK ('SelSymbol "id") NoMods a 'Prim)
 primIdQuery =
   primAs @"id"
 
 type NoResult =
-  'DdK ('SelSymbol "") NoMods () ('Comp ('SelSymbol "") ('Prod 'Reg) 'Nest '[])
+  'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
 
 noResult :: Dd NoResult
 noResult =
-  Dd (SelWSymbol Proxy) NoMods (DdComp (SelWSymbol Proxy) DdProd DdNest Nil)
+  Dd (SelWSymbol Proxy) NoMods (DdComp mkTSel DdProd DdNest Nil)
 
 interpretQStoreDb ::
   ∀ f q d e r .

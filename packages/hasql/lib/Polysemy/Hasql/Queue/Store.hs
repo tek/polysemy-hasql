@@ -8,7 +8,6 @@ import Prelude hiding (Queue, listen)
 import Sqel.Codec (PrimColumn)
 import Sqel.Comp (CompName)
 import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.Sel (Sel (SelType))
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uuid)
 import Sqel.PgType (tableSchema)
@@ -22,6 +21,7 @@ import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
+import Sqel.Data.Sel (TSel(TSel))
 
 class StoreTable t d where
   storeTable :: (TableSchema (Uuid (Queued t d)), QuerySchema UUID (Uuid (Queued t d)))
@@ -30,7 +30,7 @@ instance (
     ToJSON d,
     FromJSON d,
     PrimColumn t,
-    CompName d ('SelType prefix name),
+    CompName d ('TSel prefix name),
     KnownSymbol (AppendSymbol "Queued" name)
   ) => StoreTable t d where
   storeTable =
