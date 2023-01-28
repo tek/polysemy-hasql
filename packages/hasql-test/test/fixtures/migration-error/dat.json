@@ -56,8 +56,10 @@
       [
         "pord",
         {
-          "contents": "sqel_type__pord",
-          "tag": "ColumnComp"
+          "tag": "ColumnComp",
+          "pgType": "sqel_type__pord",
+          "unique": false,
+          "constraints": ["not null"]
         }
       ],
       [
@@ -116,8 +118,10 @@
       [
         "pord",
         {
-          "contents": "sqel_type__pord",
-          "tag": "ColumnComp"
+          "tag": "ColumnComp",
+          "pgType": "sqel_type__pord",
+          "unique": false,
+          "constraints": ["not null"]
         }
       ]
     ],
@@ -208,8 +212,10 @@
       [
         "pord",
         {
-          "contents": "sqel_type__pord",
-          "tag": "ColumnComp"
+          "tag": "ColumnComp",
+          "pgType": "sqel_type__pord",
+          "unique": false,
+          "constraints": ["not null"]
         }
       ]
     ],
