@@ -18,17 +18,21 @@ import Polysemy.Time (GhcTime, interpretTimeGhc)
 import Polysemy.Hasql.Test.Database (TestConnectionEffects, withTestConnection)
 import Polysemy.Hasql.Test.DbConfig (dbConfig)
 
-type TestEffects =
+type DbErrors =
   [
-    GhcTime,
-    Random,
-    Log,
     Stop DbConnectionError,
     Stop DbError,
     Stop QueryError,
     Stop Text,
     Error InitDbError,
-    Error DbError,
+    Error DbError
+  ]
+
+type TestEffects =
+  DbErrors ++ [
+    GhcTime,
+    Random,
+    Log,
     Error Text,
     Mask,
     Race,
@@ -43,33 +47,40 @@ type TestEffects =
     Final IO
   ]
 
+runIntegrationTestWith ::
+  Members [Error Text, Embed IO] r =>
+  HasCallStack =>
+  (DbConfig -> Sem (DbErrors ++ r) ()) ->
+  Sem r ()
+runIntegrationTestWith run =
+  withFrozenCallStack do
+    dbConfig >>= \case
+      Just conf ->
+        mapError @DbError @Text show $
+        mapError @InitDbError @Text show $
+        stopToError @Text $
+        mapStop @QueryError @Text show $
+        mapStop @DbError @Text show $
+        mapStop @DbConnectionError @Text show $
+        run conf
+      Nothing ->
+        unit
+
 integrationTestWith ::
   HasCallStack =>
   (DbConfig -> Sem TestEffects ()) ->
   TestT IO ()
 integrationTestWith run =
-  withFrozenCallStack do
-    dbConfig >>= \case
-      Just conf -> do
-        runTestAuto do
-          r <-
-            asyncToIOFinal $
-            interpretRace $
-            interpretMaskFinal $
-            runError @Text $
-            mapError @DbError @Text show $
-            mapError @InitDbError @Text show $
-            stopToError @Text $
-            mapStop @QueryError @Text show $
-            mapStop @DbError @Text show $
-            mapStop @DbConnectionError @Text show $
-            interpretLogStdoutLevelConc (Just Error) $
-            runRandomIO $
-            interpretTimeGhc $
-            run conf
-          Hedgehog.evalEither r
-      Nothing ->
-        unit
+  withFrozenCallStack $ runTestAuto do
+    r <- asyncToIOFinal $
+      interpretRace $
+      interpretMaskFinal $
+      runError @Text $
+      interpretLogStdoutLevelConc (Just Error) $
+      runRandomIO $
+      interpretTimeGhc $
+      runIntegrationTestWith run
+    Hedgehog.evalEither r
 
 integrationTest ::
   HasCallStack =>
@@ -78,11 +89,3 @@ integrationTest ::
 integrationTest thunk =
   withFrozenCallStack do
     integrationTestWith \ conf -> withTestConnection conf thunk
-
-integrationTestWithDb ::
-  HasCallStack =>
-  (DbConfig -> Sem (TestConnectionEffects ++ TestEffects) ()) ->
-  TestT IO ()
-integrationTestWithDb thunk =
-  withFrozenCallStack do
-    integrationTestWith \ conf -> withTestConnection conf (thunk conf)

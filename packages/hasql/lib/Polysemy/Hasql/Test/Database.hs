@@ -66,7 +66,7 @@ type TestConnectionEffects =
 withTestConnection ::
   Members [Stop DbError, Time t dt, Log, Resource, Mask, Race, Embed IO, Final IO] r =>
   DbConfig ->
-  InterpretersFor (TestConnectionEffects) r
+  InterpretersFor TestConnectionEffects r
 withTestConnection baseConfig ma =
   withTestDb baseConfig \ dbConfig ->
     interpretDbConnectionPool dbConfig Nothing Nothing $

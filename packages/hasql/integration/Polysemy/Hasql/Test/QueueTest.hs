@@ -14,7 +14,7 @@ import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
 import Polysemy.Hasql.Queue.Input (interpretInputQueueDb)
 import Polysemy.Hasql.Queue.Output (interpretOutputQueueDb)
 import Polysemy.Hasql.Queue.Store (interpretQueueStoreDb)
-import Polysemy.Hasql.Test.Run (integrationTestWithDb)
+import Polysemy.Hasql.Test.Run (integrationTest)
 
 data Dat =
   Dat {
@@ -51,9 +51,9 @@ prog = do
 
 test_queue :: UnitTest
 test_queue =
-  integrationTestWithDb \ _ ->
-    mapStop @QueueOutputError @Text show $
-    interpretQueueStoreDb $
-    interpretOutputQueueDb @"test-queue" @(Uuid Dat) $
-    interpretInputQueueDb @"test-queue" (Seconds 0) def (const (pure True)) $
-    prog
+  integrationTest $
+  mapStop @QueueOutputError @Text show $
+  interpretQueueStoreDb $
+  interpretOutputQueueDb @"test-queue" @(Uuid Dat) $
+  interpretInputQueueDb @"test-queue" (Seconds 0) def (const (pure True)) $
+  prog
