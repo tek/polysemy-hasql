@@ -18,7 +18,7 @@ import Sqel.Data.Migration (Migration (Migration), Migrations (Migrations), chan
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
-  PgColumnName,
+  PgColumn (PgColumn),
   PgColumns (PgColumns),
   PgComposite (PgComposite),
   PgPrimName (PgPrimName),
@@ -154,12 +154,12 @@ showType =
     ColumnPrim {name = PgPrimName name} -> name
     ColumnComp { pgType = PgTypeRef name } -> name
 
-columnMismatch :: Maybe (PgColumnName, ColumnType) -> Maybe (PgColumnName, ColumnType) -> Text
-columnMismatch Nothing (Just (name, tpe)) =
+columnMismatch :: Maybe PgColumn -> Maybe PgColumn -> Text
+columnMismatch Nothing (Just (PgColumn name tpe)) =
   [exon|A column '##{name}' with type #{showType tpe} was added.|]
-columnMismatch (Just (name, tpe)) Nothing =
+columnMismatch (Just (PgColumn name tpe)) Nothing =
   [exon|The column '##{name}' with type #{showType tpe} was removed.|]
-columnMismatch (Just (gname, gtpe)) (Just (cname, ctpe))
+columnMismatch (Just (PgColumn gname gtpe)) (Just (PgColumn cname ctpe))
   | gname == cname =
     [exon|The type of the column '##{gname}' was changed from #{showType gtpe} to #{showType ctpe}.|]
   | otherwise =

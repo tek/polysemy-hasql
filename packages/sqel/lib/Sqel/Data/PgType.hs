@@ -1,8 +1,11 @@
 module Sqel.Data.PgType where
 
 import qualified Data.Map.Strict as Map
+import qualified Exon
+import Lens.Micro.Extras (view)
 import Prettyprinter (Pretty (pretty), nest, sep, vsep, (<+>))
 
+import Sqel.Data.Create (Create (Create))
 import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Selector (Selector (unSelector), assign, nameSelector)
@@ -100,8 +103,24 @@ data ColumnType =
 
 json ''ColumnType
 
+data PgColumn =
+  PgColumn {
+    name :: PgColumnName,
+    pgType :: ColumnType
+  }
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+instance ToSql (Create PgColumn) where
+  toSql (Create PgColumn {..}) =
+    case pgType of
+      ColumnPrim (PgPrimName tpe) _ (Exon.intercalate " " -> params) ->
+        [sql|##{name} ##{tpe} #{params}|]
+      ColumnComp (PgTypeRef tpe) _ (Exon.intercalate " " -> params) ->
+        [sql|##{name} ##{tpe} #{params}|]
+
 newtype PgColumns =
-  PgColumns { unPgColumns :: [(PgColumnName, ColumnType)] }
+  PgColumns { unPgColumns :: [PgColumn] }
   deriving stock (Eq, Show)
   deriving newtype (FromJSON, ToJSON)
 
@@ -120,12 +139,16 @@ structureToColumn = \case
 instance Pretty PgColumns where
   pretty (PgColumns cs) =
     vsep $ cs <&> \case
-      (n, ColumnPrim t _ opt) -> "*" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
-      (n, ColumnComp t _ opt) -> "+" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
+      PgColumn n (ColumnPrim t _ opt) -> "*" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
+      PgColumn n (ColumnComp t _ opt) -> "+" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
 
 instance ToSql (CommaSep PgColumns) where
   toSql (CommaSep (PgColumns cols)) =
-    toSql (CommaSep (fst <$> cols))
+    toSql (CommaSep (view #name <$> cols))
+
+instance ToSql (Create PgColumns) where
+  toSql (Create (PgColumns cols)) =
+    [sql|(##{CommaSep (Create <$> cols)})|]
 
 newtype PgStructure =
   PgStructure { unPgColumns :: [(PgColumnName, StructureType)] }
@@ -134,7 +157,7 @@ newtype PgStructure =
 
 structureToColumns :: PgStructure -> PgColumns
 structureToColumns (PgStructure cols) =
-  PgColumns (second structureToColumn <$> cols)
+  PgColumns (uncurry PgColumn . second structureToColumn <$> cols)
 
 data PgComposite =
   PgComposite {
@@ -179,6 +202,10 @@ instance Pretty (PgTable a) where
   pretty PgTable {..} =
     nest 2 (vsep (("table" <+> pretty name) : pretty columns : (pretty <$> Map.elems types)))
 
+instance ToSql (Create (PgTable a)) where
+  toSql (Create PgTable {name, columns}) =
+    [sql|create table ##{name} ##{Create columns}|]
+
 instance ToSql (Select (PgTable a)) where
   toSql (Select PgTable {name, selectors}) =
     [sql|##{Select selectors} ##{From name}|]
@@ -188,7 +215,7 @@ instance ToSql (Update (PgTable a)) where
     [sql|update set ##{CommaSep assigns}|]
     where
       assigns = zipWith assign colNames values
-      colNames = columns <&> \ (PgColumnName name, _) -> nameSelector name
+      colNames = columns <&> \ (PgColumn (PgColumnName name) _) -> nameSelector name
 
 instance ToSql (Returning (PgTable a)) where
   toSql (Returning (PgTable {selectors})) =

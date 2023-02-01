@@ -31,6 +31,7 @@ library
       Sqel.Combinators
       Sqel.Comp
       Sqel.Data.Codec
+      Sqel.Data.Create
       Sqel.Data.Dd
       Sqel.Data.FieldPath
       Sqel.Data.FragType

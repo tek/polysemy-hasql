@@ -5,7 +5,7 @@ import qualified Exon
 import Sqel.Data.Sql (ToSql (toSql))
 
 newtype CommaSep a =
-  CommaSep { unReturning :: a }
+  CommaSep { unCommaSep :: a }
   deriving stock (Eq, Show)
 
 instance ToSql a => ToSql (CommaSep [a]) where

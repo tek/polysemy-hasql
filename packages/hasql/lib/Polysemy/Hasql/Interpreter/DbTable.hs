@@ -12,6 +12,7 @@ import Sqel.Data.Migration (Mig (Mig), Migration (Migration, tableFrom), Migrati
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
+  PgColumn (PgColumn),
   PgColumnName (PgColumnName),
   PgColumns (PgColumns),
   PgComposite (PgComposite),
@@ -66,6 +67,10 @@ tableColumns ::
 tableColumns =
   typeColumns tableColumnsSql
 
+columnMap :: [PgColumn] -> Map PgColumnName ColumnType
+columnMap =
+  Map.fromList . fmap \ PgColumn {name, pgType} -> (name, pgType)
+
 typeMatch ::
   Member Database r =>
   PgComposite ->
@@ -74,7 +79,7 @@ typeMatch (PgComposite name (PgColumns cols)) = do
   dbCols <- typeColumns typeColumnsSql name
   pure (dbCols == colsByName)
   where
-    colsByName = Map.fromList cols <&> \case
+    colsByName = columnMap cols <&> \case
       ColumnPrim n _ _ -> Right n
       ColumnComp n _ _ -> Left n
 
@@ -86,7 +91,7 @@ tableMatch (PgTable tableName (PgColumns cols) types _ _ _) = do
   dbCols <- tableColumns tableName
   andM (pure (dbCols == colsByName) : (typeMatch <$> Map.elems types))
   where
-    colsByName = Map.fromList cols <&> \case
+    colsByName = columnMap cols <&> \case
       ColumnPrim n _ _ -> Right n
       ColumnComp n _ _ -> Left n
 
@@ -126,12 +131,15 @@ initTable ::
   PgTable d ->
   Migrations (Sem r) ds d ->
   Sem r ()
-initTable table (Migrations migrations) =
+initTable table@PgTable {name = PgTypeName name} (Migrations migrations) =
   ifM (Map.null <$> tableColumns (table ^. #name))
   do
-    Database.use \ c -> createTable c table
+    Database.use \ c -> do
+      Log.debug [exon|Creating nonexistent table #{name}|]
+      createTable c table
   do
     unlessM (tableMatch table) do
+      Log.debug [exon|Initiating migrations for table #{name}|]
       runMigrations table migrations
 
 interpretTableMigrations ::

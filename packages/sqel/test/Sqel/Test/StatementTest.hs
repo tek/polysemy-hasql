@@ -12,6 +12,7 @@ import Test.Tasty (TestTree, testGroup)
 import Sqel.Class.MatchView (HasColumn)
 import Sqel.Comp (Column, CompName (compName))
 import Sqel.Data.Codec (FullCodec)
+import Sqel.Data.Create (Create (Create))
 import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdNest),
@@ -116,6 +117,15 @@ target_mergeSum =
   [sql|select "id", "sqel_sum_index__merge_sum", ("merge_sum1").num1, ("merge_sum1").name1, ("merge_sum2").num2,
        ("merge_sum2").name2 from "merge_sum"|]
 
+target_create_mergeSum :: Sql
+target_create_mergeSum =
+  [sql|create table "merge_sum"
+  ("id" bigint not null,
+    "sqel_sum_index__merge_sum" bigint not null,
+    "merge_sum1" sqel_type__merge_sum1 not null,
+    "merge_sum2" sqel_type__merge_sum2 not null)
+  |]
+
 data MergeSum =
   MergeSum1 { num1 :: Int, name1 :: Text }
   |
@@ -134,6 +144,7 @@ test_statement_merge_sum :: TestT IO ()
 test_statement_merge_sum = do
   target_mergeSum === toSql (Select (tableSchema dd_uid_merge_sum))
   target_mergeSum === toSql (Select (tableSchema dd_uid_merge_sum_manual))
+  target_create_mergeSum === toSql (Create (tableSchema dd_uid_merge_sum_manual))
 
 data MergeProd =
   MergeProd { count :: Int, b :: Pro }

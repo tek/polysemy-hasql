@@ -5,6 +5,7 @@ import qualified Exon
 import qualified Sqel.Data.PgType as PgTable
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
+  PgColumn (PgColumn),
   PgColumnName (PgColumnName),
   PgColumns (PgColumns),
   PgComposite (PgComposite),
@@ -19,33 +20,30 @@ import Sqel.Text.Quote (dquote)
 
 -- TODO why is unique not used?
 columnSpec ::
-  PgColumnName ->
-  ColumnType ->
+  PgColumn ->
   Sql
-columnSpec (PgColumnName name) = \case
-  ColumnPrim (PgPrimName tpe) _ (Exon.intercalate " " -> params) ->
+columnSpec = \case
+  PgColumn (PgColumnName name) (ColumnPrim (PgPrimName tpe) _ (Exon.intercalate " " -> params)) ->
     [sql|##{dquote name} ##{tpe} #{params}|]
-  ColumnComp (PgTypeRef tpe) _ (Exon.intercalate " " -> params) ->
+  PgColumn (PgColumnName name) (ColumnComp (PgTypeRef tpe) _ (Exon.intercalate " " -> params)) ->
     [sql|##{dquote name} ##{tpe} #{params}|]
 
 typeColumnSpec ::
-  PgColumnName ->
-  ColumnType ->
+  PgColumn ->
   Sql
-typeColumnSpec (PgColumnName name) = \case
-  ColumnPrim (PgPrimName tpe) _ _ ->
+typeColumnSpec = \case
+  PgColumn (PgColumnName name) (ColumnPrim (PgPrimName tpe) _ _) ->
     [sql|##{dquote name} ##{tpe}|]
-  ColumnComp (PgTypeRef tpe) _ _ ->
+  PgColumn (PgColumnName name) (ColumnComp (PgTypeRef tpe) _ _) ->
     [sql|##{dquote name} ##{tpe}|]
 
--- TODO this should use PgColumns, not PgStructure
 createTable ::
   PgTable a ->
   Sql
 createTable PgTable {name, columns = PgColumns cols} =
   [sql|create table ##{name} (##{CommaSep formattedColumns})|]
   where
-    formattedColumns = toList (uncurry columnSpec <$> cols)
+    formattedColumns = toList (columnSpec <$> cols)
 
 dropTable ::
   PgTableName ->
@@ -60,4 +58,4 @@ createProdType ::
 createProdType (PgComposite name (PgColumns cols)) =
   [sql|create type ##{name} as (##{CommaSep formattedColumns})|]
   where
-    formattedColumns = toList (uncurry typeColumnSpec <$> cols)
+    formattedColumns = toList (typeColumnSpec <$> cols)

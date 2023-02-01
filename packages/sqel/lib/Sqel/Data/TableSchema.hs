@@ -4,6 +4,7 @@ import Exon (exon)
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
 
+import Sqel.Data.Create (Create (Create))
 import Sqel.Data.PgType (PgTable)
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Sql (ToSql (toSql))
@@ -23,3 +24,7 @@ instance Show (TableSchema a) where
 instance ToSql (Select (TableSchema a)) where
   toSql (Select ts) =
     toSql (Select (ts ^. #pg))
+
+instance ToSql (Create (TableSchema a)) where
+  toSql (Create ts) =
+    toSql (Create (ts ^. #pg))

@@ -6,7 +6,13 @@ import Hasql.Statement (Statement (Statement))
 
 import Sqel.Data.Codec (Encoder (Encoder))
 import qualified Sqel.Data.PgType as PgTable
-import Sqel.Data.PgType (ColumnType (ColumnPrim), PgColumnName (PgColumnName), PgColumns (PgColumns), PgTable (PgTable))
+import Sqel.Data.PgType (
+  ColumnType (ColumnPrim),
+  PgColumn (PgColumn),
+  PgColumnName (PgColumnName),
+  PgColumns (PgColumns),
+  PgTable (PgTable),
+  )
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
@@ -76,14 +82,14 @@ insert ::
 insert (TableSchema col _ params) =
   prepared [sql|##{Insert col}|] unit params
 
-uniqueColumn :: (PgColumnName, ColumnType) -> Maybe Selector
+uniqueColumn :: PgColumn -> Maybe Selector
 uniqueColumn = \case
-  (PgColumnName name, ColumnPrim _ True _) ->
+  PgColumn (PgColumnName name) (ColumnPrim _ True _) ->
     Just (Selector (Sql (dquote name)))
   _ ->
     Nothing
 
-pattern UniqueName :: Selector -> (PgColumnName, ColumnType)
+pattern UniqueName :: Selector -> PgColumn
 pattern UniqueName sel <- (uniqueColumn -> Just sel)
 
 conflictFragment ::

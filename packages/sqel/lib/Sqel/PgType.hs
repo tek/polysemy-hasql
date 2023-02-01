@@ -13,6 +13,7 @@ import Sqel.Data.Codec (Codec (Codec), FullCodec)
 import Sqel.Data.Dd (Dd, DdK, DdType)
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
+  PgColumn (PgColumn),
   PgColumnName (PgColumnName),
   PgColumns (PgColumns),
   PgComposite (PgComposite),
@@ -38,16 +39,16 @@ import Sqel.Text.Quote (dquote)
 
 pgColumn ::
   DdTerm ->
-  ([(PgColumnName, ColumnType)], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty PgColumnName])
+  ([PgColumn], [(PgColumnName, StructureType)], Map PgTypeRef PgComposite, [NonEmpty PgColumnName])
 pgColumn = \case
   DdTerm name _ unique constr (Prim t) ->
-    ([(name, ColumnPrim t unique constr)], [(name, StructurePrim t unique constr)], mempty, [pure name])
+    ([PgColumn name (ColumnPrim t unique constr)], [(name, StructurePrim t unique constr)], mempty, [pure name])
   DdTerm name _ unique constr (Comp typeName c i sub) ->
     case comp typeName c i sub of
       (compType@(PgComposite cname _), struct, types, False, sels) ->
         (colType, structType, Map.insert ref compType types, (name <|) <$> sels)
         where
-          colType = [(name, ColumnComp ref unique constr)]
+          colType = [PgColumn name (ColumnComp ref unique constr)]
           structType = [(name, StructureComp cname struct unique constr)]
           ref = pgCompRef cname
       (PgComposite _ (PgColumns columns), PgStructure struct, types, True, sels) ->
@@ -105,7 +106,7 @@ toTable = \case
   DdTerm name tableName unique constr (Prim t) ->
     mkTable name tableName cols [] [pure name] struct
     where
-      cols = PgColumns [(name, ColumnPrim t unique constr)]
+      cols = PgColumns [PgColumn name (ColumnPrim t unique constr)]
       struct = PgStructure [(name, StructurePrim t unique constr)]
   DdTerm name tableName _ _ (Comp typeName c i sub) ->
     mkTable name tableName cols types paths struct

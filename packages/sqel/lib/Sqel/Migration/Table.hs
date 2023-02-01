@@ -2,8 +2,7 @@ module Sqel.Migration.Table where
 
 import Hasql.Session (Session)
 
-import qualified Sqel.Data.Dd as Dd
-import Sqel.Data.Dd (Dd)
+import Sqel.Data.Dd (Dd, DdType)
 import Sqel.Data.Migration (Mig (Mig), Migration (Migration), MigrationAction)
 import Sqel.Data.PgType (PgTable)
 import Sqel.Migration.Ddl (DdlTypes, ddTable)
@@ -37,7 +36,7 @@ instance AutoMigrationEffect (Const [MigrationStatement]) where
   autoMigrationEffect _ _ = Const . migrationStatements
 
 class DdMigrations m old new where
-  ddMigrations :: Dd old -> Dd new -> Migration m ('Mig (Dd.DdType old) (Dd.DdType new))
+  ddMigrations :: Dd old -> Dd new -> Migration m ('Mig (DdType old) (DdType new))
 
 instance (
   TableChanges old new,
@@ -56,6 +55,6 @@ migrateAuto ::
   DdMigrations m old new =>
   Dd old ->
   Dd new ->
-  Migration m ('Mig (Dd.DdType old) (Dd.DdType new))
+  Migration m ('Mig (DdType old) (DdType new))
 migrateAuto =
   ddMigrations
