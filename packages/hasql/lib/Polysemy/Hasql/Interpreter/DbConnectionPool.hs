@@ -21,7 +21,7 @@ import Polysemy.Db.Data.DbUser (DbUser (DbUser))
 import qualified Text.Show as Show
 
 import Polysemy.Hasql.Data.ConnectionTag (ConnectionTag)
-import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool (Acquire, Free, Kill, Release, UnsafeGet, Use))
+import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool (Acquire, Config, Free, Kill, Release, UnsafeGet, Use))
 
 data KillCommand =
   KillCommand
@@ -221,6 +221,8 @@ handleDbConnectionPool dbConfig = \case
     pureT =<< release ctag
   UnsafeGet ctag ->
     pureT . fmap (coerce . connection) =<< atomicGets (view (#active . at ctag))
+  Config ->
+    pureT dbConfig
 
 interpretDbConnectionPool ::
   Members [Log, Resource, Embed IO, Final IO] r =>
@@ -259,6 +261,8 @@ handleDbConnectionPoolSingle dbConfig = \case
     unitT
   UnsafeGet _ ->
     pureT Nothing
+  Config ->
+    pureT dbConfig
 
 interpretDbConnectionPoolSingle ::
   Member (Embed IO) r =>
