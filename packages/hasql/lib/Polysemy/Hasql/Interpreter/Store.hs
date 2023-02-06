@@ -17,26 +17,19 @@ import Sqel.Data.Dd (
   ProdType (Reg),
   Struct (Comp, Prim),
   )
-import Sqel.Data.Migration (noMigrations)
 import Sqel.Data.Mods (pattern NoMods, NoMods)
-import qualified Sqel.Data.PgType as PgType
-import Sqel.Data.PgType (PgTable (PgTable))
-import Sqel.Data.PgTypeName (pattern PgTypeName)
 import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
 import Sqel.Data.Sel (Sel (SelSymbol), SelPrefix (DefaultPrefix), SelW (SelWSymbol), TSel (TSel), mkTSel)
-import qualified Sqel.Data.TableSchema as TableSchema
-import Sqel.Data.TableSchema (TableSchema (TableSchema))
+import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid)
 import Sqel.Prim (primAs)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (delete, insert, selectWhere, upsert)
 
-import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
-import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
+import Polysemy.Hasql.Effect.Database (ConnectionSource)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
-import Polysemy.Hasql.Interpreter.DbTable (initTable)
 
 type EmptyQuery =
   'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
@@ -56,27 +49,27 @@ noResult :: Dd NoResult
 noResult =
   Dd (SelWSymbol Proxy) NoMods (DdComp mkTSel DdProd DdNest Nil)
 
-interpretQStoreDb ::
-  ∀ f q d e r .
+handleQStoreDb ::
+  ∀ f q d e r m a .
   ResultShape d (f d) =>
-  Member (DbTable d !! e) r =>
+  Members [DbTable d !! e, Stop e] r =>
   TableSchema d ->
   QuerySchema q d ->
-  InterpreterFor (QStore f q d !! e) r
-interpretQStoreDb table query =
-  interpretResumable \case
-    Store.Insert d ->
-      restop (DbTable.statement d is)
-    Store.Upsert d ->
-      restop (DbTable.statement d us)
-    Store.Delete i ->
-      restop (DbTable.statement i ds)
-    Store.DeleteAll ->
-      restop (DbTable.statement () das)
-    Store.Fetch i ->
-      restop (DbTable.statement i qs)
-    Store.FetchAll ->
-      restop (DbTable.statement () qas)
+  QStore f q d m a ->
+  Sem r a
+handleQStoreDb table query = \case
+  Store.Insert d ->
+    restop (DbTable.statement d is)
+  Store.Upsert d ->
+    restop (DbTable.statement d us)
+  Store.Delete i ->
+    restop (DbTable.statement i ds)
+  Store.DeleteAll ->
+    restop (DbTable.statement () das)
+  Store.Fetch i ->
+    restop (DbTable.statement i qs)
+  Store.FetchAll ->
+    restop (DbTable.statement () qas)
   where
     is = insert table
     us = upsert table
@@ -89,6 +82,16 @@ interpretQStoreDb table query =
     das :: Statement () [d]
     das = delete emptyQuerySchema table
 
+interpretQStoreDb ::
+  ∀ f q d e r .
+  ResultShape d (f d) =>
+  Member (DbTable d !! e) r =>
+  TableSchema d ->
+  QuerySchema q d ->
+  InterpreterFor (QStore f q d !! e) r
+interpretQStoreDb table query =
+  interpretResumable (handleQStoreDb table query)
+
 interpretStoreDb ::
   ∀ i d e r .
   Member (StoreTable i d !! e) r =>
@@ -98,48 +101,49 @@ interpretStoreDb ::
 interpretStoreDb table query =
   interpretQStoreDb table query
 
-tableDatabaseScoped ::
-  Members [Scoped conn (Database !! DbError), Stop DbError, Log, Embed IO] r =>
-  conn ->
-  InterpreterFor (Database !! DbError) r
-tableDatabaseScoped conn ma =
-  scoped conn do
-    restop (raise ma)
-
 storeScope ::
-  Members [Scoped ConnectionSource (Database !! DbError), Log, Embed IO] r =>
+  Members [Scoped ConnectionSource (DbTable d !! DbError), Log, Embed IO] r =>
   Connection ->
-  (() -> Sem (Database !! DbError : Stop DbError : r) a) ->
+  (() -> Sem (DbTable d !! DbError : Stop DbError : r) a) ->
   Sem (Stop DbError : r) a
 storeScope conn use =
-  tableDatabaseScoped (Database.Supplied "transaction" conn) do
-    insertAt @1 (use ())
+  scoped (Database.Supplied "transaction" conn) (use ())
 
--- TODO move withInit to scope?
--- TODO local DbTable?
+interpretQStoreXa ::
+  ∀ f i d r .
+  ResultShape d (f d) =>
+  Members [Scoped ConnectionSource (DbTable d !! DbError), Log, Embed IO] r =>
+  TableSchema d ->
+  QuerySchema i d ->
+  InterpreterFor (Scoped Connection (QStore f i d !! DbError) !! DbError) r
+interpretQStoreXa table query =
+  interpretScopedRWith @'[DbTable d !! DbError] storeScope \ () -> handleQStoreDb table query
+
 interpretStoreXa ::
   ∀ i d r .
-  Members [Scoped ConnectionSource (Database !! DbError), Log, Embed IO] r =>
+  Members [Scoped ConnectionSource (DbTable (Uid i d) !! DbError), Log, Embed IO] r =>
   TableSchema (Uid i d) ->
   QuerySchema i (Uid i d) ->
   InterpreterFor (Scoped Connection (Store i d !! DbError) !! DbError) r
-interpretStoreXa schema@(TableSchema {pg = table@PgTable {name = PgTypeName name}}) query =
-  interpretScopedRWith @'[Database !! DbError] storeScope \ () -> \case
-    Store.Insert d ->
-      restop (Database.withInit initDb (Database.statement d is))
-    Store.Fetch i ->
-      restop (Database.withInit initDb (Database.statement i qs))
-    Store.FetchAll ->
-      restop (Database.withInit initDb (Database.statement () qas))
-    _ ->
-      undefined
-  where
-    is = insert schema
-    qs :: Statement i (Maybe (Uid i d))
-    qs = selectWhere query schema
-    qas :: Statement () [Uid i d]
-    qas = selectWhere emptyQuerySchema schema
-    initDb ::
-      Members [Database, Stop DbError, Log, Embed IO] r' =>
-      InitDb (Sem r')
-    initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations
+interpretStoreXa =
+  interpretQStoreXa @Maybe
+
+interpretQStores ::
+  ∀ f q d r .
+  ResultShape d (f d) =>
+  Members [Scoped ConnectionSource (DbTable d !! DbError), DbTable d !! DbError, Log, Embed IO] r =>
+  TableSchema d ->
+  QuerySchema q d ->
+  InterpretersFor [QStore f q d !! DbError, Scoped Connection (QStore f q d !! DbError) !! DbError] r
+interpretQStores table query =
+  interpretQStoreXa table query .
+  interpretQStoreDb table query
+
+interpretStores ::
+  ∀ i d r .
+  Members [Scoped ConnectionSource (DbTable (Uid i d) !! DbError), StoreTable i d !! DbError, Log, Embed IO] r =>
+  TableSchema (Uid i d) ->
+  QuerySchema i (Uid i d) ->
+  InterpretersFor [Store i d !! DbError, Scoped Connection (Store i d !! DbError) !! DbError] r
+interpretStores =
+  interpretQStores @Maybe

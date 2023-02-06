@@ -140,6 +140,7 @@ library
     , polysemy-time
     , postgresql-libpq
     , prelate >=0.4
+    , prettyprinter
     , sqel
     , stm-chans
     , torsor
@@ -176,7 +177,6 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.StoreUpdateTest
       Polysemy.Hasql.Test.SumTableTest
       Polysemy.Hasql.Test.TransactionTest
-      Polysemy.Hasql.Test.UnarySumTest
       Polysemy.Hasql.Test.UpsertTest
       Polysemy.Hasql.Test.WithInitTest
   hs-source-dirs:

@@ -58,3 +58,11 @@ migrateAuto ::
   Migration m ('Mig (DdType old) (DdType new))
 migrateAuto =
   ddMigrations
+
+migrateTransform ::
+  Dd old ->
+  Dd new ->
+  ([DdType old] -> m [DdType new]) ->
+  Migration m ('Mig (DdType old) (DdType new))
+migrateTransform =
+  undefined

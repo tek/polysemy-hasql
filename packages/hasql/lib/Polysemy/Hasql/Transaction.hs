@@ -1,9 +1,16 @@
 module Polysemy.Hasql.Transaction where
 
-import Polysemy.Db.Effect.Store (Store)
+import Polysemy.Db.Effect.Store (QStore, Store)
+import Sqel.Data.Uid (Uid)
 
 import qualified Polysemy.Hasql.Effect.Transaction as Transaction
 import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions)
+
+type XaQStore res err f q d =
+  Scoped res (QStore f q d !! err) !! err
+
+type XaStore res err i d =
+  XaQStore res err Maybe i (Uid i d)
 
 type TransactionEffects :: EffectRow -> EffectRow -> Type -> Type -> EffectRow -> Constraint
 class TransactionEffects all effs err res r where
@@ -37,9 +44,9 @@ transact ma =
     transactionEffects @effs @effs @err conn do
       ma
 
-type family XaStores (ds :: [Type]) :: [Effect] where
+type family XaStores (ds :: [(Type, Type)]) :: [Effect] where
   XaStores '[] = '[]
-  XaStores (d : ds) = Store Int64 d : XaStores ds
+  XaStores ('(i, d) : ds) = Store i d : XaStores ds
 
 transactStores ::
   ∀ ds res err r xas .

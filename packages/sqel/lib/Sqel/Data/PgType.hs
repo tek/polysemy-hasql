@@ -111,6 +111,11 @@ data PgColumn =
   deriving stock (Eq, Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
+instance Pretty PgColumn where
+  pretty = \case
+    PgColumn n (ColumnPrim t _ opt) -> "*" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
+    PgColumn n (ColumnComp t _ opt) -> "+" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
+
 instance ToSql (Create PgColumn) where
   toSql (Create PgColumn {..}) =
     case pgType of
@@ -138,9 +143,7 @@ structureToColumn = \case
 
 instance Pretty PgColumns where
   pretty (PgColumns cs) =
-    vsep $ cs <&> \case
-      PgColumn n (ColumnPrim t _ opt) -> "*" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
-      PgColumn n (ColumnComp t _ opt) -> "+" <+> pretty n <+> pretty t <+> sep (pretty <$> opt)
+    vsep (pretty <$> cs)
 
 instance ToSql (CommaSep PgColumns) where
   toSql (CommaSep (PgColumns cols)) =

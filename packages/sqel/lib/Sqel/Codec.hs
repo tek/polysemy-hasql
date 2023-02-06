@@ -66,7 +66,7 @@ instance {-# overlappable #-} (
     primEncoder = error "no instance for PrimColumn"
     pgType = error "no instance for PrimColumn"
 
-instance PrimColumn Bool where pgType = "bool"
+instance PrimColumn Bool where pgType = "boolean"
 instance PrimColumn Int where pgType = "bigint"
 instance PrimColumn Int64 where pgType = "bigint"
 instance PrimColumn Double where pgType = "double precision"
@@ -83,7 +83,7 @@ instance PrimColumn Chronos.Date where pgType = "date"
 instance PrimColumn Chronos.Time where pgType = "bigint"
 instance PrimColumn Chronos.Datetime where pgType = "timestamp without time zone"
 instance PrimDecoder (Path b t) => PrimColumn (Path b t) where pgType = "text"
-instance PrimColumn () where pgType = "bool"
+instance PrimColumn () where pgType = "boolean"
 
 fullPrimCodec ::
   Encoders.Value a ->

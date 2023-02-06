@@ -23,7 +23,7 @@ import Sqel.Uid (uidAs)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable, interpretTableMigrations)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTables)
 import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Migration (migrateSem)
@@ -135,7 +135,7 @@ migrations =
 test_dslMigration :: UnitTest
 test_dslMigration =
   integrationTest do
-    interpretDbTable schemaOld $ interpretStoreDb schemaOld (checkQuery (primAs @"id") t1) $ restop @DbError do
+    interpretTables schemaOld $ interpretStoreDb schemaOld (checkQuery (primAs @"id") t1) $ restop @DbError do
       Store.insert (Uid 3 (Dat1 11 (PordOld 93)))
       Store.insert (Uid 4 (Dat1 55 (PordOld 78)))
     restop @DbError Database.release

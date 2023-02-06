@@ -81,14 +81,14 @@ tableStmts =
 stmtsTarget :: [Sql]
 stmtsTarget =
   [
-    "alter table dat rename column ph_sum_index__thing to sqel_sum_index__thing",
-    "alter table dat add column ph_sum_index__thing bigint",
-    "alter table dat alter column ph_sum_index__thing set not null",
-    "alter table dat add column thing1 sqel_type__thing1",
-    "alter table dat alter column thing1 set not null",
-    "alter table dat add column thing2 sqel_type__thing2",
-    "alter table dat alter column thing2 set not null",
-    "alter table dat add column num bigint"
+    [exon|alter table "dat" rename column ph_sum_index__thing to sqel_sum_index__thing|],
+    [exon|alter table "dat" add column ph_sum_index__thing bigint|],
+    [exon|alter table "dat" alter column ph_sum_index__thing set not null|],
+    [exon|alter table "dat" add column thing1 sqel_type__thing1|],
+    [exon|alter table "dat" alter column thing1 set not null|],
+    [exon|alter table "dat" add column thing2 sqel_type__thing2|],
+    [exon|alter table "dat" alter column thing2 set not null|],
+    [exon|alter table "dat" add column num bigint|]
   ]
 
 tableStmtsTarget :: [Sql]

@@ -23,4 +23,3 @@ interpretAtomicStateDb table initial =
   interpretQStoreDb @Maybe table emptyQuerySchema .
   interpretAtomicStateStore (insertAt @0 initial) .
   insertAt @1
-{-# inline interpretAtomicStateDb #-}

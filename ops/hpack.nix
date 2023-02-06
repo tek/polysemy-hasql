@@ -111,6 +111,7 @@ in {
       "polysemy-log"
       "polysemy-time"
       "postgresql-libpq"
+      "prettyprinter"
       "sqel"
       "stm-chans"
       "torsor"

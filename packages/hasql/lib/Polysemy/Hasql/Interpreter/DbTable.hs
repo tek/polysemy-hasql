@@ -3,12 +3,20 @@ module Polysemy.Hasql.Interpreter.DbTable where
 import Control.Monad.Extra (andM)
 import qualified Data.Map.Strict as Map
 import Exon (exon)
-import Generics.SOP (NP (Nil, (:*)))
+import Generics.SOP (NP (Nil, (:*)), SListI)
 import qualified Log
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
+import Prettyprinter (Pretty, pretty, vsep, (<+>))
 import Sqel.Data.Dd (Dd, DdType)
-import Sqel.Data.Migration (Mig (Mig), Migration (Migration, tableFrom), Migrations (Migrations), Migs, noMigrations)
+import Sqel.Data.Migration (
+  Mig (Mig),
+  Migration (Migration, tableFrom),
+  Migrations (Migrations),
+  Migs,
+  hoistMigrations,
+  noMigrations,
+  )
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
@@ -33,18 +41,34 @@ import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable)
 import Polysemy.Hasql.Table (createTable, dbColumnsStatement, tableColumnsSql, typeColumnsSql)
 
--- TODO lots of duplication in this module
+handleDbTable ::
+  Members [Database !! DbError, Log, Embed IO] r =>
+  RunMigrations d (Migs ds d) =>
+  TableSchema d ->
+  Migrations (Sem (Database : Stop DbError : r)) ds d ->
+  DbTable d m a ->
+  Sem (Stop DbError : r) a
+handleDbTable (TableSchema table@PgTable {name = PgTypeName name} _ _) migrations = \case
+  DbTable.Statement q stmt ->
+    restop (Database.withInit initDb (Database.statement q stmt))
+  where
+    initDb = InitDb (ClientTag name) True \ _ -> initTable table migrations
+
 interpretDbTable ::
   ∀ d r .
   Members [Database !! DbError, Log, Embed IO] r =>
   TableSchema d ->
   InterpreterFor (DbTable d !! DbError) r
-interpretDbTable (TableSchema table@PgTable {name = PgTypeName name} _ _) =
-  interpretResumable \case
-    DbTable.Statement q stmt ->
-      restop (Database.withInit initDb (Database.statement q stmt))
-  where
-    initDb = InitDb (ClientTag name) True \ _ -> initTable table noMigrations
+interpretDbTable schema =
+  interpretResumable (handleDbTable schema noMigrations)
+
+tablesScope ::
+  Member (Scoped p (Database !! DbError)) r =>
+  p ->
+  (() -> Sem (Database !! DbError : r) a) ->
+  Sem r a
+tablesScope conn use =
+  scoped conn (use ())
 
 typeColumns ::
   Member Database r =>
@@ -67,16 +91,32 @@ tableColumns ::
 tableColumns =
   typeColumns tableColumnsSql
 
+newtype PrettyColMap =
+  PrettyColMap { unPrettyColMap :: Map PgColumnName (Either PgTypeRef PgPrimName) }
+  deriving stock (Eq, Show, Generic)
+
+instance Pretty PrettyColMap where
+  pretty (PrettyColMap cols) =
+    vsep (uncurry col <$> Map.toList cols)
+    where
+      col name = \case
+        Right tpe -> "*" <+> pretty name <+> pretty tpe
+        Left ref -> "+" <+> pretty name <+> pretty ref
+
 columnMap :: [PgColumn] -> Map PgColumnName ColumnType
 columnMap =
   Map.fromList . fmap \ PgColumn {name, pgType} -> (name, pgType)
 
 typeMatch ::
-  Member Database r =>
+  Members [Database, Log] r =>
   PgComposite ->
   Sem r Bool
 typeMatch (PgComposite name (PgColumns cols)) = do
   dbCols <- typeColumns typeColumnsSql name
+  Log.debug [exon|Trying type with:
+#{show (pretty (PrettyColMap colsByName))}
+for existing type with
+#{show (pretty (PrettyColMap dbCols))}|]
   pure (dbCols == colsByName)
   where
     colsByName = columnMap cols <&> \case
@@ -84,11 +124,15 @@ typeMatch (PgComposite name (PgColumns cols)) = do
       ColumnComp n _ _ -> Left n
 
 tableMatch ::
-  Member Database r =>
+  Members [Database, Log] r =>
   PgTable d ->
   Sem r Bool
 tableMatch (PgTable tableName (PgColumns cols) types _ _ _) = do
   dbCols <- tableColumns tableName
+  Log.debug [exon|Trying table with:
+#{show (pretty (PrettyColMap colsByName))}
+for existing table with
+#{show (pretty (PrettyColMap dbCols))}|]
   andM (pure (dbCols == colsByName) : (typeMatch <$> Map.elems types))
   where
     colsByName = columnMap cols <&> \case
@@ -104,30 +148,30 @@ startMigration (Migration _ _ _ action) = do
   action
 
 -- TODO is it necessary for migrations to be stored as an NP? there's no type stuff going on here anymore
-class RunMigrations d migs r where
+class RunMigrations d migs where
   runMigrations ::
+    Members [Database, Stop DbError, Log] r =>
     PgTable d ->
     NP (Migration (Sem r)) migs ->
     Sem r ()
 
-instance (
-    Member (Stop DbError) r
-  ) => RunMigrations d '[] r where
-  runMigrations (PgTable (PgTypeName name) _ _ _ _ _) Nil =
+instance RunMigrations d '[] where
+  runMigrations (PgTable (PgTypeName name) _ _ _ _ _) Nil = do
+    Log.error [exon|No migration fits the current table layout for #{name}|]
     stop (DbError.Table [exon|No migration fits the current table layout for #{name}|])
 
 instance (
-    Members [Database, Log] r,
-    RunMigrations d migs r
-  ) => RunMigrations d ('Mig from to : migs) r where
+    RunMigrations d migs
+  ) => RunMigrations d ('Mig from to : migs) where
   runMigrations table (h :* t) =
     ifM (tableMatch (tableFrom h)) (startMigration h) nextMigration
     where
       nextMigration = runMigrations table t *> startMigration h
 
+
 initTable ::
   Members [Database, Stop DbError, Log, Embed IO] r =>
-  RunMigrations d (Migs ds d) r =>
+  RunMigrations d (Migs ds d) =>
   PgTable d ->
   Migrations (Sem r) ds d ->
   Sem r ()
@@ -144,17 +188,33 @@ initTable table@PgTable {name = PgTypeName name} (Migrations migrations) =
 
 interpretTableMigrations ::
   ∀ d ds r .
-  RunMigrations d (Migs ds d) (Database : Stop DbError : r) =>
+  RunMigrations d (Migs ds d) =>
   Members [Database !! DbError, Log, Embed IO] r =>
   TableSchema d ->
   Migrations (Sem (Database : Stop DbError : r)) ds d ->
   InterpreterFor (DbTable d !! DbError) r
-interpretTableMigrations (TableSchema table@PgTable {name = PgTypeName name} _ _) migrations =
-  interpretResumable \case
-    DbTable.Statement q stmt -> do
-      restop (Database.withInit initDb (Database.statement q stmt))
-  where
-    initDb = InitDb (ClientTag name) True \ _ -> initTable table migrations
+interpretTableMigrations schema migrations =
+  interpretResumable \ ma ->
+    handleDbTable schema migrations ma
+
+interpretTablesMigrations ::
+  ∀ d ds p r .
+  SListI (Migs ds d) =>
+  RunMigrations d (Migs ds d) =>
+  Members [Scoped p (Database !! DbError), Database !! DbError, Log, Embed IO] r =>
+  TableSchema d ->
+  Migrations (Sem (Database : Stop DbError : r)) ds d ->
+  InterpretersFor [Scoped p (DbTable d !! DbError), DbTable d !! DbError] r
+interpretTablesMigrations schema migrations =
+  interpretTableMigrations schema migrations .
+  interpretResumableScopedWith @'[_] tablesScope \ () -> handleDbTable schema (hoistMigrations (insertAt @2) migrations)
+
+interpretTables ::
+  Members [Scoped p (Database !! DbError), Database !! DbError, Log, Embed IO] r =>
+  TableSchema d ->
+  InterpretersFor [Scoped p (DbTable d !! DbError), DbTable d !! DbError] r
+interpretTables schema =
+  interpretTablesMigrations schema noMigrations
 
 interpretTableView ::
   Member (DbTable table !! DbError) r =>

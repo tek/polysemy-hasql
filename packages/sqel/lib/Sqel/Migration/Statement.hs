@@ -18,7 +18,7 @@ import Sqel.Data.PgType (
   PgPrimName (PgPrimName),
   PgTypeRef (PgTypeRef),
   )
-import Sqel.Data.PgTypeName (pattern PgCompName, pattern PgTableName, pattern PgTypeName, PgTypeName)
+import Sqel.Data.PgTypeName (pattern PgCompName, pattern PgTableName, pattern PgTypeName, PgTypeName, pgTableName)
 import Sqel.Data.Sql (Sql (Sql), sql)
 import Sqel.Statement (unprepared)
 
@@ -39,14 +39,13 @@ alterStatement ::
   (Sql -> Sql -> Sql) ->
   Mtl.Writer [MigrationStatement] ()
 alterStatement typeName p enc f =
-  Mtl.tell [MigrationStatement p enc (f [sql|alter #{entity} ##{Sql name}|] attr)]
+  Mtl.tell [MigrationStatement p enc (f [sql|alter #{entity} ##{pgTableName name}|] attr)]
   where
     (entity, attr, name) = withSome typeName \case
       PgTableName n -> ("table", "column", n)
       PgCompName n -> ("type", "attribute", n)
 
 -- TODO maybe the default value can be null and the encoder Maybe, to unify the cases
--- TODO use ToSql for these statements
 columnStatements ::
   Bool ->
   Some PgTypeName ->
