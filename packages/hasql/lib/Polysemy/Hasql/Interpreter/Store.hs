@@ -12,7 +12,7 @@ import Sqel.Data.Dd (
   DdInc (DdNest),
   DdK (DdK),
   DdStruct (DdComp),
-  DdVar (DdProd),
+  DdSort (DdProd),
   ProdType (Reg),
   Struct (Comp, Prim),
   )

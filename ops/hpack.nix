@@ -214,6 +214,7 @@ in {
       "path-io"
       "prettyprinter"
       "scientific"
+      "singletons"
       "some"
       "template-haskell"
       "time"

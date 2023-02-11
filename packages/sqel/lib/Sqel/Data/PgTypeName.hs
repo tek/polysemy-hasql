@@ -7,9 +7,8 @@ import Prettyprinter (Pretty (pretty))
 
 import Sqel.Data.Sel (SelPrefix (DefaultPrefix), TypeName)
 import Sqel.Data.Sql (ToSql (toSql), sql, sqlQuote)
+import Sqel.Data.SqlFragment (From (From), Into (Into))
 import Sqel.SOP.Constraint (symbolText)
-import Sqel.Sql.From (From (From))
-import Sqel.Sql.Into (Into (Into))
 import Sqel.Text.DbIdentifier (dbIdentifierT)
 
 type PgTypeName :: Bool -> Type

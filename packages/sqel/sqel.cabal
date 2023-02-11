@@ -28,7 +28,6 @@ library
       Sqel.Codec.Sum
       Sqel.Column
       Sqel.ColumnConstraints
-      Sqel.Combinators
       Sqel.Comp
       Sqel.Data.Codec
       Sqel.Data.Create
@@ -47,9 +46,11 @@ library
       Sqel.Data.Select
       Sqel.Data.Selector
       Sqel.Data.Sql
+      Sqel.Data.SqlFragment
       Sqel.Data.TableSchema
       Sqel.Data.Term
       Sqel.Data.Uid
+      Sqel.Ext
       Sqel.Merge
       Sqel.Migration.Column
       Sqel.Migration.Consistency
@@ -81,17 +82,10 @@ library
       Sqel.SOP.Fundeps
       Sqel.SOP.HasGeneric
       Sqel.SOP.Newtype
-      Sqel.Sql.CommaSep
-      Sqel.Sql.Delete
-      Sqel.Sql.From
-      Sqel.Sql.Insert
-      Sqel.Sql.Into
+      Sqel.Sql
       Sqel.Sql.Prepared
-      Sqel.Sql.Returning
       Sqel.Sql.Select
-      Sqel.Sql.SelectQuery
       Sqel.Sql.Type
-      Sqel.Sql.Update
       Sqel.Statement
       Sqel.Sum
       Sqel.Text.Case
@@ -183,6 +177,7 @@ library
     , prelate >=0.4
     , prettyprinter
     , scientific
+    , singletons
     , some
     , template-haskell
     , time

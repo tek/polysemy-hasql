@@ -66,11 +66,6 @@ type family TypeSel (tsel :: TSel) (dd :: DdK) :: DdK where
   TypeSel tsel ('DdK sel mods a ('Comp _ c i sub)) =
     'DdK sel mods a ('Comp tsel c i sub)
 
--- -- TODO this will result in a double prefix when used with DdTypeName and manually set prefix
--- type family TypeName (name :: Symbol) (dd :: DdK) :: DdK where
---   TypeName name ('DdK sel mods a ('Comp _ c i sub)) =
---     'DdK sel mods a ('Comp ('SelType 'DefaultPrefix name) c i sub)
-
 type family ProdPrimFields (as :: [Type]) (fields :: [FieldInfo]) :: [DdK] where
   ProdPrimFields '[] '[] = '[]
   ProdPrimFields (a : as) ('FieldInfo name : fields) =

@@ -1,6 +1,6 @@
 module Sqel.Data.Term where
 
-import Sqel.Data.Dd (DdInc (DdMerge, DdNest), DdVar (DdCon, DdProd, DdSum))
+import Sqel.Data.Dd (DdInc (DdMerge, DdNest), DdSort (DdCon, DdProd, DdSum))
 import Sqel.Data.PgType (PgColumnName, PgPrimName)
 import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Data.Sql (Sql)
@@ -40,7 +40,7 @@ data DdTerm =
   }
   deriving stock (Eq, Show, Generic)
 
-demoteComp :: DdVar c -> Comp
+demoteComp :: DdSort c -> Comp
 demoteComp = \case
   DdProd -> Prod Reg
   DdCon -> Prod Con

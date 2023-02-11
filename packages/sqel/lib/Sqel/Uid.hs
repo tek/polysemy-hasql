@@ -5,7 +5,7 @@ import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetTypeName)
-import Sqel.Product (ProductNamed (prodNamed))
+import Sqel.Product (ProductSel (prodSel))
 import qualified Sqel.Type as T
 import Sqel.Type (type (*>), type (>))
 
@@ -23,10 +23,10 @@ instance (
     DdType si ~ i,
     DdType sa ~ a,
     DdTypeSel sa ~ sel,
-    ProductNamed sel (Uid i a) (Dd si :> Dd (T.Merge sa)) s
+    ProductSel sel (Uid i a) (Dd si :> Dd (T.Merge sa)) s
   ) => UidColumn i a si sa s where
     uidColumn i a =
-      prodNamed @sel (i :> merge a)
+      prodSel @sel (i :> merge a)
 
 uid ::
   ∀ (i :: Type) (a :: Type) (si :: DdK) (sa :: DdK) (s :: DdK) .

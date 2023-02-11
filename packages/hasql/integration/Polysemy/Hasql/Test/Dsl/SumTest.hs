@@ -11,7 +11,7 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
-import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
+import Sqel.Data.Dd (Sqel, type (:>) ((:>)))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
@@ -65,7 +65,7 @@ data Q =
   }
   deriving stock (Eq, Show, Generic)
 
-td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
+td :: Sqel (Uid Int64 Dat) _
 td =
   uid prim (prod (
     prim :>

@@ -10,14 +10,16 @@ import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
 import Sqel.Data.Select (Select (Select))
 import Sqel.Data.Selector (Selector (unSelector), assign, nameSelector)
 import Sqel.Data.Sql (Sql, ToSql (toSql), sql, sqlQuote)
+import Sqel.Data.SqlFragment (
+  CommaSep (CommaSep),
+  Delete (Delete),
+  From (From),
+  Insert (Insert),
+  Into (Into),
+  Returning (Returning),
+  Update (Update),
+  )
 import Sqel.SOP.Constraint (symbolText)
-import Sqel.Sql.CommaSep (CommaSep (CommaSep))
-import Sqel.Sql.Delete (Delete (Delete))
-import Sqel.Sql.From (From (From))
-import Sqel.Sql.Insert (Insert (Insert))
-import Sqel.Sql.Into (Into (Into))
-import Sqel.Sql.Returning (Returning (Returning))
-import Sqel.Sql.Update (Update (Update))
 import Sqel.Text.DbIdentifier (dbIdentifierT, dbSymbol)
 
 newtype PgPrimName =

@@ -16,14 +16,16 @@ import Sqel.Data.PgType (
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
+import Sqel.Data.SqlFragment (
+  CommaSep (CommaSep),
+  Delete (Delete),
+  Insert (Insert),
+  Returning (Returning),
+  Update (Update),
+  )
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.ResultShape (ResultShape (resultShape))
-import Sqel.Sql.CommaSep (CommaSep (CommaSep))
-import Sqel.Sql.Delete (Delete (Delete))
-import Sqel.Sql.Insert (Insert (Insert))
-import Sqel.Sql.Returning (Returning (Returning))
 import qualified Sqel.Sql.Select as Sql
-import Sqel.Sql.Update (Update (Update))
 import Sqel.Text.Quote (dquote)
 
 statement ::

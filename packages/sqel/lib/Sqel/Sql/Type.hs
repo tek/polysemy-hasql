@@ -15,7 +15,7 @@ import Sqel.Data.PgType (
   )
 import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Data.Sql (Sql, sql)
-import Sqel.Sql.CommaSep (CommaSep (CommaSep))
+import Sqel.Data.SqlFragment (CommaSep (CommaSep))
 import Sqel.Text.Quote (dquote)
 
 -- TODO why is unique not used?

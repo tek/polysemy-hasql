@@ -6,7 +6,7 @@ import Generics.SOP (NP (Nil, (:*)))
 
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), DdStruct (DdComp), (:>) ((:>)), DdTypeSel, DdType)
 import Sqel.Prim (prim, prims)
-import Sqel.Product (prod, prodNamed)
+import Sqel.Product (prod, prodSel)
 import Sqel.Type (Prim, Merge, type (>), TypeSel, Prod, type (*>))
 import Sqel.Data.Sel (MkTSel)
 import Sqel.Merge (merge)
@@ -37,7 +37,7 @@ ddHO ::
   Dd s ->
   Dd (WrapDd s)
 ddHO wrapped =
-  prodNamed @(DdTypeSel s) (merge wrapped :> prim)
+  prodSel @(DdTypeSel s) (merge wrapped :> prim)
 
 ddHOCol :: Dd ('DdK _ _ (Wrap Pr) _)
 ddHOCol =

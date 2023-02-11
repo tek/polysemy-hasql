@@ -1,8 +1,5 @@
 module Sqel.Column where
 
-import qualified Hasql.Decoders as Hasql
-import Hasql.Decoders (Row, custom)
-
 import Sqel.Class.Mods (AddMod (addMod), MapMod, amendMod)
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), Struct (Prim))
 import Sqel.Data.Mods (Nullable (Nullable), PgDefault (PgDefault), PrimaryKey (PrimaryKey), SetTableName (SetTableName))
@@ -10,10 +7,6 @@ import Sqel.Data.PgTypeName (PgTableName)
 import Sqel.Data.Sql (Sql)
 import Sqel.Names.Rename (Rename, rename)
 import Sqel.Names.Set (SetName)
-
-ignoreDecoder :: Row (Maybe a)
-ignoreDecoder =
-  join <$> Hasql.column (Hasql.nullable (custom \ _ _ -> pure Nothing))
 
 pk ::
   AddMod PrimaryKey s0 s1 =>
@@ -64,9 +57,3 @@ pgDefault ::
   Dd s1
 pgDefault v =
   addMod (PgDefault v)
-
-class Unnamed s0 s1 where
-
-unnamed :: Dd s0 -> Dd s1
-unnamed =
-  undefined

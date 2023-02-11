@@ -10,7 +10,7 @@ import Sqel.Data.Dd (
   DdInc (DdMerge, DdNest),
   DdK (DdK),
   DdStruct (DdComp, DdPrim),
-  DdVar (DdSum),
+  DdSort (DdSum),
   QOp (QAnd),
   Struct (Comp, Prim),
   )

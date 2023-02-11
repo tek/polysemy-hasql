@@ -39,18 +39,18 @@ data DdK =
     struct :: Struct
   }
 
-type DdVar :: Comp -> Type
-data DdVar c where
-  DdProd :: DdVar ('Prod 'Reg)
-  DdCon :: DdVar ('Prod ('Con as))
-  DdSum :: DdVar 'Sum
+type DdSort :: Comp -> Type
+data DdSort c where
+  DdProd :: DdSort ('Prod 'Reg)
+  DdCon :: DdSort ('Prod ('Con as))
+  DdSum :: DdSort 'Sum
 
-type MkDdVar :: Comp -> Constraint
-class MkDdVar c where ddVar :: DdVar c
+type MkDdSort :: Comp -> Constraint
+class MkDdSort c where ddSort :: DdSort c
 
-instance MkDdVar ('Prod 'Reg) where ddVar = DdProd
-instance MkDdVar ('Prod ('Con as)) where ddVar = DdCon
-instance MkDdVar 'Sum where ddVar = DdSum
+instance MkDdSort ('Prod 'Reg) where ddSort = DdProd
+instance MkDdSort ('Prod ('Con as)) where ddSort = DdCon
+instance MkDdSort 'Sum where ddSort = DdSum
 
 type DdInc :: CompInc -> Type
 data DdInc c where
@@ -66,7 +66,7 @@ instance MkDdInc 'Nest where ddInc = DdNest
 type DdStruct :: Struct -> Type
 data DdStruct s where
   DdPrim :: DdStruct 'Prim
-  DdComp :: TSelW sel -> DdVar c -> DdInc i -> NP Dd sub -> DdStruct ('Comp sel c i sub)
+  DdComp :: TSelW sel -> DdSort c -> DdInc i -> NP Dd sub -> DdStruct ('Comp sel c i sub)
 
 -- TODO maybe this could be a data family so that after using the dsl, the index is changed so that all Sels are present
 -- also to stuff different metadata in there, like DdlColumn?
@@ -115,22 +115,6 @@ showTypeSel :: Dd ('DdK sel p a ('Comp tsel c i sub)) -> Text
 showTypeSel =
   showTSelW . typeSel
 
-class MatchDdType s a | s -> a
-instance MatchDdType ('DdK sel p a s) a
-
--- type DbTypeName :: Type -> Symbol -> Constraint
--- class MkSel ('SelType 'DefaultPrefix name) => DbTypeName a name | a -> name where
---   dbTypeName :: SelW ('SelType 'DefaultPrefix name)
-
--- instance {-# overlappable #-} (
---     IsDataT (GDatatypeInfoOf a) name,
---     MkSel ('SelType 'DefaultPrefix name)
---   ) => DbTypeName a name where
---     dbTypeName = mkSel
-
--- instance DbTypeName a name => DbTypeName (Uid i a) name where
---   dbTypeName = dbTypeName @a
-
 data a :> b = a :> b
 infixr 3 :>
 
@@ -169,3 +153,11 @@ instance (
   ) => Pretty (Dd ('DdK sel p a 'Prim)) where
   pretty (Dd s p DdPrim) =
     "prim" <+> pretty (showSelW s) <+> pretty p
+
+type Sqel' :: Sel -> [Type] -> Type -> Struct -> Type
+type family Sqel' sel mods a s = r | r -> sel mods a s where
+  Sqel' sel mods a s = Dd ('DdK sel mods a s)
+
+type Sqel :: Type -> (Sel, [Type], Struct) -> Type
+type family Sqel a p = r | r -> p a where
+  Sqel a '(sel, mods, s) = Dd ('DdK sel mods a s)

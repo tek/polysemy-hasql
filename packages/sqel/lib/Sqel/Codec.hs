@@ -3,23 +3,26 @@ module Sqel.Codec where
 import qualified Chronos as Chronos
 import Data.Time (Day, DiffTime, LocalTime, TimeOfDay, TimeZone, UTCTime)
 import Data.UUID (UUID)
+import qualified Hasql.Decoders as Hasql
 import qualified Hasql.Decoders as Decoders
-import Hasql.Decoders (Row)
+import Hasql.Decoders (Row, custom)
 import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Path (Path)
-import Prelude hiding (sum)
 
 import qualified Sqel.Codec.PrimDecoder as PrimDecoder
 import Sqel.Codec.PrimDecoder (PrimDecoder)
 import qualified Sqel.Codec.PrimEncoder as PrimEncoder
 import Sqel.Codec.PrimEncoder (PrimEncoder)
 import Sqel.Codec.Sum (ignoreEncoder)
-import Sqel.Column (ignoreDecoder)
 import qualified Sqel.Data.Codec as Codec
 import Sqel.Data.Codec (Codec (Codec), Decoder (Decoder), Encoder (Encoder), FullCodec, ValueCodec)
 import Sqel.Data.PgType (PgPrimName)
-import Sqel.SOP.Error (QuotedType, Quoted)
+import Sqel.SOP.Error (Quoted, QuotedType)
+
+ignoreDecoder :: Row (Maybe a)
+ignoreDecoder =
+  join <$> Hasql.column (Hasql.nullable (custom \ _ _ -> pure Nothing))
 
 class ColumnEncoder f where
   columnEncoder :: f a -> Params a

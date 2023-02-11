@@ -16,7 +16,7 @@ import Sqel.Data.Dd (
   DdK (DdK),
   DdStruct (DdComp, DdPrim),
   DdType,
-  DdVar (DdCon, DdSum),
+  DdSort (DdCon, DdSum),
   ProdType (Con),
   ProductField (ProductField),
   Struct (Comp, Prim),

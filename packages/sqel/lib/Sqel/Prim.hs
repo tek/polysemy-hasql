@@ -136,6 +136,14 @@ primAs ::
 primAs =
   named @name (prim @a)
 
+-- TODO are composite arrays legal?
+array ::
+  ∀ f a p sel .
+  Dd ('DdK sel p a 'Prim) ->
+  Dd ('DdK sel (ArrayColumn f : p) (f a) 'Prim)
+array (Dd sel (Mods p) s) =
+  Dd sel (Mods (I ArrayColumn :* p)) s
+
 migrateDef ::
   ∀ s0 s1 .
   MapMod (MigrationDefault (DdType s0)) s0 s1 =>
@@ -144,14 +152,6 @@ migrateDef ::
   Dd s1
 migrateDef a =
   setMod (MigrationDefault a)
-
--- TODO are composite arrays legal?
-array ::
-  ∀ f a p sel .
-  Dd ('DdK sel p a 'Prim) ->
-  Dd ('DdK sel (ArrayColumn f : p) (f a) 'Prim)
-array (Dd sel (Mods p) s) =
-  Dd sel (Mods (I ArrayColumn :* p)) s
 
 migrateRename ::
   ∀ name s0 s1 .

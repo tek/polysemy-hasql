@@ -63,8 +63,8 @@ interpretAtomicStateStoreAs value =
   interpretAtomicStateStore (pure value)
 
 atomicStateScope ::
-  param ->
   Member (Scoped param (QStore Maybe () d !! err) !! err) r =>
+  param ->
   (() -> Sem (QStore Maybe () d !! err : Stop err : r) a) ->
   Sem (Stop err : r) a
 atomicStateScope p use =

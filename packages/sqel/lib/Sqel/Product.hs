@@ -10,9 +10,9 @@ import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdNest),
   DdK (DdK),
+  DdSort (DdProd),
   DdStruct (DdComp),
   DdType,
-  DdVar (DdProd),
   ProdType (Reg),
   Struct (Comp),
   )
@@ -21,16 +21,16 @@ import Sqel.Data.Sel (MkTSel (mkTSel), Sel (SelAuto), SelW (SelWAuto))
 import Sqel.Names.Rename (Rename (rename))
 import Sqel.Names.Set (SetName)
 
-class DdType s ~ a => ProductNamed sel a arg s | sel a arg -> s where
-  prodNamed :: arg -> Dd s
+class DdType s ~ a => ProductSel sel a arg s | sel a arg -> s where
+  prodSel :: arg -> Dd s
 
 instance (
     MkTSel sel,
     fields ~ ProductFields (GDatatypeInfoOf a) (GCode a),
     meta ~ MetaFor "product type" ('ShowType a) "prod",
     CompColumn meta fields a arg s
-  ) => ProductNamed sel a arg ('DdK 'SelAuto NoMods a ('Comp sel ('Prod 'Reg) 'Nest s)) where
-    prodNamed arg =
+  ) => ProductSel sel a arg ('DdK 'SelAuto NoMods a ('Comp sel ('Prod 'Reg) 'Nest s)) where
+    prodSel arg =
       Dd SelWAuto NoMods (DdComp mkTSel DdProd DdNest (compColumn @meta @fields @a arg))
 
 class DdType s ~ a => Product a arg s | a arg -> s where
@@ -38,10 +38,10 @@ class DdType s ~ a => Product a arg s | a arg -> s where
 
 instance (
     CompName a sel,
-    ProductNamed sel a arg s
+    ProductSel sel a arg s
   ) => Product a arg s where
     prod =
-      prodNamed @sel
+      prodSel @sel
 
 prodAs ::
   ∀ (name :: Symbol) (a :: Type) (s :: DdK) (arg :: Type) .

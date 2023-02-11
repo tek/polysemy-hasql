@@ -9,12 +9,12 @@ import Sqel.Codec (
   ColumnEncoder (columnEncoder, columnEncoderIgnore, columnEncoderNullable),
   PrimColumn (primDecoder, primEncoder),
   fullPrimCodec,
+  ignoreDecoder,
   )
 import Sqel.Codec.PrimDecoder (ArrayDecoder (arrayDecoder), enumDecoder, readDecoder)
 import Sqel.Codec.PrimEncoder (arrayEncoder)
 import Sqel.Codec.Product (ProdCodec (prodCodec))
 import Sqel.Codec.Sum (ConCodec (conCodec), SumCodec (sumCodec), ignoreEncoder)
-import Sqel.Column (ignoreDecoder)
 import qualified Sqel.Data.Codec as Codec
 import Sqel.Data.Codec (Codec (Codec), Decoder (Decoder), Encoder (Encoder), FullCodec, ValueCodec)
 import Sqel.Data.Dd (

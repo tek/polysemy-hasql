@@ -20,7 +20,7 @@ import Sqel.Data.Dd (
   DdStruct (DdComp),
   DdType,
   DdTypeSel,
-  DdVar (DdProd),
+  DdSort (DdProd),
   type (:>) ((:>)),
   )
 import Sqel.Data.Mods (pattern NoMods)
@@ -34,7 +34,7 @@ import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)
 import Sqel.PgType (MkTableSchema, tableSchema)
 import Sqel.Prim (prim, primAs, primNewtypes, prims)
-import Sqel.Product (prod, prodNamed)
+import Sqel.Product (prod, prodSel)
 import Sqel.Query (checkQuery)
 import Sqel.Query.Combinators (order)
 import Sqel.ReifyCodec (ReifyCodec)
@@ -252,7 +252,7 @@ ddHigherOrder2 ::
   Dd s ->
   Dd (UidDd (Prim "id" Int64) (WrapDd s))
 ddHigherOrder2 wrapped =
-  uid prim (prodNamed @(DdTypeSel s) (merge wrapped :> prim))
+  uid prim (prodSel @(DdTypeSel s) (merge wrapped :> prim))
 
 ddUidWrapPro :: Dd (UidDd (Prim "id" Int64) (WrapDd ProdTable))
 ddUidWrapPro =
@@ -272,7 +272,7 @@ higherOrder2 wrapped =
   where
     ts :: TableSchema (Wrap a)
     ts = tableSchema dd
-    dd = prodNamed @(DdTypeSel s) (merge wrapped :> prim)
+    dd = prodSel @(DdTypeSel s) (merge wrapped :> prim)
 
 test_higherOrder2 :: TestT IO ()
 test_higherOrder2 =
