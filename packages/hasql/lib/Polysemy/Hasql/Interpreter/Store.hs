@@ -3,7 +3,6 @@ module Polysemy.Hasql.Interpreter.Store where
 import Generics.SOP (NP (Nil))
 import Hasql.Connection (Connection)
 import Hasql.Statement (Statement)
-import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (QStore, Store)
 import Sqel.Data.Dd (
@@ -26,10 +25,10 @@ import Sqel.Prim (primAs)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (delete, insert, selectWhere, upsert)
 
-import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (ConnectionSource)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
+import Polysemy.Hasql.Transaction (interpretForXa)
 
 type EmptyQuery =
   'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
@@ -101,49 +100,41 @@ interpretStoreDb ::
 interpretStoreDb table query =
   interpretQStoreDb table query
 
-storeScope ::
-  Members [Scoped ConnectionSource (DbTable d !! DbError), Log, Embed IO] r =>
-  Connection ->
-  (() -> Sem (DbTable d !! DbError : Stop DbError : r) a) ->
-  Sem (Stop DbError : r) a
-storeScope conn use =
-  scoped (Database.Supplied "transaction" conn) (use ())
-
 interpretQStoreXa ::
-  ∀ f i d r .
+  ∀ f err i d r .
   ResultShape d (f d) =>
-  Members [Scoped ConnectionSource (DbTable d !! DbError), Log, Embed IO] r =>
+  Members [Scoped ConnectionSource (DbTable d !! err), Log, Embed IO] r =>
   TableSchema d ->
   QuerySchema i d ->
-  InterpreterFor (Scoped Connection (QStore f i d !! DbError) !! DbError) r
+  InterpreterFor (Scoped Connection (QStore f i d !! err) !! err) r
 interpretQStoreXa table query =
-  interpretScopedRWith @'[DbTable d !! DbError] storeScope \ () -> handleQStoreDb table query
+  interpretForXa (handleQStoreDb table query)
 
 interpretStoreXa ::
-  ∀ i d r .
-  Members [Scoped ConnectionSource (DbTable (Uid i d) !! DbError), Log, Embed IO] r =>
+  ∀ err i d r .
+  Members [Scoped ConnectionSource (DbTable (Uid i d) !! err), Log, Embed IO] r =>
   TableSchema (Uid i d) ->
   QuerySchema i (Uid i d) ->
-  InterpreterFor (Scoped Connection (Store i d !! DbError) !! DbError) r
+  InterpreterFor (Scoped Connection (Store i d !! err) !! err) r
 interpretStoreXa =
   interpretQStoreXa @Maybe
 
 interpretQStores ::
-  ∀ f q d r .
+  ∀ f err q d r .
   ResultShape d (f d) =>
-  Members [Scoped ConnectionSource (DbTable d !! DbError), DbTable d !! DbError, Log, Embed IO] r =>
+  Members [Scoped ConnectionSource (DbTable d !! err), DbTable d !! err, Log, Embed IO] r =>
   TableSchema d ->
   QuerySchema q d ->
-  InterpretersFor [QStore f q d !! DbError, Scoped Connection (QStore f q d !! DbError) !! DbError] r
+  InterpretersFor [QStore f q d !! err, Scoped Connection (QStore f q d !! err) !! err] r
 interpretQStores table query =
   interpretQStoreXa table query .
   interpretQStoreDb table query
 
 interpretStores ::
-  ∀ i d r .
-  Members [Scoped ConnectionSource (DbTable (Uid i d) !! DbError), StoreTable i d !! DbError, Log, Embed IO] r =>
+  ∀ err i d r .
+  Members [Scoped ConnectionSource (DbTable (Uid i d) !! err), StoreTable i d !! err, Log, Embed IO] r =>
   TableSchema (Uid i d) ->
   QuerySchema i (Uid i d) ->
-  InterpretersFor [Store i d !! DbError, Scoped Connection (Store i d !! DbError) !! DbError] r
+  InterpretersFor [Store i d !! err, Scoped Connection (Store i d !! err) !! err] r
 interpretStores =
   interpretQStores @Maybe
