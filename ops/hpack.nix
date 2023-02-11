@@ -225,18 +225,12 @@ in {
 
     tests.polysemy-hasql-unit = polysemyExe "sqel" "test" {
       dependencies = [
-        "aeson"
-        "chronos"
         "exon"
-        "first-class-families"
         "generics-sop"
-        "hasql >= 1.4.3"
         "hedgehog"
         "path"
-        "prettyprinter"
         "tasty"
         "tasty-hedgehog"
-        "uuid"
       ];
     };
 
