@@ -24,7 +24,7 @@ import Polysemy.Hasql.Effect.Transaction (Transactions, abort)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTables)
 import Polysemy.Hasql.Interpreter.Store (interpretQStores)
 import Polysemy.Hasql.Interpreter.Transaction (interpretTransactions)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 import Polysemy.Hasql.Transaction (XaStore, transactStores)
 
 data Dat =

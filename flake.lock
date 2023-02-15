@@ -118,6 +118,18 @@
         "url": "https://hackage.haskell.org/package/brittany-0.13.1.2/brittany-0.13.1.2.tar.gz"
       }
     },
+    "brittany-01312_2": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-4rDE2bu4C8cv1D6lkTtLxMwLRyDfIK70BnptSrygK60=",
+        "type": "tarball",
+        "url": "https://hackage.haskell.org/package/brittany-0.13.1.2/brittany-0.13.1.2.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://hackage.haskell.org/package/brittany-0.13.1.2/brittany-0.13.1.2.tar.gz"
+      }
+    },
     "constraints-extras": {
       "flake": false,
       "locked": {
@@ -561,11 +573,11 @@
         "thax": "thax"
       },
       "locked": {
-        "lastModified": 1676488420,
-        "narHash": "sha256-LPlWK1Ele+OQ4fU1AZdM5LGEXn40JOfyxpP3nequkxg=",
+        "lastModified": 1676500929,
+        "narHash": "sha256-moM3zVV26jBMoLhxW5G+NVyn6KcVOgKCvQhgg0SC63g=",
         "ref": "refs/heads/main",
-        "rev": "cf07f2801cab3cf5ddec1ce6f3a0e11371bf5541",
-        "revCount": 260,
+        "rev": "fd50f12677e79e943996ec97dbd812ba4c9a6d1c",
+        "revCount": 261,
         "type": "git",
         "url": "https://git.tryp.io/tek/hix"
       },
@@ -1044,6 +1056,7 @@
         "all-cabal-hashes-unpacked": "all-cabal-hashes-unpacked",
         "apply-refact": "apply-refact",
         "apply-refact-0930": "apply-refact-0930",
+        "brittany-01312": "brittany-01312",
         "constraints-extras": "constraints-extras",
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils_2",
@@ -1064,15 +1077,16 @@
         "retrie-1100": "retrie-1100"
       },
       "locked": {
-        "lastModified": 1676404091,
-        "narHash": "sha256-sC3Eljg8435WbW7DWdUdRZcVAUTfIyyJ9ydG1iTXJKA=",
+        "lastModified": 1672051165,
+        "narHash": "sha256-j3XRQTWa7jsVlimaxFZNnlE9IzWII9Prj1/+otks5FQ=",
         "owner": "haskell",
         "repo": "haskell-language-server",
-        "rev": "a73c07c51b9dabf9b8551a30744e7e1ffdea6c3a",
+        "rev": "1916b5782d9f3204d25a1d8f94da4cfd83ae2607",
         "type": "github"
       },
       "original": {
         "owner": "haskell",
+        "ref": "1.9.0.0",
         "repo": "haskell-language-server",
         "type": "github"
       }
@@ -1083,7 +1097,7 @@
         "all-cabal-hashes-unpacked": "all-cabal-hashes-unpacked_2",
         "apply-refact": "apply-refact_2",
         "apply-refact-0930": "apply-refact-0930_2",
-        "brittany-01312": "brittany-01312",
+        "brittany-01312": "brittany-01312_2",
         "constraints-extras": "constraints-extras_2",
         "flake-compat": "flake-compat_2",
         "flake-utils": "flake-utils_4",

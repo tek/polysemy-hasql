@@ -3,13 +3,14 @@ module Polysemy.Hasql.Test.AtomicStateTest where
 import Exon (exon)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (UnitTest, (===))
-
-import Polysemy.Hasql.Test.Run (integrationTest)
-import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
-import Sqel.PgType (MkTableSchema(tableSchema))
-import Sqel.Product (prod)
+import Sqel.Data.TableSchema (TableSchema)
+import Sqel.PgType (MkTableSchema (tableSchema))
 import Sqel.Prim (prims)
+import Sqel.Product (prod)
+
+import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
 import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Cat =
   Cat {
@@ -27,4 +28,5 @@ test_atomicStateDb =
         atomicGet
     Cat 200 "mr. fuzzyboots" === r
   where
+    ts :: TableSchema Cat
     ts = tableSchema (prod prims)

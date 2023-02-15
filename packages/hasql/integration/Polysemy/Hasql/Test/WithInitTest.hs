@@ -9,7 +9,7 @@ import Sqel.Statement (unprepared)
 import Polysemy.Hasql.Data.InitDb (InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 prog ::
   Members [Hedgehog IO, Database, AtomicState Int] r =>

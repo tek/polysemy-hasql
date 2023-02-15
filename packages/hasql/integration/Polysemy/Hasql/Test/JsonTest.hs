@@ -24,7 +24,7 @@ import Sqel.Uid (uid)
 import qualified Polysemy.Hasql.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Field3 =
   Field3 {

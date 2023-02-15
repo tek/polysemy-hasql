@@ -1,7 +1,7 @@
 module Sqel.ReifyCodec where
 
 import Data.Functor.Invariant (Invariant, invmap)
-import Generics.SOP (AllZip, I (I), NP ((:*)), htrans)
+import Generics.SOP (I (I), NP (Nil, (:*)))
 import qualified Hasql.Encoders as Encoders
 
 import Sqel.Codec (
@@ -240,6 +240,7 @@ instance (
     reifyCompCodec _ sub =
       defaultCompCodec @c @i sub
 
+type ReifyCodec :: (Type -> Type) -> DdK -> Type -> Constraint
 class ReifyCodec b s a | s -> a where
   reifyCodec :: Dd s -> b a
 
@@ -250,8 +251,22 @@ instance (
       reifyPrimCodec @b ps
 
 instance (
-    AllZip (ReifyCodec b) sub as,
+    ReifyCodecComp b sub as,
     ReifyCompCodec b c i ps as a
   ) => ReifyCodec b ('DdK sel ps a ('Comp tsel c i sub)) a where
     reifyCodec (Dd _ (Mods ps) (DdComp _ _ _ sub)) =
-      reifyCompCodec @b @c @i @ps @as ps (htrans (Proxy @(ReifyCodec b)) reifyCodec sub)
+      reifyCompCodec @b @c @i @ps @as ps (reifyCodecComp @b @sub sub)
+
+-- TODO this is probably only necessary because of a bug in GHC that's fixed in master
+type ReifyCodecComp :: (Type -> Type) -> [DdK] -> [Type] -> Constraint
+class ReifyCodecComp b s as | s -> as where
+  reifyCodecComp :: NP Dd s -> NP b as
+
+instance ReifyCodecComp b '[] '[] where
+  reifyCodecComp Nil = Nil
+
+instance (
+    ReifyCodec b s a,
+    ReifyCodecComp b ss as
+  ) => ReifyCodecComp b (s : ss) (a : as) where
+  reifyCodecComp (d :* ds) = reifyCodec d :* reifyCodecComp ds

@@ -13,7 +13,7 @@ import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Databases, withDatabaseUnique)
 import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool
 import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 prog ::
   Members [Hedgehog IO, Databases, DbConnectionPool !! DbConnectionError, Stop DbError, Embed IO] r =>

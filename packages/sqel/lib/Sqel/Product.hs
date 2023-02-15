@@ -41,7 +41,7 @@ instance (
     ProductSel sel a arg s
   ) => Product a arg s where
     prod =
-      prodSel @sel
+      prodSel @sel @a
 
 prodAs ::
   ∀ (name :: Symbol) (a :: Type) (s :: DdK) (arg :: Type) .

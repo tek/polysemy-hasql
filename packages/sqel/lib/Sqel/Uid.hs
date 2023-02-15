@@ -26,7 +26,7 @@ instance (
     ProductSel sel (Uid i a) (Dd si :> Dd (T.Merge sa)) s
   ) => UidColumn i a si sa s where
     uidColumn i a =
-      prodSel @sel (i :> merge a)
+      prodSel @sel @(Uid i a) (i :> merge a)
 
 uid ::
   ∀ (i :: Type) (a :: Type) (si :: DdK) (sa :: DdK) (s :: DdK) .

@@ -172,7 +172,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.QueryTest
       Polysemy.Hasql.Test.QueueTest
       Polysemy.Hasql.Test.RetryTest
-      Polysemy.Hasql.Test.Run
+      Polysemy.Hasql.Test.RunIntegration
       Polysemy.Hasql.Test.SingletonTest
       Polysemy.Hasql.Test.StoreUpdateTest
       Polysemy.Hasql.Test.SumTableTest

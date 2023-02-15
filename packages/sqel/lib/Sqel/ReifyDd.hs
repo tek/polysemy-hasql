@@ -1,6 +1,6 @@
 module Sqel.ReifyDd where
 
-import Generics.SOP (All, I (I), NP (Nil, (:*)), hcfoldMap, tl)
+import Generics.SOP (I (I), NP (Nil, (:*)), tl)
 
 import Sqel.Class.Mods (MaybeMod (maybeMod))
 import Sqel.Codec (PrimColumn (pgType))
@@ -69,14 +69,27 @@ instance (
 instance (
     ColumnConstraints mods,
     MaybeMod SetTableName mods,
-    All ReifyDd sub
+    ReifyDdComp sub
   ) => ReifyDd ('DdK sel mods a ('Comp tsel c i sub)) where
     reifyDd (Dd sel mods (DdComp (TSelW (Proxy :: Proxy '(tname, tpe))) c i sub)) =
       DdTerm (pgColumnName name) (unSetTableName <$> maybeMod mods) unique constraints struct
       where
         (unique, constraints) = columnConstraints mods
-        struct = Term.Comp typeName (demoteComp c) (demoteInc i) (hcfoldMap (Proxy @ReifyDd) (pure . reifyDd) sub)
+        struct = Term.Comp typeName (demoteComp c) (demoteInc i) (reifyDdComp sub)
         name = case sel of
           SelWSymbol (Proxy :: Proxy name) -> symbolText @name
           _ -> symbolText @tname
         typeName = symbolText @tpe
+
+-- TODO this is probably only necessary because of a bug in GHC that's fixed in master
+class ReifyDdComp s where
+  reifyDdComp :: NP Dd s -> [DdTerm]
+
+instance ReifyDdComp '[] where
+  reifyDdComp Nil = []
+
+instance (
+    ReifyDd s,
+    ReifyDdComp ss
+  ) => ReifyDdComp (s : ss) where
+    reifyDdComp (s :* ss) = reifyDd s : reifyDdComp ss

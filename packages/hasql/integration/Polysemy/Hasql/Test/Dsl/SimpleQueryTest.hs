@@ -25,7 +25,7 @@ import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Q =
   Q {

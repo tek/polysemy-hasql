@@ -27,7 +27,7 @@ import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTa
 import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Migration (migrateSem)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data PordOld =
   PordOld {

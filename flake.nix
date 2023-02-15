@@ -4,7 +4,7 @@
   inputs = {
     hix.url = git+https://git.tryp.io/tek/hix;
     prelate.url = git+https://git.tryp.io/tek/prelate;
-    hls.url = github:haskell/haskell-language-server;
+    hls.url = "github:haskell/haskell-language-server?ref=1.9.0.0";
   };
 
   outputs = { hix, prelate, hls, ... }:

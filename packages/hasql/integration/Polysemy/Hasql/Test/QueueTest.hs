@@ -14,7 +14,7 @@ import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
 import Polysemy.Hasql.Queue.Input (interpretInputQueueDb)
 import Polysemy.Hasql.Queue.Output (interpretOutputQueueDb)
 import Polysemy.Hasql.Queue.Store (interpretQueueStoreDb)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Dat =
   Dat {

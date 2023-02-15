@@ -20,7 +20,7 @@ import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
-import Polysemy.Hasql.Test.Run (integrationTest)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Dat =
   Dat {

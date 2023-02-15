@@ -6,9 +6,6 @@ import Generics.SOP (NP (Nil, (:*)))
 
 import Sqel.Column (nullable)
 import Sqel.Data.Dd (Dd (Dd), DdK (DdK), DdStruct (DdComp), (:>) ((:>)))
-import Sqel.Data.PgType (PgTable)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.PgType (tableSchema)
 import Sqel.Prim (prim)
 import Sqel.Product (prod)
 
@@ -34,13 +31,13 @@ ddTooFew =
     prod prim
   )
 
-tableTooFew :: TableSchema Dat
-tableTooFew =
-  tableSchema ddTooFew
-
-prodTooFew :: PgTable Dat
+prodTooFew :: ()
 prodTooFew =
-  tableTooFew ^. #pg
+  case ddTooFew of
+    Dd _ _ (DdComp _ _ _ (_ :* (Dd _ _ (DdComp _ _ _ (Dd _ _ _ :* _))) :* Nil)) ->
+      ()
+    Dd _ _ (DdComp _ _ _ (_ :* (Dd _ _ (DdComp _ _ _ _)) :* Nil)) ->
+      ()
 
 ddTooMany :: Dd ('DdK _ _ Dat _)
 ddTooMany =
@@ -49,13 +46,11 @@ ddTooMany =
     prod (prim :> prim :> prim :> prim :> prim)
   )
 
-tableTooMany :: TableSchema Dat
-tableTooMany =
-  tableSchema ddTooMany
-
-prodTooMany :: PgTable Dat
+prodTooMany :: ()
 prodTooMany =
-  tableTooMany ^. #pg
+  case ddTooMany of
+    Dd _ _ (DdComp _ _ _ (_ :* (Dd _ _ (DdComp _ _ _ (Dd _ _ _ :* _))) :* Nil)) ->
+      ()
 
 ddBadType :: Dd ('DdK _ _ Dat _)
 ddBadType =

@@ -1,4 +1,4 @@
-module Polysemy.Hasql.Test.Run where
+module Polysemy.Hasql.Test.RunIntegration where
 
 import Conc (interpretMaskFinal, interpretRace)
 import Hasql.Session (QueryError)
