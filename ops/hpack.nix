@@ -47,7 +47,7 @@ let
 
   dependencies = [
     { name = "base"; version = ">= 4.12 && < 5"; mixin = "hiding (Prelude)"; }
-    { name = "prelate"; version = ">= 0.4"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
+    { name = "prelate"; version = ">= 0.5"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
   ];
 
   project = name: doc: merge (meta // { library = paths name; } // options) {
@@ -214,7 +214,6 @@ in {
       "path-io"
       "prettyprinter"
       "scientific"
-      "singletons"
       "some"
       "template-haskell"
       "time"

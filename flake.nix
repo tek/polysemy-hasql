@@ -38,7 +38,7 @@
       polysemy-hasql = ./packages/hasql;
       polysemy-hasql-test = ./packages/hasql-test;
     };
-    devGhc.compiler = "ghc925";
+    devGhc.compiler = "ghc943";
     ghci = {
       args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
       preludePackage = "prelate";
@@ -51,6 +51,6 @@
       testConfig = conf: { inherit env; vm.enable = lib.mkForce (conf.type == "integration"); };
     };
     compat.enable = false;
-    shell.hls.package = hls.packages.${config.system}.haskell-language-server-925;
+    shell.hls.package = hls.packages.${config.system}.haskell-language-server-943;
   });
 }

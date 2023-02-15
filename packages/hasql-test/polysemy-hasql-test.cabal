@@ -96,7 +96,7 @@ library
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.4
+    , prelate >=0.5
     , sqel
   mixins:
       base hiding (Prelude)
@@ -190,7 +190,7 @@ test-suite polysemy-hasql-test-unit
     , polysemy-hasql-test
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.4
+    , prelate >=0.5
     , sqel
     , tasty
   mixins:

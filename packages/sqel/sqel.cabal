@@ -174,10 +174,9 @@ library
     , invariant
     , path
     , path-io
-    , prelate >=0.4
+    , prelate >=0.5
     , prettyprinter
     , scientific
-    , singletons
     , some
     , template-haskell
     , time
@@ -281,7 +280,7 @@ test-suite polysemy-hasql-unit
     , path
     , polysemy
     , polysemy-plugin
-    , prelate >=0.4
+    , prelate >=0.5
     , sqel
     , tasty
     , tasty-hedgehog

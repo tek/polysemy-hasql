@@ -116,7 +116,7 @@ library
     , lens
     , polysemy
     , polysemy-plugin
-    , prelate >=0.4
+    , prelate >=0.5
     , random
     , sqel
     , time

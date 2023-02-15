@@ -139,7 +139,7 @@ library
     , polysemy-plugin
     , polysemy-time
     , postgresql-libpq
-    , prelate >=0.4
+    , prelate >=0.5
     , prettyprinter
     , sqel
     , stm-chans
@@ -263,7 +263,7 @@ test-suite polysemy-hasql-integration
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
-    , prelate >=0.4
+    , prelate >=0.5
     , prettyprinter
     , sqel
     , tasty
@@ -363,7 +363,7 @@ test-suite polysemy-hasql-unit
     , polysemy-hasql
     , polysemy-plugin
     , polysemy-test
-    , prelate >=0.4
+    , prelate >=0.5
     , sqel
     , tasty
   mixins:
