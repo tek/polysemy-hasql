@@ -32,8 +32,10 @@ library
       Polysemy.Db.Data.DbUser
       Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.InitDbError
+      Polysemy.Db.Effect.Id
       Polysemy.Db.Effect.Query
       Polysemy.Db.Effect.Store
+      Polysemy.Db.Interpreter.Id
       Polysemy.Db.Query
       Polysemy.Db.Random
       Polysemy.Db.Reader
