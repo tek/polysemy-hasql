@@ -16,7 +16,7 @@ module Sqel (
 ) where
 
 import Sqel.Column (nullable, nullableAs, pgDefault, pk, tableName)
-import Sqel.Data.Dd (Dd (Dd), DdK (DdK), DdType, QOp (..), Sqel, Sqel', (:>) ((:>)))
+import Sqel.Data.Dd (Dd (Dd), Sqel, Sqel', (:>) ((:>)))
 import Sqel.Data.Migration (Migrations, hoistMigration, hoistMigrations, migrate, noMigrations)
 import Sqel.Data.Sel (Sel (..), TSel (..))
 import Sqel.Data.Uid (Uid (Uid), Uuid)
@@ -25,6 +25,7 @@ import Sqel.Migration.Table (migrateAuto)
 import Sqel.Prim (
   IndexColumn,
   IndexColumnWith,
+  array,
   column,
   enum,
   ignore,
