@@ -9,7 +9,6 @@ module Sqel.Ext (
   module Sqel.Data.Migration,
   module Sqel.ReifyCodec,
   module Sqel.ReifyDd,
-  module Sqel.PgType,
 ) where
 
 import Sqel.Comp (Column)
