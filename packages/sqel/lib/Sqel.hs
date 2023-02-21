@@ -14,10 +14,12 @@ module Sqel (
   module Sqel.Data.Migration,
   module Sqel.Migration.Table,
   module Sqel.Sql,
+  module Sqel.Data.Codec,
   module Sqel.PgType,
 ) where
 
 import Sqel.Column (nullable, nullableAs, pgDefault, pk, tableName)
+import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (Dd (Dd), Sqel, Sqel', (:>) ((:>)))
 import Sqel.Data.Migration (Migrations, hoistMigration, hoistMigrations, migrate, noMigrations)
 import Sqel.Data.Sel (Sel (..), TSel (..))
