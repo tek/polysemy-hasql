@@ -8,11 +8,13 @@ module Sqel (
   module Sqel.Sum,
   module Sqel.Data.Uid,
   module Sqel.Uid,
+  module Sqel.Names,
   module Sqel.Column,
   module Sqel.Query.Combinators,
   module Sqel.Data.Migration,
   module Sqel.Migration.Table,
   module Sqel.Sql,
+  module Sqel.PgType,
 ) where
 
 import Sqel.Column (nullable, nullableAs, pgDefault, pk, tableName)
@@ -22,6 +24,8 @@ import Sqel.Data.Sel (Sel (..), TSel (..))
 import Sqel.Data.Uid (Uid (Uid), Uuid)
 import Sqel.Merge (merge)
 import Sqel.Migration.Table (migrateAuto)
+import Sqel.Names (named, typeAs)
+import Sqel.PgType (MkTableSchema (tableSchema))
 import Sqel.Prim (
   IndexColumn,
   IndexColumnWith,
