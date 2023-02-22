@@ -1,5 +1,6 @@
 module Polysemy.Db.Interpreter.Id where
 
+import Conc (interpretAtomic)
 import qualified Data.UUID as UUID
 import Data.UUID (UUID)
 
@@ -24,32 +25,34 @@ interpretIdUuidZero =
   interpret \ NewId -> pure UUID.nil
 
 interpretIdState ::
-  Members [State [i], Error Text] r =>
+  Members [AtomicState [i], Error Text] r =>
   InterpreterFor (Id i) r
 interpretIdState =
   interpret \case
-    NewId ->
-      get >>= \case
-        u : rest -> u <$ put rest
-        [] -> throw "Id pool exhausted"
+    NewId -> do
+      i <- atomicState' \case
+        u : rest -> (rest, Just u)
+        [] -> ([], Nothing)
+      fromMaybeA (throw "Id pool exhausted") i
 
 interpretIdList ::
-  Member (Error Text) r =>
+  Members [Error Text, Embed IO] r =>
   [i] ->
   InterpreterFor (Id i) r
 interpretIdList pool =
-  evalState pool .
+  interpretAtomic pool .
   interpretIdState .
   raiseUnder
 
 interpretIdNum ::
   ∀ i r .
+  Member (Embed IO) r =>
   Num i =>
   InterpreterFor (Id i) r
 interpretIdNum =
-  evalState @i 1 .
+  interpretAtomic @i 1 .
   reinterpret \ NewId ->
-    get >>= \ id' -> id' <$ put (id' + 1)
+    atomicState' \ id' -> ((id' + 1), id')
 
 interpretIdConst ::
   i ->
