@@ -1,7 +1,7 @@
 module Sqel.Sql.Select where
 
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
-import Sqel.Data.Select (Select (Select))
+import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Sql (Sql, sql)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 

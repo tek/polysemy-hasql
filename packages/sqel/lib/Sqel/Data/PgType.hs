@@ -7,7 +7,7 @@ import Prettyprinter (Pretty (pretty), nest, sep, vsep, (<+>))
 
 import Sqel.Data.Create (Create (Create))
 import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
-import Sqel.Data.Select (Select (Select))
+import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Selector (Selector (unSelector), assign, nameSelector)
 import Sqel.Data.Sql (Sql, ToSql (toSql), sql, sqlQuote)
 import Sqel.Data.SqlFragment (

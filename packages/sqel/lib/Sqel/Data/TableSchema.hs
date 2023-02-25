@@ -6,7 +6,7 @@ import Hasql.Encoders (Params)
 
 import Sqel.Data.Create (Create (Create))
 import Sqel.Data.PgType (PgTable)
-import Sqel.Data.Select (Select (Select))
+import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Sql (ToSql (toSql))
 
 data TableSchema a =

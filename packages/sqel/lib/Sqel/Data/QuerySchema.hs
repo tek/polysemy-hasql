@@ -1,7 +1,7 @@
 module Sqel.Data.QuerySchema where
 
 import Sqel.Data.Codec (Encoder)
-import Sqel.Data.Select (SelectFragment)
+import Sqel.Data.SelectExpr (SelectFragment)
 import Sqel.Data.Sql (ToSql (toSql))
 import Sqel.Data.SqlFragment (SelectQuery (SelectQuery))
 

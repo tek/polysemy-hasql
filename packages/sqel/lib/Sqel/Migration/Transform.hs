@@ -15,7 +15,7 @@ import Sqel.Data.Migration (
   MigrationActions (CustomActions),
   )
 import Sqel.Data.PgTypeName (PgCompName, pattern PgTypeName)
-import Sqel.Data.Select (Select (Select))
+import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Sql (sql, toSql)
 import Sqel.Data.SqlFragment (Insert (Insert))
 import Sqel.Data.TableSchema (TableSchema)

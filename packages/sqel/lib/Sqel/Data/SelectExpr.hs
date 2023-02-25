@@ -1,4 +1,4 @@
-module Sqel.Data.Select where
+module Sqel.Data.SelectExpr where
 
 import qualified Exon
 
@@ -38,7 +38,3 @@ data SelectExpr =
   SelectExprNot SelectExpr
   |
   SelectExprIgnore
-
-newtype Select a =
-  Select { unSelect :: a }
-  deriving stock (Eq, Show)

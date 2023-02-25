@@ -9,15 +9,15 @@ import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdMerge, DdNest),
   DdK (DdK),
-  DdStruct (DdComp, DdPrim),
   DdSort (DdSum),
+  DdStruct (DdComp, DdPrim),
   QOp (QAnd),
   Struct (Comp, Prim),
   )
 import Sqel.Data.FragType (FragType (Where))
 import Sqel.Data.Mods (Ignore (Ignore))
 import Sqel.Data.Sel (Sel (SelSymbol, SelUnused), SelW (SelWAuto))
-import Sqel.Data.Select (
+import Sqel.Data.SelectExpr (
   SelectAtom (SelectAtom),
   SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprSum),
   )

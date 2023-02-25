@@ -6,7 +6,7 @@ import Generics.SOP (NP (Nil, (:*)))
 import Prelude hiding (sum)
 
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
-import Sqel.Data.Select (SelectFragment)
+import Sqel.Data.SelectExpr (SelectFragment)
 import Sqel.Data.Uid (Uid)
 import Sqel.Prim (prim, primAs)
 import Sqel.Product (prod, prodAs)

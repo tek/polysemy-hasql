@@ -32,6 +32,10 @@ newtype Returning a =
   Returning { unReturning :: a }
   deriving stock (Eq, Show)
 
+newtype Select a =
+  Select { unSelect :: a }
+  deriving stock (Eq, Show)
+
 newtype SelectQuery a =
   SelectQuery { unSelectQuery :: a }
   deriving stock (Eq, Show, Generic)

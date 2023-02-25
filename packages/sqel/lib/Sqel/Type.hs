@@ -8,7 +8,7 @@ import qualified Sqel.Data.Dd as Kind
 import Sqel.Data.Dd (DdK (DdK), Struct (Comp))
 import Sqel.Data.Mods (Newtype, NoMods)
 import Sqel.Data.Sel (Sel (SelAuto, SelSymbol, SelUnused), SelPrefix (DefaultPrefix), TSel (TSel))
-import Sqel.Data.Select (SelectAtom)
+import Sqel.Data.SelectExpr (SelectAtom)
 import Sqel.SOP.Constraint (DataNameF)
 import Sqel.SOP.Error (QuotedType)
 

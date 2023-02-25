@@ -44,7 +44,7 @@ library
       Sqel.Data.ProjectionSchema
       Sqel.Data.QuerySchema
       Sqel.Data.Sel
-      Sqel.Data.Select
+      Sqel.Data.SelectExpr
       Sqel.Data.Selector
       Sqel.Data.Sql
       Sqel.Data.SqlFragment

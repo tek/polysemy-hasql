@@ -9,7 +9,7 @@ import Sqel.Data.Codec (Encoder)
 import Sqel.Data.Dd (Dd, DdK, DdType)
 import Sqel.Data.FragType (FragType)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
-import Sqel.Data.Select (
+import Sqel.Data.SelectExpr (
   SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprNot, SelectExprSum),
   SelectFragment (SelectFragment),
   )
