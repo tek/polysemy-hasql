@@ -52,7 +52,6 @@ library
       Polysemy.Hasql.Session
       Polysemy.Hasql.Statement
       Polysemy.Hasql.Statement.Transaction
-      Polysemy.Hasql.Table
       Polysemy.Hasql.Table.Query.Text
       Polysemy.Hasql.Table.Query.Update
       Polysemy.Hasql.Table.SumIndex

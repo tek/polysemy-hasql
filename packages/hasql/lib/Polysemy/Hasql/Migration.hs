@@ -8,11 +8,8 @@ import Sqel.Class.MigrationEffect (MigrationEffect (error, log, runMigrationStat
 import Sqel.Data.Migration (
   CustomMigration,
   HoistMigration (hoistMigration),
-  HoistMigrations (hoistMigrations),
-  Migrations (Migrations),
+  HoistMigrations (hoistMigrations), Migrations,
   )
-import Sqel.Data.PgType (PgTable)
-import Sqel.Migration.Run (runMigrations)
 import Sqel.Migration.Statement (migrationSession)
 import qualified Sqel.Migration.Transform as Transform
 import Sqel.Migration.Transform (MigrateTransform (MigrateTransform))
@@ -60,13 +57,3 @@ instance (
     error msg = MigrateSem do
       Log.error msg
       stop (DbError.Table msg)
-
--- TODO unnecessary?
-runMigrationsSem ::
-  CustomSemMigrations r migs =>
-  Member Log r =>
-  PgTable d ->
-  Migrations (MigrateSem r) migs ->
-  MigrateSem r ()
-runMigrationsSem table (Migrations migs) =
-  runMigrations table migs

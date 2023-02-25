@@ -15,6 +15,7 @@ import Sqel.Data.Migration (
   MigExt,
   Migration (Migration),
   MigrationActions (AutoActions, CustomActions),
+  Migrations (Migrations),
   TypeAction (AddAction),
   )
 import Sqel.Data.PgType (
@@ -243,9 +244,9 @@ runMigrations ::
   MigrationEffect m =>
   All (CustomMigration m) migs =>
   PgTable a ->
-  NP Migration migs ->
+  Migrations m migs ->
   m ()
-runMigrations table steps = do
+runMigrations table (Migrations steps) = do
   initialStatus <- tableMatch Mismatch table
   (status, _) <- runMigrationSteps initialStatus mempty table steps
   createAbsent table status

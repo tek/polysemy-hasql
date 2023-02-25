@@ -8,6 +8,7 @@ import Sqel.Data.PgType (PgTable (PgTable))
 import Sqel.Data.PgTypeName (pattern PgTypeName)
 import Sqel.Data.ProjectionSchema (ProjectionSchema)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
+import Sqel.Migration.Run (runMigrations)
 import Sqel.PgType (CheckedProjection, projectionSchema)
 
 import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
@@ -15,7 +16,7 @@ import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable)
-import Polysemy.Hasql.Migration (CustomSemMigrations, MigrateSem (unMigrateSem), SemMigrations, runMigrationsSem)
+import Polysemy.Hasql.Migration (CustomSemMigrations, MigrateSem (unMigrateSem), SemMigrations)
 
 handleDbTable ::
   ∀ d migs m r' r a .
@@ -32,7 +33,7 @@ handleDbTable raiser (TableSchema table@PgTable {name = PgTypeName name} _ _) mi
     restop (Database.withInit initDb (Database.statement q stmt))
   where
     initDb :: InitDb (Sem (Database : Stop DbError : Database !! DbError : r))
-    initDb = InitDb (ClientTag name) True \ _ -> raise2Under (raiser (unMigrateSem (runMigrationsSem table migrations)))
+    initDb = InitDb (ClientTag name) True \ _ -> raise2Under (raiser (unMigrateSem (runMigrations table migrations)))
 
 interpretDbTable ::
   ∀ d r .
@@ -105,7 +106,7 @@ interpretTableView ::
   InterpreterFor (DbTable view !! DbError) r
 interpretTableView _ =
   interpretResumable \case
-    DbTable.Statement q stmt -> do
+    DbTable.Statement q stmt ->
       restop (DbTable.statement q stmt)
 
 interpretTableViewDd ::
