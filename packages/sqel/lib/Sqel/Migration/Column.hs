@@ -5,7 +5,7 @@ import qualified Hasql.Encoders as Encoders
 
 import Sqel.Class.Mods (OptMod (optMod))
 import Sqel.Codec (PrimColumn (primEncoder))
-import Sqel.Data.Migration (MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn))
+import Sqel.Data.Migration (ColumnAction (AddColumn, RemoveColumn, RenameColumn))
 import Sqel.Data.MigrationParams (MigrationDefault (MigrationDefault))
 import Sqel.Data.PgType (ColumnType, PgColumnName, pgColumnName)
 import Sqel.Migration.Data.Ddl (DdlColumn (DdlColumn), DdlColumnK (DdlColumnK))
@@ -86,7 +86,7 @@ type family MigrationActions (old :: [OldK]) (new :: [NewK]) :: [ActionK] where
     MigrationActionsCont (MkMigrationAction old new '[]) olds
 
 class ColumnAddition (comp :: Maybe Symbol) (def :: Type) where
-  columnAddition :: def -> PgColumnName -> ColumnType -> [MigrationTypeAction]
+  columnAddition :: def -> PgColumnName -> ColumnType -> [ColumnAction]
 
 instance ColumnAddition ('Just tname) () where
   columnAddition () n t = [AddColumn n t Nothing]
@@ -117,7 +117,7 @@ instance {-# overlappable #-} (
 
 type ReifyModAction :: ModK -> DdlColumnK -> DdlColumnK -> Constraint
 class ReifyModAction action old new where
-  reifyModAction :: DdlColumn old -> DdlColumn new -> [MigrationTypeAction]
+  reifyModAction :: DdlColumn old -> DdlColumn new -> [ColumnAction]
 
 instance ReifyModAction 'KeepK old new where
   reifyModAction _ _ = []
@@ -128,7 +128,7 @@ instance ReifyModAction 'RenameK ('DdlColumnK name compOld modsOld renameOld ren
 
 type ReifyOldAction :: ActionK -> DdlColumnK -> [DdlColumnK] -> Constraint
 class ReifyOldAction action old new where
-  reifyOldAction :: DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+  reifyOldAction :: DdlColumn old -> NP DdlColumn new -> [ColumnAction]
 
 instance (
     ColIndex index news new,
@@ -148,7 +148,7 @@ instance ReifyOldAction 'RemoveK old new where
 -- -- b) Maybe
 type ReifyNewAction :: ActionK -> [DdlColumnK] -> Constraint
 class ReifyNewAction action new where
-  reifyNewAction :: NP DdlColumn new -> [MigrationTypeAction]
+  reifyNewAction :: NP DdlColumn new -> [ColumnAction]
 
 instance (
     ColIndex index news ('DdlColumnK name comp mods rename renameT delete tpe),
@@ -162,7 +162,7 @@ instance (
 
 type ReifyActions :: [ActionK] -> [DdlColumnK] -> [DdlColumnK] -> Constraint
 class ReifyActions actions old new where
-  reifyActions :: NP DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+  reifyActions :: NP DdlColumn old -> NP DdlColumn new -> [ColumnAction]
 
 instance ReifyActions '[] '[] new where
   reifyActions _ _ =
@@ -172,8 +172,8 @@ instance (
     ReifyNewAction action new,
     ReifyActions actions '[] new
   ) => ReifyActions (action : actions) '[] new where
-  reifyActions Nil new =
-    reifyNewAction @action new <> reifyActions @actions Nil new
+    reifyActions Nil new =
+      reifyNewAction @action new <> reifyActions @actions Nil new
 
 instance (
     ReifyOldAction action o new,
@@ -184,7 +184,7 @@ instance (
 
 type ColumnsChanges :: [DdlColumnK] -> [DdlColumnK] -> Constraint
 class ColumnsChanges old new where
-  columnsChanges :: NP DdlColumn old -> NP DdlColumn new -> [MigrationTypeAction]
+  columnsChanges :: NP DdlColumn old -> NP DdlColumn new -> [ColumnAction]
 
 instance (
     actions ~ MigrationActions (OldKs 0 old) (NewKs 0 new),

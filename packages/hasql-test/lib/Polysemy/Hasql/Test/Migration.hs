@@ -3,17 +3,15 @@ module Polysemy.Hasql.Test.Migration where
 import qualified Data.Text as Text
 import Hedgehog.Internal.Property (failWith)
 import Path (reldir)
-import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Test as Test
 import Polysemy.Test (Hedgehog, Test, liftH)
 import Sqel.Data.Migration (Migrations)
 import Sqel.Migration.Consistency (migrationConsistency)
 
-import Polysemy.Hasql.Effect.Database (Database)
-
 testMigration' ::
+  ∀ migs r .
   Members [Test, Hedgehog IO, Embed IO] r =>
-  Migrations r' old cur ->
+  Migrations (Sem r) migs ->
   Bool ->
   Sem r ()
 testMigration' migs write =
@@ -25,10 +23,11 @@ testMigration' migs write =
       Nothing -> unit
 
 testMigration ::
+  ∀ migs r .
   Members [Test, Hedgehog IO, Embed IO] r =>
-  Migrations (Sem (Database !! DbError : Stop DbError : r)) old cur ->
+  Migrations (Sem r) migs ->
   Bool ->
   Sem r ()
-testMigration write =
+testMigration migs write =
   withFrozenCallStack do
-    testMigration' write
+    testMigration' migs write

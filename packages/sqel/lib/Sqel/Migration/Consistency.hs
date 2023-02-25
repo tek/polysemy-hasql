@@ -14,7 +14,8 @@ import Path.IO (createDirIfMissing, doesFileExist)
 import Prelude hiding (tryIO)
 import System.IO.Error (IOError)
 
-import Sqel.Data.Migration (Migration (Migration), Migrations (Migrations), changes, tableFrom, tableTo)
+import qualified Sqel.Data.Migration as Migration
+import Sqel.Data.Migration (Migration (Migration), Migrations (Migrations))
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
@@ -64,25 +65,26 @@ tableMetadata table =
   where
     types = snd <$> Map.toAscList (table ^. #types)
 
-migrationMetadata :: Migration m mig -> MigrationMetadata
-migrationMetadata Migration {tableFrom, changes} =
-  tableMetadata tableFrom & #statementsMigration .~ (migrationStatementSql <$> migrationStatements changes)
+migrationMetadata :: Migration mig -> MigrationMetadata
+migrationMetadata Migration {tableFrom, actions} =
+  tableMetadata tableFrom & #statementsMigration .~
+  (migrationStatementSql <$> migrationStatements (tableFrom ^. #name) actions)
 
-currentMetadata :: Migration m mig -> MigrationMetadata
+currentMetadata :: Migration mig -> MigrationMetadata
 currentMetadata Migration {tableTo} =
   tableMetadata tableTo
 
-migrationMetadatas :: NP (Migration m) migs -> [MigrationMetadata]
+migrationMetadatas :: NP Migration migs -> [MigrationMetadata]
 migrationMetadatas = \case
   Nil -> []
   m :* ms -> migrationMetadata m : migrationMetadatas ms
 
-headMigrationMetadata :: NP (Migration m) migs -> Maybe MigrationMetadata
+headMigrationMetadata :: NP Migration migs -> Maybe MigrationMetadata
 headMigrationMetadata = \case
   Nil -> Nothing
   mig :* _ -> Just (currentMetadata mig)
 
-migrationsMetadata :: Migrations m old cur -> [MigrationMetadata]
+migrationsMetadata :: Migrations m migs -> [MigrationMetadata]
 migrationsMetadata (Migrations migs) =
   reverse (maybeToList (headMigrationMetadata migs) <> migrationMetadatas migs)
 
@@ -105,7 +107,7 @@ jsonPath dir table = do
 writeMigrationMetadata ::
   MonadIO m =>
   Path Abs Dir ->
-  Migrations n old cur ->
+  Migrations m migs ->
   ExceptT Text m ()
 writeMigrationMetadata dir migs@(Migrations (Migration {tableFrom} :* _)) = do
   path <- jsonPath dir tableFrom
@@ -128,7 +130,7 @@ decodeError path e =
 readMigrationMetadata ::
   MonadIO m =>
   Path Abs Dir ->
-  Migrations n old cur ->
+  Migrations m migs ->
   ExceptT Text m (Maybe [MigrationMetadata])
 readMigrationMetadata dir (Migrations (Migration {tableFrom} :* _)) = do
   path <- jsonPath dir tableFrom
@@ -227,7 +229,7 @@ result =
 migrationConsistency ::
   MonadIO m =>
   Path Abs Dir ->
-  Migrations n old cur ->
+  Migrations m migs ->
   Bool ->
   m (Maybe (NonEmpty Text))
 migrationConsistency dir migs =

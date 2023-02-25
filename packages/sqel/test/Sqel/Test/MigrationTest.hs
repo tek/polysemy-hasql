@@ -8,11 +8,12 @@ import Hedgehog (TestT, (===))
 import Prelude hiding (sum)
 
 import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
-import Sqel.Data.Migration (Migration (Migration), Migrations (Migrations), migrate, migration, tableFrom)
+import qualified Sqel.Data.Migration as Migration
+import Sqel.Data.Migration (AutoMigrations, Migration (Migration), Migrations (Migrations), migrate, tableFrom)
 import Sqel.Data.Sql (Sql)
 import Sqel.Merge (merge)
 import Sqel.Migration.Consistency (tableStatements)
-import Sqel.Migration.Statement (MigrationStatement, migrationStatementSql)
+import Sqel.Migration.Statement (MigrationStatement, migrationStatementSql, migrationStatements)
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (typeAs)
 import Sqel.Prim (migrateRename, prim, primIndex, primNullable, prims)
@@ -60,8 +61,7 @@ dd_Dat :: Dd ('DdK _ _ Dat _)
 dd_Dat =
   prod (primNullable :> prim :> merge (sumWith (migrateRename @"ph_sum_index__Thing" (primIndex @"Thing")) (con prims :> con prims)))
 
-migrations ::
-  Migrations (Const [MigrationStatement]) '[Dat1, Dat0] Dat
+migrations :: AutoMigrations Identity [Dat1, Dat0] Dat
 migrations =
   migrate (
     migrateAuto dd_Dat1 dd_Dat :>
@@ -71,7 +71,7 @@ migrations =
 stmts :: [MigrationStatement]
 stmts =
   let Migrations migs = migrations
-  in hcfoldMap (Proxy @Top) (\ Migration {migration} -> getConst migration) migs
+  in hcfoldMap (Proxy @Top) (\ Migration {tableFrom, actions} -> migrationStatements (tableFrom ^. #name) actions) migs
 
 tableStmts :: [Sql]
 tableStmts =
@@ -88,7 +88,9 @@ stmtsTarget =
     [exon|alter table "dat" alter column thing1 set not null|],
     [exon|alter table "dat" add column thing2 sqel_type__thing2|],
     [exon|alter table "dat" alter column thing2 set not null|],
-    [exon|alter table "dat" add column num bigint|]
+    [exon|alter table "dat" add column num bigint|],
+    [exon|create type "sqel_type__thing1" as ("x" bigint, "y" bigint)|],
+    [exon|create type "sqel_type__thing2" as ("z" bigint, "a" bigint)|]
   ]
 
 tableStmtsTarget :: [Sql]

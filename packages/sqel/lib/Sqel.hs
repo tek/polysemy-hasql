@@ -21,7 +21,7 @@ module Sqel (
 import Sqel.Column (nullable, nullableAs, pgDefault, pk, tableName)
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (Dd (Dd), Sqel, Sqel', (:>) ((:>)))
-import Sqel.Data.Migration (Migrations, hoistMigration, hoistMigrations, migrate, noMigrations)
+import Sqel.Data.Migration (Migrations, migrate, noMigrations)
 import Sqel.Data.Sel (Sel (..), TSel (..))
 import Sqel.Data.Uid (Uid (Uid), Uuid)
 import Sqel.Merge (merge)

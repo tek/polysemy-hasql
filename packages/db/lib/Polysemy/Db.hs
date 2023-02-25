@@ -5,10 +5,12 @@ module Polysemy.Db (
   module Polysemy.Db.Store,
   interpretAtomicStateStore,
   DbError,
+  InitDbError,
 ) where
 
 import Polysemy.Db.AtomicState (interpretAtomicStateStore)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Effect.Query (Query, query)
 import Polysemy.Db.Effect.Store (QStore, Store, delete, deleteAll, fetch, fetchAll, insert, upsert)
 import Polysemy.Db.Store

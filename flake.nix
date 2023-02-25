@@ -3,11 +3,12 @@
 
   inputs = {
     hix.url = git+https://git.tryp.io/tek/hix;
-    prelate.url = git+https://git.tryp.io/tek/prelate;
     hls.url = "github:haskell/haskell-language-server?ref=1.9.0.0";
+    prelate.url = git+https://git.tryp.io/tek/prelate;
+    incipit.url = git+https://git.tryp.io/tek/incipit;
   };
 
-  outputs = { hix, prelate, hls, ... }:
+  outputs = { hix, hls, prelate, incipit, ... }:
   let
 
     vm = {
@@ -31,14 +32,14 @@
 
   in hix.lib.pro ({ config, lib, ... }: {
     main = "polysemy-hasql";
-    depsFull = [prelate];
+    depsFull = [prelate incipit];
     packages = {
       sqel = ./packages/sqel;
       polysemy-db = ./packages/db;
       polysemy-hasql = ./packages/hasql;
       polysemy-hasql-test = ./packages/hasql-test;
     };
-    devGhc.compiler = "ghc943";
+    devGhc.compiler = "ghc925";
     ghci = {
       args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
       preludePackage = "prelate";
@@ -51,6 +52,6 @@
       testConfig = conf: { inherit env; vm.enable = lib.mkForce (conf.type == "integration"); };
     };
     compat.enable = false;
-    shell.hls.package = hls.packages.${config.system}.haskell-language-server-943;
+    shell.hls.package = hls.packages.${config.system}.haskell-language-server-925;
   });
 }

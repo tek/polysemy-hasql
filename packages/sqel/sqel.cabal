@@ -20,6 +20,7 @@ library
   exposed-modules:
       Sqel
       Sqel.Class.MatchView
+      Sqel.Class.MigrationEffect
       Sqel.Class.Mods
       Sqel.Codec
       Sqel.Codec.PrimDecoder
@@ -56,8 +57,12 @@ library
       Sqel.Migration.Consistency
       Sqel.Migration.Data.Ddl
       Sqel.Migration.Ddl
+      Sqel.Migration.Init
+      Sqel.Migration.Metadata
+      Sqel.Migration.Run
       Sqel.Migration.Statement
       Sqel.Migration.Table
+      Sqel.Migration.Transform
       Sqel.Migration.Type
       Sqel.Mods
       Sqel.Names

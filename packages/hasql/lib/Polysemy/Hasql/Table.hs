@@ -19,24 +19,11 @@ import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
 import Sqel.Data.Sql (Sql)
 import qualified Sqel.Sql.Type as Sql
 import qualified Sqel.Statement as Statement
-import Sqel.Statement (plain)
+import Sqel.Statement (plain, typeColumnsSql)
 
 import Polysemy.Hasql.Data.ExistingColumn (ExistingColumn (ExistingColumn))
 import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag))
 import Polysemy.Hasql.Session (runStatement)
-
-dbColumnsStatement ::
-  Sql ->
-  Statement Text [(Text, Text, Text)]
-dbColumnsStatement sql =
-  Statement.prepared sql decoder encoder
-  where
-    decoder =
-      (,,) <$> text' <*> text' <*> text'
-    text' =
-      Decoders.column (Decoders.nonNullable Decoders.text)
-    encoder =
-      Encoders.param (Encoders.nonNullable Encoders.text)
 
 dbColumnsFor ::
   Members [Embed IO, Stop DbError] r =>
@@ -45,26 +32,10 @@ dbColumnsFor ::
   ClientTag ->
   Sem r (Maybe (NonEmpty ExistingColumn))
 dbColumnsFor sql connection (ClientTag tableName) =
-  nonEmpty . fmap cons <$> runStatement connection tableName (dbColumnsStatement sql)
+  nonEmpty . fmap cons <$> runStatement connection tableName (Statement.dbColumns sql)
   where
     cons (name, dataType, udtName) =
       ExistingColumn (PgColumnName name) dataType udtName
-
-tableColumnsSql :: Sql
-tableColumnsSql =
-  [exon|select "column_name", "data_type", "udt_name" from information_schema.columns where "table_name" = $1|]
-
-tableColumns ::
-  Members [Embed IO, Stop DbError] r =>
-  Connection ->
-  ClientTag ->
-  Sem r (Maybe (NonEmpty ExistingColumn))
-tableColumns =
-  dbColumnsFor tableColumnsSql
-
-typeColumnsSql :: Sql
-typeColumnsSql =
-  [exon|select "attribute_name", "data_type", "attribute_udt_name" from information_schema.attributes where "udt_name" = $1|]
 
 typeColumns ::
   Members [Embed IO, Stop DbError] r =>
@@ -73,13 +44,6 @@ typeColumns ::
   Sem r (Maybe (NonEmpty ExistingColumn))
 typeColumns connection (PgTypeName name) =
   dbColumnsFor typeColumnsSql connection (ClientTag name)
-
--- TODO
-updateType ::
-  NonEmpty ExistingColumn ->
-  Sem r ()
-updateType _ =
-  unit
 
 initComp ::
   Members [Embed IO, Stop DbError] r =>

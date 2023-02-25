@@ -11,7 +11,7 @@ import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
-import Sqel.Data.Migration (Migrations)
+import Sqel.Data.Migration (AutoMigrations, migrate)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Migration.Table (migrateAuto)
@@ -22,11 +22,10 @@ import Sqel.Query (checkQuery)
 import Sqel.Uid (uidAs)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
-import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTables)
 import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
-import Polysemy.Hasql.Migration (migrateSem)
+import Polysemy.Hasql.Migration (MigrateSem)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data PordOld =
@@ -123,10 +122,9 @@ schemaCur =
   tableSchema tcur
 
 migrations ::
-  Members [Database !! DbError, Stop DbError] r =>
-  Migrations (Sem r) [Uid Int64 Dat2, Uid Int64 Dat1, Uid Int64 Dat0] (Uid Int64 Dat)
+  AutoMigrations (MigrateSem r) [Uid Int64 Dat2, Uid Int64 Dat1, Uid Int64 Dat0] (Uid Int64 Dat)
 migrations =
-  migrateSem (
+  migrate (
     migrateAuto t2 tcur :>
     migrateAuto t1 t2 :>
     migrateAuto t0 t1

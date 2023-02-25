@@ -158,6 +158,7 @@ in {
         "time"
         "uuid"
         "vector"
+        "zeugma"
       ];
     };
 

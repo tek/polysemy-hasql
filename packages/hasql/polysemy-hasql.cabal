@@ -177,6 +177,7 @@ test-suite polysemy-hasql-integration
       Polysemy.Hasql.Test.StoreUpdateTest
       Polysemy.Hasql.Test.SumTableTest
       Polysemy.Hasql.Test.TransactionTest
+      Polysemy.Hasql.Test.TransformMigrationTest
       Polysemy.Hasql.Test.UpsertTest
       Polysemy.Hasql.Test.WithInitTest
   hs-source-dirs:
@@ -270,6 +271,7 @@ test-suite polysemy-hasql-integration
     , time
     , uuid
     , vector
+    , zeugma
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

@@ -1,6 +1,9 @@
 module Sqel.Statement where
 
+import Exon (exon)
+import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, noResult)
+import qualified Hasql.Encoders as Encoders
 import Hasql.Encoders (Params)
 import Hasql.Statement (Statement (Statement))
 
@@ -26,6 +29,7 @@ import Sqel.Data.SqlFragment (
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.ResultShape (ResultShape (resultShape))
 import qualified Sqel.Sql.Select as Sql
+import qualified Sqel.Sql.Type as Sql
 import Sqel.Text.Quote (dquote)
 
 statement ::
@@ -118,3 +122,28 @@ upsert ::
   Statement a ()
 upsert (TableSchema tab _ params) =
   prepared (upsertSql tab) unit params
+
+dbColumns ::
+  Sql ->
+  Statement Text [(Text, Text, Text)]
+dbColumns code =
+  prepared code decoder encoder
+  where
+    decoder =
+      (,,) <$> text' <*> text' <*> text'
+    text' =
+      Decoders.column (Decoders.nonNullable Decoders.text)
+    encoder =
+      Encoders.param (Encoders.nonNullable Encoders.text)
+
+tableColumnsSql :: Sql
+tableColumnsSql =
+  [exon|select "column_name", "data_type", "udt_name" from information_schema.columns where "table_name" = $1|]
+
+typeColumnsSql :: Sql
+typeColumnsSql =
+  [exon|select "attribute_name", "data_type", "attribute_udt_name" from information_schema.attributes where "udt_name" = $1|]
+
+createTable :: PgTable a -> Statement () ()
+createTable table =
+  unprepared (Sql.createTable table) unit mempty

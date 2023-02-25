@@ -115,7 +115,7 @@ releaseNative ::
   Members [Stop DbConnectionError, Embed IO] r =>
   Connection ->
   Sem r ()
-releaseNative connection = do
+releaseNative connection =
   stopTryIOError DbConnectionError.Release (Connection.release connection)
 
 release ::
@@ -216,7 +216,7 @@ handleDbConnectionPool dbConfig = \case
   Kill ctag -> do
     cur <- embed myThreadId
     atomicGets (view (#active . at ctag)) >>= traverse_ \ (ConnectionClients _ clients) -> do
-      for_ (Map.keys clients) \ c -> do
+      for_ (Map.keys clients) \ c ->
         unless (cur == c) (embed (throwTo c KillCommand))
     pureT =<< release ctag
   UnsafeGet ctag ->

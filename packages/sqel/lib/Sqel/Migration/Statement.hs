@@ -1,25 +1,36 @@
 module Sqel.Migration.Statement where
 
 import qualified Control.Monad.Trans.Writer.Strict as Mtl
-import Data.Some (Some (Some), withSome)
+import qualified Data.Map.Strict as Map
 import qualified Exon
 import Hasql.Encoders (Params)
 import qualified Hasql.Session as Session
 import Hasql.Session (Session)
 import qualified Text.Show as Show
 
+import qualified Sqel.Data.Migration as Migration
 import Sqel.Data.Migration (
-  MigrationAction (ModifyType, RenameType),
-  MigrationTypeAction (AddColumn, RemoveColumn, RenameColumn, RenameColumnType),
+  ColumnAction (AddColumn, RemoveColumn, RenameColumn, RenameColumnType),
+  MigrationActions (AutoActions, CustomActions),
+  TypeAction (AddAction, ModifyAction, RenameAction),
   )
 import Sqel.Data.PgType (
   ColumnType (ColumnComp, ColumnPrim),
   PgColumnName (PgColumnName),
+  PgComposite (PgComposite),
   PgPrimName (PgPrimName),
   PgTypeRef (PgTypeRef),
   )
-import Sqel.Data.PgTypeName (pattern PgCompName, pattern PgTableName, pattern PgTypeName, PgTypeName, pgTableName)
+import Sqel.Data.PgTypeName (
+  pattern PgCompName,
+  PgTableName,
+  pattern PgTableName,
+  pattern PgTypeName,
+  PgTypeName,
+  pgTableName,
+  )
 import Sqel.Data.Sql (Sql (Sql), sql)
+import qualified Sqel.Sql.Type as Sql
 import Sqel.Statement (unprepared)
 
 data MigrationStatement where
@@ -33,7 +44,7 @@ migrationStatementSql (MigrationStatement _ _ s) =
   s
 
 alterStatement ::
-  Some PgTypeName ->
+  PgTypeName table ->
   p ->
   Params p ->
   (Sql -> Sql -> Sql) ->
@@ -41,25 +52,26 @@ alterStatement ::
 alterStatement typeName p enc f =
   Mtl.tell [MigrationStatement p enc (f [sql|alter #{entity} ##{pgTableName name}|] attr)]
   where
-    (entity, attr, name) = withSome typeName \case
+    (entity, attr, name) = case typeName of
       PgTableName n -> ("table", "column", n)
       PgCompName n -> ("type", "attribute", n)
 
 -- TODO maybe the default value can be null and the encoder Maybe, to unify the cases
-columnStatements ::
-  Bool ->
-  Some PgTypeName ->
-  MigrationTypeAction ->
+columnStatements' ::
+  PgTypeName table ->
+  ColumnAction ->
   Mtl.Writer [MigrationStatement] ()
-columnStatements table typeName = \case
+columnStatements' typeName = \case
   AddColumn (PgColumnName colName) tpe md -> do
     alter_ \ alter attr -> [sql|#{alter} add #{attr} ##{colName} #{colTypeName}|]
-    when table do
-      for_ md \ (defVal, enc) -> do
-        alterStatement typeName defVal enc \ _ _ -> [sql|update ##{comp} set ##{colName} = $1|]
-      for_ (nonEmpty optFrag) \ opt ->
-        alter_ \ alter attr ->
-          [sql|#{alter} alter #{attr} ##{colName} set #{Exon.intercalate " " opt}|]
+    case typeName of
+      PgTableName _ -> do
+        for_ md \ (defVal, enc) -> do
+          alterStatement typeName defVal enc \ _ _ -> [sql|update ##{comp} set ##{colName} = $1|]
+        for_ (nonEmpty optFrag) \ opt ->
+          alter_ \ alter attr ->
+            [sql|#{alter} alter #{attr} ##{colName} set #{Exon.intercalate " " opt}|]
+      PgCompName _ -> unit
     where
       (optFrag, colTypeName) = case tpe of
         ColumnPrim (PgPrimName n) _ opt -> (opt, Sql n)
@@ -72,24 +84,32 @@ columnStatements table typeName = \case
     alter_ \ alter attr -> [sql|#{alter} alter #{attr} ##{old} set data type ##{new}|]
   where
     alter_ = alterStatement typeName () mempty
-    comp = withSome typeName \ (PgTypeName n) -> Sql n
+    PgTypeName comp = typeName
 
-actionStatements :: MigrationAction -> Mtl.Writer [MigrationStatement] ()
-actionStatements = \case
-  ModifyType table name cols ->
-    traverse_ (columnStatements table name) cols
-  RenameType name (PgTypeName new) ->
-    alterStatement (Some name) () mempty \ alter _ -> [sql|#{alter} rename to ##{new}|]
+typeActionStatements :: PgTypeName table -> TypeAction table -> Mtl.Writer [MigrationStatement] ()
+typeActionStatements typeName = \case
+  ModifyAction _ cols ->
+    traverse_ (columnStatements' typeName) cols
+  RenameAction newName@(PgTypeName new) cols -> do
+    alterStatement typeName () mempty \ alter _ -> [sql|#{alter} rename to ##{new}|]
+    traverse_ (columnStatements' newName) cols
+  AddAction cols ->
+    Mtl.tell [MigrationStatement () mempty (Sql.createProdType (PgComposite typeName cols))]
 
-migrationStatements :: [MigrationAction] -> [MigrationStatement]
-migrationStatements =
+typeStatements :: PgTypeName table -> TypeAction table -> [MigrationStatement]
+typeStatements name =
   snd .
   runIdentity .
   Mtl.runWriterT .
-  traverse_ actionStatements
+  typeActionStatements name
 
-migrationSession :: [MigrationAction] ->  Session ()
+migrationStatements :: PgTableName -> MigrationActions ext -> [MigrationStatement]
+migrationStatements tableName = \case
+  AutoActions {..} ->
+    typeStatements tableName table <> (Map.toList types >>= \ (name, actions) -> typeStatements name actions)
+  CustomActions _ ->
+    []
+
+migrationSession :: [MigrationStatement] -> Session ()
 migrationSession =
-  traverse_ runS . migrationStatements
-  where
-    runS (MigrationStatement p enc stmt) = Session.statement p (unprepared @() stmt unit enc)
+  traverse_ \ (MigrationStatement p enc stmt) -> Session.statement p (unprepared @() stmt unit enc)

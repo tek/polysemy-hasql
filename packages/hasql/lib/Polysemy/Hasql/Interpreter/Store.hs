@@ -11,8 +11,8 @@ import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdNest),
   DdK (DdK),
-  DdStruct (DdComp),
   DdSort (DdProd),
+  DdStruct (DdComp),
   ProdType (Reg),
   Struct (Comp, Prim),
   )

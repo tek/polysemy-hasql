@@ -3,12 +3,11 @@
 module Polysemy.Hasql.Test.MigrationTest where
 
 import Path (reldir)
-import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Test as Test
 import Polysemy.Test (UnitTest, assertJust, runTestAuto)
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
-import Sqel.Data.Migration (Migrations)
+import Sqel.Data.Migration (AutoMigrations, migrate)
 import Sqel.Data.Uid (Uid)
 import Sqel.Migration.Consistency (migrationConsistency)
 import Sqel.Migration.Table (migrateAuto)
@@ -17,8 +16,6 @@ import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primNullable)
 import Sqel.Product (prod)
 import Sqel.Uid (uidAs)
 
-import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Migration (migrateSem)
 import Polysemy.Hasql.Test.Migration (testMigration)
 
 data PordOld =
@@ -103,10 +100,9 @@ tcur =
   ))
 
 migrations ::
-  Members [Database !! DbError, Stop DbError] r =>
-  Migrations (Sem r) [Uid Int64 Dat2, Uid Int64 Dat1, Uid Int64 Dat0] (Uid Int64 Dat)
+  AutoMigrations (Sem r) [Uid Int64 Dat2, Uid Int64 Dat1, Uid Int64 Dat0] (Uid Int64 Dat)
 migrations =
-  migrateSem (
+  migrate (
     migrateAuto t2 tcur :>
     migrateAuto t1 t2 :>
     migrateAuto t0 t1
@@ -126,7 +122,7 @@ test_migrationErrors :: UnitTest
 test_migrationErrors =
   runTestAuto do
     fixtures <- Test.fixturePath [reldir|migration-error|]
-    assertJust migrationErrors =<< migrationConsistency fixtures (migrations @[Database !! DbError, Stop DbError]) False
+    assertJust migrationErrors =<< migrationConsistency fixtures migrations False
 
 -- TODO error message claims type change if a column constraint differs
 test_migrationConsistency :: UnitTest
