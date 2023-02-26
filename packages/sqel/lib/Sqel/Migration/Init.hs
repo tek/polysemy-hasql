@@ -10,10 +10,11 @@ import Sqel.Data.PgType (
   StructureType (StructureComp, StructurePrim),
   structureToColumns,
   )
-import Sqel.Data.PgTypeName (PgCompName)
+import Sqel.Data.PgTypeName (PgCompName, getPgTypeName)
 import Sqel.Migration.Metadata (DbCols (DbCols), typeColumns)
 import qualified Sqel.Sql.Type as Sql
 import Sqel.Statement (createTable, plain, typeColumnsSql)
+import Exon (exon)
 
 initComp ::
   Monad m =>
@@ -55,5 +56,6 @@ initTable ::
   PgTable a ->
   m ()
 initTable table = do
+  MigrationEffect.log [exon|Initializing table '#{getPgTypeName (table ^. #name)}'|]
   initStructure (table ^. #structure)
   MigrationEffect.runStatement_ () (createTable table)

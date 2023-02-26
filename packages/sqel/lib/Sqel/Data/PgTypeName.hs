@@ -24,13 +24,13 @@ type PgTableName =
 type PgCompName =
   PgTypeName 'False
 
-unsafePgTypeName :: PgTypeName table -> Text
-unsafePgTypeName = \case
+getPgTypeName :: PgTypeName table -> Text
+getPgTypeName = \case
   UnsafePgTableName n -> n
   UnsafePgCompName n -> n
 
 pattern PgTypeName :: Text -> PgTypeName table
-pattern PgTypeName name <- (unsafePgTypeName -> name)
+pattern PgTypeName name <- (getPgTypeName -> name)
 {-# complete PgTypeName #-}
 
 pattern PgTableName :: Text -> PgTypeName table
@@ -74,7 +74,7 @@ instance FromJSON PgCompName where
   parseJSON v = UnsafePgCompName <$> parseJSON v
 
 instance ToJSON (PgTypeName t) where
-  toJSON = toJSON . unsafePgTypeName
+  toJSON = toJSON . getPgTypeName
 
 pgTableName ::
   Text ->
@@ -97,7 +97,7 @@ instance IsString PgCompName where
     pgCompName . fromString
 
 instance Ord (PgTypeName table) where
-  compare = comparing unsafePgTypeName
+  compare = comparing getPgTypeName
 
 type MkPgTypeName :: SelPrefix -> Symbol -> Bool -> Symbol -> Constraint
 class KnownSymbol tname => MkPgTypeName prefix name table tname | prefix name table -> tname where

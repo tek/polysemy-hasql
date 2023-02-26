@@ -24,7 +24,7 @@ import Sqel.Data.PgType (
   PgComposite (PgComposite),
   PgTable (PgTable),
   )
-import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTableName, pattern PgTypeName, PgTypeName)
+import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTableName, pattern PgTypeName, PgTypeName, getPgTypeName)
 import Sqel.Data.Sql (Sql)
 import Sqel.Migration.Init (initTable)
 import Sqel.Migration.Metadata (
@@ -171,9 +171,9 @@ collectDirectMatches actions curMatches =
       True -> not (Set.member name curMatches)
       False -> Set.member name curMatches
 
-matchMessage :: TypeStatus -> Set PgCompName -> Set PgCompName -> Set PgCompName -> Text
-matchMessage status currentMatches directMatches allMatches =
-  [exon|Table: #{show status}
+matchMessage :: PgTypeName table -> TypeStatus -> Set PgCompName -> Set PgCompName -> Set PgCompName -> Text
+matchMessage (PgTypeName tableName) status currentMatches directMatches allMatches =
+  [exon|Table #{tableName}: #{show status}
 Matching types: #{showNames currentMatches}
 Direct action matches: #{showNames directMatches}
 All action matches: #{showNames allMatches}
@@ -209,7 +209,7 @@ runMigrationSteps initialStatus laterMatches table ((Migration currentTable _ ac
     directMatches = collectDirectMatches actionNamesAndAdditions currentTypeMatches
     -- actions whose types either match this migration's from-table or that of a later migration.
     allMatches = Set.union directMatches laterMatches
-  MigrationEffect.log (matchMessage status currentTypeMatches directMatches allMatches)
+  MigrationEffect.log (matchMessage (currentTable ^. #name) status currentTypeMatches directMatches allMatches)
   (newStatus, eligible) <-
     -- if actionNames is a subset of allMatches, all actions can be executed either here or in a later migration.
     -- therefore we don't need to check earlier migrations and just execute the direct matches here and relay the rest
@@ -247,6 +247,7 @@ runMigrations ::
   Migrations m migs ->
   m ()
 runMigrations table (Migrations steps) = do
+  MigrationEffect.log [exon|Checking migrations for '#{getPgTypeName (table ^. #name)}'|]
   initialStatus <- tableMatch Mismatch table
   (status, _) <- runMigrationSteps initialStatus mempty table steps
   createAbsent table status
