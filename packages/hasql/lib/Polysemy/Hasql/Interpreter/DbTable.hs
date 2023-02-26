@@ -6,10 +6,10 @@ import Sqel.Data.Migration (noMigrations)
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (PgTable (PgTable))
 import Sqel.Data.PgTypeName (pattern PgTypeName)
-import Sqel.Data.ProjectionSchema (ProjectionSchema)
+import Sqel.Data.ProjectionWitness (ProjectionWitness)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Migration.Run (runMigrations)
-import Sqel.PgType (CheckedProjection, projectionSchema)
+import Sqel.PgType (CheckedProjection, projectionWitness)
 
 import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -102,7 +102,7 @@ interpretTables schema =
 
 interpretTableView ::
   Member (DbTable table !! DbError) r =>
-  ProjectionSchema view table ->
+  ProjectionWitness view table ->
   InterpreterFor (DbTable view !! DbError) r
 interpretTableView _ =
   interpretResumable \case
@@ -116,4 +116,4 @@ interpretTableViewDd ::
   Dd view ->
   InterpreterFor (DbTable (DdType view) !! DbError) r
 interpretTableViewDd table view =
-  interpretTableView (projectionSchema view table)
+  interpretTableView (projectionWitness view table)

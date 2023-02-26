@@ -4,9 +4,9 @@ import Hasql.Statement (Statement)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Effect.Query (Query (Query), query)
 import Sqel.Data.Dd (Dd, DdType)
+import Sqel.Data.Projection (Projection)
 import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.PgType (MkTableSchema, tableSchema)
+import Sqel.PgType (CheckedProjection, MkTableSchema, projection)
 import Sqel.Query (CheckQuery, checkQuery)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (selectWhere)
@@ -18,7 +18,7 @@ interpretQuery ::
   ∀ result query proj table r .
   ResultShape proj result =>
   Member (DbTable table !! DbError) r =>
-  TableSchema proj ->
+  Projection proj table ->
   QuerySchema query table ->
   InterpreterFor (Query query result !! DbError) r
 interpretQuery proj que =
@@ -27,10 +27,11 @@ interpretQuery proj que =
     stmt :: Statement query result
     stmt = selectWhere que proj
 
--- TODO check the projection against the table
 interpretQueryDd ::
   ∀ result query proj table r .
   MkTableSchema proj =>
+  MkTableSchema table =>
+  CheckedProjection proj table =>
   CheckQuery query table =>
   ResultShape (DdType proj) result =>
   Member (DbTable (DdType table) !! DbError) r =>
@@ -42,7 +43,7 @@ interpretQueryDd table proj que =
   interpretQuery ps qs
   where
     qs = checkQuery que table
-    ps = tableSchema proj
+    ps = projection proj table
 
 queryVia ::
   (q1 -> Sem (Stop DbError : r) q2) ->

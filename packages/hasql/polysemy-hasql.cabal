@@ -40,8 +40,6 @@ library
       Polysemy.Hasql.Interpreter.Transaction
       Polysemy.Hasql.Migration
       Polysemy.Hasql.Query.Any
-      Polysemy.Hasql.Query.Many
-      Polysemy.Hasql.Query.One
       Polysemy.Hasql.Queue
       Polysemy.Hasql.Queue.Data.Queue
       Polysemy.Hasql.Queue.Data.Queued
@@ -153,29 +151,22 @@ test-suite polysemy-hasql-integration
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Polysemy.Hasql.Test.AnyTest
       Polysemy.Hasql.Test.ArrayTest
       Polysemy.Hasql.Test.AtomicStateTest
       Polysemy.Hasql.Test.DbConfig
-      Polysemy.Hasql.Test.Dsl.DefaultTest
-      Polysemy.Hasql.Test.Dsl.MigrationTest
-      Polysemy.Hasql.Test.Dsl.QueryTest
-      Polysemy.Hasql.Test.Dsl.SimpleQueryTest
-      Polysemy.Hasql.Test.Dsl.SumQueryTest
-      Polysemy.Hasql.Test.Dsl.SumTest
-      Polysemy.Hasql.Test.Dsl.UnaryConTest
-      Polysemy.Hasql.Test.DslTest
+      Polysemy.Hasql.Test.DefaultTest
       Polysemy.Hasql.Test.JsonTest
+      Polysemy.Hasql.Test.MigrationTest
       Polysemy.Hasql.Test.QueryTest
       Polysemy.Hasql.Test.QueueTest
       Polysemy.Hasql.Test.RetryTest
       Polysemy.Hasql.Test.RunIntegration
-      Polysemy.Hasql.Test.SingletonTest
-      Polysemy.Hasql.Test.StoreUpdateTest
-      Polysemy.Hasql.Test.SumTableTest
+      Polysemy.Hasql.Test.SimpleQueryTest
+      Polysemy.Hasql.Test.SumQueryTest
+      Polysemy.Hasql.Test.SumTest
       Polysemy.Hasql.Test.TransactionTest
       Polysemy.Hasql.Test.TransformMigrationTest
-      Polysemy.Hasql.Test.UpsertTest
+      Polysemy.Hasql.Test.UnaryConTest
       Polysemy.Hasql.Test.WithInitTest
   hs-source-dirs:
       integration

@@ -40,7 +40,8 @@ library
       Sqel.Data.Order
       Sqel.Data.PgType
       Sqel.Data.PgTypeName
-      Sqel.Data.ProjectionSchema
+      Sqel.Data.Projection
+      Sqel.Data.ProjectionWitness
       Sqel.Data.QuerySchema
       Sqel.Data.Sel
       Sqel.Data.SelectExpr
@@ -72,7 +73,6 @@ library
       Sqel.PgType
       Sqel.Prim
       Sqel.Product
-      Sqel.Projection
       Sqel.Query
       Sqel.Query.Combinators
       Sqel.Query.Fragments

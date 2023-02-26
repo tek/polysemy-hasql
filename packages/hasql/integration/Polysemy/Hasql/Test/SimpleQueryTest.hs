@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-partial-type-signatures #-}
 
-module Polysemy.Hasql.Test.Dsl.SimpleQueryTest where
+module Polysemy.Hasql.Test.SimpleQueryTest where
 
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
@@ -14,7 +14,7 @@ import Sqel.Data.Dd (Dd, (:>) ((:>)))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
-import Sqel.PgType (tableSchema)
+import Sqel.PgType (tableSchema, toFullProjection)
 import Sqel.Prim (prim, primAs, prims)
 import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
@@ -60,10 +60,10 @@ interpretQuery =
     Query params ->
       restop (Database.statement params stm)
       where
-        stm = selectWhere (checkQuery (prod (prim :> prim)) td) ts
+        stm = selectWhere (checkQuery (prod (prim :> prim)) td) (toFullProjection ts)
 
-test_dslSimpleQuery :: UnitTest
-test_dslSimpleQuery =
+test_simpleQuery :: UnitTest
+test_simpleQuery =
   integrationTest do
     interpretDbTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do

@@ -22,6 +22,7 @@ module Sqel (
   module Sqel.Query,
   module Sqel.Class.MatchView,
   module Sqel.Data.TableSchema,
+  module Sqel.Data.Projection,
   module Sqel.Data.QuerySchema,
 ) where
 
@@ -36,7 +37,6 @@ import Sqel.Data.Mods (
   EnumColumn,
   Ignore,
   Newtype,
-  pattern NoMods,
   NoMods,
   Nullable,
   PgDefault,
@@ -46,6 +46,7 @@ import Sqel.Data.Mods (
   Unique,
   )
 import Sqel.Data.Order (Order (..))
+import Sqel.Data.Projection (Projection)
 import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
 import Sqel.Data.Sel (Sel (..), TSel (..))
 import Sqel.Data.TableSchema (TableSchema)
@@ -53,7 +54,7 @@ import Sqel.Data.Uid (Uid (Uid), Uuid)
 import Sqel.Merge (merge)
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (named, typeAs)
-import Sqel.PgType (MkTableSchema (tableSchema))
+import Sqel.PgType (MkTableSchema (tableSchema), fullProjection, projection, toFullProjection)
 import Sqel.Prim (
   IndexColumn,
   IndexColumnWith,

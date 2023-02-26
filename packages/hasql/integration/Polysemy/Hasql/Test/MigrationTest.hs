@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-partial-type-signatures #-}
 
-module Polysemy.Hasql.Test.Dsl.MigrationTest where
+module Polysemy.Hasql.Test.MigrationTest where
 
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
@@ -130,8 +130,8 @@ migrations =
     migrateAuto t0 t1
   )
 
-test_dslMigration :: UnitTest
-test_dslMigration =
+test_migration :: UnitTest
+test_migration =
   integrationTest do
     interpretTables schemaOld $ interpretStoreDb schemaOld (checkQuery (primAs @"id") t1) $ restop @DbError do
       Store.insert (Uid 3 (Dat1 11 (PordOld 93)))

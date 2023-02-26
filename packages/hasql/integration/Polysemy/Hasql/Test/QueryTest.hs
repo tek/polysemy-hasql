@@ -1,243 +1,130 @@
-{-# options_ghc -Wno-redundant-constraints #-}
+{-# options_ghc -Wno-partial-type-signatures #-}
 
 module Polysemy.Hasql.Test.QueryTest where
 
--- import Data.Time (UTCTime)
--- import Data.UUID (UUID)
--- import Hasql.Encoders (Params)
--- import Polysemy.Db.Data.Cond (LessOrEq)
--- import Polysemy.Db.Data.CreationTime (CreationTime (CreationTime))
--- import Polysemy.Db.Data.DbError (DbError)
--- import Polysemy.Db.Data.FieldId (FieldId (NamedField))
--- import Polysemy.Db.Data.InitDbError (InitDbError)
--- import Polysemy.Db.Data.Rep (Auto, Flatten, Prim, PrimaryKey, Product, Sum, UidRep)
--- import qualified Polysemy.Db.Effect.Store as Store
--- import Polysemy.Db.Effect.Store (UuidStore)
--- import qualified Polysemy.Db.Effect.Query as Query
--- import Polysemy.Db.Effect.Query (Query)
--- import qualified Sqel.Data.Uid as Uid
--- import Sqel.Data.Uid (Uid (Uid), Uuid)
--- import qualified Polysemy.Db.Kind.Data.Tree as Kind
--- import Polysemy.Db.Tree.Data.Effect (Adt, Newtype, Tycon)
--- import Polysemy.Db.Tree.Data.TreeMeta (ConMeta (ConMeta), TreeMeta (TreeMeta))
--- import Polysemy.Db.Tree.Meta (AdtMeta', AdtMetadata (AdtProd, AdtSum))
--- import Polysemy.Test (Hedgehog, UnitTest, (===))
--- import Polysemy.Test.Hedgehog (assertJust)
--- import Polysemy.Time (GhcTime, mkDatetime)
+import Hasql.Statement (Statement)
+import Lens.Micro.Extras (view)
+import Polysemy.Db.Data.DbError (DbError)
+import qualified Polysemy.Db.Effect.Query as Query
+import Polysemy.Db.Effect.Query (Query (Query))
+import qualified Polysemy.Db.Effect.Store as Store
+import Polysemy.Db.Effect.Store (Store)
+import Polysemy.Test (UnitTest, (===))
+import Prelude hiding (sum)
+import Sqel.Column (nullable)
+import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
+import Sqel.Data.QuerySchema (QuerySchema)
+import Sqel.Data.TableSchema (TableSchema)
+import Sqel.Data.Uid (Uid (Uid))
+import Sqel.Names (named)
+import Sqel.PgType (fullProjection, tableSchema)
+import Sqel.Prim (ignore, prim, primAs, primNewtype)
+import Sqel.Product (prod, prodAs)
+import Sqel.Query (checkQuery)
+import qualified Sqel.Query.Combinators as Q
+import Sqel.Statement (selectWhere)
+import Sqel.Uid (uid)
 
--- import Polysemy.Hasql.Data.Where (Where)
--- import Polysemy.Hasql.Effect.Database (Database)
--- -- import Polysemy.Hasql.Query (interpretQuery)
--- -- import Polysemy.Hasql.Query.Many (interpretMany)
--- -- import Polysemy.Hasql.Query.One (interpretOne)
--- import Polysemy.Hasql.QueryParams (QueryParams, queryParams)
--- import Polysemy.Hasql.Table.DataColumn (dataTable)
--- import Polysemy.Hasql.Test.Run (integrationTest)
--- import Polysemy.Hasql.Tree.Table (TableRoot, tableRoot)
--- import Polysemy.Hasql.Where (queryWhere)
+import qualified Polysemy.Hasql.Effect.Database as Database
+import Polysemy.Hasql.Effect.Database (Database)
+import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
+import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
+import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
--- newtype Content =
---   Content { unContent :: Text }
---   deriving stock (Eq, Show, Generic)
---   deriving newtype (IsString)
+newtype TextNt =
+  TextNt { unTextNt :: Text }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)
 
--- data XXor =
---   Lef { l :: Double }
---   |
---   Righ { r :: Bool }
---   deriving stock (Eq, Show, Generic)
+data PordQ =
+  PordQ {
+    p2 :: Text
+  }
+  deriving stock (Eq, Show, Generic)
 
--- data XXorRep =
---   LRep { l :: Prim }
---   |
---   RRep { r :: Prim }
---   deriving stock (Eq, Show, Generic)
+data Par =
+  Par {
+    limit :: Maybe Int64,
+    offset :: Maybe Int64
+  }
+  deriving stock (Eq, Show, Generic)
 
--- data Number =
---   Number {
---     number_ :: Int,
---     otherNumber :: Int
---   }
---   deriving stock (Eq, Show, Generic)
+data Q =
+  Q {
+    pr :: PordQ,
+    params :: Par,
+    n :: TextNt,
+    ig :: Maybe Int
+  }
+  deriving stock (Eq, Show, Generic)
 
--- data NumberRep =
---   NumberRep {
---     number_ :: Auto,
---     otherNumber :: Auto
---   }
---   deriving stock (Eq, Show, Generic)
+data Pord =
+  Pord {
+    p1 :: Int64,
+    p2 :: Maybe TextNt
+  }
+  deriving stock (Eq, Show, Generic)
 
--- data NumberWrap =
---   NumberWrap {
---     numberWrap :: Number
---   }
---   deriving stock (Eq, Show, Generic)
+data Dat =
+  Dat {
+    name :: Text,
+    po :: Pord
+  }
+  deriving stock (Eq, Show, Generic)
 
--- data NumberWrapRep =
---   NumberWrapRep {
---     numberWrap :: Flatten NumberRep
---   }
---   deriving stock (Eq, Show, Generic)
+ddUidDat :: Dd ('DdK _ _ (Uid Int64 Dat) _)
+ddUidDat =
+  uid prim (prod (
+    prim :>
+    prod (prim :> nullable primNewtype)
+  ))
 
--- data Dat =
---   Dat {
---      _content :: Content,
---      number :: NumberWrap,
---      xxor :: XXor,
---      created :: CreationTime
---   }
---   deriving stock (Eq, Show, Generic)
+ts :: TableSchema (Uid Int64 Dat)
+ts = tableSchema ddUidDat
 
--- data DatRep =
---   DatRep {
---     content :: Auto,
---     number :: Flatten NumberWrapRep,
---     xxor :: Sum XXorRep,
---     created :: Auto
---   }
---   deriving stock (Eq, Show, Generic)
+queryIdDat :: QuerySchema Int64 (Uid Int64 Dat)
+queryIdDat =
+  checkQuery (primAs @"id") ddUidDat
 
--- data ContentNumber =
---   ContentNumber {
---     content :: Content,
---     otherNumber :: Maybe Int,
---     number :: Maybe (LessOrEq Int),
---     xxor :: XXor
---   }
---   deriving stock (Eq, Show, Generic)
+interpretQuery ::
+  Member (Database !! DbError) r =>
+  InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
+interpretQuery =
+  interpretResumable \ (Query params) -> restop (Database.statement params stm)
+  where
+    stm :: Statement Q [Uid Int64 Dat]
+    stm =
+      selectWhere (checkQuery qd ddUidDat) (fullProjection ddUidDat)
+    qd =
+      prod (
+        prodAs @"po" prim :>
+        prod (nullable Q.limit :> nullable Q.offset) :>
+        named @"name" primNewtype :>
+        ignore
+      )
 
--- type XXorMeta =
---   'AdtSum '[
---     'ConMeta 0 ('NamedField "Lef") '[ 'TreeMeta ('NamedField "l") Auto Double],
---     'ConMeta 1 ('NamedField "Righ") '[ 'TreeMeta ('NamedField "r") Auto Bool]
---   ]
+inserts ::
+  Member (Store Int64 Dat) r =>
+  Sem r ()
+inserts =
+  for_ @[] [1..10] \ i ->
+    Store.insert (Uid i (Dat "name" (Pord i (Just (TextNt "hnnnggg")))))
 
--- type XXorCols =
---   [
---     'Kind.ConUna 0 ('NamedField "Lef") ('Kind.Tree ('NamedField "l") '[Prim] ('Kind.Prim Double)),
---     'Kind.ConUna 1 ('NamedField "Righ") ('Kind.Tree ('NamedField "r") '[Prim] ('Kind.Prim Bool))
---   ]
+test_query :: UnitTest
+test_query =
+  integrationTest do
+    interpretDbTable ts $ interpretStoreDb ts queryIdDat $ interpretQuery do
+      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
+        inserts
+        r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name" Nothing)
+        [3, 4] === r
 
--- type XXorType rep =
---   'Kind.SumProd XXor XXorCols
-
--- type ContentNumberMeta =
---   'AdtProd '[
---     'TreeMeta ('NamedField "content") Auto Content,
---     'TreeMeta ('NamedField "otherNumber") Auto (Maybe Int),
---     'TreeMeta ('NamedField "number_") Auto (Maybe (LessOrEq Int)),
---     'TreeMeta ('NamedField "xxor") Auto XXor
---   ]
-
--- type XXorCol =
---   'Kind.Tree ('NamedField "xxor") '[Adt XXorMeta (Sum XXorRep)] (XXorType (Sum XXorRep))
-
--- type XXorColAuto =
---   'Kind.Tree ('NamedField "xxor") '[Adt XXorMeta Auto] (XXorType Auto)
-
--- type ContentNumberType =
---   'Kind.Tree ('NamedField "ContentNumber") '[Adt ContentNumberMeta Auto] (
---     'Kind.Prod ContentNumber '[
---       'Kind.Tree ('NamedField "content") '[Newtype Content Text, Prim] ('Kind.Prim Content),
---       'Kind.Tree ('NamedField "otherNumber") '[Tycon Maybe Int, Prim] ('Kind.Prim (Maybe Int)),
---       'Kind.Tree ('NamedField "number_") '[Tycon Maybe (LessOrEq Int), Newtype (LessOrEq Int) Int, Prim] ('Kind.Prim (Maybe (LessOrEq Int))),
---       XXorColAuto
---     ]
---   )
-
--- type DatType name rep sumRep =
---   'Kind.Tree name '[Adt (AdtMeta' rep Dat) rep] ('Kind.Prod Dat '[
---     'Kind.Tree ('NamedField "content") '[Newtype Content Text, Prim] ('Kind.Prim Content),
---     'Kind.Tree ('NamedField "number") '[Adt (AdtMeta' (Flatten NumberWrapRep) NumberWrap) (Flatten NumberWrapRep)] (
---       'Kind.Prod NumberWrap '[
---         'Kind.Tree ('NamedField "numberWrap") '[Adt (AdtMeta' (Flatten NumberRep) Number) (Flatten NumberRep)] (
---           'Kind.Prod Number '[
---             'Kind.Tree ('NamedField "number_") '[Prim] ('Kind.Prim Int),
---             'Kind.Tree ('NamedField "otherNumber") '[Prim] ('Kind.Prim Int)
---           ]
---         )
---       ]
---     ),
---     'Kind.Tree ('NamedField "xxor") '[Adt (AdtMeta' sumRep XXor) sumRep] ('Kind.SumProd XXor XXorCols),
---     'Kind.Tree ('NamedField "created") '[Newtype CreationTime UTCTime, Prim] ('Kind.Prim CreationTime)
---   ])
-
--- type DatTable =
---   DatType ('NamedField "Dat") (Product DatRep) (Sum XXorRep)
-
--- type UidDatType =
---   'Kind.Tree ('NamedField "Dat") '[Adt (AdtMeta' (Product (UidRep PrimaryKey DatRep)) (Uuid Dat)) (Product (UidRep PrimaryKey DatRep))] (
---     'Kind.Prod (Uuid Dat) [
---       'Kind.Tree ('NamedField "id") '[PrimaryKey, Prim] ('Kind.Prim UUID),
---       DatType ('NamedField "payload") (Flatten DatRep) (Sum XXorRep)
---     ]
---   )
-
--- queryParams_ContentNumber ::
---   QueryParams ContentNumberType ContentNumber =>
---   Params ContentNumber
--- queryParams_ContentNumber =
---   queryParams @ContentNumberType @ContentNumber
-
--- queryWhere_ContentNumber ::
---   TableRoot DatRep Dat DatTable =>
---   Where ContentNumber Dat
--- queryWhere_ContentNumber =
---   queryWhere @Auto @ContentNumberType @ContentNumber @DatTable @Dat
-
--- queryWhere_ContentNumber_Uid ::
---   TableRoot (UidRep PrimaryKey DatRep) (Uuid Dat) (UidDatType) =>
---   Where ContentNumber (Uuid Dat)
--- queryWhere_ContentNumber_Uid =
---   queryWhere @Auto @ContentNumberType @ContentNumber @UidDatType @(Uuid Dat)
-
--- test_derivation :: IO ()
--- test_derivation = do
---   void (pure (dataTable (tableRoot @(UidRep Auto DatRep) @(Uuid Dat))))
---   void (pure queryParams_ContentNumber)
---   void (pure queryWhere_ContentNumber)
---   void (pure queryWhere_ContentNumber_Uid)
-
--- creation :: CreationTime
--- creation =
---   CreationTime (mkDatetime 2020 1 1 0 0 0)
-
--- num :: Int -> NumberWrap
--- num n =
---   NumberWrap (Number n 555)
-
--- target :: Uuid Dat
--- target =
---   Uid (Uid.uuid 2) (Dat "hello" (num 5) (Lef 8) creation)
-
--- prog ::
---   Members [Stop DbError, Query ContentNumber [Uuid Dat] !! DbError] r =>
---   Members [UuidStore Dat !! DbError, Query ContentNumber (Maybe (Uuid Dat)) !! DbError] r =>
---   Sem r (Int, Maybe (Uuid Dat))
--- prog = do
---   restop @DbError @(UuidStore Dat) do
---     Store.insert (Uid (Uid.uuid 1) (Dat "hello" (num 10) (Lef 8) creation))
---     Store.insert target
---     Store.insert (Uid (Uid.uuid 3) (Dat "goodbye" (num 1) (Lef 8) creation))
---     Store.insert (Uid (Uid.uuid 4) (Dat "goodbye" (num 5) (Lef 8) creation))
---     Store.insert (Uid (Uid.uuid 5) (Dat "hello" (num 7) (Lef 9) creation))
---     Store.insert (Uid (Uid.uuid 6) (Dat "hello" (num 7) (Righ True) creation))
---     r1 :: [Uuid Dat] <- restop (Query.query (ContentNumber "hello" Nothing Nothing (Lef 8)))
---     r2 <- restop (Query.query (ContentNumber "hello" Nothing (Just 6) (Lef 8)))
---     pure (length r1, r2)
-
--- prog' ::
---   Members [Database !! DbError, Stop DbError, Error InitDbError, GhcTime, Hedgehog IO, Log, Embed IO] r =>
---   Sem r ()
--- prog' =
---   interpretQuery @Auto @(UidRep PrimaryKey DatRep) $
---   interpretStoreDbFullGen @DatRep $
---   interpretOne @ContentNumber @(Uuid Dat) $
---   interpretMany @ContentNumber @(Uuid Dat) do
---     (count, result) <- prog
---     2 === count
---     assertJust target result
-
--- test_query :: UnitTest
--- test_query = do
---   integrationTest prog'
+test_queryId :: UnitTest
+test_queryId =
+  integrationTest do
+    interpretDbTable ts $ interpretStoreDb ts queryIdDat $ interpretQueryDd @[Int64] ddUidDat (primAs @"id" @Int64) (primAs @"id" @Int64) do
+      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
+        inserts
+        r <- Query.query (5 :: Int64)
+        [5] === r

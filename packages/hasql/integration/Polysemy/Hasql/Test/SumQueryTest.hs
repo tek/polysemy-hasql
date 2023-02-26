@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-partial-type-signatures -fconstraint-solver-iterations=10 #-}
 
-module Polysemy.Hasql.Test.Dsl.SumQueryTest where
+module Polysemy.Hasql.Test.SumQueryTest where
 
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
@@ -9,11 +9,12 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
-import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
+import Sqel.Data.Dd (Dd, DdK (DdK), Sqel, type (:>) ((:>)))
+import Sqel.Data.Projection (Projection)
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
-import Sqel.PgType (tableSchema)
+import Sqel.PgType (projection, tableSchema)
 import Sqel.Prim (prim, primAs, prims)
 import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
@@ -38,7 +39,7 @@ data NaNu =
   Nu Int64
   deriving stock (Eq, Show, Generic)
 
-td :: Dd ('DdK _ _ (Uid Int64 Dat) _)
+td :: Sqel (Uid Int64 Dat) _
 td = uid prim (prod prims)
 
 ts :: TableSchema (Uid Int64 Dat)
@@ -47,9 +48,9 @@ ts = tableSchema td
 vd :: Dd ('DdK _ _ Dat _)
 vd = prod prims
 
-vs :: TableSchema Dat
+vs :: Projection Dat (Uid Int64 Dat)
 vs =
-  tableSchema vd
+  projection vd td
 
 idSchema :: QuerySchema Int64 (Uid Int64 Dat)
 idSchema =
@@ -58,8 +59,8 @@ idSchema =
 qd :: Dd ('DdK _ _ NaNu _)
 qd = sum (con1 prim :> con1As @"number" prim)
 
-test_dslSumQuery :: UnitTest
-test_dslSumQuery =
+test_sumQuery :: UnitTest
+test_sumQuery =
   integrationTest do
     interpretDbTable ts $ interpretTableViewDd td vd $ interpretStoreDb ts idSchema $ interpretQuery @[_] vs (checkQuery qd td) do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do

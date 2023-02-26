@@ -16,6 +16,7 @@ import Sqel.Data.PgType (
   PgColumns (PgColumns),
   PgTable (PgTable),
   )
+import Sqel.Data.Projection (Projection)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
@@ -69,10 +70,10 @@ selectWhere ::
   ∀ result proj q table .
   ResultShape proj result =>
   QuerySchema q table ->
-  TableSchema proj ->
+  Projection proj table ->
   Statement q result
 selectWhere q@(QuerySchema _ (Encoder qp _)) t =
-  prepared (Sql.selectWhere q t) (t ^. #decoder) qp
+  prepared (Sql.selectWhereGen q t) (t ^. #decoder) qp
 
 delete ::
   ResultShape a result =>

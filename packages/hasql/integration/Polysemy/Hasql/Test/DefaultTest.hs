@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-partial-type-signatures #-}
 
-module Polysemy.Hasql.Test.Dsl.DefaultTest where
+module Polysemy.Hasql.Test.DefaultTest where
 
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store

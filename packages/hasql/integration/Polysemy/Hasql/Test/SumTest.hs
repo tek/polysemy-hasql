@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-partial-type-signatures -fconstraint-solver-iterations=10 #-}
 
-module Polysemy.Hasql.Test.Dsl.SumTest where
+module Polysemy.Hasql.Test.SumTest where
 
 import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
@@ -16,7 +16,7 @@ import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
 import Sqel.Names (typeAs)
-import Sqel.PgType (tableSchema)
+import Sqel.PgType (fullProjection, tableSchema)
 import Sqel.Prim (prim, primAs, prims)
 import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
@@ -85,7 +85,7 @@ idSchema =
 
 stm :: Statement Q [Uid Int64 Dat]
 stm =
-  selectWhere (checkQuery qd td) (tableSchema td)
+  selectWhere (checkQuery qd td) (fullProjection td)
   where
     qd =
       prod (
@@ -104,8 +104,8 @@ interpretQuery =
     Query params ->
       restop (Database.statement params stm)
 
-test_dslSum :: UnitTest
-test_dslSum =
+test_sum :: UnitTest
+test_sum =
   integrationTest do
     interpretDbTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do

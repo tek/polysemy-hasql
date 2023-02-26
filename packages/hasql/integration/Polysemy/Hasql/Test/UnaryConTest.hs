@@ -1,6 +1,6 @@
 {-# options_ghc -Wno-partial-type-signatures -fconstraint-solver-iterations=10 #-}
 
-module Polysemy.Hasql.Test.Dsl.UnaryConTest where
+module Polysemy.Hasql.Test.UnaryConTest where
 
 import Generics.SOP (NP (Nil, (:*)))
 import Hasql.Statement (Statement)
@@ -16,7 +16,7 @@ import Sqel.Data.Dd
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid (Uid))
-import Sqel.PgType (tableSchema)
+import Sqel.PgType (tableSchema, toFullProjection)
 import Sqel.Prim (prim, primAs)
 import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
@@ -89,7 +89,7 @@ checkedQ =
 
 checkedQStm :: Statement Q [Uid Int64 Dat]
 checkedQStm =
-  selectWhere checkedQ t1d
+  selectWhere checkedQ (toFullProjection t1d)
 
 interpretQuery ::
   Member (Database !! DbError) r =>
@@ -99,8 +99,8 @@ interpretQuery =
     Query params ->
       restop (Database.statement params checkedQStm)
 
-test_dslUnaryCon :: UnitTest
-test_dslUnaryCon =
+test_unaryCon :: UnitTest
+test_unaryCon =
   integrationTest do
     interpretDbTable t1d $ interpretStoreDb t1d (checkQuery (primAs @"id") t1C) $ interpretQuery do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do

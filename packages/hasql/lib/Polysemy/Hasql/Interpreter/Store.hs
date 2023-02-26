@@ -21,6 +21,7 @@ import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
 import Sqel.Data.Sel (Sel (SelSymbol), SelPrefix (DefaultPrefix), SelW (SelWSymbol), TSel (TSel), mkTSel)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid)
+import Sqel.PgType (toFullProjection)
 import Sqel.Prim (primAs)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (delete, insert, selectWhere, upsert)
@@ -75,11 +76,12 @@ handleQStoreDb table query = \case
     ds :: Statement q (f d)
     ds = delete query table
     qs :: Statement q (f d)
-    qs = selectWhere query table
+    qs = selectWhere query full
     qas :: Statement () [d]
-    qas = selectWhere emptyQuerySchema table
+    qas = selectWhere emptyQuerySchema full
     das :: Statement () [d]
     das = delete emptyQuerySchema table
+    full = toFullProjection table
 
 interpretQStoreDb ::
   ∀ f q d e r .

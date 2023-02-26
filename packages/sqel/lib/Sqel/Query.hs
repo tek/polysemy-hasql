@@ -51,6 +51,7 @@ compileSelectExpr expr =
       SelectExprAtom tpe code -> (i + 1, [(tpe, code i)])
       SelectExprList op sub -> second (Map.mapWithKey (joinFrag op)) (prod i sub)
       SelectExprSum sub -> second (Map.mapWithKey (joinSum i)) (prod (i + 1) sub)
+      -- TODO
       SelectExprNot _ -> undefined
       SelectExprIgnore -> (i, mempty)
     prod i sub =

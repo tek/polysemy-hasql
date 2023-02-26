@@ -26,9 +26,12 @@ import Sqel.Data.PgType (
   pgCompRef,
   )
 import Sqel.Data.PgTypeName (PgTableName, pgCompName, pgTableName)
-import Sqel.Data.ProjectionSchema (ProjectionSchema (ProjectionSchema))
+import qualified Sqel.Data.Projection as Projection
+import Sqel.Data.Projection (Projection (Projection))
+import Sqel.Data.ProjectionWitness (ProjectionWitness (ProjectionWitness))
 import Sqel.Data.Selector (Selector (Selector))
 import Sqel.Data.Sql (Sql (Sql), sql)
+import qualified Sqel.Data.TableSchema as TableSchema
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.Data.Term (Comp, CompInc (Merge), DdTerm (DdTerm), Struct (Comp, Prim))
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
@@ -135,13 +138,13 @@ instance (
       Codec params row = reifyCodec @FullCodec tab
 
 class CheckedProjection' (check :: Maybe Void) (s :: DdK) where
-  checkedProjection' :: Dd s -> ProjectionSchema (DdType s) table
+  checkedProjection' :: Dd s -> ProjectionWitness (DdType s) table
 
 instance CheckedProjection' 'Nothing s where
-  checkedProjection' _ = ProjectionSchema
+  checkedProjection' _ = ProjectionWitness
 
-class CheckedProjection (query :: DdK) (table :: DdK) where
-  checkedProjection :: Dd query -> ProjectionSchema (DdType query) (DdType table)
+class CheckedProjection (proj :: DdK) (table :: DdK) where
+  checkedProjection :: Dd proj -> ProjectionWitness (DdType proj) (DdType table)
 
 type CheckProjectionStuck :: ErrorMessage
 type CheckProjectionStuck =
@@ -157,11 +160,37 @@ instance (
 -- TODO check that the table name matches, otherwise a query using the projection will use the wrong name.
 -- also possible to automatically set it, but that might be incompatible with the db view interpreter feature, since
 -- the name there can't be propagated here. but it would be possible to check only there and do it automatically here.
-projectionSchema ::
+projectionWitness ::
   ∀ proj table .
   CheckedProjection proj table =>
   Dd proj ->
   Dd table ->
-  ProjectionSchema (DdType proj) (DdType table)
-projectionSchema proj _ =
+  ProjectionWitness (DdType proj) (DdType table)
+projectionWitness proj _ =
   checkedProjection @proj @table proj
+
+projection ::
+  MkTableSchema proj =>
+  MkTableSchema table =>
+  CheckedProjection proj table =>
+  Dd proj ->
+  Dd table ->
+  Projection (DdType proj) (DdType table)
+projection ddProj ddTable =
+  Projection {..}
+  where
+    table = tableSchema ddTable
+    TableSchema {..} = tableSchema ddProj
+    witness = projectionWitness ddProj ddTable
+
+fullProjection ::
+  MkTableSchema table =>
+  CheckedProjection table table =>
+  Dd table ->
+  Projection (DdType table) (DdType table)
+fullProjection dd =
+  projection dd dd
+
+toFullProjection :: TableSchema table -> Projection table table
+toFullProjection table@TableSchema {..} =
+  Projection {table, witness = ProjectionWitness, ..}
