@@ -5,18 +5,18 @@ import qualified Exon
 import Lens.Micro.Extras (view)
 import Prettyprinter (Pretty (pretty), nest, sep, vsep, (<+>))
 
-import Sqel.Data.Create (Create (Create))
 import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTypeName)
-import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Selector (Selector (unSelector), assign, nameSelector)
 import Sqel.Data.Sql (Sql, ToSql (toSql), sql, sqlQuote)
 import Sqel.Data.SqlFragment (
   CommaSep (CommaSep),
+  Create (Create),
   Delete (Delete),
   From (From),
   Insert (Insert),
   Into (Into),
   Returning (Returning),
+  Select (Select),
   Update (Update),
   )
 import Sqel.SOP.Constraint (symbolText)

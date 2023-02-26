@@ -6,7 +6,7 @@ import Sqel.Data.Sql (ToSql (toSql))
 
 newtype CommaSep a =
   CommaSep { unCommaSep :: a }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
 instance ToSql a => ToSql (CommaSep [a]) where
   toSql (CommaSep a) =
@@ -14,7 +14,7 @@ instance ToSql a => ToSql (CommaSep [a]) where
 
 newtype Delete a =
   Delete { unDelete :: a }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
 newtype From a =
   From { unFrom :: a }
@@ -22,7 +22,7 @@ newtype From a =
 
 newtype Insert a =
   Insert { unInsert :: a }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
 newtype Into a =
   Into { unInto :: a }
@@ -30,11 +30,11 @@ newtype Into a =
 
 newtype Returning a =
   Returning { unReturning :: a }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
 newtype Select a =
   Select { unSelect :: a }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
 newtype SelectQuery a =
   SelectQuery { unSelectQuery :: a }
@@ -42,4 +42,8 @@ newtype SelectQuery a =
 
 newtype Update a =
   Update { unUpdate :: a }
+  deriving stock (Eq, Show, Generic)
+
+newtype Create a =
+  Create { unSelect :: a }
   deriving stock (Eq, Show, Generic)

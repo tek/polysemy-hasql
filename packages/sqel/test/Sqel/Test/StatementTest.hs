@@ -12,23 +12,22 @@ import Test.Tasty (TestTree, testGroup)
 import Sqel.Class.MatchView (HasColumn)
 import Sqel.Comp (Column, CompName (compName))
 import Sqel.Data.Codec (FullCodec)
-import Sqel.Data.Create (Create (Create))
 import Sqel.Data.Dd (
   Dd (Dd),
   DdInc (DdNest),
   DdK (DdK),
+  DdSort (DdProd),
   DdStruct (DdComp),
   DdType,
   DdTypeSel,
-  DdSort (DdProd),
   type (:>) ((:>)),
   )
 import Sqel.Data.Mods (pattern NoMods)
 import Sqel.Data.Order (Order (Desc))
 import Sqel.Data.QuerySchema (QuerySchema)
 import Sqel.Data.Sel (MkTSel (mkTSel), Sel (SelAuto), SelW (SelWAuto))
-import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Sql (Sql, sql, toSql)
+import Sqel.Data.SqlFragment (Create (Create), Select (Select))
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid)
 import Sqel.Merge (merge)

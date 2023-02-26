@@ -4,10 +4,9 @@ import Exon (exon)
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
 
-import Sqel.Data.Create (Create (Create))
 import Sqel.Data.PgType (PgTable)
-import Sqel.Data.SqlFragment (Select (Select))
 import Sqel.Data.Sql (ToSql (toSql))
+import Sqel.Data.SqlFragment (Create (Create), Select (Select))
 
 data TableSchema a =
   TableSchema {
