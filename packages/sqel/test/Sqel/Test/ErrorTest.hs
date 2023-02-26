@@ -88,10 +88,14 @@ newtypeNoNewtypeMessage =
     "The type \8216TextNt\8217 is not a newtype."
   ]
 
+polyHasFieldMessage :: [Text]
+polyHasFieldMessage =
+  [
+  ]
+
 cantInferCheckQueryMessage :: [Text]
 cantInferCheckQueryMessage =
   [
-    -- "wha?"
   ]
 
 test_errors :: TestTree
@@ -104,6 +108,7 @@ test_errors =
     unitTest "higher-order column constraint" (typeError higherOrderColumnMessage higherOrderColumn),
     unitTest "primNewtype without Generic" (typeError newtypeNoGenericMessage newtypeNoGeneric),
     unitTest "primNewtype with ADT" (typeError newtypeNoNewtypeMessage newtypeNoNewtype)
-    -- ,
+    -- TODO these aren't triggered with deferred errors
+    -- unitTest "missing HasField with polymorphic DdK" (typeError polyHasFieldMessage polyHasField)
     -- unitTest "can't infer CheckQuery" (typeError cantInferCheckQueryMessage cantInferCheckQuery)
   ]

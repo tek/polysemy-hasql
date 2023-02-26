@@ -204,10 +204,12 @@ test-suite sqel-unit
       Sqel.Test.Error.HigherOrderColumn
       Sqel.Test.Error.NewtypeNoGeneric
       Sqel.Test.Error.NewtypeNoNewtype
+      Sqel.Test.Error.PolyHasField
       Sqel.Test.Error.QueryColumMismatch
       Sqel.Test.ErrorTest
       Sqel.Test.HasGeneric
       Sqel.Test.MigrationTest
+      Sqel.Test.QueryProjectionTest
       Sqel.Test.SqlCodeTest
       Sqel.Test.StatementTest
       Sqel.Test.TableSchemaTest

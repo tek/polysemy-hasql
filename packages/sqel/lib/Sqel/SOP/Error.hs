@@ -43,7 +43,7 @@ type family QuotedError (msg :: ErrorMessage) :: ErrorMessage where
 type family Quoted (s :: Symbol) :: ErrorMessage where
   Quoted s = QuotedError ('Text s)
 
-type family QuotedType (t :: Type) :: ErrorMessage where
+type family QuotedType (t :: k) :: ErrorMessage where
   QuotedType t = QuotedError ('ShowType t)
 
 data LineBreak :: ErrorMessage -> ErrorMessage -> Exp ErrorMessage

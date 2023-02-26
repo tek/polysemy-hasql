@@ -26,7 +26,7 @@ module Sqel (
   module Sqel.Data.QuerySchema,
 ) where
 
-import Sqel.Class.MatchView (HasColumn)
+import Sqel.Class.MatchView (HasField, HasPath)
 import Sqel.Column (nullable, nullableAs, pgDefault, pk, tableName)
 import Sqel.Comp (typePrefix)
 import Sqel.Data.Codec (FullCodec)
@@ -54,7 +54,7 @@ import Sqel.Data.Uid (Uid (Uid), Uuid)
 import Sqel.Merge (merge)
 import Sqel.Migration.Table (migrateAuto)
 import Sqel.Names (named, typeAs)
-import Sqel.PgType (MkTableSchema (tableSchema), fullProjection, projection, toFullProjection)
+import Sqel.PgType (CheckedProjection, MkTableSchema (tableSchema), fullProjection, projection, toFullProjection)
 import Sqel.Prim (
   IndexColumn,
   IndexColumnWith,

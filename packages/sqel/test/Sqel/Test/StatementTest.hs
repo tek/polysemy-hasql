@@ -9,7 +9,7 @@ import Prelude hiding (sum)
 import Test (unitTest)
 import Test.Tasty (TestTree, testGroup)
 
-import Sqel.Class.MatchView (HasColumn)
+import Sqel.Class.MatchView (HasPath)
 import Sqel.Comp (Column, CompName (compName))
 import Sqel.Data.Codec (FullCodec)
 import Sqel.Data.Dd (
@@ -215,7 +215,7 @@ statement_query_higherOrder ::
   MkTSel (DdTypeSel s0) =>
   table ~ UidDd (Prim "id" Int64) (WrapDd s0) =>
   MkTableSchema table =>
-  HasColumn ["two", "name"] Text table =>
+  HasPath ["two", "name"] Text table =>
   Dd s0 ->
   Sql
 statement_query_higherOrder wrapped =
