@@ -230,10 +230,10 @@ runMigrationSteps initialStatus laterMatches table ((Migration currentTable _ ac
       -- if the table matched in an earlier migration, it will match here as well since the earlier migration
       -- executed.
       -- same for types, so add earlier matches to the direct matches.
-      (earlierStatus, earlierMatches) <- runMigrationSteps Mismatch allMatches table t
+      (earlierStatus, earlierMatches) <- runMigrationSteps status allMatches table t
       pure (earlierStatus, Set.union earlierMatches directMatches)
   runMigration @mig newStatus (table ^. #name) eligible actions
-  pure (Match, eligible)
+  pure (newStatus, eligible)
 
 createAbsent ::
   Monad m =>
