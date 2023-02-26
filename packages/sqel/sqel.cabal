@@ -195,7 +195,7 @@ library
     , prelate hiding (Prelate)
   default-language: Haskell2010
 
-test-suite polysemy-hasql-unit
+test-suite sqel-unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
@@ -207,7 +207,9 @@ test-suite polysemy-hasql-unit
       Sqel.Test.Error.NewtypeNoNewtype
       Sqel.Test.Error.QueryColumMismatch
       Sqel.Test.ErrorTest
+      Sqel.Test.HasGeneric
       Sqel.Test.MigrationTest
+      Sqel.Test.SqlCodeTest
       Sqel.Test.StatementTest
       Sqel.Test.TableSchemaTest
       Test
@@ -282,7 +284,6 @@ test-suite polysemy-hasql-unit
     , exon
     , generics-sop
     , hedgehog
-    , path
     , polysemy
     , polysemy-plugin
     , prelate >=0.5

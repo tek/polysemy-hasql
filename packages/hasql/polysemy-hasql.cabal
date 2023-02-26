@@ -128,7 +128,6 @@ library
     , base >=4.12 && <5
     , containers
     , exon
-    , extra
     , generics-sop
     , hasql >=1.4.3
     , polysemy
@@ -139,7 +138,6 @@ library
     , polysemy-time
     , postgresql-libpq
     , prelate >=0.5
-    , prettyprinter
     , sqel
     , stm-chans
     , torsor
@@ -249,124 +247,21 @@ test-suite polysemy-hasql-integration
       aeson
     , base >=4.12 && <5
     , exon
-    , first-class-families
     , generics-sop
     , hasql >=1.4.3
     , hedgehog
-    , lens
-    , path
     , polysemy
-    , polysemy-conc
     , polysemy-db
     , polysemy-hasql
-    , polysemy-log
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
     , prelate >=0.5
-    , prettyprinter
     , sqel
     , tasty
-    , time
     , uuid
     , vector
     , zeugma
-  mixins:
-      base hiding (Prelude)
-    , prelate (Prelate as Prelude)
-    , prelate hiding (Prelate)
-  default-language: Haskell2010
-
-test-suite polysemy-hasql-unit
-  type: exitcode-stdio-1.0
-  main-is: Main.hs
-  other-modules:
-      Polysemy.Hasql.Test.EnumTest
-      Polysemy.Hasql.Test.HasGeneric
-      Polysemy.Hasql.Test.SqlCodeTest
-  hs-source-dirs:
-      test
-  default-extensions:
-      StandaloneKindSignatures
-      AllowAmbiguousTypes
-      ApplicativeDo
-      BangPatterns
-      BinaryLiterals
-      BlockArguments
-      ConstraintKinds
-      DataKinds
-      DefaultSignatures
-      DeriveAnyClass
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveLift
-      DeriveTraversable
-      DerivingStrategies
-      DerivingVia
-      DisambiguateRecordFields
-      DoAndIfThenElse
-      DuplicateRecordFields
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
-      FunctionalDependencies
-      GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
-      LambdaCase
-      LiberalTypeSynonyms
-      MultiParamTypeClasses
-      MultiWayIf
-      NamedFieldPuns
-      OverloadedLabels
-      OverloadedLists
-      OverloadedStrings
-      PackageImports
-      PartialTypeSignatures
-      PatternGuards
-      PatternSynonyms
-      PolyKinds
-      QuantifiedConstraints
-      QuasiQuotes
-      RankNTypes
-      RecordWildCards
-      RecursiveDo
-      RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
-      TemplateHaskell
-      TupleSections
-      TypeApplications
-      TypeFamilies
-      TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
-      UndecidableInstances
-      UnicodeSyntax
-      ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      aeson
-    , base >=4.12 && <5
-    , chronos
-    , exon
-    , first-class-families
-    , generics-sop
-    , hasql >=1.4.3
-    , path
-    , polysemy
-    , polysemy-db
-    , polysemy-hasql
-    , polysemy-plugin
-    , polysemy-test
-    , prelate >=0.5
-    , sqel
-    , tasty
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

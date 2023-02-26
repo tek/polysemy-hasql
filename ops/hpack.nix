@@ -103,7 +103,6 @@ in {
       "async"
       "containers"
       "exon"
-      "extra"
       "generics-sop"
       "hasql >= 1.4.3"
       "polysemy-conc"
@@ -111,7 +110,6 @@ in {
       "polysemy-log"
       "polysemy-time"
       "postgresql-libpq"
-      "prettyprinter"
       "sqel"
       "stm-chans"
       "torsor"
@@ -119,43 +117,19 @@ in {
       "uuid"
     ];
 
-    tests.polysemy-hasql-unit = polysemyExe "polysemy-hasql" "test" {
-      dependencies = [
-        "aeson"
-        "chronos"
-        "exon"
-        "first-class-families"
-        "generics-sop"
-        "hasql >= 1.4.3"
-        "path"
-        "polysemy-db"
-        "polysemy-hasql"
-        "polysemy-test"
-        "sqel"
-        "tasty"
-      ];
-    };
-
     tests.polysemy-hasql-integration = polysemyExe "polysemy-hasql" "integration" {
       dependencies = [
         "aeson"
         "exon"
-        "first-class-families"
         "generics-sop"
         "hasql >= 1.4.3"
         "hedgehog"
-        "lens"
-        "path"
-        "polysemy-conc"
         "polysemy-db"
         "polysemy-hasql"
-        "polysemy-log"
         "polysemy-test"
         "polysemy-time"
-        "prettyprinter"
         "sqel"
         "tasty"
-        "time"
         "uuid"
         "vector"
         "zeugma"
@@ -224,12 +198,11 @@ in {
       "vector"
     ];
 
-    tests.polysemy-hasql-unit = polysemyExe "sqel" "test" {
+    tests.sqel-unit = polysemyExe "sqel" "test" {
       dependencies = [
         "exon"
         "generics-sop"
         "hedgehog"
-        "path"
         "tasty"
         "tasty-hedgehog"
       ];
