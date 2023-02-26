@@ -24,7 +24,15 @@ import Sqel.Data.PgType (
   PgComposite (PgComposite),
   PgTable (PgTable),
   )
-import Sqel.Data.PgTypeName (PgCompName, PgTableName, pattern PgTableName, pattern PgTypeName, PgTypeName, getPgTypeName)
+import Sqel.Data.PgTypeName (
+  PgCompName,
+  pattern PgOnlyTableName,
+  PgTableName,
+  pattern PgTableName,
+  pattern PgTypeName,
+  PgTypeName,
+  getPgTypeName,
+  )
 import Sqel.Data.Sql (Sql)
 import Sqel.Migration.Init (initTable)
 import Sqel.Migration.Metadata (
@@ -107,7 +115,6 @@ runTypesMigration eligible actions =
   for_ (Map.toList (Map.restrictKeys actions eligible)) \ (name, tpe) ->
     runAction name tpe
 
--- TODO shouldn't the types be migrated first?
 runMigration ::
   ∀ mig m .
   Monad m =>
@@ -120,9 +127,9 @@ runMigration ::
   m ()
 runMigration status tableName eligible = \case
   AutoActions tableAction typeActions -> do
-    MigrationEffect.log "Starting migration"
-    when (status == Match) (runAction tableName tableAction)
+    MigrationEffect.log [exon|Starting migration for #{getPgTypeName tableName}|]
     runTypesMigration eligible typeActions
+    when (status == Match) (runAction tableName tableAction)
   CustomActions actions ->
     customMigration @m @mig tableName eligible actions
 
@@ -247,7 +254,10 @@ runMigrations ::
   Migrations m migs ->
   m ()
 runMigrations table (Migrations steps) = do
-  MigrationEffect.log [exon|Checking migrations for '#{getPgTypeName (table ^. #name)}'|]
+  MigrationEffect.log [exon|Checking migrations for '#{name}'|]
   initialStatus <- tableMatch Mismatch table
   (status, _) <- runMigrationSteps initialStatus mempty table steps
+  MigrationEffect.log [exon|Migrations for '#{name}' concluded with #{show status}|]
   createAbsent table status
+  where
+    PgOnlyTableName name = table ^. #name

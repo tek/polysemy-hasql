@@ -41,6 +41,16 @@ pattern PgCompName name <- (UnsafePgCompName name)
 
 {-# complete PgTableName, PgCompName #-}
 
+pattern PgOnlyTableName :: Text -> PgTypeName 'True
+pattern PgOnlyTableName name <- (UnsafePgTableName name)
+
+{-# complete PgOnlyTableName #-}
+
+pattern PgOnlyCompName :: Text -> PgTypeName 'False
+pattern PgOnlyCompName name <- (UnsafePgCompName name)
+
+{-# complete PgOnlyCompName #-}
+
 instance Eq (PgTypeName table) where
   UnsafePgTableName l == UnsafePgTableName r = l == r
   UnsafePgCompName l == UnsafePgCompName r = l == r
