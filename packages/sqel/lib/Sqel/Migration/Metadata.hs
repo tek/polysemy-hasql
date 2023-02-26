@@ -41,14 +41,20 @@ typeColumns ::
   Sql ->
   PgTypeName table ->
   m DbCols
-typeColumns code (PgTypeName name) =
-  DbCols . Map.fromList . fmap mktype <$> MigrationEffect.runStatement name (Statement.dbColumns code)
+typeColumns code (PgTypeName name) = do
+  cols <- traverse mktype =<< MigrationEffect.runStatement name (Statement.dbColumns code)
+  pure (DbCols (Map.fromList cols))
   where
     mktype = \case
-      (col, "USER-DEFINED", n) ->
-        (PgColumnName col, Left (PgTypeRef n))
-      (col, n, _) ->
-        (PgColumnName col, Right (PgPrimName n))
+      (col, "USER-DEFINED", n, _) ->
+        pure (PgColumnName col, Left (PgTypeRef n))
+      (col, "ARRAY", _, Just n) ->
+        pure (PgColumnName col, Right (PgPrimName [exon|#{n}[]|]))
+      (col, n, _, Nothing) ->
+        pure (PgColumnName col, Right (PgPrimName n))
+      (col, n, _, Just e) -> do
+        MigrationEffect.error [exon|Error: non-array column with element type: ##{n} | ##{e}|]
+        pure (PgColumnName col, Right (PgPrimName n))
 
 tableColumns ::
   Monad m =>

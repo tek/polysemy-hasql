@@ -1,6 +1,5 @@
 module Sqel.Statement where
 
-import Exon (exon)
 import qualified Hasql.Decoders as Decoders
 import Hasql.Decoders (Row, noResult)
 import qualified Hasql.Encoders as Encoders
@@ -126,24 +125,32 @@ upsert (TableSchema tab _ params) =
 
 dbColumns ::
   Sql ->
-  Statement Text [(Text, Text, Text)]
+  Statement Text [(Text, Text, Text, Maybe Text)]
 dbColumns code =
   prepared code decoder encoder
   where
     decoder =
-      (,,) <$> text' <*> text' <*> text'
+      (,,,) <$> text' <*> text' <*> text' <*> Decoders.column (Decoders.nullable Decoders.text)
     text' =
       Decoders.column (Decoders.nonNullable Decoders.text)
     encoder =
       Encoders.param (Encoders.nonNullable Encoders.text)
 
+columnsSql :: Sql -> Sql -> Sql -> Sql
+columnsSql entity container namePrefix =
+  [sql|select c.#{entity}_name, c.data_type, c.#{namePrefix}udt_name, e.data_type
+       from information_schema.#{entity}s c left join information_schema.element_types e
+       on ((c.#{container}_catalog, c.#{container}_schema, c.#{container}_name, 'TABLE', c.dtd_identifier)
+       = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier))
+       where c.#{container}_name = $1|]
+
 tableColumnsSql :: Sql
 tableColumnsSql =
-  [exon|select "column_name", "data_type", "udt_name" from information_schema.columns where "table_name" = $1|]
+  columnsSql "column" "table" ""
 
 typeColumnsSql :: Sql
 typeColumnsSql =
-  [exon|select "attribute_name", "data_type", "attribute_udt_name" from information_schema.attributes where "udt_name" = $1|]
+  columnsSql "attribute" "udt" "attribute_"
 
 createTable :: PgTable a -> Statement () ()
 createTable table =
