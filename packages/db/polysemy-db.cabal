@@ -19,9 +19,6 @@ build-type:     Simple
 library
   exposed-modules:
       Polysemy.Db
-      Polysemy.Db.AtomicState
-      Polysemy.Db.Data.Cond
-      Polysemy.Db.Data.CreationTime
       Polysemy.Db.Data.DbConfig
       Polysemy.Db.Data.DbConnectionError
       Polysemy.Db.Data.DbError
@@ -30,20 +27,17 @@ library
       Polysemy.Db.Data.DbPassword
       Polysemy.Db.Data.DbPort
       Polysemy.Db.Data.DbUser
-      Polysemy.Db.Data.FieldId
       Polysemy.Db.Data.InitDbError
       Polysemy.Db.Effect.Id
       Polysemy.Db.Effect.Query
+      Polysemy.Db.Effect.Random
       Polysemy.Db.Effect.Store
+      Polysemy.Db.Interpreter.AtomicState
       Polysemy.Db.Interpreter.Id
-      Polysemy.Db.Query
-      Polysemy.Db.Random
-      Polysemy.Db.Reader
-      Polysemy.Db.SOP.Constructor
-      Polysemy.Db.SOP.Contravariant
-      Polysemy.Db.SOP.FieldNames
-      Polysemy.Db.SOP.List
-      Polysemy.Db.Store
+      Polysemy.Db.Interpreter.Query
+      Polysemy.Db.Interpreter.Random
+      Polysemy.Db.Interpreter.Reader
+      Polysemy.Db.Interpreter.Store
   hs-source-dirs:
       lib
   default-extensions:

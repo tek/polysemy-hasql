@@ -5,7 +5,6 @@ import Sqel.Data.Uid (Uid)
 
 type DbTable :: Type -> Effect
 data DbTable a :: Effect where
-  -- Schema :: DbTable a m (TableSchema a)
   Statement :: p -> Statement p o -> DbTable a m o
 
 makeSem ''DbTable

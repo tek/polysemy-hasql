@@ -18,7 +18,7 @@ import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -45,7 +45,7 @@ idSchema =
 test_default :: UnitTest
 test_default =
   integrationTest do
-    interpretDbTable ts $ interpretStoreDb ts idSchema do
+    interpretTable ts $ interpretStoreDb ts idSchema do
       restop @DbError @(Store _ _) do
         Store.insert d
         assertEq [d] =<< Store.fetchAll

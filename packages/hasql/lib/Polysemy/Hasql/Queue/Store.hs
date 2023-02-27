@@ -18,7 +18,7 @@ import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Queue.Data.Queued (Queued)
 import Sqel.Data.Sel (TSel(TSel))
@@ -47,7 +47,7 @@ interpretQueueStoreDb ::
   Members [Database !! DbError, Time t dt, Log, Resource, Async, Race, Embed IO, Final IO] r =>
   InterpreterFor (Store UUID (Queued t d) !! DbError) r
 interpretQueueStoreDb =
-  interpretDbTable ts .
+  interpretTable ts .
   interpretStoreDb ts qs .
   raiseUnder
   where

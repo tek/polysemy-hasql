@@ -8,8 +8,8 @@ import Sqel.PgType (MkTableSchema (tableSchema))
 import Sqel.Prim (prims)
 import Sqel.Product (prod)
 
-import Polysemy.Hasql.AtomicState (interpretAtomicStateDb)
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.AtomicState (interpretAtomicStateDb)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Cat =
@@ -21,7 +21,7 @@ data Cat =
 
 test_atomicStateDb :: UnitTest
 test_atomicStateDb =
-  integrationTest $ interpretDbTable ts do
+  integrationTest $ interpretTable ts do
     r <- interpretAtomicStateDb ts (pure (Cat 5 "fuzzyboots")) do
       restop @DbError do
         atomicModify' \ (Cat _ nam) -> Cat 200 [exon|mr. #{nam}|]

@@ -1,24 +1,9 @@
 module Polysemy.Db.Effect.Store where
 
 import Data.UUID (UUID)
+import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uid)
 
--- TODO change *All result to [Uid i d]
---
--- |A 'Store' is characterized by a record type @d@ and a primary key type @i@.
--- The parameter is usually something like 'UUID' or 'Int', and it is combined with the record in the data type 'Uid'.
--- Programs using 'Store' need no knowledge about the database that might be backing the effect:
---
--- @
--- data User { name :: Text }
--- progStore :: Member (Store Int User) r => Sem r (Maybe (Uid Int User))
--- progStore = do
---   Store.insert (Uid 1 (User "admin"))
---   Store.upsert (Uid 1 (User "root"))
---   Store.upsert (Uid 2 (User "guest"))
---   _ \<- Store.delete 2
---   Store.fetch 1
--- @
 data QStore f q d :: Effect where
   Insert :: d -> QStore f i d m ()
   Upsert :: d -> QStore f i d m ()
@@ -41,3 +26,29 @@ type family StoreEffects i e ds :: EffectRow where
 type family Stores i e ds r :: Constraint where
   Stores _ _ '[] _ = ()
   Stores i e (d : ds) r = (Member (Store i d !! e) r, Stores i e ds r)
+
+elem ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  Sem r Bool
+elem id' =
+  isJust <$> fetch id'
+
+fetchPayload ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  Sem r (Maybe d)
+fetchPayload id' =
+  fmap Uid.payload <$> fetch id'
+
+alter ::
+  ∀ i d r .
+  Member (Store i d) r =>
+  i ->
+  (d -> d) ->
+  Sem r ()
+alter id' f = do
+  cur <- fetch id'
+  traverse_ (upsert . (#payload %~ f)) cur

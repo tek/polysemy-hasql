@@ -3,9 +3,9 @@ module Polysemy.Hasql.Queue.Output where
 import Data.UUID (UUID)
 import Exon (exon)
 import Polysemy.Db.Data.DbError (DbError)
+import Polysemy.Db.Effect.Random (Random, random)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import Polysemy.Db.Random (Random, random)
 import qualified Polysemy.Log as Log
 import Polysemy.Output (Output (Output))
 import qualified Polysemy.Time as Time
@@ -25,7 +25,7 @@ import Polysemy.Hasql.Queue.Data.Queued (Queued (Queued))
 interpretOutputQueueDb ::
   ∀ (queue :: Symbol) d t dt r .
   KnownSymbol queue =>
-  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Random, Embed IO] r =>
+  Members [Store UUID (Queued t d) !! DbError, Database !! DbError, Time t dt, Log, Random UUID, Embed IO] r =>
   InterpreterFor (Output d !! QueueOutputError) r
 interpretOutputQueueDb =
   interpretResumable \case

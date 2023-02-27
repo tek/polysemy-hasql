@@ -1,28 +1,13 @@
 module Polysemy.Hasql.Interpreter.Store where
 
-import Generics.SOP (NP (Nil))
 import Hasql.Connection (Connection)
 import Hasql.Statement (Statement)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (QStore, Store)
-import Sqel.Data.Dd (
-  Comp (Prod),
-  CompInc (Nest),
-  Dd (Dd),
-  DdInc (DdNest),
-  DdK (DdK),
-  DdSort (DdProd),
-  DdStruct (DdComp),
-  ProdType (Reg),
-  Struct (Comp, Prim),
-  )
-import Sqel.Data.Mods (pattern NoMods, NoMods)
 import Sqel.Data.QuerySchema (QuerySchema, emptyQuerySchema)
-import Sqel.Data.Sel (Sel (SelSymbol), SelPrefix (DefaultPrefix), SelW (SelWSymbol), TSel (TSel), mkTSel)
 import Sqel.Data.TableSchema (TableSchema)
 import Sqel.Data.Uid (Uid)
 import Sqel.PgType (toFullProjection)
-import Sqel.Prim (primAs)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (delete, insert, selectWhere, upsert)
 
@@ -30,24 +15,6 @@ import Polysemy.Hasql.Effect.Database (ConnectionSource)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
 import Polysemy.Hasql.Transaction (interpretForXa)
-
-type EmptyQuery =
-  'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
-
-emptyQuery :: Dd EmptyQuery
-emptyQuery =
-  Dd (SelWSymbol Proxy) NoMods (DdComp mkTSel DdProd DdNest Nil)
-
-primIdQuery :: Dd ('DdK ('SelSymbol "id") NoMods a 'Prim)
-primIdQuery =
-  primAs @"id"
-
-type NoResult =
-  'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
-
-noResult :: Dd NoResult
-noResult =
-  Dd (SelWSymbol Proxy) NoMods (DdComp mkTSel DdProd DdNest Nil)
 
 handleQStoreDb ::
   ∀ f q d e r m a .

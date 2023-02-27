@@ -1,4 +1,4 @@
-module Polysemy.Db.AtomicState where
+module Polysemy.Db.Interpreter.AtomicState where
 
 import Conc (Lock, lock)
 import Polysemy.AtomicState (AtomicState (AtomicGet, AtomicState))

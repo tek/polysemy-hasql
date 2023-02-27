@@ -81,7 +81,7 @@ import Sqel.Prim (
   readShow,
   )
 import Sqel.Product (prod, prodAs, prodSel)
-import Sqel.Query (CheckQuery (checkQuery))
+import Sqel.Query (CheckQuery (checkQuery), EmptyQuery, emptyQuery, primIdQuery)
 import Sqel.Query.Combinators
 import Sqel.Sql
 import Sqel.Sum (con, con1, con1As, conAs, indexPrefix, mergeSum, sum, sumAs, sumWith)

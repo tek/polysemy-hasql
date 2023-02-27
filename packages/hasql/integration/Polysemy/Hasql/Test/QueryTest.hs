@@ -27,7 +27,7 @@ import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
@@ -114,7 +114,7 @@ inserts =
 test_query :: UnitTest
 test_query =
   integrationTest do
-    interpretDbTable ts $ interpretStoreDb ts queryIdDat $ interpretQuery do
+    interpretTable ts $ interpretStoreDb ts queryIdDat $ interpretQuery do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         inserts
         r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name" Nothing)
@@ -123,7 +123,7 @@ test_query =
 test_queryId :: UnitTest
 test_queryId =
   integrationTest do
-    interpretDbTable ts $ interpretStoreDb ts queryIdDat $ interpretQueryDd @[Int64] ddUidDat (primAs @"id" @Int64) (primAs @"id" @Int64) do
+    interpretTable ts $ interpretStoreDb ts queryIdDat $ interpretQueryDd @[Int64] ddUidDat (primAs @"id" @Int64) (primAs @"id" @Int64) do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         inserts
         r <- Query.query (5 :: Int64)

@@ -19,40 +19,33 @@ build-type:     Simple
 library
   exposed-modules:
       Polysemy.Hasql
-      Polysemy.Hasql.AtomicState
       Polysemy.Hasql.Data.ConnectionState
       Polysemy.Hasql.Data.ConnectionTag
-      Polysemy.Hasql.Data.ExistingColumn
       Polysemy.Hasql.Data.InitDb
       Polysemy.Hasql.Data.QueueOutputError
-      Polysemy.Hasql.Data.Set
       Polysemy.Hasql.Database
       Polysemy.Hasql.Effect.Database
       Polysemy.Hasql.Effect.DbConnectionPool
       Polysemy.Hasql.Effect.DbTable
       Polysemy.Hasql.Effect.Transaction
-      Polysemy.Hasql.InitDbError
+      Polysemy.Hasql.Interpreter.AtomicState
       Polysemy.Hasql.Interpreter.Database
       Polysemy.Hasql.Interpreter.DbConnectionPool
       Polysemy.Hasql.Interpreter.DbTable
       Polysemy.Hasql.Interpreter.Query
+      Polysemy.Hasql.Interpreter.Reader
       Polysemy.Hasql.Interpreter.Store
       Polysemy.Hasql.Interpreter.Transaction
       Polysemy.Hasql.Migration
-      Polysemy.Hasql.Query.Any
       Polysemy.Hasql.Queue
       Polysemy.Hasql.Queue.Data.Queue
       Polysemy.Hasql.Queue.Data.Queued
       Polysemy.Hasql.Queue.Input
       Polysemy.Hasql.Queue.Output
       Polysemy.Hasql.Queue.Store
-      Polysemy.Hasql.Reader
       Polysemy.Hasql.Session
       Polysemy.Hasql.Statement
       Polysemy.Hasql.Statement.Transaction
-      Polysemy.Hasql.Table.Query.Text
-      Polysemy.Hasql.Table.Query.Update
-      Polysemy.Hasql.Table.SumIndex
       Polysemy.Hasql.Test.Database
       Polysemy.Hasql.Transaction
   hs-source-dirs:

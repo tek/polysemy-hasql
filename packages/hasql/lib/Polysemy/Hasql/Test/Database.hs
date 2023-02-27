@@ -1,6 +1,7 @@
 module Polysemy.Hasql.Test.Database where
 
 import qualified Data.UUID as UUID
+import Data.UUID (UUID)
 import Exon (exon)
 import Hasql.Connection (Connection)
 import Hasql.Session (QueryError)
@@ -9,7 +10,8 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName (DbName))
-import Polysemy.Db.Random (Random, random, runRandomIO)
+import Polysemy.Db.Effect.Random (Random, random)
+import Polysemy.Db.Interpreter.Random (interpretRandom)
 import Polysemy.Time (GhcTime)
 import Sqel.Data.PgTypeName (pattern PgTypeName, pgTableName)
 import Sqel.Data.TableSchema (TableSchema)
@@ -30,7 +32,7 @@ suffixedTableSchema suffix =
   #pg . #name %~ \ (PgTypeName name) -> pgTableName [exon|#{name}-#{suffix}|]
 
 createTestDb ::
-  Members [Random, Stop DbError, Embed IO] r =>
+  Members [Random UUID, Stop DbError, Embed IO] r =>
   DbConfig ->
   Connection ->
   Sem r DbConfig
@@ -52,7 +54,7 @@ withTestDb baseConfig f =
       bracket (acquire baseConfig connection) (release connection) (raise . raise . f)
   where
     acquire config connection =
-      runRandomIO $ createTestDb config connection
+      interpretRandom $ createTestDb config connection
     release connection (DbConfig _ _ name _ _) =
       mapStop convertQueryError (runStatement connection () (Statement.dropDb name))
 
@@ -80,7 +82,7 @@ type TestStoreDeps =
     Scoped ConnectionSource (Database !! DbError),
     Database !! DbError,
     Error DbError,
-    Random,
+    Random UUID,
     Log,
     Stop QueryError,
     Stop DbError,

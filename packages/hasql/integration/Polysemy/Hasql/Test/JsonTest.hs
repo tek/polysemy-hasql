@@ -22,7 +22,7 @@ import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Database as Database
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -54,7 +54,7 @@ ts =
 test_json :: UnitTest
 test_json = do
   integrationTest do
-    interpretDbTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
+    interpretTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
       restop @DbError do
         Store.insert dat
         raise . assertJust dat =<< Store.fetch 5

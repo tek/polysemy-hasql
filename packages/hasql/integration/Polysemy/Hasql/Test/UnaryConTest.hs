@@ -26,7 +26,7 @@ import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -102,7 +102,7 @@ interpretQuery =
 test_unaryCon :: UnitTest
 test_unaryCon =
   integrationTest do
-    interpretDbTable t1d $ interpretStoreDb t1d (checkQuery (primAs @"id") t1C) $ interpretQuery do
+    interpretTable t1d $ interpretStoreDb t1d (checkQuery (primAs @"id") t1C) $ interpretQuery do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         Store.insert (Uid 1 (Dat "ellow" (S1 "crinp")))
         Store.insert (Uid 2 (Dat "cheerio" (S2 (F2 "pord" 93))))

@@ -1,4 +1,4 @@
-module Polysemy.Db.Reader where
+module Polysemy.Db.Interpreter.Reader where
 
 import Polysemy.Internal.Tactics (liftT)
 import Polysemy.Reader (Reader (Ask, Local))
@@ -38,7 +38,6 @@ interpretReaderStore initial =
       liftT (readValue @d @e (raise initial))
     Local f ma ->
       raise . interpretReaderStore (f <$> raise initial) =<< runT ma
-{-# inline interpretReaderStore #-}
 
 interpretReaderStoreAs ::
   ∀ d e r .
@@ -47,4 +46,3 @@ interpretReaderStoreAs ::
   InterpreterFor (Reader d !! e) r
 interpretReaderStoreAs initial =
   interpretReaderStore (pure initial)
-{-# inline interpretReaderStoreAs #-}

@@ -35,12 +35,12 @@ handleDbTable raiser (TableSchema table@PgTable {name = PgTypeName name} _ _) mi
     initDb :: InitDb (Sem (Database : Stop DbError : Database !! DbError : r))
     initDb = InitDb (ClientTag name) True \ _ -> raise2Under (raiser (unMigrateSem (runMigrations table migrations)))
 
-interpretDbTable ::
+interpretTable ::
   ∀ d r .
   Members [Database !! DbError, Log, Embed IO] r =>
   TableSchema d ->
   InterpreterFor (DbTable d !! DbError) r
-interpretDbTable schema =
+interpretTable schema =
   interpretResumable (subsume . subsume . raise2Under . handleDbTable id schema noMigrations)
 
 tablesScope ::

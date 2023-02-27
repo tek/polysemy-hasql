@@ -21,7 +21,7 @@ import Sqel.Query (checkQuery)
 import Sqel.Sum (con1, con1As, sum)
 import Sqel.Uid (uid)
 
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable, interpretTableViewDd)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable, interpretTableViewDd)
 import Polysemy.Hasql.Interpreter.Query (interpretQuery)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
@@ -62,7 +62,7 @@ qd = sum (con1 prim :> con1As @"number" prim)
 test_sumQuery :: UnitTest
 test_sumQuery =
   integrationTest do
-    interpretDbTable ts $ interpretTableViewDd td vd $ interpretStoreDb ts idSchema $ interpretQuery @[_] vs (checkQuery qd td) do
+    interpretTable ts $ interpretTableViewDd td vd $ interpretStoreDb ts idSchema $ interpretQuery @[_] vs (checkQuery qd td) do
       restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
         Store.insert (Uid 1 d1)
         Store.insert (Uid 2 d2)

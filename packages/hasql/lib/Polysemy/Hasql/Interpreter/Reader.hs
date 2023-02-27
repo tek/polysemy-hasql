@@ -1,6 +1,6 @@
-module Polysemy.Hasql.Reader where
+module Polysemy.Hasql.Interpreter.Reader where
 
-import Polysemy.Db.Reader (interpretReaderStore)
+import Polysemy.Db.Interpreter.Reader (interpretReaderStore)
 import Sqel.Data.QuerySchema (emptyQuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 

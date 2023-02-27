@@ -10,7 +10,7 @@ import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
-import Polysemy.Db.Random (Random, runRandomIO)
+import Polysemy.Db.Effect.Random (Random)
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
@@ -115,7 +115,7 @@ integrationTestWith envPrefix name run =
       interpretMaskFinal $
       runError @Text $
       interpretLogStdoutLevelConc (Just Error) $
-      runRandomIO $
+      interpretRandom $
       interpretTimeGhc $
       runIntegrationTestWith envPrefix name run
     Hedgehog.evalEither r

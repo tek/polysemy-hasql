@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.RunIntegration where
 
+import Data.UUID (UUID)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
 import Log (Severity (Error))
@@ -7,7 +8,8 @@ import Polysemy.Db.Data.DbConfig (DbConfig)
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
-import Polysemy.Db.Random (Random, runRandomIO)
+import Polysemy.Db.Effect.Random (Random)
+import Polysemy.Db.Interpreter.Random (interpretRandom)
 import Polysemy.Time (GhcTime, interpretTimeGhc)
 import Zeugma.Run (TestStack, runTestLevel)
 
@@ -27,7 +29,7 @@ type DbErrors =
 type TestEffects =
   DbErrors ++ [
     GhcTime,
-    Random
+    Random UUID
   ] ++ TestStack
 
 runIntegrationTestWith ::
@@ -55,7 +57,7 @@ integrationTestLevelWith ::
   (DbConfig -> Sem TestEffects ()) ->
   TestT IO ()
 integrationTestLevelWith level run =
-  withFrozenCallStack $ runTestLevel level $ runRandomIO $ interpretTimeGhc $ runIntegrationTestWith run
+  withFrozenCallStack $ runTestLevel level $ interpretRandom $ interpretTimeGhc $ runIntegrationTestWith run
 
 integrationTestWith ::
   HasCallStack =>

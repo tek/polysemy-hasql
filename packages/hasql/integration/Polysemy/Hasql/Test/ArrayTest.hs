@@ -5,7 +5,6 @@ import Data.Vector (Vector)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (UuidStore)
-import qualified Polysemy.Db.Store as Store
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
 import Sqel.Column (nullable)
@@ -20,7 +19,7 @@ import Sqel.Product (prod)
 import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 
-import Polysemy.Hasql.Interpreter.DbTable (interpretDbTable)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -63,6 +62,6 @@ prog = do
 test_arrayField :: UnitTest
 test_arrayField =
   integrationTest do
-    interpretDbTable table $ interpretStoreDb table query do
+    interpretTable table $ interpretStoreDb table query do
       result <- restop @DbError prog
       assertJust payload result

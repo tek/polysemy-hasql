@@ -1,19 +1,34 @@
 module Sqel.Query where
 
 import qualified Data.Map.Strict as Map
+import Generics.SOP (NP (Nil))
 import Prelude hiding (type (@@))
 import Type.Errors (ErrorMessage)
 
 import Sqel.Class.MatchView (MatchQuery)
 import Sqel.Data.Codec (Encoder)
-import Sqel.Data.Dd (Dd, DdK, DdType)
+import Sqel.Data.Dd (
+  Comp (Prod),
+  CompInc (Nest),
+  Dd (Dd),
+  DdInc (DdNest),
+  DdK (DdK),
+  DdSort (DdProd),
+  DdStruct (DdComp),
+  DdType,
+  ProdType (Reg),
+  Struct (Comp, Prim),
+  )
 import Sqel.Data.FragType (FragType)
+import Sqel.Data.Mods (pattern NoMods, NoMods)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
+import Sqel.Data.Sel (MkTSel (mkTSel), Sel (SelSymbol), SelPrefix (DefaultPrefix), SelW (SelWSymbol), TSel (TSel))
 import Sqel.Data.SelectExpr (
   SelectExpr (SelectExprAtom, SelectExprIgnore, SelectExprList, SelectExprNot, SelectExprSum),
   SelectFragment (SelectFragment),
   )
 import Sqel.Data.Sql (Sql)
+import Sqel.Prim (primAs)
 import Sqel.Query.Fragments (ColumnPrefix (NoPrefix), joinFrag, joinSum)
 import Sqel.Query.SelectExpr (ToSelectExpr (toSelectExpr))
 import Sqel.ReifyCodec (ReifyCodec (reifyCodec))
@@ -91,3 +106,14 @@ instance (
   ) => CheckQuery query table where
   checkQuery query _ =
     querySchemaWith query (checkedQ @query @table query)
+
+type EmptyQuery =
+  'DdK ('SelSymbol "") NoMods () ('Comp ('TSel 'DefaultPrefix "") ('Prod 'Reg) 'Nest '[])
+
+emptyQuery :: Dd EmptyQuery
+emptyQuery =
+  Dd (SelWSymbol Proxy) NoMods (DdComp mkTSel DdProd DdNest Nil)
+
+primIdQuery :: Dd ('DdK ('SelSymbol "id") NoMods a 'Prim)
+primIdQuery =
+  primAs @"id"

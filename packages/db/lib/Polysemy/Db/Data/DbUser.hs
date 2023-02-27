@@ -1,8 +1,8 @@
 module Polysemy.Db.Data.DbUser where
 
 newtype DbUser =
-  DbUser Text
-  deriving stock (Eq, Show)
-  deriving newtype (IsString)
+  DbUser { unDbUser :: Text }
+  deriving stock (Eq, Show, Generic)
+  deriving newtype (IsString, Ord)
 
 json ''DbUser

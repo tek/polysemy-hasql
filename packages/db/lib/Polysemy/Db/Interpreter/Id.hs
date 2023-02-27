@@ -5,10 +5,11 @@ import qualified Data.UUID as UUID
 import Data.UUID (UUID)
 
 import Polysemy.Db.Effect.Id (Id (NewId))
-import Polysemy.Db.Random (Random, random, runRandomIO)
+import Polysemy.Db.Effect.Random (Random, random)
+import Polysemy.Db.Interpreter.Random (interpretRandom)
 
 interpretIdUuid ::
-  Member Random r =>
+  Member (Random UUID) r =>
   InterpreterFor (Id UUID) r
 interpretIdUuid =
   interpret \ NewId -> random
@@ -17,17 +18,17 @@ interpretIdUuidIO ::
   Member (Embed IO) r =>
   InterpreterFor (Id UUID) r
 interpretIdUuidIO =
-  runRandomIO . interpretIdUuid . raiseUnder
+  interpretRandom . interpretIdUuid . raiseUnder
 
 interpretIdUuidZero ::
   InterpreterFor (Id UUID) r
 interpretIdUuidZero =
   interpret \ NewId -> pure UUID.nil
 
-interpretIdState ::
+interpretIdAtomicState ::
   Members [AtomicState [i], Error Text] r =>
   InterpreterFor (Id i) r
-interpretIdState =
+interpretIdAtomicState =
   interpret \case
     NewId -> do
       i <- atomicState' \case
@@ -41,7 +42,7 @@ interpretIdList ::
   InterpreterFor (Id i) r
 interpretIdList pool =
   interpretAtomic pool .
-  interpretIdState .
+  interpretIdAtomicState .
   raiseUnder
 
 interpretIdNum ::

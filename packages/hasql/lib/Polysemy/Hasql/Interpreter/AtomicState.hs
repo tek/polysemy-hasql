@@ -1,9 +1,9 @@
-module Polysemy.Hasql.AtomicState where
+module Polysemy.Hasql.Interpreter.AtomicState where
 
 import Conc (interpretLockReentrant)
 import Hasql.Connection (Connection)
-import Polysemy.Db.AtomicState (interpretAtomicStateStore, interpretAtomicStatesStore)
 import Polysemy.Db.Data.InitDbError (InitDbError)
+import Polysemy.Db.Interpreter.AtomicState (interpretAtomicStateStore, interpretAtomicStatesStore)
 import Sqel.Data.QuerySchema (emptyQuerySchema)
 import Sqel.Data.TableSchema (TableSchema)
 
