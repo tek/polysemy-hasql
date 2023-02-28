@@ -46,11 +46,10 @@ interpretStoreConc ::
   Show i =>
   Member (Embed IO) r =>
   PureStore i a ->
-  InterpreterFor (Store i a !! DbError) r
+  InterpretersFor [Store i a !! DbError, AtomicState (PureStore i a)] r
 interpretStoreConc initial =
   interpretAtomic initial .
-  interpretStoreAtomicState .
-  raiseUnder
+  interpretStoreAtomicState
 
 interpretStoreState ::
   ∀ i a r .
@@ -68,11 +67,10 @@ interpretStoreLocal ::
   Ord i =>
   Show i =>
   PureStore i a ->
-  InterpreterFor (Store i a !! DbError) r
+  InterpretersFor [Store i a !! DbError, State (PureStore i a)] r
 interpretStoreLocal initial =
   evalState initial .
-  interpretStoreState .
-  raiseUnder
+  interpretStoreState
 
 interpretStoreNull ::
   InterpreterFor (Store i a !! e) r

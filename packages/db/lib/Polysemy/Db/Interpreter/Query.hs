@@ -11,7 +11,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Effect.Query (Query (..))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import Polysemy.Db.Interpreter.Store (PureStore (PureStore))
+import Polysemy.Db.Interpreter.Store (PureStore (PureStore), interpretStoreConc)
 
 class QueryCheckResult f where
   queryCheckResult :: [a] -> Either DbError (f a)
@@ -57,6 +57,18 @@ interpretQueryConc match initial =
   interpretAtomic (PureStore (Map.fromList (initial <&> \ a@(Uid i _) -> (i, a)))) .
   interpretQueryAtomicState match .
   raiseUnder
+
+interpretQueryStoreConc ::
+  Ord i =>
+  Show i =>
+  QueryCheckResult f =>
+  Member (Embed IO) r =>
+  (q -> Uid i a -> Maybe d) ->
+  [Uid i a] ->
+  InterpretersFor [Query q (f d) !! DbError, Store i a !! DbError, AtomicState (PureStore i a)] r
+interpretQueryStoreConc match initial =
+  interpretStoreConc (PureStore (Map.fromList (initial <&> \ a@(Uid i _) -> (i, a)))) .
+  interpretQueryAtomicState match
 
 interpretQueryStoreAny ::
   ∀ q d i e r .

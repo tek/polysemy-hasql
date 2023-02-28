@@ -18,6 +18,7 @@ module Polysemy.Db (
   interpretQueryConc,
   interpretQueryConst,
   interpretQueryAtomicState,
+  interpretQueryStoreConc,
   interpretQueryStoreAny,
 
   interpretRandom,
@@ -102,6 +103,7 @@ import Polysemy.Db.Interpreter.Query (
   interpretQueryConc,
   interpretQueryConst,
   interpretQueryStoreAny,
+  interpretQueryStoreConc,
   )
 import Polysemy.Db.Interpreter.Random (
   interpretRandom,
