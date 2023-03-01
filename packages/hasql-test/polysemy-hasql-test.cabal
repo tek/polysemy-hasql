@@ -18,6 +18,7 @@ build-type:     Simple
 
 library
   exposed-modules:
+      Polysemy.Hasql.Test
       Polysemy.Hasql.Test.Migration
       Polysemy.Hasql.Test.Run
   hs-source-dirs:

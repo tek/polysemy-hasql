@@ -21,23 +21,6 @@ import System.Environment (lookupEnv)
 
 import Polysemy.Hasql.Test.Database (TestConnectionEffects, withTestConnection)
 
-data Err1 = Err1
-data Err2 = Err2
-
-data E1 :: Effect where
-  E1 :: E1 m ()
-
-makeSem ''E1
-
-data E2 :: Effect where
-  E2 :: E2 m ()
-
-makeSem ''E2
-
-f :: Members [E1 !! Err1, E2 !! Err2] r => Sem r ()
-f =
-  resume_ e1
-
 type DbErrors =
   [
     Stop DbConnectionError,
