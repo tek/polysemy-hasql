@@ -53,10 +53,19 @@ interpretIdNum ::
 interpretIdNum =
   interpretAtomic @i 1 .
   reinterpret \ NewId ->
-    atomicState' \ id' -> ((id' + 1), id')
+    atomicState' \ i -> ((i + 1), i)
+
+interpretIdNumLocal ::
+  ∀ i r .
+  Num i =>
+  InterpreterFor (Id i) r
+interpretIdNumLocal =
+  evalState @i 1 .
+  reinterpret \ NewId ->
+    get >>= \ i -> i <$ put (i + 1)
 
 interpretIdConst ::
   i ->
   InterpreterFor (Id i) r
-interpretIdConst id' =
-  interpret \ NewId -> pure id'
+interpretIdConst i =
+  interpret \ NewId -> pure i
