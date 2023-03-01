@@ -26,6 +26,7 @@ interpretIdUuidZero =
   interpret \ NewId -> pure UUID.nil
 
 interpretIdAtomicState ::
+  ∀ i r .
   Members [AtomicState [i], Error Text] r =>
   InterpreterFor (Id i) r
 interpretIdAtomicState =
@@ -37,6 +38,7 @@ interpretIdAtomicState =
       fromMaybeA (throw "Id pool exhausted") i
 
 interpretIdList ::
+  ∀ i r .
   Members [Error Text, Embed IO] r =>
   [i] ->
   InterpreterFor (Id i) r
@@ -45,15 +47,24 @@ interpretIdList pool =
   interpretIdAtomicState .
   raiseUnder
 
+interpretIdNumFrom ::
+  ∀ i r .
+  Member (Embed IO) r =>
+  Num i =>
+  i ->
+  InterpreterFor (Id i) r
+interpretIdNumFrom start =
+  interpretAtomic @i start .
+  reinterpret \ NewId ->
+    atomicState' \ i -> ((i + 1), i)
+
 interpretIdNum ::
   ∀ i r .
   Member (Embed IO) r =>
   Num i =>
   InterpreterFor (Id i) r
 interpretIdNum =
-  interpretAtomic @i 1 .
-  reinterpret \ NewId ->
-    atomicState' \ i -> ((i + 1), i)
+  interpretIdNumFrom 1
 
 interpretIdNumLocal ::
   ∀ i r .
@@ -65,6 +76,7 @@ interpretIdNumLocal =
     get >>= \ i -> i <$ put (i + 1)
 
 interpretIdConst ::
+  ∀ i r .
   i ->
   InterpreterFor (Id i) r
 interpretIdConst i =
