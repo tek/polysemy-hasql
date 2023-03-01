@@ -109,7 +109,6 @@ test-suite polysemy-hasql-test-unit
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-      Polysemy.Db.Ext
       Polysemy.Hasql.Test.MigrationTest
   hs-source-dirs:
       test

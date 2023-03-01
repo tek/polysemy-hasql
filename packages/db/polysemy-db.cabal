@@ -32,6 +32,7 @@ library
       Polysemy.Db.Effect.Query
       Polysemy.Db.Effect.Random
       Polysemy.Db.Effect.Store
+      Polysemy.Db.Ext
       Polysemy.Db.Interpreter.AtomicState
       Polysemy.Db.Interpreter.Id
       Polysemy.Db.Interpreter.Query
