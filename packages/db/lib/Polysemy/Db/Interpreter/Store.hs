@@ -14,6 +14,13 @@ newtype PureStore i a =
   deriving stock (Eq, Show, Generic)
   deriving newtype (Default, Semigroup, Monoid)
 
+pureStore ::
+  Ord i =>
+  [Uid i a] ->
+  PureStore i a
+pureStore =
+  PureStore . Map.fromList . fmap \ a@(Uid i _) -> (i, a)
+
 interpretStoreAtomicState ::
   ∀ i a r .
   Ord i =>

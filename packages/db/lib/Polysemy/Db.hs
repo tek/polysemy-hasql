@@ -14,6 +14,7 @@ module Polysemy.Db (
   interpretStoreState,
   interpretStoreNull,
   PureStore (PureStore),
+  pureStore,
 
   interpretQueryConc,
   interpretQueryConst,
@@ -119,6 +120,7 @@ import Polysemy.Db.Interpreter.Store (
   interpretStoreLocal,
   interpretStoreNull,
   interpretStoreState,
+  pureStore,
   )
 
 -- $intro
