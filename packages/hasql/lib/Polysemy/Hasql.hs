@@ -16,6 +16,7 @@ module Polysemy.Hasql (
   -- * Database effects
   DbConnectionPool,
   Database,
+  Databases,
   DbTable,
   StoreTable,
   Transaction,
@@ -48,9 +49,10 @@ module Polysemy.Hasql (
   interpretReaderDb,
 ) where
 
-import Polysemy.Hasql.Effect.Database (Database)
+import Polysemy.Hasql.Effect.Database (Database, Databases)
 import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
+import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions, abort)
 import Polysemy.Hasql.Interpreter.AtomicState (interpretAtomicStateDb, interpretAtomicStatesDb)
 import Polysemy.Hasql.Interpreter.Database (interpretDatabase, interpretDatabases, interpretHasql)
 import Polysemy.Hasql.Interpreter.DbConnectionPool (interpretDbConnectionPool, interpretDbConnectionPoolSingle)
@@ -59,7 +61,9 @@ import Polysemy.Hasql.Interpreter.DbTable (
   interpretTableMigrations,
   interpretTableMigrationsScoped,
   interpretTableView,
-  interpretTableViewDd, interpretTablesMigrations, interpretTables,
+  interpretTableViewDd,
+  interpretTables,
+  interpretTablesMigrations,
   )
 import Polysemy.Hasql.Interpreter.Query (interpretQuery, interpretQueryDd, mapQuery, queryVia)
 import Polysemy.Hasql.Interpreter.Reader (interpretReaderDb)
@@ -71,7 +75,6 @@ import Polysemy.Hasql.Interpreter.Store (
   interpretStoreXa,
   interpretStores,
   )
-import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions, abort)
 
 -- $intro
 -- This library provides Hasql-specific interpreters for the effects in [Polysemy.Db]("Polysemy.Db")
