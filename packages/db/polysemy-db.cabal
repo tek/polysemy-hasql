@@ -108,16 +108,12 @@ library
   build-depends:
       base >=4.12 && <5
     , exon
-    , first-class-families
-    , generics-sop
     , lens
     , polysemy
     , polysemy-plugin
     , prelate >=0.5
     , random
     , sqel
-    , time
-    , type-errors
     , uuid
   mixins:
       base hiding (Prelude)

@@ -86,13 +86,9 @@ in {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
       "exon"
-      "first-class-families"
-      "generics-sop"
       "lens"
       "random"
       "sqel"
-      "time"
-      "type-errors"
       "uuid"
     ];
   };
