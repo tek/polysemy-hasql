@@ -98,6 +98,7 @@ library
     , polysemy-test
     , prelate >=0.5
     , sqel
+    , uuid
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

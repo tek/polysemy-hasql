@@ -1,11 +1,13 @@
 module Polysemy.Hasql.Test.Run where
 
 import Conc (interpretMaskFinal, interpretRace)
+import Data.UUID (UUID)
 import Exon (exon)
 import Hasql.Session (QueryError)
 import Hedgehog (TestT)
 import Hedgehog.Internal.Property (Failure)
 import Log (Severity (Error), interpretLogStdoutLevelConc)
+import Polysemy.Db (interpretRandom)
 import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
@@ -49,7 +51,7 @@ type DbErrors =
 type TestEffects =
   DbErrors ++ [
     GhcTime,
-    Random,
+    Random UUID,
     Log,
     Error Text,
     Mask,

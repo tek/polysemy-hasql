@@ -149,6 +149,7 @@ in {
       "polysemy-db"
       "polysemy-hasql"
       "sqel"
+      "uuid"
     ];
 
     tests.polysemy-hasql-test-unit = polysemyExe "polysemy-hasql-test" "test" {
