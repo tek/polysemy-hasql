@@ -9,4 +9,4 @@ module Polysemy.Db.Ext (
 import Polysemy.Db.Effect.Id (Id (..))
 import Polysemy.Db.Effect.Query (Query (..))
 import Polysemy.Db.Effect.Random (Random (..))
-import Polysemy.Db.Effect.Store (Store (..))
+import Polysemy.Db.Effect.Store (QStore (..))
