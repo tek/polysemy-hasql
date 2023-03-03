@@ -149,17 +149,9 @@ in {
 
     tests.polysemy-hasql-test-unit = polysemyExe "polysemy-hasql-test" "test" {
       dependencies = [
-        "aeson ^>= 2.0"
-        "chronos ^>= 1.1"
-        "exon ^>= 1.4"
-        "first-class-families ^>= 0.8"
-        "generics-sop ^>= 0.5"
-        "hasql ^>= 1.6"
         "path ^>= 0.9"
         "polysemy-test ^>= 0.7"
         "tasty ^>= 1.4"
-        dep_db
-        dep_hasql
         "sqel ^>= 0.0.1"
       ];
 

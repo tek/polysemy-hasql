@@ -178,17 +178,9 @@ test-suite polysemy-hasql-test-unit
       ViewPatterns
   ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson ==2.0.*
-    , base >=4.12 && <5
-    , chronos ==1.1.*
-    , exon ==1.4.*
-    , first-class-families ==0.8.*
-    , generics-sop ==0.5.*
-    , hasql ==1.6.*
+      base >=4.12 && <5
     , path ==0.9.*
     , polysemy
-    , polysemy-db >=0.0.1.0 && <0.1
-    , polysemy-hasql >=0.0.1.0 && <0.1
     , polysemy-hasql-test
     , polysemy-plugin
     , polysemy-test ==0.7.*
