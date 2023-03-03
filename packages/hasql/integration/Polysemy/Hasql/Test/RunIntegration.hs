@@ -10,7 +10,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Effect.Random (Random)
 import Polysemy.Db.Interpreter.Random (interpretRandom)
-import Polysemy.Time (GhcTime, interpretTimeGhc)
+import Time (GhcTime, interpretTimeGhc)
 import Zeugma.Run (TestStack, runTestLevel)
 
 import Polysemy.Hasql.Test.Database (TestConnectionEffects, withTestConnection)

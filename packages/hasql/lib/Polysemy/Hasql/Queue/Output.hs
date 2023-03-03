@@ -6,10 +6,10 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Effect.Random (Random, random)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import qualified Polysemy.Log as Log
+import qualified Log
 import Polysemy.Output (Output (Output))
-import qualified Polysemy.Time as Time
-import Polysemy.Time (Seconds (Seconds))
+import qualified Time as Time
+import Time (Seconds (Seconds))
 import Prelude hiding (Queue, group)
 import Sqel.Data.Sql (Sql (Sql))
 import Sqel.Data.Uid (Uid (Uid))

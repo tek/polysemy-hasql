@@ -5,9 +5,10 @@
     hix.url = git+https://git.tryp.io/tek/hix;
     hls.url = "github:haskell/haskell-language-server?ref=1.9.0.0";
     prelate.url = git+https://git.tryp.io/tek/prelate;
+    sqel.url = git+https://git.tryp.io/tek/sqel;
   };
 
-  outputs = { hix, hls, prelate, ... }:
+  outputs = { hix, hls, prelate, sqel, ... }:
   let
 
     vm = {
@@ -31,9 +32,8 @@
 
   in hix.lib.pro ({ config, lib, ... }: {
     main = "polysemy-hasql";
-    depsFull = [prelate];
+    depsFull = [sqel prelate];
     packages = {
-      sqel = ./packages/sqel;
       polysemy-db = ./packages/db;
       polysemy-hasql = ./packages/hasql;
       polysemy-hasql-test = ./packages/hasql-test;

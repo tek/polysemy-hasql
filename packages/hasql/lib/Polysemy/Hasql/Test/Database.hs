@@ -12,7 +12,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Data.DbName (DbName (DbName))
 import Polysemy.Db.Effect.Random (Random, random)
 import Polysemy.Db.Interpreter.Random (interpretRandom)
-import Polysemy.Time (GhcTime)
+import Time (GhcTime)
 import Sqel.Data.PgTypeName (pattern PgTypeName, pgTableName)
 import Sqel.Data.TableSchema (TableSchema)
 

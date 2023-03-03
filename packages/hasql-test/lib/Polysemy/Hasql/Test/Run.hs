@@ -16,7 +16,7 @@ import Polysemy.Db.Effect.Random (Random)
 import qualified Polysemy.Test as Hedgehog
 import Polysemy.Test (Hedgehog, Test, runTestAuto)
 import Polysemy.Test.Data.TestError (TestError)
-import Polysemy.Time (GhcTime, interpretTimeGhc)
+import Time (GhcTime, interpretTimeGhc)
 import System.Environment (lookupEnv)
 
 import Polysemy.Hasql.Test.Database (TestConnectionEffects, withTestConnection)

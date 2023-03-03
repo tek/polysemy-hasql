@@ -1,8 +1,8 @@
 module Polysemy.Db.Interpreter.Query where
 
 import Conc (interpretAtomic)
-import Control.Lens (view)
 import qualified Data.Map.Strict as Map
+import Lens.Micro.Extras (view)
 import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uid (Uid))
 

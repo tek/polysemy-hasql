@@ -2,7 +2,7 @@ module Polysemy.Hasql.Database where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Polysemy.Time (Seconds (Seconds))
+import Time (Seconds (Seconds))
 import Sqel.Data.Codec (Encoder, FullCodec)
 import Sqel.Data.Dd (Dd, DdType)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))

@@ -1,5 +1,16 @@
 module Polysemy.Hasql.Queue.Input where
 
+import Conc (
+  ClockSkewConfig,
+  Monitor,
+  Restart,
+  RestartingMonitor,
+  interpretAtomic,
+  interpretMonitorRestart,
+  monitor,
+  monitorClockSkew,
+  restart,
+  )
 import Control.Concurrent (threadWaitRead)
 import qualified Control.Concurrent.Async as Concurrent
 import Control.Concurrent.STM (atomically)
@@ -12,16 +23,6 @@ import Data.UUID (UUID)
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Exon (exon)
 import Hasql.Connection (Connection, withLibPQConnection)
-import qualified Polysemy.Conc as Monitor
-import Polysemy.Conc (
-  ClockSkewConfig,
-  Monitor,
-  Restart,
-  RestartingMonitor,
-  interpretAtomic,
-  interpretMonitorRestart,
-  monitorClockSkew,
-  )
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -29,8 +30,8 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
-import qualified Polysemy.Log as Log
-import qualified Polysemy.Time as Time
+import qualified Log
+import qualified Time as Time
 import Prelude hiding (Queue, listen)
 import Sqel.Data.Sql (sql)
 import qualified Sqel.Data.Uid as Uid
@@ -73,7 +74,7 @@ tryDequeue connection = do
       embed (LibPQ.socket connection) >>= \case
         Just fd -> do
           status "Waiting for activity"
-          Monitor.monitor (embed (threadWaitRead fd))
+          monitor (embed (threadWaitRead fd))
           status "Activity received"
           Right Nothing <$ embed (LibPQ.consumeInput connection)
         Nothing ->
@@ -195,7 +196,7 @@ startDequeueLoop ::
 startDequeueLoop errorDelay errorHandler queue = do
   QueueName name <- ask
   withDatabaseUnique (Just (NamedTag [exon|dequeue-#{name}|])) do
-    finally (Monitor.restart (dequeueLoop errorDelay (insertAt @0 . errorHandler) queue)) unlisten
+    finally (restart (dequeueLoop errorDelay (insertAt @0 . errorHandler) queue)) unlisten
 
 interpretInputQueue ::
   ∀ d r .
