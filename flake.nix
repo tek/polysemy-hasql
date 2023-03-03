@@ -46,6 +46,7 @@
       extensions = ["StandaloneKindSignatures"];
     };
     hpack.packages = import ./ops/hpack.nix { inherit config lib; };
+    hackage.versionFile = "ops/version.nix";
     ghcid = {
       shellConfig = { inherit vm; };
       testConfig = conf: { inherit env; vm.enable = lib.mkForce (conf.type == "integration"); };

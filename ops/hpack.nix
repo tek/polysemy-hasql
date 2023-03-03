@@ -26,12 +26,12 @@ let
   };
 
   meta = {
-    version = "0.1.0.0";
+    version = import ./version.nix;
     license = "BSD-2-Clause-Patent";
     license-file = "LICENSE";
     author = "Torsten Schmits";
     maintainer = "hackage@tryp.io";
-    copyright = "2022 Torsten Schmits";
+    copyright = "2023 Torsten Schmits";
     category = "Database";
     build-type = "Simple";
   };
@@ -47,7 +47,7 @@ let
 
   dependencies = [
     { name = "base"; version = ">= 4.12 && < 5"; mixin = "hiding (Prelude)"; }
-    { name = "prelate"; version = ">= 0.5"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
+    { name = "prelate"; version = "^>= 0.5.1"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
   ];
 
   project = name: doc: merge (meta // { library = paths name; } // options) {

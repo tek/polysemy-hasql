@@ -5,13 +5,13 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           polysemy-hasql
-version:        0.1.0.0
+version:        0.0.1.0
 synopsis:       Polysemy effects for databases
 description:    See https://hackage.haskell.org/package/polysemy-hasql/docs/Polysemy-Hasql.html
 category:       Database
 author:         Torsten Schmits
 maintainer:     hackage@tryp.io
-copyright:      2022 Torsten Schmits
+copyright:      2023 Torsten Schmits
 license:        BSD-2-Clause-Patent
 license-file:   LICENSE
 build-type:     Simple
@@ -128,7 +128,7 @@ library
     , polysemy-plugin
     , polysemy-time
     , postgresql-libpq
-    , prelate >=0.5
+    , prelate >=0.5.1 && <0.6
     , sqel
     , stm-chans
     , torsor
@@ -240,7 +240,7 @@ test-suite polysemy-hasql-integration
     , polysemy-plugin
     , polysemy-test
     , polysemy-time
-    , prelate >=0.5
+    , prelate >=0.5.1 && <0.6
     , sqel
     , tasty
     , uuid
