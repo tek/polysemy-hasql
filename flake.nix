@@ -31,7 +31,7 @@
     };
 
   in hix.lib.pro ({ config, lib, ... }: {
-    main = "polysemy-hasql";
+    main = "polysemy-hasql-test";
     depsFull = [sqel prelate];
     packages = {
       polysemy-db = ./packages/db;
