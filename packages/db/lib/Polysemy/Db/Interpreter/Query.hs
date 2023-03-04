@@ -70,6 +70,16 @@ interpretQueryStoreConc match initial =
   interpretStoreConc (PureStore (Map.fromList (initial <&> \ a@(Uid i _) -> (i, a)))) .
   interpretQueryAtomicState match
 
+interpretQueryStore ::
+  QueryCheckResult f =>
+  Member (Store i a !! DbError) r =>
+  (q -> Uid i a -> Maybe d) ->
+  InterpreterFor (Query q (f d) !! DbError) r
+interpretQueryStore match =
+  interpretResumable \case
+    Query q ->
+      stopEither =<< (queryCheckResult . mapMaybe (match q) <$> restop Store.fetchAll)
+
 interpretQueryStoreAny ::
   ∀ q d i e r .
   Member (Store i d !! e) r =>
