@@ -3814,11 +3814,11 @@
         "hls": "hls_6"
       },
       "locked": {
-        "lastModified": 1678024200,
-        "narHash": "sha256-vFE7mQ4SrS9LwF5GsiTinb9sFc/pyLQEc3RCgLeQfMo=",
+        "lastModified": 1678032426,
+        "narHash": "sha256-yvW240yYsvi3UY+o3jzTVsMmU/LhnL29V5NQMfCKPLA=",
         "ref": "refs/heads/main",
-        "rev": "025bf7b2223901fc1af615558e078f44abe86950",
-        "revCount": 8,
+        "rev": "288d94af12c061ebdd1700fd2688a5d3259782a5",
+        "revCount": 11,
         "type": "git",
         "url": "https://git.tryp.io/tek/sqel"
       },

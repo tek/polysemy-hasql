@@ -33,7 +33,9 @@ handleDbTable raiser (TableSchema table@PgTable {name = PgTypeName name} _ _) mi
     restop (Database.withInit initDb (Database.statement q stmt))
   where
     initDb :: InitDb (Sem (Database : Stop DbError : Database !! DbError : r))
-    initDb = InitDb (ClientTag name) True \ _ -> raise2Under (raiser (unMigrateSem (runMigrations table migrations)))
+    initDb =
+      InitDb (ClientTag name) True \ _ ->
+        void (raise2Under (raiser (unMigrateSem (runMigrations table migrations))))
 
 interpretTable ::
   ∀ d r .
