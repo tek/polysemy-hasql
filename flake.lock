@@ -1406,11 +1406,11 @@
         "thax": "thax"
       },
       "locked": {
-        "lastModified": 1677874512,
-        "narHash": "sha256-TGDhbdJn0+eDYK5YGdPlhJxMbN9Ks69kbRmGJJmRjsk=",
+        "lastModified": 1677960834,
+        "narHash": "sha256-Znl3KD1OTk0UzmmaEEQnd0GPlJk13LJ6RTZqzwJ24pc=",
         "ref": "refs/heads/main",
-        "rev": "f5aef809c6d6edbaf4045b049d249498672ce850",
-        "revCount": 263,
+        "rev": "d4e4e74588855dc2ca3471c9a31c8024db998cba",
+        "revCount": 264,
         "type": "git",
         "url": "https://git.tryp.io/tek/hix"
       },
@@ -3814,11 +3814,11 @@
         "hls": "hls_6"
       },
       "locked": {
-        "lastModified": 1677942020,
-        "narHash": "sha256-HQdNjNdAU8RTDASUJCiykNFcug3m1r03TBoklge38n8=",
+        "lastModified": 1678024200,
+        "narHash": "sha256-vFE7mQ4SrS9LwF5GsiTinb9sFc/pyLQEc3RCgLeQfMo=",
         "ref": "refs/heads/main",
-        "rev": "980e4ef5c970bd4f1d5727c3a8d316aafc8f4d33",
-        "revCount": 7,
+        "rev": "025bf7b2223901fc1af615558e078f44abe86950",
+        "revCount": 8,
         "type": "git",
         "url": "https://git.tryp.io/tek/sqel"
       },
@@ -3829,11 +3829,11 @@
     },
     "thax": {
       "locked": {
-        "lastModified": 1650770034,
-        "narHash": "sha256-OI4dxtNKgXogHBwYnNAfDABhHEcmWiBkkboZ+cCfyzk=",
+        "lastModified": 1677960812,
+        "narHash": "sha256-FYkZZVTMBo0dtqPr73tadUz+69jgQBo2S4qKOxTGWZ4=",
         "owner": "tek",
         "repo": "thax",
-        "rev": "dc0025eebaba4ad97fcf48b68c14c8901d90daa5",
+        "rev": "4b4f68d0232e1f707d97bbcaab0d5534b97ba94f",
         "type": "github"
       },
       "original": {

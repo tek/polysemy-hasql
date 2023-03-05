@@ -9,9 +9,13 @@
       {
         "name": "id",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -20,9 +24,13 @@
       {
         "name": "old",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "text",
           "tag": "ColumnPrim",
           "unique": false
@@ -42,9 +50,13 @@
       {
         "name": "id",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -53,9 +65,13 @@
       {
         "name": "size",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -67,13 +83,25 @@
           "tag": "ColumnComp",
           "pgType": "sqel_type__pord",
           "unique": false,
-          "constraints": ["not null"]
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          }
         }
       },
       {
         "name": "number",
         "pgType": {
-          "constraints": ["not null"],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -86,9 +114,13 @@
           {
             "name": "p1",
             "pgType": {
-              "constraints": [
-                "not null"
-              ],
+              "constraints": {
+                "fragments": [
+                  "not null"
+                ],
+                "nullable": false,
+                "unique": false
+              },
               "name": "bigint",
               "tag": "ColumnPrim",
               "unique": false
@@ -110,9 +142,13 @@
       {
         "name": "id",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -121,9 +157,13 @@
       {
         "name": "number",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -135,7 +175,13 @@
           "tag": "ColumnComp",
           "pgType": "sqel_type__pord",
           "unique": false,
-          "constraints": ["not null"]
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          }
         }
       }
     ],
@@ -145,9 +191,13 @@
           {
             "name": "p1",
             "pgType": {
-              "constraints": [
-                "not null"
-              ],
+              "constraints": {
+                "fragments": [
+                  "not null"
+                ],
+                "nullable": false,
+                "unique": false
+              },
               "name": "text",
               "tag": "ColumnPrim",
               "unique": false
@@ -156,7 +206,11 @@
           {
             "name": "p2",
             "pgType": {
-              "constraints": [],
+              "constraints": {
+                "fragments": [ ],
+                "nullable": true,
+                "unique": false
+              },
               "name": "text",
               "tag": "ColumnPrim",
               "unique": false
@@ -170,9 +224,13 @@
           {
             "name": "p1",
             "pgType": {
-              "constraints": [
-                "not null"
-              ],
+              "constraints": {
+                "fragments": [
+                  "not null"
+                ],
+                "nullable": false,
+                "unique": false
+              },
               "name": "bigint",
               "tag": "ColumnPrim",
               "unique": false
@@ -181,9 +239,13 @@
           {
             "name": "p2",
             "pgType": {
-              "constraints": [
-                "not null"
-              ],
+              "constraints": {
+                "fragments": [
+                  "not null"
+                ],
+                "nullable": false,
+                "unique": false
+              },
               "name": "bigint",
               "tag": "ColumnPrim",
               "unique": false
@@ -205,9 +267,13 @@
       {
         "name": "id",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -216,9 +282,13 @@
       {
         "name": "name",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "text",
           "tag": "ColumnPrim",
           "unique": false
@@ -227,9 +297,13 @@
       {
         "name": "num",
         "pgType": {
-          "constraints": [
-            "not null"
-          ],
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          },
           "name": "bigint",
           "tag": "ColumnPrim",
           "unique": false
@@ -241,7 +315,13 @@
           "tag": "ColumnComp",
           "pgType": "sqel_type__pord",
           "unique": false,
-          "constraints": ["not null"]
+          "constraints": {
+            "fragments": [
+              "not null"
+            ],
+            "nullable": false,
+            "unique": false
+          }
         }
       }
     ],
@@ -251,9 +331,13 @@
           {
             "name": "p1",
             "pgType": {
-              "constraints": [
-                "not null"
-              ],
+              "constraints": {
+                "fragments": [
+                  "not null"
+                ],
+                "nullable": false,
+                "unique": false
+              },
               "name": "bigint",
               "tag": "ColumnPrim",
               "unique": false
@@ -262,7 +346,11 @@
           {
             "name": "p2",
             "pgType": {
-              "constraints": [],
+              "constraints": {
+                "fragments": [ ],
+                "nullable": true,
+                "unique": false
+              },
               "name": "text",
               "tag": "ColumnPrim",
               "unique": false
