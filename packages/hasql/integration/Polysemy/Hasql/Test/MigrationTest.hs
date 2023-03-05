@@ -10,16 +10,27 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
 import Prelude hiding (sum)
-import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
-import Sqel.Data.Migration (AutoMigrations, migrate)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
-import Sqel.Migration.Table (migrateAuto)
-import Sqel.PgType (tableSchema)
-import Sqel.Prim (array, migrateDef, migrateDelete, migrateRename, migrateRenameType, prim, primAs, primNullable)
-import Sqel.Product (Product (prod))
-import Sqel.Query (checkQuery)
-import Sqel.Uid (uidAs)
+import Sqel (
+  Dd,
+  TableSchema,
+  Uid (Uid),
+  array,
+  checkQuery,
+  migrate,
+  migrateAuto,
+  migrateDef,
+  migrateDelete,
+  migrateRename,
+  migrateRenameType,
+  prim,
+  primAs,
+  primNullable,
+  prod,
+  tableSchema,
+  uidAs,
+  type (:>) ((:>)),
+  )
+import Sqel.Ext (AutoMigrations, DdK (DdK))
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTables)

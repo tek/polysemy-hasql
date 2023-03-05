@@ -6,15 +6,23 @@ import Path (reldir)
 import qualified Polysemy.Test as Test
 import Polysemy.Test (UnitTest, assertJust, runTestAuto)
 import Prelude hiding (sum)
-import Sqel.Data.Dd (Dd, DdK (DdK), type (:>) ((:>)))
-import Sqel.Data.Migration (AutoMigrations, migrate)
-import Sqel.Data.Uid (Uid)
+import Sqel (
+  Dd,
+  Uid,
+  migrate,
+  migrateAuto,
+  migrateDef,
+  migrateDelete,
+  migrateRename,
+  prim,
+  primNullable,
+  prod,
+  typeAs,
+  uidAs,
+  type (:>) ((:>)),
+  )
+import Sqel.Ext (AutoMigrations, DdK (DdK))
 import Sqel.Migration.Consistency (migrationConsistency)
-import Sqel.Migration.Table (migrateAuto)
-import Sqel.Names (typeAs)
-import Sqel.Prim (migrateDef, migrateDelete, migrateRename, prim, primNullable)
-import Sqel.Product (prod)
-import Sqel.Uid (uidAs)
 
 import Polysemy.Hasql.Test.Migration (testMigration)
 
