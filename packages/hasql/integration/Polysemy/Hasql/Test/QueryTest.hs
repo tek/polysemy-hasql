@@ -119,6 +119,8 @@ test_query =
         inserts
         r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name" Nothing)
         [3, 4] === r
+        r2 <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par Nothing Nothing) "name" Nothing)
+        10 === length r2
 
 test_queryId :: UnitTest
 test_queryId =
