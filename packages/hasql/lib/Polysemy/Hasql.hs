@@ -18,6 +18,7 @@ module Polysemy.Hasql (
   Database,
   Databases,
   DbTable,
+  statement,
   StoreTable,
   Transaction,
   Transactions,
@@ -51,7 +52,7 @@ module Polysemy.Hasql (
 
 import Polysemy.Hasql.Effect.Database (Database, Databases)
 import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
-import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
+import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable, statement)
 import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions, abort)
 import Polysemy.Hasql.Interpreter.AtomicState (interpretAtomicStateDb, interpretAtomicStatesDb)
 import Polysemy.Hasql.Interpreter.Database (interpretDatabase, interpretDatabases, interpretHasql)
