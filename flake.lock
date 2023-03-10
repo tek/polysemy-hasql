@@ -3570,11 +3570,11 @@
         "incipit": "incipit"
       },
       "locked": {
-        "lastModified": 1677709117,
-        "narHash": "sha256-s0SepwTlrZbEu9ZX5W11MOXkdxkiTDWi4tHMuivnFgk=",
+        "lastModified": 1678476473,
+        "narHash": "sha256-euii7x+r/8AHBesngrvHdsI4vpLF1xPMz6hio+dupsY=",
         "ref": "refs/heads/main",
-        "rev": "194c5a1a6c70c1ee298d38d5afb7467e762b6f75",
-        "revCount": 29,
+        "rev": "db8015e78ba3baecbd790b1cc86fd912616f4caf",
+        "revCount": 30,
         "type": "git",
         "url": "https://git.tryp.io/tek/prelate"
       },
