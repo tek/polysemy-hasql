@@ -5,16 +5,21 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
 import Prelude hiding (sum)
-import Sqel (pgDefault)
-import Sqel.Data.Dd (Dd, (:>) ((:>)))
-import Sqel (QuerySchema)
-import Sqel (TableSchema)
-import Sqel (Uid (Uid))
+import Sqel (
+  QuerySchema,
+  Sqel,
+  TableSchema,
+  Uid (Uid),
+  checkQuery,
+  pgDefault,
+  prim,
+  primAs,
+  primNullable,
+  prod,
+  (:>) ((:>)),
+  )
 import Sqel.PgType (tableSchema)
-import Sqel (prim, primAs, primNullable)
-import Sqel (prod)
-import Sqel (checkQuery)
-import Sqel.Uid (uid)
+import Sqel (uid)
 
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
@@ -28,7 +33,7 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-dd :: Dd _
+dd :: Sqel (Uid Int Dat) _
 dd = uid prim (prod (prim :> prim :> pgDefault "13" primNullable))
 
 ts :: TableSchema (Uid Int Dat)

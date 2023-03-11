@@ -32,9 +32,8 @@ import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
 import Prelude hiding (Queue, listen)
-import Sqel.Data.Sql (sql)
+import Sqel (Uuid, sql)
 import qualified Sqel.Data.Uid as Uid
-import Sqel (Uuid)
 import Sqel.SOP.Constraint (symbolText)
 import qualified Time as Time
 import Torsor (Torsor)

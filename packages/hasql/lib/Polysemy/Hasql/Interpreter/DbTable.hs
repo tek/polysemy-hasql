@@ -1,13 +1,13 @@
 module Polysemy.Hasql.Interpreter.DbTable where
 
 import Polysemy.Db.Data.DbError (DbError)
-import Sqel.Data.Dd (Dd, DdType)
 import Sqel.Data.Migration (noMigrations)
 import qualified Sqel.Data.PgType as PgType
 import Sqel.Data.PgType (PgTable (PgTable))
 import Sqel.Data.PgTypeName (pattern PgTypeName)
 import Sqel.Data.ProjectionWitness (ProjectionWitness)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
+import Sqel.Ext (Dd, DdType)
 import Sqel.Migration.Run (runMigrations)
 import Sqel.PgType (CheckedProjection, projectionWitness)
 

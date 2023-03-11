@@ -11,7 +11,7 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
-import Sqel.Data.Dd (Sqel, type (:>) ((:>)))
+import Sqel (Sqel, type (:>) ((:>)))
 import Sqel (QuerySchema)
 import Sqel (TableSchema)
 import Sqel (Uid (Uid))
@@ -22,7 +22,7 @@ import Sqel (prod)
 import Sqel (checkQuery)
 import Sqel.Statement (selectWhere)
 import Sqel.Sum (con, conAs, sum)
-import Sqel.Uid (uid)
+import Sqel (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)

@@ -15,7 +15,7 @@ import qualified Sqel as Sqel
 import Sqel (prim, primAs)
 import Sqel (prod)
 import Sqel (checkQuery)
-import Sqel.Uid (uid)
+import Sqel (uid)
 
 import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)

@@ -7,17 +7,24 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (UuidStore)
 import Polysemy.Test (UnitTest)
 import Polysemy.Test.Hedgehog (assertJust)
-import Sqel (nullable)
-import Sqel.Data.Dd ((:>) ((:>)))
-import Sqel (QuerySchema)
-import Sqel (TableSchema)
+import Sqel (
+  QuerySchema,
+  TableSchema,
+  Uid (Uid),
+  Uuid,
+  array,
+  checkQuery,
+  enum,
+  nullable,
+  prim,
+  primAs,
+  prod,
+  readShow,
+  tableSchema,
+  uid,
+  (:>) ((:>)),
+  )
 import qualified Sqel.Data.Uid as Uid
-import Sqel (Uid (Uid), Uuid)
-import Sqel.PgType (tableSchema)
-import Sqel (array, enum, prim, primAs, readShow)
-import Sqel (prod)
-import Sqel (checkQuery)
-import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)

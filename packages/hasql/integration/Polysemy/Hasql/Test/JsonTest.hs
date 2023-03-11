@@ -9,15 +9,10 @@ import Hasql.Encoders (int8, param)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Test (UnitTest, assertJust, assertRight, evalMaybe)
-import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
-import Sqel (TableSchema)
-import Sqel (Uid (Uid))
-import Sqel.PgType (tableSchema)
 import qualified Sqel as Sqel
-import Sqel (prim, primAs)
-import Sqel (prod)
-import Sqel (checkQuery)
-import Sqel.Uid (uid)
+import Sqel (Dd, TableSchema, Uid (Uid), checkQuery, prim, primAs, prod, uid, type (:>) ((:>)))
+import Sqel.Ext (DdK (DdK))
+import Sqel.PgType (tableSchema)
 
 import qualified Polysemy.Hasql.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)

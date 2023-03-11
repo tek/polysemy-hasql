@@ -9,17 +9,26 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
-import Sqel.Data.Dd (Dd, DdK (DdK), Sqel, type (:>) ((:>)))
-import Sqel.Data.Projection (Projection)
-import Sqel (QuerySchema)
-import Sqel (TableSchema)
-import Sqel (Uid (Uid))
+import Sqel (
+  Dd,
+  Projection,
+  QuerySchema,
+  Sqel,
+  TableSchema,
+  Uid (Uid),
+  checkQuery,
+  con1,
+  con1As,
+  prim,
+  primAs,
+  prims,
+  prod,
+  sum,
+  uid,
+  type (:>) ((:>)),
+  )
+import Sqel.Ext (DdK (DdK))
 import Sqel.PgType (projection, tableSchema)
-import Sqel (prim, primAs, prims)
-import Sqel (prod)
-import Sqel (checkQuery)
-import Sqel.Sum (con1, con1As, sum)
-import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable, interpretTableViewDd)
 import Polysemy.Hasql.Interpreter.Query (interpretQuery)

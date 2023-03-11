@@ -3,11 +3,10 @@ module Polysemy.Hasql.Interpreter.Query where
 import Hasql.Statement (Statement)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Effect.Query (Query (Query), query)
-import Sqel.Data.Dd (Dd, DdType)
+import Sqel (CheckQuery, Dd, QuerySchema, checkQuery)
 import Sqel.Data.Projection (Projection)
-import Sqel (QuerySchema)
+import Sqel.Ext (DdType)
 import Sqel.PgType (CheckedProjection, MkTableSchema, projection)
-import Sqel (CheckQuery, checkQuery)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (selectWhere)
 

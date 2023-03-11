@@ -10,6 +10,7 @@ import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Sqel (
   QuerySchema,
+  Sqel,
   TableSchema,
   Uid (Uid),
   checkQuery,
@@ -22,12 +23,12 @@ import Sqel (
   primNewtype,
   prod,
   prodAs,
+  type (:>) ((:>)),
   )
-import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
 import Sqel.PgType (fullProjection, tableSchema)
 import qualified Sqel.Query.Combinators as Q
 import Sqel.Statement (selectWhere)
-import Sqel.Uid (uid)
+import Sqel (uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
@@ -77,7 +78,7 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-ddUidDat :: Dd ('DdK _ _ (Uid Int64 Dat) _)
+ddUidDat :: Sqel (Uid Int64 Dat) _
 ddUidDat =
   uid prim (prod (
     prim :>
