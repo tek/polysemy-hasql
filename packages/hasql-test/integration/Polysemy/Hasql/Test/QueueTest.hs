@@ -2,8 +2,7 @@ module Polysemy.Hasql.Test.QueueTest where
 
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
-import Polysemy.Test (UnitTest, assertJust)
-import Polysemy.Test.Data.Hedgehog (Hedgehog)
+import Polysemy.Test (Hedgehog, UnitTest, assertJust)
 import Sqel (Uuid)
 import Sqel.Data.Uid (intUuid)
 import qualified Time as Time

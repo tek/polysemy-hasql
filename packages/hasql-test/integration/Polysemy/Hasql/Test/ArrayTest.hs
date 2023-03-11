@@ -5,8 +5,7 @@ import Data.Vector (Vector)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (UuidStore)
-import Polysemy.Test (UnitTest)
-import Polysemy.Test.Hedgehog (assertJust)
+import Polysemy.Test (UnitTest, assertJust)
 import Sqel (
   QuerySchema,
   TableSchema,

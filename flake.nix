@@ -12,15 +12,15 @@
   let
 
     vm = {
-      name = "polysemy-db";
+      name = "polysemy_db";
       port = 10000;
       postgres = {
         enable = true;
-        name = "polysemy-db";
+        name = "polysemy_db";
         log = true;
         creds = {
-          user = "polysemy-db";
-          password = "polysemy-db";
+          user = "polysemy_db";
+          password = "polysemy_db";
         };
       };
     };

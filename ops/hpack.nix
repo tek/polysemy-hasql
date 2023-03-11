@@ -49,9 +49,11 @@ let
   dependencies = [
     { name = "base"; version = ">= 4.12 && < 5"; mixin = "hiding (Prelude)"; }
     { name = "prelate"; version = "^>= 0.5.1"; mixin = ["(Prelate as Prelude)" "hiding (Prelate)"]; }
+    "polysemy"
+    "polysemy-plugin"
   ];
 
-  project = name: doc: merge (meta // { library = paths name; } // options) {
+  package = name: doc: merge (meta // { library = paths name; } // options) {
     inherit name;
     description = "See https://hackage.haskell.org/package/${name}/docs/${doc}.html";
     library = {
@@ -59,10 +61,6 @@ let
       inherit dependencies;
     };
     default-extensions = config.ghci.extensions;
-  };
-
-  polysemy = name: doc: merge (project name doc) {
-    library.dependencies = ["polysemy" "polysemy-plugin"];
     ghc-options = ["-fplugin=Polysemy.Plugin"];
   };
 
@@ -77,17 +75,13 @@ let
     ];
   });
 
-  polysemyExe = pkg: dir: merge (exe pkg dir {
-    dependencies = ["polysemy" "polysemy-plugin"];
-  });
-
   dep = n: "${n} ^>= ${import ./version.nix}";
   dep_db = dep "polysemy-db";
   dep_hasql = dep "polysemy-hasql";
 
 in {
 
-  polysemy-db = merge (polysemy "polysemy-db" "Polysemy-Db") {
+  polysemy-db = merge (package "polysemy-db" "Polysemy-Db") {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
       "exon ^>= 1.4"
@@ -97,7 +91,7 @@ in {
     ];
   };
 
-  polysemy-hasql = merge (polysemy "polysemy-hasql" "Polysemy-Hasql") {
+  polysemy-hasql = merge (package "polysemy-hasql" "Polysemy-Hasql") {
     synopsis = "Polysemy effects for databases";
     library.dependencies = [
       "async ^>= 2.2"
@@ -105,50 +99,32 @@ in {
       "exon ^>= 1.4"
       "generics-sop ^>= 0.5"
       "hasql ^>= 1.6"
-      dep_db
       "postgresql-libpq ^>= 0.9"
       "sqel ^>= 0.0.1"
       "stm-chans ^>= 3.0"
       "torsor ^>= 0.1"
       "transformers"
       "uuid ^>= 1.3"
+      dep_db
     ];
-
-    tests.polysemy-hasql-integration = polysemyExe "polysemy-hasql" "integration" {
-      dependencies = [
-        "aeson ^>= 2.0"
-        "exon ^>= 1.4"
-        "generics-sop ^>= 0.5"
-        "hasql ^>= 1.6"
-        "hedgehog ^>= 1.1"
-        "polysemy-test ^>= 0.7"
-        "tasty ^>= 1.4"
-        "uuid ^>= 1.3"
-        "vector ^>= 0.12"
-        "zeugma ^>= 0.7"
-        dep_db
-        dep_hasql
-        "sqel ^>= 0.0.1"
-      ];
-    };
 
   };
 
-  polysemy-hasql-test = merge (polysemy "polysemy-hasql-test" "Polysemy-Hasql-Test") {
+  polysemy-hasql-test = merge (package "polysemy-hasql-test" "Polysemy-Hasql-Test") {
     synopsis = "Test utilities for polysemy-hasql";
 
     library.dependencies = [
       "hasql ^>= 1.6"
       "hedgehog ^>= 1.1"
       "path ^>= 0.9"
+      "sqel ^>= 0.0.1"
       "uuid ^>= 1.3"
+      "zeugma ^>= 0.7"
       dep_db
       dep_hasql
-      "sqel ^>= 0.0.1"
-      "zeugma ^>= 0.7"
     ];
 
-    tests.polysemy-hasql-test-unit = polysemyExe "polysemy-hasql-test" "test" {
+    tests.polysemy-hasql-test-unit = exe "polysemy-hasql-test" "test" {
       dependencies = [
         "path ^>= 0.9"
         "polysemy-test ^>= 0.7"
@@ -156,6 +132,23 @@ in {
         "sqel ^>= 0.0.1"
       ];
 
+    };
+
+    tests.polysemy-hasql-test-integration = exe "polysemy-hasql-test" "integration" {
+      dependencies = [
+        "aeson ^>= 2.0"
+        "exon ^>= 1.4"
+        "generics-sop ^>= 0.5"
+        "hasql ^>= 1.6"
+        "hedgehog ^>= 1.1"
+        "sqel ^>= 0.0.1"
+        "tasty ^>= 1.4"
+        "uuid ^>= 1.3"
+        "vector ^>= 0.12"
+        "zeugma ^>= 0.7"
+        dep_db
+        dep_hasql
+      ];
     };
 
   };
