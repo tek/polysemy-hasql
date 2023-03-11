@@ -2,7 +2,7 @@ module Polysemy.Db.Effect.Store where
 
 import Data.UUID (UUID)
 import qualified Sqel.Data.Uid as Uid
-import Sqel.Data.Uid (Uid)
+import Sqel (Uid)
 
 data QStore f q d :: Effect where
   Insert :: d -> QStore f i d m ()

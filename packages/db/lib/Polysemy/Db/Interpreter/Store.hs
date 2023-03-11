@@ -3,7 +3,7 @@ module Polysemy.Db.Interpreter.Store where
 import Conc (interpretAtomic)
 import qualified Data.Map.Strict as Map
 import Exon (exon)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (Uid (Uid))
 
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)

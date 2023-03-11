@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.DefaultTest where
 
 import Polysemy.Db.Data.DbError (DbError)
@@ -7,15 +5,15 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
 import Prelude hiding (sum)
-import Sqel.Column (pgDefault)
+import Sqel (pgDefault)
 import Sqel.Data.Dd (Dd, (:>) ((:>)))
-import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (QuerySchema)
+import Sqel (TableSchema)
+import Sqel (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs, primNullable)
-import Sqel.Product (prod)
-import Sqel.Query (checkQuery)
+import Sqel (prim, primAs, primNullable)
+import Sqel (prod)
+import Sqel (checkQuery)
 import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)

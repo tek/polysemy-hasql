@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.JsonTest where
 
 import qualified Data.Aeson as Aeson
@@ -12,13 +10,13 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Test (UnitTest, assertJust, assertRight, evalMaybe)
 import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (TableSchema)
+import Sqel (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import qualified Sqel.Prim as Sqel
-import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod)
-import Sqel.Query (checkQuery)
+import qualified Sqel as Sqel
+import Sqel (prim, primAs)
+import Sqel (prod)
+import Sqel (checkQuery)
 import Sqel.Uid (uid)
 
 import qualified Polysemy.Hasql.Database as Database

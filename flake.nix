@@ -40,7 +40,7 @@
     };
     devGhc.compiler = "ghc925";
     ghci = {
-      args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
+      args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances" "-Wno-partial-type-signatures"];
       preludePackage = "prelate";
       preludeModule = "Prelate";
       extensions = ["StandaloneKindSignatures" "OverloadedRecordDot" "NoFieldSelectors"];

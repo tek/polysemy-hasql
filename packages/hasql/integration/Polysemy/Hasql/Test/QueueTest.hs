@@ -4,9 +4,10 @@ import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (UnitTest, assertJust)
 import Polysemy.Test.Data.Hedgehog (Hedgehog)
+import Sqel (Uuid)
+import Sqel.Data.Uid (intUuid)
 import qualified Time as Time
 import Time (MilliSeconds (MilliSeconds), Seconds (Seconds))
-import Sqel.Data.Uid (Uuid, intUuid)
 
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)
 import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool

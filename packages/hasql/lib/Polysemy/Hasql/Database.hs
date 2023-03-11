@@ -2,18 +2,19 @@ module Polysemy.Hasql.Database where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Time (Seconds (Seconds))
+import Sqel (checkQuery)
 import Sqel.Data.Codec (Encoder, FullCodec)
 import Sqel.Data.Dd (Dd, DdType)
 import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
 import Sqel.Data.Sql (Sql)
 import Sqel.Data.TableSchema (TableSchema (TableSchema))
 import Sqel.PgType (tableSchema)
-import Sqel.Query (CheckedQuery, checkQuery)
+import Sqel.Query (CheckedQuery)
 import Sqel.ReifyCodec (ReifyCodec)
 import Sqel.ReifyDd (ReifyDd)
 import Sqel.ResultShape (ResultShape)
 import Sqel.Statement (plain, prepared, unprepared)
+import Time (Seconds (Seconds))
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database (..))

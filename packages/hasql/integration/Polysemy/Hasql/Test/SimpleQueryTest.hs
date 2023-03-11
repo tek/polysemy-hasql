@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.SimpleQueryTest where
 
 import Lens.Micro.Extras (view)
@@ -11,13 +9,13 @@ import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, (:>) ((:>)))
-import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (QuerySchema)
+import Sqel (TableSchema)
+import Sqel (Uid (Uid))
 import Sqel.PgType (tableSchema, toFullProjection)
-import Sqel.Prim (prim, primAs, prims)
-import Sqel.Product (prod)
-import Sqel.Query (checkQuery)
+import Sqel (prim, primAs, prims)
+import Sqel (prod)
+import Sqel (checkQuery)
 import Sqel.Statement (selectWhere)
 import Sqel.Uid (uid)
 

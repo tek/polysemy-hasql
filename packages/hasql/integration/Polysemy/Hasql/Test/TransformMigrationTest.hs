@@ -1,22 +1,20 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.TransformMigrationTest where
 
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
-import Sqel.Column (pk)
+import Sqel (pk)
 import Sqel.Data.Dd (Sqel, (:>) ((:>)))
 import Sqel.Data.Migration (Mig (Mig), Migrations, migrate)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (TableSchema)
+import Sqel (Uid (Uid))
 import Sqel.Migration.Transform (MigrateTransform, migrateTransform)
-import Sqel.Names (typeAs)
+import Sqel (typeAs)
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (enum, prim, primAs, prims)
-import Sqel.Product (prod)
-import Sqel.Query (checkQuery)
+import Sqel (enum, prim, primAs, prims)
+import Sqel (prod)
+import Sqel (checkQuery)
 import Sqel.Uid (uid)
 import Zeugma (resumeTest)
 

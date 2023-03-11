@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.MigrationTest where
 
 import Lens.Micro.Extras (view)

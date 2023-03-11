@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.QueryTest where
 
 import Hasql.Statement (Statement)
@@ -10,17 +8,23 @@ import Polysemy.Db.Effect.Query (Query (Query))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
-import Prelude hiding (sum)
-import Sqel.Column (nullable)
+import Sqel (
+  QuerySchema,
+  TableSchema,
+  Uid (Uid),
+  checkQuery,
+  ignore,
+  named,
+  nullable,
+  orNull,
+  prim,
+  primAs,
+  primNewtype,
+  prod,
+  prodAs,
+  )
 import Sqel.Data.Dd (Dd, DdK (DdK), (:>) ((:>)))
-import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
-import Sqel.Names (named)
 import Sqel.PgType (fullProjection, tableSchema)
-import Sqel.Prim (ignore, prim, primAs, primNewtype)
-import Sqel.Product (prod, prodAs)
-import Sqel.Query (checkQuery)
 import qualified Sqel.Query.Combinators as Q
 import Sqel.Statement (selectWhere)
 import Sqel.Uid (uid)
@@ -99,7 +103,7 @@ interpretQuery =
     qd =
       prod (
         prodAs @"po" prim :>
-        prod (nullable Q.limit :> nullable Q.offset) :>
+        prod (orNull Q.limit :> orNull Q.offset) :>
         named @"name" primNewtype :>
         ignore
       )

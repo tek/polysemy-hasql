@@ -1,8 +1,8 @@
 module Polysemy.Hasql.Interpreter.Reader where
 
 import Polysemy.Db.Interpreter.Reader (interpretReaderStore)
-import Sqel.Data.QuerySchema (emptyQuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
+import Sqel (emptyQuerySchema)
+import Sqel (TableSchema)
 
 import Polysemy.Hasql.Effect.DbTable (DbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretQStoreDb)

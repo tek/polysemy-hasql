@@ -1,5 +1,3 @@
-{-# options_ghc -Wno-partial-type-signatures #-}
-
 module Polysemy.Hasql.Test.TransactionTest where
 
 import Exon (exon)
@@ -11,13 +9,13 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (Hedgehog, UnitTest, assertEq, assertLeft)
 import Sqel.Data.Dd (Dd, DdK (DdK))
-import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (QuerySchema)
+import Sqel (TableSchema)
+import Sqel (Uid (Uid))
 import Sqel.PgType (tableSchema)
-import Sqel.Prim (prim, primAs)
-import Sqel.Product (prod)
-import Sqel.Query (checkQuery)
+import Sqel (prim, primAs)
+import Sqel (prod)
+import Sqel (checkQuery)
 import Sqel.Uid (uid)
 
 import Polysemy.Hasql.Effect.Transaction (Transactions, abort)

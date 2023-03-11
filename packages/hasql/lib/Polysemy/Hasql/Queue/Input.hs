@@ -34,7 +34,7 @@ import Polysemy.Input (Input (Input))
 import Prelude hiding (Queue, listen)
 import Sqel.Data.Sql (sql)
 import qualified Sqel.Data.Uid as Uid
-import Sqel.Data.Uid (Uuid)
+import Sqel (Uuid)
 import Sqel.SOP.Constraint (symbolText)
 import qualified Time as Time
 import Torsor (Torsor)

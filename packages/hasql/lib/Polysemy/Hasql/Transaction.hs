@@ -2,7 +2,7 @@ module Polysemy.Hasql.Transaction where
 
 import Hasql.Connection (Connection)
 import Polysemy.Db.Effect.Store (QStore, Store)
-import Sqel.Data.Uid (Uid)
+import Sqel (Uid)
 
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (ConnectionSource)

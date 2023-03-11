@@ -12,7 +12,7 @@ import qualified Time as Time
 import Time (Seconds (Seconds))
 import Prelude hiding (Queue, group)
 import Sqel.Data.Sql (Sql (Sql))
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (Uid (Uid))
 import Sqel.SOP.Constraint (symbolText)
 
 import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError

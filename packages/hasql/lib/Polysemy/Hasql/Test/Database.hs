@@ -14,7 +14,7 @@ import Polysemy.Db.Effect.Random (Random, random)
 import Polysemy.Db.Interpreter.Random (interpretRandom)
 import Time (GhcTime)
 import Sqel.Data.PgTypeName (pattern PgTypeName, pgTableName)
-import Sqel.Data.TableSchema (TableSchema)
+import Sqel (TableSchema)
 
 import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
 import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool

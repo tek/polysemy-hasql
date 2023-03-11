@@ -1,4 +1,4 @@
-{-# options_ghc -Wno-partial-type-signatures -fconstraint-solver-iterations=10 #-}
+{-# options_ghc -fconstraint-solver-iterations=10 #-}
 
 module Polysemy.Hasql.Test.SumQueryTest where
 
@@ -11,13 +11,13 @@ import Polysemy.Test (UnitTest, (===))
 import Prelude hiding (sum)
 import Sqel.Data.Dd (Dd, DdK (DdK), Sqel, type (:>) ((:>)))
 import Sqel.Data.Projection (Projection)
-import Sqel.Data.QuerySchema (QuerySchema)
-import Sqel.Data.TableSchema (TableSchema)
-import Sqel.Data.Uid (Uid (Uid))
+import Sqel (QuerySchema)
+import Sqel (TableSchema)
+import Sqel (Uid (Uid))
 import Sqel.PgType (projection, tableSchema)
-import Sqel.Prim (prim, primAs, prims)
-import Sqel.Product (prod)
-import Sqel.Query (checkQuery)
+import Sqel (prim, primAs, prims)
+import Sqel (prod)
+import Sqel (checkQuery)
 import Sqel.Sum (con1, con1As, sum)
 import Sqel.Uid (uid)
 
