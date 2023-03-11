@@ -1,5 +1,6 @@
 module Polysemy.Hasql.Test.Run where
 
+import Conc (interpretAtomic, timeout_)
 import Data.UUID (UUID)
 import Exon (exon)
 import Hasql.Session (QueryError)
@@ -13,9 +14,13 @@ import Polysemy.Db.Data.InitDbError (InitDbError)
 import Polysemy.Db.Effect.Random (Random)
 import Polysemy.Test (UnitTest)
 import System.Environment (lookupEnv)
-import Time (GhcTime, interpretTimeGhc)
+import qualified Time as Time
+import Time (GhcTime, MilliSeconds (MilliSeconds), Seconds (Seconds), interpretTimeGhc)
 import Zeugma (TestError (TestError), TestStack, runTest, runTestLevel, stopTest)
 
+import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool
+import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
+import Polysemy.Hasql.Interpreter.DbConnectionPool (interpretDbConnectionPool)
 import Polysemy.Hasql.Test.Database (TestConnectionEffects, withTestConnection)
 
 data EnvDb =
@@ -25,7 +30,8 @@ data EnvDb =
     dbUser :: DbUser,
     dbPassword :: DbPassword,
     fatal :: Bool,
-    notify :: Bool
+    notify :: Bool,
+    wait :: Maybe Seconds
   }
   deriving stock (Eq, Show, Generic)
 
@@ -37,7 +43,8 @@ envDb name =
     dbUser = fromString name,
     dbPassword = fromString name,
     fatal = False,
-    notify = True
+    notify = True,
+    wait = Just 30
   }
 
 instance IsString EnvDb where
@@ -87,18 +94,44 @@ interpretDbErrors =
   stopTest @DbError .
   stopTest @DbConnectionError
 
+serverInoperative ::
+  Members [AtomicState (Maybe DbConnectionError), Error TestError] r =>
+  Seconds ->
+  Sem r ()
+serverInoperative (Seconds timeout) = do
+  err <- maybe noResponse show <$> atomicGet
+  throw (fromString [exon|Server didn't start up within #{show timeout} seconds:
+  #{err}
+|])
+  where
+    noResponse = "Connection attempt did not terminate."
+
+waitForServer ::
+  Members [DbConnectionPool !! DbConnectionError, Error TestError, Time t d, Race, Embed IO] r =>
+  Seconds ->
+  Sem r ()
+waitForServer timeout = do
+  interpretAtomic Nothing do
+    timeout_ (serverInoperative timeout) timeout do
+      Time.while (MilliSeconds 50) do
+        (False <$ DbConnectionPool.acquire "boot") !! \ e -> True <$ atomicPut (Just e)
+
 runIntegrationTestConfig ::
-  Members [Error TestError, Embed IO] r =>
+  Members [Error TestError, Time t d, Log, Resource, Race, Embed IO, Final IO] r =>
   HasCallStack =>
+  Maybe Seconds ->
   DbConfig ->
   (DbConfig -> Sem (DbErrors ++ r) ()) ->
   Sem r ()
-runIntegrationTestConfig conf run =
+runIntegrationTestConfig waitTimeout conf run =
   withFrozenCallStack do
+    for_ waitTimeout \ timeout ->
+      interpretDbConnectionPool conf Nothing Nothing do
+        waitForServer timeout
     interpretDbErrors (run conf)
 
 runIntegrationTestEnv ::
-  Members [Log, Error TestError, Embed IO] r =>
+  Members [Error TestError, Time t d, Log, Resource, Race, Embed IO, Final IO] r =>
   HasCallStack =>
   EnvDb ->
   (DbConfig -> Sem (DbErrors ++ r) ()) ->
@@ -107,7 +140,7 @@ runIntegrationTestEnv econf run =
   withFrozenCallStack do
     envDbConfig econf >>= \case
       Right conf ->
-        interpretDbErrors (run conf)
+        runIntegrationTestConfig econf.wait conf run
       Left var -> do
         let msg = [exon|Can't run integration test, env var unset: #{var}|]
         when econf.fatal (throw (TestError msg))
@@ -115,15 +148,16 @@ runIntegrationTestEnv econf run =
 
 integrationTestConfig ::
   HasCallStack =>
+  Maybe Seconds ->
   DbConfig ->
   Sem TestEffects () ->
   UnitTest
-integrationTestConfig conf run =
+integrationTestConfig waitTimeout conf run =
   withFrozenCallStack $
   runTest $
   interpretRandom $
   interpretTimeGhc $
-  runIntegrationTestConfig conf (const run)
+  runIntegrationTestConfig waitTimeout conf (const run)
 
 integrationTestLevelWith ::
   HasCallStack =>
