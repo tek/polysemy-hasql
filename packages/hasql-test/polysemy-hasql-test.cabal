@@ -25,6 +25,8 @@ library
       lib
   default-extensions:
       StandaloneKindSignatures
+      OverloadedRecordDot
+      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns
@@ -115,6 +117,8 @@ test-suite polysemy-hasql-test-unit
       test
   default-extensions:
       StandaloneKindSignatures
+      OverloadedRecordDot
+      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns

@@ -43,7 +43,7 @@
       args = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
       preludePackage = "prelate";
       preludeModule = "Prelate";
-      extensions = ["StandaloneKindSignatures"];
+      extensions = ["StandaloneKindSignatures" "OverloadedRecordDot" "NoFieldSelectors"];
     };
     hpack.packages = import ./ops/hpack.nix { inherit config lib; };
     hackage.versionFile = "ops/version.nix";

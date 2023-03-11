@@ -32,11 +32,11 @@ import Sqel (
   )
 import Sqel.Ext (AutoMigrations, DdK (DdK))
 
+import Polysemy.Hasql.Data.MigrateSem (MigrateSem)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTables)
 import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
-import Polysemy.Hasql.Migration (MigrateSem)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data PordOld =

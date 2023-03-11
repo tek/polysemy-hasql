@@ -12,11 +12,12 @@ import Sqel.Migration.Run (runMigrations)
 import Sqel.PgType (CheckedProjection, projectionWitness)
 
 import Polysemy.Hasql.Data.InitDb (ClientTag (ClientTag), InitDb (InitDb))
+import Polysemy.Hasql.Data.MigrateSem (unMigrateSem)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Effect.Database (Database)
 import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable)
-import Polysemy.Hasql.Migration (CustomSemMigrations, MigrateSem (unMigrateSem), SemMigrations)
+import Polysemy.Hasql.Migration (CustomSemMigrations, SemMigrations)
 
 handleDbTable ::
   ∀ d migs m r' r a .

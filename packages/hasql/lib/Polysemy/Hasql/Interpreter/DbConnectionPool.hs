@@ -124,7 +124,7 @@ release ::
   Sem r ()
 release ctag = do
   conn <- atomicState' \ Pools {..} -> (Pools {active = Map.delete ctag active, ..}, active !? ctag)
-  traverse_ (releaseNative . coerce . connection) conn
+  traverse_ (releaseNative . coerce . (.connection)) conn
 
 -- | Remove the connection used by @ctag@ from the active pool if it exists.
 -- Store it for reuse if @maxAvailable@ is @Nothing@ or larger than the currently stored number, otherwise return the
@@ -220,7 +220,7 @@ handleDbConnectionPool dbConfig = \case
         unless (cur == c) (embed (throwTo c KillCommand))
     pureT =<< release ctag
   UnsafeGet ctag ->
-    pureT . fmap (coerce . connection) =<< atomicGets (view (#active . at ctag))
+    pureT . fmap (coerce . (.connection)) =<< atomicGets (view (#active . at ctag))
   Config ->
     pureT dbConfig
 

@@ -43,6 +43,8 @@ library
       lib
   default-extensions:
       StandaloneKindSignatures
+      OverloadedRecordDot
+      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns

@@ -22,6 +22,7 @@ library
       Polysemy.Hasql.Data.ConnectionState
       Polysemy.Hasql.Data.ConnectionTag
       Polysemy.Hasql.Data.InitDb
+      Polysemy.Hasql.Data.MigrateSem
       Polysemy.Hasql.Data.QueueOutputError
       Polysemy.Hasql.Database
       Polysemy.Hasql.Effect.Database
@@ -53,6 +54,8 @@ library
       lib
   default-extensions:
       StandaloneKindSignatures
+      OverloadedRecordDot
+      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns
@@ -163,6 +166,8 @@ test-suite polysemy-hasql-integration
       integration
   default-extensions:
       StandaloneKindSignatures
+      OverloadedRecordDot
+      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
       BangPatterns

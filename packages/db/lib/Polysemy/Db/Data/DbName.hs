@@ -1,3 +1,5 @@
+{-# language FieldSelectors #-}
+
 module Polysemy.Db.Data.DbName where
 
 newtype DbName =

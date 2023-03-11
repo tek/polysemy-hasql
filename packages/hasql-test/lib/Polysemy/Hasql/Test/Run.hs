@@ -3,6 +3,7 @@ module Polysemy.Hasql.Test.Run where
 import Data.UUID (UUID)
 import Exon (exon)
 import Hasql.Session (QueryError)
+import qualified Log
 import Log (Severity (Error))
 import Polysemy.Db (DbName, DbPassword, DbUser, interpretRandom)
 import Polysemy.Db.Data.DbConfig (DbConfig (DbConfig))
@@ -22,13 +23,22 @@ data EnvDb =
     envPrefix :: String,
     dbName :: DbName,
     dbUser :: DbUser,
-    dbPassword :: DbPassword
+    dbPassword :: DbPassword,
+    fatal :: Bool,
+    notify :: Bool
   }
   deriving stock (Eq, Show, Generic)
 
 envDb :: String -> EnvDb
 envDb name =
-  EnvDb {envPrefix = name, dbName = fromString name, dbUser = fromString name, dbPassword = fromString name}
+  EnvDb {
+    envPrefix = name,
+    dbName = fromString name,
+    dbUser = fromString name,
+    dbPassword = fromString name,
+    fatal = False,
+    notify = True
+  }
 
 instance IsString EnvDb where
   fromString = envDb
@@ -46,19 +56,24 @@ type TestEffects =
   DbErrors ++ [GhcTime, Random UUID] ++ TestStack
 
 envDbConfig ::
-  MonadIO m =>
+  Members [Error TestError, Embed IO] r =>
   EnvDb ->
-  m (Maybe DbConfig)
+  Sem r (Either Text DbConfig)
 envDbConfig EnvDb {..} = do
-  traverse cons =<< (liftIO (lookupEnv [exon|#{envPrefix}_test_host|]))
+  cons =<< embed (lookupEnv hostVar)
   where
-    cons host = do
-      port <- parsePort =<< (fromMaybe "4321" <$> liftIO (lookupEnv [exon|#{envPrefix}_test_port|]))
-      pure (DbConfig (fromString host) port dbName dbUser dbPassword)
+    cons = \case
+      Just host -> do
+        port <- parsePort =<< (fromMaybe "4321" <$> embed (lookupEnv portVar))
+        pure (Right (DbConfig (fromString host) port dbName dbUser dbPassword))
+      Nothing ->
+        pure (Left (toText hostVar))
     parsePort p =
       case readMaybe p of
         Just a -> pure a
-        Nothing -> error [exon|invalid port in env var $#{envPrefix}_test_port: #{p}|]
+        Nothing -> throw (fromString [exon|Invalid port in env var '$#{portVar}': #{p}|])
+    hostVar = [exon|#{envPrefix}_test_host|]
+    portVar = [exon|#{envPrefix}_test_port|]
 
 interpretDbErrors ::
   Members [Error TestError, Embed IO] r =>
@@ -83,7 +98,7 @@ runIntegrationTestConfig conf run =
     interpretDbErrors (run conf)
 
 runIntegrationTestEnv ::
-  Members [Error TestError, Embed IO] r =>
+  Members [Log, Error TestError, Embed IO] r =>
   HasCallStack =>
   EnvDb ->
   (DbConfig -> Sem (DbErrors ++ r) ()) ->
@@ -91,10 +106,12 @@ runIntegrationTestEnv ::
 runIntegrationTestEnv econf run =
   withFrozenCallStack do
     envDbConfig econf >>= \case
-      Just conf ->
+      Right conf ->
         interpretDbErrors (run conf)
-      Nothing ->
-        unit
+      Left var -> do
+        let msg = [exon|Can't run integration test, env var unset: #{var}|]
+        when econf.fatal (throw (TestError msg))
+        when econf.notify (Log.crit msg)
 
 integrationTestConfig ::
   HasCallStack =>

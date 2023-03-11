@@ -20,10 +20,10 @@ import Sqel.Query (checkQuery)
 import Sqel.Uid (uid)
 import Zeugma (resumeTest)
 
+import Polysemy.Hasql.Data.MigrateSem (MigrateSem)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTables)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
-import Polysemy.Hasql.Migration (MigrateSem)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data DatOld =

@@ -23,6 +23,7 @@ import Data.UUID (UUID)
 import qualified Database.PostgreSQL.LibPQ as LibPQ
 import Exon (exon)
 import Hasql.Connection (Connection, withLibPQConnection)
+import qualified Log
 import qualified Polysemy.Db.Data.DbConnectionError as DbConnectionError
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
@@ -30,13 +31,12 @@ import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
-import qualified Log
-import qualified Time as Time
 import Prelude hiding (Queue, listen)
 import Sqel.Data.Sql (sql)
 import qualified Sqel.Data.Uid as Uid
 import Sqel.Data.Uid (Uuid)
 import Sqel.SOP.Constraint (symbolText)
+import qualified Time as Time
 import Torsor (Torsor)
 
 import Polysemy.Hasql.Data.ConnectionTag (ConnectionTag (NamedTag))
@@ -102,7 +102,8 @@ processMessages ::
   NonEmpty (Uuid (Queued t d)) ->
   NonEmpty d
 processMessages =
-  fmap (Queued.queue_payload . Uid.payload) . NonEmpty.sortWith (Queued.queue_created . Uid.payload)
+  fmap (\ u -> u.payload.queue_payload) .
+  NonEmpty.sortWith \ u -> u.payload.queue_created
 
 initQueue ::
   ∀ e d t r .
