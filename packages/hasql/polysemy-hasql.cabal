@@ -28,6 +28,7 @@ library
       Polysemy.Hasql.Effect.DbConnectionPool
       Polysemy.Hasql.Effect.DbTable
       Polysemy.Hasql.Effect.Transaction
+      Polysemy.Hasql.Ext
       Polysemy.Hasql.Interpreter.AtomicState
       Polysemy.Hasql.Interpreter.Database
       Polysemy.Hasql.Interpreter.DbConnectionPool

@@ -140,11 +140,11 @@ in {
       "hasql ^>= 1.6"
       "hedgehog ^>= 1.1"
       "path ^>= 0.9"
-      "polysemy-test ^>= 0.7"
       "uuid ^>= 1.3"
       dep_db
       dep_hasql
       "sqel ^>= 0.0.1"
+      "zeugma ^>= 0.7"
     ];
 
     tests.polysemy-hasql-test-unit = polysemyExe "polysemy-hasql-test" "test" {
