@@ -71,7 +71,7 @@ envDbConfig EnvDb {..} = do
   where
     cons = \case
       Just host -> do
-        port <- parsePort =<< (fromMaybe "4321" <$> embed (lookupEnv portVar))
+        port <- parsePort =<< (fromMaybe "5432" <$> embed (lookupEnv portVar))
         pure (Right (DbConfig (fromString host) port dbName dbUser dbPassword))
       Nothing ->
         pure (Left (toText hostVar))
