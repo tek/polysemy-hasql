@@ -88,4 +88,4 @@ interpretQueryStoreAny ::
 interpretQueryStoreAny match =
   interpretResumable \case
     Query q ->
-      any (match q . Uid.payload) <$> restop Store.fetchAll
+      any (match q . (.payload)) <$> restop Store.fetchAll

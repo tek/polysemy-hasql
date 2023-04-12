@@ -178,8 +178,8 @@ integrationTestWith ::
   (DbConfig -> Sem TestEffects ()) ->
   UnitTest
 integrationTestWith =
-  withFrozenCallStack .
-  integrationTestLevelWith Error
+  withFrozenCallStack do
+    integrationTestLevelWith Error
 
 integrationTestLevel ::
   HasCallStack =>

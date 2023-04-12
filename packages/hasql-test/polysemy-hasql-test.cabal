@@ -9,12 +9,18 @@ version:        0.0.1.0
 synopsis:       Test utilities for polysemy-hasql
 description:    See https://hackage.haskell.org/package/polysemy-hasql-test/docs/Polysemy-Hasql-Test.html
 category:       Database
+homepage:       https://git.tryp.io/tek/polysemy-hasql
+bug-reports:    https://github.com/tek/polysemy-hasql/issues
 author:         Torsten Schmits
 maintainer:     hackage@tryp.io
 copyright:      2023 Torsten Schmits
 license:        BSD-2-Clause-Patent
 license-file:   LICENSE
 build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://git.tryp.io/tek/polysemy-hasql
 
 library
   exposed-modules:
@@ -24,73 +30,43 @@ library
   hs-source-dirs:
       lib
   default-extensions:
-      StandaloneKindSignatures
-      OverloadedRecordDot
-      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
-      BangPatterns
-      BinaryLiterals
       BlockArguments
-      ConstraintKinds
       DataKinds
       DefaultSignatures
       DeriveAnyClass
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveLift
-      DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
-      DoAndIfThenElse
       DuplicateRecordFields
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
       FunctionalDependencies
       GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
       LambdaCase
       LiberalTypeSynonyms
-      MultiParamTypeClasses
       MultiWayIf
-      NamedFieldPuns
       OverloadedLabels
       OverloadedLists
       OverloadedStrings
       PackageImports
       PartialTypeSignatures
-      PatternGuards
       PatternSynonyms
-      PolyKinds
       QuantifiedConstraints
       QuasiQuotes
-      RankNTypes
       RecordWildCards
       RecursiveDo
       RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
       TemplateHaskell
-      TupleSections
-      TypeApplications
       TypeFamilies
       TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -Wno-partial-type-signatures -fplugin=Polysemy.Plugin
+      OverloadedRecordDot
+      NoFieldSelectors
+  ghc-options: -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages -fplugin=Polysemy.Plugin -Wno-partial-type-signatures -fprint-potential-instances
   build-depends:
-      base >=4.12 && <5
+      base ==4.*
     , hasql ==1.6.*
     , hedgehog ==1.1.*
     , path ==0.9.*
@@ -106,7 +82,7 @@ library
       base hiding (Prelude)
     , prelate (Prelate as Prelude)
     , prelate hiding (Prelate)
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite polysemy-hasql-test-integration
   type: exitcode-stdio-1.0
@@ -131,74 +107,44 @@ test-suite polysemy-hasql-test-integration
   hs-source-dirs:
       integration
   default-extensions:
-      StandaloneKindSignatures
-      OverloadedRecordDot
-      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
-      BangPatterns
-      BinaryLiterals
       BlockArguments
-      ConstraintKinds
       DataKinds
       DefaultSignatures
       DeriveAnyClass
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveLift
-      DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
-      DoAndIfThenElse
       DuplicateRecordFields
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
       FunctionalDependencies
       GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
       LambdaCase
       LiberalTypeSynonyms
-      MultiParamTypeClasses
       MultiWayIf
-      NamedFieldPuns
       OverloadedLabels
       OverloadedLists
       OverloadedStrings
       PackageImports
       PartialTypeSignatures
-      PatternGuards
       PatternSynonyms
-      PolyKinds
       QuantifiedConstraints
       QuasiQuotes
-      RankNTypes
       RecordWildCards
       RecursiveDo
       RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
       TemplateHaskell
-      TupleSections
-      TypeApplications
       TypeFamilies
       TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -Wno-partial-type-signatures -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
+      OverloadedRecordDot
+      NoFieldSelectors
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages -fplugin=Polysemy.Plugin -Wno-partial-type-signatures -fprint-potential-instances
   build-depends:
       aeson ==2.0.*
-    , base >=4.12 && <5
+    , base ==4.*
     , exon ==1.4.*
     , generics-sop ==0.5.*
     , hasql ==1.6.*
@@ -218,9 +164,9 @@ test-suite polysemy-hasql-test-integration
       base hiding (Prelude)
     , prelate (Prelate as Prelude)
     , prelate hiding (Prelate)
-  default-language: Haskell2010
+  default-language: GHC2021
 
-test-suite polysemy-hasql-test-unit
+test-suite polysemy-hasql-test-test
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
@@ -228,73 +174,43 @@ test-suite polysemy-hasql-test-unit
   hs-source-dirs:
       test
   default-extensions:
-      StandaloneKindSignatures
-      OverloadedRecordDot
-      NoFieldSelectors
       AllowAmbiguousTypes
       ApplicativeDo
-      BangPatterns
-      BinaryLiterals
       BlockArguments
-      ConstraintKinds
       DataKinds
       DefaultSignatures
       DeriveAnyClass
-      DeriveDataTypeable
-      DeriveFoldable
-      DeriveFunctor
-      DeriveGeneric
-      DeriveLift
-      DeriveTraversable
       DerivingStrategies
       DerivingVia
       DisambiguateRecordFields
-      DoAndIfThenElse
       DuplicateRecordFields
-      EmptyCase
-      EmptyDataDecls
-      ExistentialQuantification
-      FlexibleContexts
-      FlexibleInstances
       FunctionalDependencies
       GADTs
-      GeneralizedNewtypeDeriving
-      InstanceSigs
-      KindSignatures
       LambdaCase
       LiberalTypeSynonyms
-      MultiParamTypeClasses
       MultiWayIf
-      NamedFieldPuns
       OverloadedLabels
       OverloadedLists
       OverloadedStrings
       PackageImports
       PartialTypeSignatures
-      PatternGuards
       PatternSynonyms
-      PolyKinds
       QuantifiedConstraints
       QuasiQuotes
-      RankNTypes
       RecordWildCards
       RecursiveDo
       RoleAnnotations
-      ScopedTypeVariables
-      StandaloneDeriving
       TemplateHaskell
-      TupleSections
-      TypeApplications
       TypeFamilies
       TypeFamilyDependencies
-      TypeOperators
-      TypeSynonymInstances
       UndecidableInstances
       UnicodeSyntax
       ViewPatterns
-  ghc-options: -Wall -Wredundant-constraints -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Widentities -Wunused-packages -Wno-partial-type-signatures -fplugin=Polysemy.Plugin -threaded -rtsopts -with-rtsopts=-N
+      OverloadedRecordDot
+      NoFieldSelectors
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages -fplugin=Polysemy.Plugin -Wno-partial-type-signatures -fprint-potential-instances
   build-depends:
-      base >=4.12 && <5
+      base ==4.*
     , path ==0.9.*
     , polysemy
     , polysemy-hasql-test
@@ -307,4 +223,4 @@ test-suite polysemy-hasql-test-unit
       base hiding (Prelude)
     , prelate (Prelate as Prelude)
     , prelate hiding (Prelate)
-  default-language: Haskell2010
+  default-language: GHC2021

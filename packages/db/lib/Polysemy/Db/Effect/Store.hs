@@ -1,7 +1,7 @@
 module Polysemy.Db.Effect.Store where
 
 import Data.UUID (UUID)
-import qualified Sqel.Data.Uid as Uid
+import Lens.Micro.Extras (view)
 import Sqel (Uid)
 
 data QStore f q d :: Effect where
@@ -41,7 +41,7 @@ fetchPayload ::
   i ->
   Sem r (Maybe d)
 fetchPayload id' =
-  fmap Uid.payload <$> fetch id'
+  fmap (view #payload) <$> fetch id'
 
 alter ::
   ∀ i d r .
