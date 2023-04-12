@@ -117,12 +117,12 @@
             config.packages.polysemy-db.dep.minor
             config.packages.polysemy-hasql.dep.minor
           ];
-          env = "integration";
+          env = "polysemy-db-integration";
         };
       };
     };
 
-    envs.integration = {
+    envs.polysemy-db-integration = {
       services.postgres = {
         enable = true;
         config = {
@@ -137,7 +137,7 @@
 
       env = {
         polysemy_db_test_host = "localhost";
-        polysemy_db_test_port = config.envs.integration.hostPorts.postgres;
+        polysemy_db_test_port = config.envs.polysemy-db-integration.hostPorts.postgres;
       };
     };
 
