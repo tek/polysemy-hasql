@@ -16,7 +16,7 @@ import Polysemy.Test (UnitTest)
 import System.Environment (lookupEnv)
 import qualified Time as Time
 import Time (GhcTime, MilliSeconds (MilliSeconds), Seconds (Seconds), interpretTimeGhc)
-import Zeugma (TestError (TestError), TestStack, runTest, runTestLevel, stopTest)
+import Zeugma (TestStack, runTest, runTestLevel)
 
 import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool
 import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
@@ -63,7 +63,7 @@ type TestEffects =
   DbErrors ++ [GhcTime, Random UUID] ++ TestStack
 
 envDbConfig ::
-  Members [Error TestError, Embed IO] r =>
+  Members [Error Text, Embed IO] r =>
   EnvDb ->
   Sem r (Either Text DbConfig)
 envDbConfig EnvDb {..} = do
@@ -83,19 +83,19 @@ envDbConfig EnvDb {..} = do
     portVar = [exon|#{envPrefix}_test_port|]
 
 interpretDbErrors ::
-  Members [Error TestError, Embed IO] r =>
+  Members [Error Text, Embed IO] r =>
   HasCallStack =>
   InterpretersFor DbErrors r
 interpretDbErrors =
   withFrozenCallStack $
-  mapError @DbError (TestError . show) .
-  mapError @InitDbError (TestError . show) .
-  stopTest @QueryError .
-  stopTest @DbError .
-  stopTest @DbConnectionError
+  mapError @DbError show .
+  mapError @InitDbError show .
+  stopToErrorWith @QueryError show .
+  stopToErrorWith @DbError show .
+  stopToErrorWith @DbConnectionError show
 
 serverInoperative ::
-  Members [AtomicState (Maybe DbConnectionError), Error TestError] r =>
+  Members [AtomicState (Maybe DbConnectionError), Error Text] r =>
   Seconds ->
   Sem r ()
 serverInoperative (Seconds timeout) = do
@@ -107,7 +107,7 @@ serverInoperative (Seconds timeout) = do
     noResponse = "Connection attempt did not terminate."
 
 waitForServer ::
-  Members [DbConnectionPool !! DbConnectionError, Error TestError, Time t d, Race, Embed IO] r =>
+  Members [DbConnectionPool !! DbConnectionError, Error Text, Time t d, Race, Embed IO] r =>
   Seconds ->
   Sem r ()
 waitForServer timeout = do
@@ -116,35 +116,47 @@ waitForServer timeout = do
       Time.while (MilliSeconds 50) do
         (False <$ DbConnectionPool.acquire "boot") !! \ e -> True <$ atomicPut (Just e)
 
-runIntegrationTestConfig ::
-  Members [Error TestError, Time t d, Log, Resource, Race, Embed IO, Final IO] r =>
+runIntegrationAppConfig ::
+  Members [Error Text, Time t d, Log, Resource, Race, Embed IO, Final IO] r =>
   HasCallStack =>
   Maybe Seconds ->
   DbConfig ->
   (DbConfig -> Sem (DbErrors ++ r) ()) ->
   Sem r ()
-runIntegrationTestConfig waitTimeout conf run =
+runIntegrationAppConfig waitTimeout conf run =
   withFrozenCallStack do
     for_ waitTimeout \ timeout ->
       interpretDbConnectionPool conf Nothing Nothing do
         waitForServer timeout
     interpretDbErrors (run conf)
 
-runIntegrationTestEnv ::
-  Members [Error TestError, Time t d, Log, Resource, Race, Embed IO, Final IO] r =>
+runIntegrationAppEnv ::
+  Members [Error Text, Time t d, Log, Resource, Race, Embed IO, Final IO] r =>
   HasCallStack =>
   EnvDb ->
   (DbConfig -> Sem (DbErrors ++ r) ()) ->
   Sem r ()
-runIntegrationTestEnv econf run =
+runIntegrationAppEnv econf run =
   withFrozenCallStack do
     envDbConfig econf >>= \case
       Right conf ->
-        runIntegrationTestConfig econf.wait conf run
+        runIntegrationAppConfig econf.wait conf run
       Left var -> do
         let msg = [exon|Can't run integration test, env var unset: #{var}|]
-        when econf.fatal (throw (TestError msg))
+        when econf.fatal (throw msg)
         when econf.notify (Log.crit msg)
+
+integrationApp ::
+  Members [Error Text, Log, Resource, Race, Embed IO, Final IO] r =>
+  HasCallStack =>
+  EnvDb ->
+  (DbConfig -> Sem (DbErrors ++ [GhcTime, Random UUID] ++ r) ()) ->
+  Sem r ()
+integrationApp econf run =
+  withFrozenCallStack $
+  interpretRandom $
+  interpretTimeGhc $
+  runIntegrationAppEnv econf run
 
 integrationTestConfig ::
   HasCallStack =>
@@ -157,7 +169,7 @@ integrationTestConfig waitTimeout conf run =
   runTest $
   interpretRandom $
   interpretTimeGhc $
-  runIntegrationTestConfig waitTimeout conf (const run)
+  runIntegrationAppConfig waitTimeout conf (const run)
 
 integrationTestLevelWith ::
   HasCallStack =>
@@ -170,7 +182,7 @@ integrationTestLevelWith level econf run =
   runTestLevel level $
   interpretRandom $
   interpretTimeGhc $
-  runIntegrationTestEnv econf run
+  runIntegrationAppEnv econf run
 
 integrationTestWith ::
   HasCallStack =>
