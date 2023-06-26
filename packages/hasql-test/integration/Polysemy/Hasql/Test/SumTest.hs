@@ -1,32 +1,15 @@
-{-# options_ghc -fconstraint-solver-iterations=10 #-}
-
 module Polysemy.Hasql.Test.SumTest where
 
-import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query (Query))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
-import Prelude hiding (sum)
-import Sqel (Sqel, type (:>) ((:>)))
-import Sqel (QuerySchema)
-import Sqel (TableSchema)
-import Sqel (Uid (Uid))
-import Sqel (typeAs)
-import Sqel.PgType (fullProjection, tableSchema)
-import Sqel (prim, primAs, prims)
-import Sqel (prod)
-import Sqel (checkQuery)
-import Sqel.Statement (selectWhere)
-import Sqel.Sum (con, conAs, sum)
-import Sqel (uid)
+import Sqel (Con, Gen, Name, Prim, PrimAs, Prod, Query, Sqel, Sum, TypeName, Uid (Uid), UidTable, query_Int, sqel)
 
-import qualified Polysemy.Hasql.Effect.Database as Database
-import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
+import Polysemy.Hasql.Interpreter.Query (interpretQuery)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -52,6 +35,11 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
+type Table_Dat = UidTable "dat" Int64 Dat Prim (TypeName "sombo" (Prod [Prim, Sum [Gen, Gen, Con [Prim, Gen]]]))
+
+table_Dat :: Sqel Table_Dat
+table_Dat = sqel
+
 data SumboQ =
   GlorpfQ { g1 :: Int }
   |
@@ -65,50 +53,20 @@ data Q =
   }
   deriving stock (Eq, Show, Generic)
 
-td :: Sqel (Uid Int64 Dat) _
-td =
-  uid prim (prod (
-    prim :>
-    typeAs @"sombo" (sum (
-      con prims :>
-      con prims :>
-      con (prim :> prod prims)
-    ))
-  ))
+type Query_Q =
+  Query Q (Prod [
+    PrimAs "name",
+    TypeName "Sumbo" (Sum [Name "Glorpf" (Con '[Prim]), Name "Shwank" (Con '[Prim])])
+  ])
 
-ts :: TableSchema (Uid Int64 Dat)
-ts = tableSchema td
-
-idSchema :: QuerySchema Int64 (Uid Int64 Dat)
-idSchema =
-  checkQuery (primAs @"id") td
-
-stm :: Statement Q [Uid Int64 Dat]
-stm =
-  selectWhere (checkQuery qd td) (fullProjection td)
-  where
-    qd =
-      prod (
-        primAs @"name" :>
-        sum (
-          conAs @"Glorpf" prim :>
-          conAs @"Shwank" prim
-        )
-      )
-
-interpretQuery ::
-  Member (Database !! DbError) r =>
-  InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
-interpretQuery =
-  interpretResumable \case
-    Query params ->
-      restop (Database.statement params stm)
+query_Q :: Sqel Query_Q
+query_Q = sqel
 
 test_sum :: UnitTest
 test_sum =
   integrationTest do
-    interpretTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
-      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
+    interpretTable table_Dat $ interpretStoreDb query_Int table_Dat $ interpretQuery @[_] query_Q table_Dat do
+      restop @DbError @(Query.Query _ _) $ restop @DbError @(Store _ _) do
         Store.insert (Uid 1 (Dat "ellow" (Glorpf 5 "crinp")))
         Store.insert (Uid 2 (Dat "ellow" (Glorpf 6 "crinp")))
         Store.insert (Uid 3 (Dat "cheerio" (Shwank "gzerq" (Pord 93 "pord"))))

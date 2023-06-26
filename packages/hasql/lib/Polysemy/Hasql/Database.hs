@@ -2,18 +2,11 @@ module Polysemy.Hasql.Database where
 
 import Hasql.Decoders (Row)
 import Hasql.Encoders (Params)
-import Sqel (Dd, checkQuery)
-import Sqel.Data.Codec (Encoder, FullCodec)
-import Sqel.Data.QuerySchema (QuerySchema (QuerySchema))
-import Sqel.Data.Sql (Sql)
-import Sqel.Data.TableSchema (TableSchema (TableSchema))
-import Sqel.Ext (DdType)
-import Sqel.PgType (tableSchema)
-import Sqel.Query (CheckedQuery)
-import Sqel.ReifyCodec (ReifyCodec)
-import Sqel.ReifyDd (ReifyDd)
-import Sqel.ResultShape (ResultShape)
-import Sqel.Statement (plain, prepared, unprepared)
+import Sqel (DdType, From, ResultShape, Select, SqelFor, Sql, Statement, Where, from, select, unprepared, where_)
+import Sqel.Exts (BuildClauses, Check1, Dd)
+import Sqel.Statement (unsafeSql, unsafeUntypedSql)
+import qualified Sqel.Syntax as Sqel
+import Sqel.Syntax (project, query)
 import Time (Seconds (Seconds))
 
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -26,7 +19,7 @@ retryingSql ::
   Sql ->
   Sem r ()
 retryingSql interval =
-  Database.retry interval Nothing . Database.statement () . plain
+  Database.retry interval Nothing . Database.statement () . unsafeUntypedSql
 
 retryingSqlDef ::
   Member Database r =>
@@ -46,7 +39,7 @@ retryingQuerySql ::
   param ->
   Sem r result
 retryingQuerySql interval s row params q =
-  restop (Database.retry interval Nothing (Database.statement q (prepared s row params)))
+  restop (Database.retry interval Nothing (Database.statement q (unsafeSql s params row)))
 
 retryingQuerySqlDef ::
   ∀ e d param result r .
@@ -60,25 +53,24 @@ retryingQuerySqlDef ::
 retryingQuerySqlDef =
   retryingQuerySql (Seconds 3)
 
--- TODO check projection
-query ::
-  ∀ res query proj table r .
+selectQuery ::
+  ∀ {extq} {extt} res (query :: Dd extq) (proj :: Dd extt) (table :: Dd extt) tag r .
   Member Database r =>
-  CheckedQuery query table =>
-  ReifyCodec Encoder query (DdType query) =>
-  ReifyDd proj =>
-  ReifyCodec FullCodec proj (DdType proj) =>
+  Check1 table proj =>
+  Check1 table query =>
+  BuildClauses tag [Select, From, Where] =>
   ResultShape (DdType proj) res =>
-  Dd query ->
-  Dd proj ->
-  Dd table ->
+  SqelFor tag query ->
+  SqelFor tag proj ->
+  SqelFor tag table ->
   DdType query ->
-  Sql ->
   Sem r res
-query queryDd projDd tableDd q s =
-  Database.statement q (unprepared s decoder (encoder ^. #encodeValue))
+selectQuery q proj table par =
+  Database.statement par (unprepared statement)
   where
-    QuerySchema _ encoder =
-      checkQuery queryDd tableDd
-    TableSchema _ decoder _ =
-      tableSchema projDd
+    statement :: Statement '[DdType table] (DdType query) (DdType proj)
+    statement = Sqel.do
+      frags <- project proj (query q table)
+      select frags.projection
+      from frags.table
+      where_ frags.query

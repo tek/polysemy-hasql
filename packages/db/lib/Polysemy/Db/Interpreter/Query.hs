@@ -4,7 +4,7 @@ import Conc (interpretAtomic)
 import qualified Data.Map.Strict as Map
 import Lens.Micro.Extras (view)
 import Sqel (Uid (Uid))
-import qualified Sqel.Data.Uid as Uid
+import qualified Sqel.Exts
 
 import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)

@@ -1,25 +1,15 @@
-{-# options_ghc -fconstraint-solver-iterations=10 #-}
-
 module Polysemy.Hasql.Test.UnaryConTest where
 
-import Generics.SOP (NP (Nil, (:*)))
-import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query (Query))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
-import Prelude hiding (sum)
-import Sqel (Dd, QuerySchema, TableSchema, Uid (Uid), checkQuery, con1, prim, primAs, prod, sum, uid)
-import Sqel.Ext (DdK (DdK))
-import Sqel.PgType (tableSchema, toFullProjection)
-import Sqel.Statement (selectWhere)
+import Sqel (Con1, Gen, Prim, PrimAs, Prod, Query, Sqel, Sum, Uid (Uid), UidTable, sqel)
 
-import qualified Polysemy.Hasql.Effect.Database as Database
-import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
+import Polysemy.Hasql.Interpreter.Query (interpretQuery)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -50,53 +40,26 @@ data Q =
   }
   deriving stock (Eq, Show, Generic)
 
-t1C :: Dd ('DdK _ _ (Uid Int64 Dat) _)
-t1C =
-  uid prim (prod (
-    prim :*
-    sum (
-      con1 prim :*
-      con1 (prod (primAs @"desc" :* prim :* Nil)) :* Nil
-    ) :*
-    Nil
-  ))
+type Table_Dat = UidTable "dat" Int64 Dat Prim (Prod [Prim, Sum [Gen, Con1 (Prod [PrimAs "desc", Prim])]])
 
-q :: Dd ('DdK _ _ Q _)
-q =
-  prod (
-    primAs @"name" :*
-    sum (
-      con1 prim :*
-      con1 (prod (primAs @"desc" :* prim :* Nil)) :* Nil
-    ) :*
-    Nil
-  )
+table_Dat :: Sqel Table_Dat
+table_Dat = sqel
 
-t1d :: TableSchema (Uid Int64 Dat)
-t1d =
-  tableSchema t1C
+type Query_Int = Query Int64 (PrimAs "id")
 
-checkedQ :: QuerySchema Q (Uid Int64 Dat)
-checkedQ =
-  checkQuery q t1C
+query_Int :: Sqel Query_Int
+query_Int = sqel
 
-checkedQStm :: Statement Q [Uid Int64 Dat]
-checkedQStm =
-  selectWhere checkedQ (toFullProjection t1d)
+type Query_Q = Query Q (Prod [Prim, Sum [Gen, Con1 (Prod [PrimAs "desc", Prim])]])
 
-interpretQuery ::
-  Member (Database !! DbError) r =>
-  InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
-interpretQuery =
-  interpretResumable \case
-    Query params ->
-      restop (Database.statement params checkedQStm)
+query_Q :: Sqel Query_Q
+query_Q = sqel
 
 test_unaryCon :: UnitTest
 test_unaryCon =
   integrationTest do
-    interpretTable t1d $ interpretStoreDb t1d (checkQuery (primAs @"id") t1C) $ interpretQuery do
-      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
+    interpretTable table_Dat $ interpretStoreDb query_Int table_Dat $ interpretQuery @[_] query_Q table_Dat do
+      restop @DbError @(Query.Query _ _) $ restop @DbError @(Store _ _) do
         Store.insert (Uid 1 (Dat "ellow" (S1 "crinp")))
         Store.insert (Uid 2 (Dat "cheerio" (S2 (F2 "pord" 93))))
         r <- fmap (view #id) <$> Query.query (Q "ellow" (S1 "crinp"))

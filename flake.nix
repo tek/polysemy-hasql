@@ -3,16 +3,17 @@
 
   inputs = {
     hix.url = "git+https://git.tryp.io/tek/hix";
-    hls.url = "github:haskell/haskell-language-server?ref=1.9.0.0";
     prelate.url = "git+https://git.tryp.io/tek/prelate";
     sqel.url = "git+https://git.tryp.io/tek/sqel";
+    exon.url = "git+https://git.tryp.io/tek/exon";
   };
 
-  outputs = { hix, hls, prelate, sqel, ... }: hix.lib.pro ({config, ...}: {
+  outputs = { hix, prelate, sqel, exon, ... }: hix.lib.pro ({config, ...}: {
     hackage.versionFile = "ops/version.nix";
     depsFull = [sqel prelate];
     main = "polysemy-hasql-test";
-    ifd = false;
+    compiler = "ghc94";
+    gen-overrides.enable = true;
 
     cabal = {
       license = "BSD-2-Clause-Patent";
@@ -22,7 +23,7 @@
         enable = true;
         package = {
           name = "prelate";
-          version = "^>= 0.5.1";
+          version = "^>= 0.6";
         };
         module = "Prelate";
       };
@@ -34,8 +35,9 @@
         homepage = "https://git.tryp.io/tek/polysemy-hasql";
         bug-reports = "https://github.com/tek/polysemy-hasql/issues";
       };
-      dependencies = ["polysemy" "polysemy-plugin"];
-      ghc-options = ["-fplugin=Polysemy.Plugin" "-Wno-partial-type-signatures" "-fprint-potential-instances"];
+      dependencies = ["polysemy ^>= 1.9" "polysemy-plugin ^>= 0.4.5"];
+      ghc-options = ["-fplugin=Polysemy.Plugin" "-fprint-potential-instances"];
+      default-extensions = ["QualifiedDo"];
     };
 
     packages = {
@@ -63,10 +65,10 @@
             "async ^>= 2.2"
             "containers"
             "exon ^>= 1.4"
-            "generics-sop ^>= 0.5"
             "hasql ^>= 1.6"
             "postgresql-libpq ^>= 0.9"
             "sqel ^>= 0.0.1"
+            "sqel-core ^>= 0.0.1"
             "stm-chans ^>= 3.0"
             "torsor ^>= 0.1"
             "transformers"
@@ -83,37 +85,25 @@
           enable = true;
           dependencies = [
             "hasql ^>= 1.6"
-            "hedgehog ^>= 1.1"
+            "hedgehog >= 1.1 && < 1.3"
             "path ^>= 0.9"
             "sqel ^>= 0.0.1"
             "uuid ^>= 1.3"
-            "zeugma ^>= 0.7"
+            "zeugma ^>= 0.8"
             config.packages.polysemy-db.dep.minor
             config.packages.polysemy-hasql.dep.minor
-          ];
-        };
-        test = {
-          enable = true;
-          dependencies = [
-            "path ^>= 0.9"
-            "polysemy-test ^>= 0.7"
-            "tasty ^>= 1.4"
-            "sqel ^>= 0.0.1"
           ];
         };
         tests.polysemy-hasql-test-integration = {
           source-dirs = "integration";
           dependencies = [
-            "aeson ^>= 2.0"
+            "aeson >= 2.0 && < 2.2"
             "exon ^>= 1.4"
-            "generics-sop ^>= 0.5"
             "hasql ^>= 1.6"
-            "hedgehog ^>= 1.1"
             "sqel ^>= 0.0.1"
             "tasty ^>= 1.4"
-            "uuid ^>= 1.3"
             "vector ^>= 0.12"
-            "zeugma ^>= 0.7"
+            "zeugma ^>= 0.8"
             config.packages.polysemy-db.dep.minor
             config.packages.polysemy-hasql.dep.minor
           ];
@@ -123,6 +113,7 @@
     };
 
     envs.polysemy-db-integration = {
+      systems = ["x86_64-linux"];
       services.postgres = {
         enable = true;
         config = {
@@ -140,8 +131,5 @@
         polysemy_db_test_port = config.envs.polysemy-db-integration.hostPorts.postgres;
       };
     };
-
-    compiler = "ghc925";
-    envs.hls.hls.package = hls.packages.${config.system}.haskell-language-server-925;
   });
 }

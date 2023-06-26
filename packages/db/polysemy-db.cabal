@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -45,9 +45,11 @@ library
       Polysemy.Db.Interpreter.Random
       Polysemy.Db.Interpreter.Reader
       Polysemy.Db.Interpreter.Store
+      Polysemy.Db.Symbol
   hs-source-dirs:
       lib
   default-extensions:
+      QualifiedDo
       AllowAmbiguousTypes
       ApplicativeDo
       BlockArguments
@@ -82,14 +84,14 @@ library
       ViewPatterns
       OverloadedRecordDot
       NoFieldSelectors
-  ghc-options: -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages -fplugin=Polysemy.Plugin -Wno-partial-type-signatures -fprint-potential-instances
+  ghc-options: -fplugin=Polysemy.Plugin -fprint-potential-instances -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages
   build-depends:
       base ==4.*
     , exon ==1.4.*
     , microlens ==0.4.*
-    , polysemy
-    , polysemy-plugin
-    , prelate >=0.5.1 && <0.6
+    , polysemy ==1.9.*
+    , polysemy-plugin >=0.4.5 && <0.5
+    , prelate ==0.6.*
     , random ==1.2.*
     , sqel >=0.0.1 && <0.1
     , uuid ==1.3.*

@@ -1,6 +1,6 @@
 module Polysemy.Hasql.Test.RunIntegration where
 
-import Log (Severity)
+import Log (Severity (Debug))
 import Polysemy.Test (UnitTest)
 
 import Polysemy.Hasql.Test.Database (TestConnectionEffects)
@@ -15,6 +15,14 @@ integrationTestLevel ::
 integrationTestLevel level test =
   withFrozenCallStack do
     Lib.integrationTestLevel level "polysemy_db" test
+
+integrationTestDebug ::
+  HasCallStack =>
+  Sem (TestConnectionEffects ++ TestEffects) () ->
+  UnitTest
+integrationTestDebug test =
+  withFrozenCallStack do
+    Lib.integrationTestLevel Debug "polysemy_db" test
 
 integrationTest ::
   HasCallStack =>

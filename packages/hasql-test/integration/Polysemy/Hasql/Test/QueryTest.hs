@@ -1,39 +1,37 @@
 module Polysemy.Hasql.Test.QueryTest where
 
-import Hasql.Statement (Statement)
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query (Query))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
 import Sqel (
-  QuerySchema,
+  Ignore,
+  IntTable,
+  Name,
+  Newtype,
+  OrNull,
+  Param,
+  Prim,
+  Prod,
+  Query,
   Sqel,
-  TableSchema,
+  Statement,
   Uid (Uid),
-  checkQuery,
-  ignore,
-  named,
-  nullable,
-  orNull,
-  prim,
-  primAs,
-  primNewtype,
-  prod,
-  prodAs,
-  type (:>) ((:>)),
+  from,
+  limit,
+  offset,
+  query_Int,
+  select,
+  sqel,
+  where_,
   )
-import Sqel.PgType (fullProjection, tableSchema)
-import qualified Sqel.Query.Combinators as Q
-import Sqel.Statement (selectWhere)
-import Sqel (uid)
+import qualified Sqel.Syntax as Sqel
+import Sqel.Syntax (query)
 
-import qualified Polysemy.Hasql.Effect.Database as Database
-import Polysemy.Hasql.Effect.Database (Database)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
-import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
+import Polysemy.Hasql.Interpreter.Query (interpretQueryProj, interpretQueryStatement)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -55,15 +53,6 @@ data Par =
   }
   deriving stock (Eq, Show, Generic)
 
-data Q =
-  Q {
-    pr :: PordQ,
-    params :: Par,
-    n :: TextNt,
-    ig :: Maybe Int
-  }
-  deriving stock (Eq, Show, Generic)
-
 data Pord =
   Pord {
     p1 :: Int64,
@@ -78,36 +67,39 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-ddUidDat :: Sqel (Uid Int64 Dat) _
-ddUidDat =
-  uid prim (prod (
-    prim :>
-    prod (prim :> nullable primNewtype)
-  ))
+type Table_Dat = IntTable "dat" Dat (Prod [Prim, Prod [Prim, Newtype]])
 
-ts :: TableSchema (Uid Int64 Dat)
-ts = tableSchema ddUidDat
+table_Dat :: Sqel Table_Dat
+table_Dat = sqel
 
-queryIdDat :: QuerySchema Int64 (Uid Int64 Dat)
-queryIdDat =
-  checkQuery (primAs @"id") ddUidDat
+data Q =
+  Q {
+    pr :: PordQ,
+    params :: Par,
+    n :: TextNt,
+    ig :: Maybe Int
+  }
+  deriving stock (Eq, Show, Generic)
 
-interpretQuery ::
-  Member (Database !! DbError) r =>
-  InterpreterFor (Query Q [Uid Int64 Dat] !! DbError) r
-interpretQuery =
-  interpretResumable \ (Query params) -> restop (Database.statement params stm)
-  where
-    stm :: Statement Q [Uid Int64 Dat]
-    stm =
-      selectWhere (checkQuery qd ddUidDat) (fullProjection ddUidDat)
-    qd =
-      prod (
-        prodAs @"po" prim :>
-        prod (orNull Q.limit :> orNull Q.offset) :>
-        named @"name" primNewtype :>
-        ignore
-      )
+type Query_Q =
+  Query Q (Prod [
+    Name "po" (Prod '[Prim]),
+    Prod [Param (OrNull Prim), Param (OrNull Prim)],
+    Name "name" Newtype,
+    Ignore Prim
+  ])
+
+query_Q :: Sqel Query_Q
+query_Q = sqel
+
+statement :: Statement '[Uid Int64 Dat] Q (Uid Int64 Dat)
+statement = Sqel.do
+  frags <- query query_Q table_Dat
+  select frags.table
+  from frags.table
+  where_ frags.query
+  limit frags.query.params.limit
+  offset frags.query.params.offset
 
 inserts ::
   Member (Store Int64 Dat) r =>
@@ -119,8 +111,8 @@ inserts =
 test_query :: UnitTest
 test_query =
   integrationTest do
-    interpretTable ts $ interpretStoreDb ts queryIdDat $ interpretQuery do
-      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
+    interpretTable table_Dat $ interpretStoreDb query_Int table_Dat $ interpretQueryStatement @[_] statement do
+      restop @DbError @(Query.Query _ _) $ restop @DbError @(Store _ _) do
         inserts
         r <- fmap (view #id) <$> Query.query (Q (PordQ "hnnnggg") (Par (Just 2) (Just 2)) "name" Nothing)
         [3, 4] === r
@@ -129,9 +121,12 @@ test_query =
 
 test_queryId :: UnitTest
 test_queryId =
-  integrationTest do
-    interpretTable ts $ interpretStoreDb ts queryIdDat $ interpretQueryDd @[Int64] ddUidDat (primAs @"id" @Int64) (primAs @"id" @Int64) do
-      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
-        inserts
-        r <- Query.query (5 :: Int64)
-        [5] === r
+  integrationTest $
+  interpretTable table_Dat $
+  interpretStoreDb query_Int table_Dat $
+  interpretQueryProj @[Int64] query_Int table_Dat table_Dat.id $
+  restop @DbError @(Query.Query _ _) $
+  restop @DbError @(Store _ _) do
+    inserts
+    r <- Query.query (5 :: Int64)
+    [5] === r

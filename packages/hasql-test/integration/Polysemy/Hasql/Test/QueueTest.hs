@@ -3,8 +3,8 @@ module Polysemy.Hasql.Test.QueueTest where
 import Polysemy.Db.Data.DbConnectionError (DbConnectionError)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (Hedgehog, UnitTest, assertJust)
-import Sqel (Uuid)
-import Sqel.Data.Uid (intUuid)
+import Sqel (Prim, Uuid)
+import Sqel.Exts (intUuid)
 import qualified Time as Time
 import Time (MilliSeconds (MilliSeconds), Seconds (Seconds))
 
@@ -53,7 +53,7 @@ test_queue :: UnitTest
 test_queue =
   integrationTest $
   mapStop @QueueOutputError @Text show $
-  interpretQueueStoreDb $
+  interpretQueueStoreDb @"dat" @Prim $
   interpretOutputQueueDb @"test-queue" @(Uuid Dat) $
   interpretInputQueueDb @"test-queue" (Seconds 0) def (const (pure True)) $
   prog

@@ -1,29 +1,12 @@
 module Polysemy.Hasql.Test.ArrayTest where
 
-import Data.UUID (UUID)
 import Data.Vector (Vector)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
-import Polysemy.Db.Effect.Store (UuidStore)
+import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertJust)
-import Sqel (
-  QuerySchema,
-  TableSchema,
-  Uid (Uid),
-  Uuid,
-  array,
-  checkQuery,
-  enum,
-  nullable,
-  prim,
-  primAs,
-  prod,
-  readShow,
-  tableSchema,
-  uid,
-  (:>) ((:>)),
-  )
-import qualified Sqel.Data.Uid as Uid
+import Prelude hiding (Enum)
+import Sqel (Enum, Prim, Prod, Sqel, Uid (Uid), UidTable, query_Int, sqel)
 
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
@@ -41,33 +24,27 @@ data ArrayField =
   }
   deriving stock (Eq, Show, Generic)
 
-table :: TableSchema (Uuid ArrayField)
-query :: QuerySchema UUID (Uuid ArrayField)
-(table, query) =
-  (tableSchema dd, checkQuery (primAs @"id") dd)
-  where
-    dd = uid prim (prod (nullable (array enum) :> array readShow :> array prim :> array prim))
+type Table_ArrayField =
+  UidTable "array_field" Int64 ArrayField Prim (Prod [Enum, Enum, Prim, Prim])
 
-id' :: UUID
-id' =
-  Uid.intUUID 555
+table_ArrayField :: Sqel Table_ArrayField
+table_ArrayField = sqel
 
 payload :: ArrayField
 payload =
   ArrayField (Just [On, Off, Superposition]) [On, Off, Superposition] [1, 2, 3] [4, 5]
 
 prog ::
-  Member (UuidStore ArrayField) r =>
+  Member (Store Int64 ArrayField) r =>
   Sem r (Maybe ArrayField)
 prog = do
-  _ <- Store.upsert (Uid id' payload)
-  Store.fetchPayload id'
+  _ <- Store.upsert (Uid 555 payload)
+  Store.fetchPayload 555
 
 -- TODO add query with enum field
--- TODO add Maybe Array field
 test_arrayField :: UnitTest
 test_arrayField =
   integrationTest do
-    interpretTable table $ interpretStoreDb table query do
+    interpretTable table_ArrayField $ interpretStoreDb query_Int table_ArrayField do
       result <- restop @DbError prog
       assertJust payload result

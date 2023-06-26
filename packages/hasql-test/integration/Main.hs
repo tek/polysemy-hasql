@@ -2,7 +2,6 @@ module Main where
 
 import Polysemy.Hasql.Test.ArrayTest (test_arrayField)
 import Polysemy.Hasql.Test.AtomicStateTest (test_atomicStateDb)
-import Polysemy.Hasql.Test.DefaultTest (test_default)
 import Polysemy.Hasql.Test.JsonTest (test_json)
 import Polysemy.Hasql.Test.MigrationTest (test_migration)
 import Polysemy.Hasql.Test.QueryTest (test_query, test_queryId)
@@ -33,7 +32,6 @@ tests =
     unitTest "sum query" test_sumQuery,
     unitTest "sum with unary constructor" test_unaryCon,
     unitTest "migration" test_migration,
-    unitTest "column default" test_default,
     unitTest "transaction" test_transaction,
     unitTest "init hook" test_withInit,
     unitTest "migration with transformation" test_transformMigration

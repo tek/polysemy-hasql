@@ -1,8 +1,8 @@
 module Polysemy.Hasql.Interpreter.Reader where
 
+import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Interpreter.Reader (interpretReaderStore)
-import Sqel (emptyQuerySchema)
-import Sqel (TableSchema)
+import Sqel (DdType, Sqel, emptyQuery)
 
 import Polysemy.Hasql.Effect.DbTable (DbTable)
 import Polysemy.Hasql.Interpreter.Store (interpretQStoreDb)
@@ -11,12 +11,12 @@ import Polysemy.Hasql.Interpreter.Store (interpretQStoreDb)
 --
 -- Given an initial value, every state action reads the value from the database, potentially writing it on first access.
 interpretReaderDb ::
-  ∀ d e r .
-  Member (DbTable d !! e) r =>
-  TableSchema d ->
-  Sem r d ->
-  InterpreterFor (Reader d !! e) r
+  ∀ table r .
+  Member (DbTable (DdType table) !! DbError) r =>
+  Sqel table ->
+  Sem r (DdType table) ->
+  InterpreterFor (Reader (DdType table) !! DbError) r
 interpretReaderDb table initial =
-  interpretQStoreDb @Maybe table emptyQuerySchema .
+  interpretQStoreDb @Maybe emptyQuery table .
   interpretReaderStore (raise initial) .
   raiseUnder

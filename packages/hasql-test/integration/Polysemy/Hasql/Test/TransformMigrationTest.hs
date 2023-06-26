@@ -4,18 +4,10 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
-import Sqel (pk)
-import Sqel (Sqel, (:>) ((:>)))
-import Sqel.Data.Migration (Mig (Mig), Migrations, migrate)
-import Sqel (TableSchema)
-import Sqel (Uid (Uid))
-import Sqel.Migration.Transform (MigrateTransform, migrateTransform)
-import Sqel (typeAs)
-import Sqel.PgType (tableSchema)
-import Sqel (enum, prim, primAs, prims)
-import Sqel (prod)
-import Sqel (checkQuery)
-import Sqel (uid)
+import Prelude hiding (Enum)
+import Sqel (Def, Enum, Gen, Prim, Prod, Sqel, Uid (Uid), UidTable, query_Int, sqel)
+import qualified Sqel.Migration as Sqel
+import Sqel.Migration (Migrate, (-->))
 import Zeugma (resumeTest)
 
 import Polysemy.Hasql.Data.MigrateSem (MigrateSem)
@@ -31,6 +23,11 @@ data DatOld =
     admin :: Bool
   }
   deriving stock (Eq, Show, Generic)
+
+type Table_DatOld = UidTable "user" Int64 DatOld Prim Gen
+
+table_DatOld :: Sqel Table_DatOld
+table_DatOld = sqel
 
 data Admin =
   Admin
@@ -57,21 +54,10 @@ data User =
   }
   deriving stock (Eq, Show, Generic)
 
-ddDatOld :: Sqel (Uid Int64 DatOld) _
-ddDatOld =
-  uid (pk prim) (typeAs @"User" (prod prims))
+type Table_User = UidTable "user" Int64 User Prim (Prod [Prim, Prod [Enum, Prim]])
 
-schemaOld :: TableSchema (Uid Int64 DatOld)
-schemaOld =
-  tableSchema ddDatOld
-
-ddUser :: Sqel (Uid Int64 User) _
-ddUser =
-  uid (pk prim) (prod (prim :> prod (enum :> prim)))
-
-schemaCur :: TableSchema (Uid Int64 User)
-schemaCur =
-  tableSchema ddUser
+table_User :: Sqel Table_User
+table_User = sqel
 
 toUser :: DatOld -> User
 toUser DatOld {..} =
@@ -81,11 +67,14 @@ toUser DatOld {..} =
   }
 
 migrations ::
-  Migrations (MigrateSem r) ('[ 'Mig (Uid Int64 DatOld) (Uid Int64 User) (MigrateSem r) (MigrateTransform (MigrateSem r) (Uid Int64 DatOld) (Uid Int64 User))])
+  ∀ r .
+  Member Log r =>
+  Migrate Def (MigrateSem r) [Table_User, Table_DatOld]
 migrations =
-  migrate (
-    migrateTransform ddDatOld ddUser (pure . fmap (fmap toUser))
-  )
+  table_DatOld --> Sqel.transform trans table_User
+  where
+    trans :: [Uid Int64 DatOld] -> MigrateSem r [Uid Int64 User]
+    trans = pure @(MigrateSem r) . fmap (fmap toUser)
 
 target :: [Uid Int64 User]
 target =
@@ -94,12 +83,12 @@ target =
 test_transformMigration :: UnitTest
 test_transformMigration =
   integrationTest do
-    interpretTables schemaOld $ interpretStoreDb schemaOld (checkQuery (primAs @"id") ddDatOld) $ resumeTest @DbError do
+    interpretTables table_DatOld $ interpretStoreDb query_Int table_DatOld $ resumeTest @DbError do
       Store.insert (Uid 1 (DatOld 1 "user1" False))
       Store.insert (Uid 2 (DatOld 2 "user2" True))
     resumeTest @DbError Database.release
     resumeTest @DbError Database.resetInit
-    interpretTableMigrations schemaCur migrations $
-      interpretStoreDb schemaCur (checkQuery (primAs @"id") ddUser) $
+    interpretTableMigrations migrations $
+      interpretStoreDb query_Int table_User $
       restop @DbError @(Store _ _) do
         assertEq target =<< Store.fetchAll

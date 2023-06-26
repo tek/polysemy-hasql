@@ -4,7 +4,7 @@ import Conc (interpretAtomic)
 import Hasql.Decoders (column, int8, nonNullable)
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Test (Hedgehog, UnitTest, assertEq)
-import Sqel.Statement (unprepared)
+import Sqel.Statement (unsafeSql)
 
 import Polysemy.Hasql.Data.InitDb (InitDb (InitDb))
 import qualified Polysemy.Hasql.Effect.Database as Database
@@ -23,7 +23,7 @@ prog = do
   atomicGet
   where
     run = Database.withInit initDb (Database.statement () stmt)
-    stmt = runIdentity <$> unprepared "select 1" (column (nonNullable int8)) mempty
+    stmt = runIdentity <$> unsafeSql "select 1" mempty (column (nonNullable int8))
     initDb = (InitDb "test" False \ _ -> atomicModify' (1 +))
 
 test_withInit :: UnitTest

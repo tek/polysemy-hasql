@@ -2,18 +2,18 @@ module Polysemy.Hasql.Queue.Output where
 
 import Data.UUID (UUID)
 import Exon (exon)
+import qualified Log
 import Polysemy.Db.Data.DbError (DbError)
 import Polysemy.Db.Effect.Random (Random, random)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
-import qualified Log
+import Polysemy.Db.Symbol (symbolText)
 import Polysemy.Output (Output (Output))
+import Prelude hiding (Queue, group)
+import Sqel (Uid (Uid))
+import Sqel.Exts (Sql (Sql))
 import qualified Time as Time
 import Time (Seconds (Seconds))
-import Prelude hiding (Queue, group)
-import Sqel.Data.Sql (Sql (Sql))
-import Sqel (Uid (Uid))
-import Sqel.SOP.Constraint (symbolText)
 
 import qualified Polysemy.Hasql.Data.QueueOutputError as QueueOutputError
 import Polysemy.Hasql.Data.QueueOutputError (QueueOutputError)

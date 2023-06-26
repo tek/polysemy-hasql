@@ -1,37 +1,14 @@
-{-# options_ghc -fconstraint-solver-iterations=10 #-}
-
 module Polysemy.Hasql.Test.SumQueryTest where
 
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
-import Prelude hiding (sum)
-import Sqel (
-  Dd,
-  Projection,
-  QuerySchema,
-  Sqel,
-  TableSchema,
-  Uid (Uid),
-  checkQuery,
-  con1,
-  con1As,
-  prim,
-  primAs,
-  prims,
-  prod,
-  sum,
-  uid,
-  type (:>) ((:>)),
-  )
-import Sqel.Ext (DdK (DdK))
-import Sqel.PgType (projection, tableSchema)
+import Sqel (Con1, Gen, Name, Prim, Query, Sqel, Sum, Uid (Uid), UidTable, query_Int, sqel)
 
-import Polysemy.Hasql.Interpreter.DbTable (interpretTable, interpretTableViewDd)
-import Polysemy.Hasql.Interpreter.Query (interpretQuery)
+import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
+import Polysemy.Hasql.Interpreter.Query (interpretQueryProj)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -48,38 +25,32 @@ data NaNu =
   Nu Int64
   deriving stock (Eq, Show, Generic)
 
-td :: Sqel (Uid Int64 Dat) _
-td = uid prim (prod prims)
+type Table_Dat =
+  UidTable "dat" Int64 Dat Prim Gen
 
-ts :: TableSchema (Uid Int64 Dat)
-ts = tableSchema td
+table_Dat :: Sqel Table_Dat
+table_Dat = sqel
 
-vd :: Dd ('DdK _ _ Dat _)
-vd = prod prims
+type Query_NaNu = Query NaNu (Sum [Gen, Con1 (Name "number" Prim)])
 
-vs :: Projection Dat (Uid Int64 Dat)
-vs =
-  projection vd td
-
-idSchema :: QuerySchema Int64 (Uid Int64 Dat)
-idSchema =
-  checkQuery (primAs @"id") td
-
-qd :: Dd ('DdK _ _ NaNu _)
-qd = sum (con1 prim :> con1As @"number" prim)
+query_NaNu :: Sqel Query_NaNu
+query_NaNu = sqel
 
 test_sumQuery :: UnitTest
 test_sumQuery =
-  integrationTest do
-    interpretTable ts $ interpretTableViewDd td vd $ interpretStoreDb ts idSchema $ interpretQuery @[_] vs (checkQuery qd td) do
-      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
-        Store.insert (Uid 1 d1)
-        Store.insert (Uid 2 d2)
-        Store.insert (Uid 3 d3)
-        r1 <- Query.query (Na "x")
-        [d1, d2] === r1
-        r2 <- Query.query (Nu 10)
-        [d2, d3] === r2
+  integrationTest $
+  interpretTable table_Dat $
+  interpretStoreDb query_Int table_Dat $
+  interpretQueryProj @[_] query_NaNu table_Dat table_Dat.payload $
+  restop @DbError @(Query.Query _ _) $
+  restop @DbError @(Store _ _) do
+    Store.insert (Uid 1 d1)
+    Store.insert (Uid 2 d2)
+    Store.insert (Uid 3 d3)
+    r1 <- Query.query (Na "x")
+    [d1, d2] === r1
+    r2 <- Query.query (Nu 10)
+    [d2, d3] === r2
   where
     d1 = Dat "x" 5
     d2 = Dat "x" 10

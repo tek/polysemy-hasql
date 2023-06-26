@@ -3,62 +3,59 @@ module Polysemy.Hasql.Test.SimpleQueryTest where
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query (Query))
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, (===))
-import Prelude hiding (sum)
-import Sqel (QuerySchema, Sqel, TableSchema, Uid (Uid), checkQuery, prim, primAs, prims, prod, (:>) ((:>)))
-import Sqel.PgType (tableSchema, toFullProjection)
-import Sqel.Statement (selectWhere)
-import Sqel (uid)
+import Sqel (Gen, IntTable, Query, Sqel, Uid (Uid), from, query_Int, select, sqel, where_)
+import qualified Sqel.Syntax as Sqel
+import Sqel.Syntax (query)
 
-import qualified Polysemy.Hasql.Effect.Database as Database
-import Polysemy.Hasql.Effect.Database (Database)
+import Polysemy.Hasql.Effect.DbTable (DbTable)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
+import Polysemy.Hasql.Interpreter.Query (interpretQueryStatement)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
 data Q =
   Q {
     name :: Text,
-    number :: Int
+    number :: Int64
   }
   deriving stock (Eq, Show, Generic)
+
+type Query_Q = Query Q Gen
 
 data Dat =
   Dat {
     name :: Text,
-    number :: Int,
-    count :: Int
+    number :: Int64,
+    count :: Int64
   }
   deriving stock (Eq, Show, Generic)
 
-td :: Sqel (Uid Int Dat) _
-td = uid prim (prod prims)
+type Table_Dat = IntTable "dat" Dat Gen
 
-ts :: TableSchema (Uid Int Dat)
-ts = tableSchema td
+query_Q :: Sqel Query_Q
+query_Q = sqel
 
-idSchema :: QuerySchema Int (Uid Int Dat)
-idSchema =
-  checkQuery (primAs @"id") td
+table_Dat :: Sqel Table_Dat
+table_Dat = sqel
 
 interpretQuery ::
-  Member (Database !! DbError) r =>
-  InterpreterFor (Query Q [Uid Int Dat] !! DbError) r
+  Member (DbTable (Uid Int64 Dat) !! DbError) r =>
+  InterpreterFor (Query.Query Q [Uid Int64 Dat] !! DbError) r
 interpretQuery =
-  interpretResumable \case
-    Query params ->
-      restop (Database.statement params stm)
-      where
-        stm = selectWhere (checkQuery (prod (prim :> prim)) td) (toFullProjection ts)
+  interpretQueryStatement Sqel.do
+    frags <- query query_Q table_Dat
+    select frags.table
+    from frags.table
+    where_ frags.query
 
 test_simpleQuery :: UnitTest
 test_simpleQuery =
   integrationTest do
-    interpretTable ts $ interpretStoreDb ts idSchema $ interpretQuery do
-      restop @DbError @(Query _ _) $ restop @DbError @(Store _ _) do
+    interpretTable table_Dat $ interpretStoreDb query_Int table_Dat $ interpretQuery do
+      restop @DbError @(Query.Query _ _) $ restop @DbError @(Store _ _) do
         for_ @[] [1..10] \ i ->
           Store.insert (Uid i (Dat "name" i 12))
         r <- fmap (view #id) <$> Query.query (Q "name" 5)

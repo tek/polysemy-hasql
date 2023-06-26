@@ -1,9 +1,11 @@
 module Polysemy.Hasql.Statement where
 
+import Exon (exon)
 import Hasql.Statement (Statement)
 import Polysemy.Db.Data.DbName (DbName, unDbName)
-import Sqel (Sql, sql, sqlQuote)
-import Sqel.Statement (plain)
+import Sqel (Sql)
+import Sqel.Exts (sqlQuote)
+import Sqel.Statement (unsafeUntypedSql)
 
 quoteName :: DbName -> Sql
 quoteName =
@@ -13,22 +15,22 @@ createDbSql ::
   DbName ->
   Sql
 createDbSql (quoteName -> name) =
-  [sql|create database #{name}|]
+  [exon|create database #{name}|]
 
 createDb ::
   DbName ->
   Statement () ()
 createDb =
-  plain . createDbSql
+  unsafeUntypedSql . createDbSql
 
 dropDbSql ::
   DbName ->
   Sql
 dropDbSql (quoteName -> name) =
-  [sql|drop database #{name}|]
+  [exon|drop database #{name}|]
 
 dropDb ::
   DbName ->
   Statement () ()
 dropDb =
-  plain . dropDbSql
+  unsafeUntypedSql . dropDbSql

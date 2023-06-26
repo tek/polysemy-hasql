@@ -13,8 +13,6 @@ import Polysemy.Db.Data.DbName (DbName (DbName))
 import Polysemy.Db.Effect.Random (Random, random)
 import Polysemy.Db.Interpreter.Random (interpretRandom)
 import Time (GhcTime)
-import Sqel.Data.PgTypeName (pattern PgTypeName, pgTableName)
-import Sqel (TableSchema)
 
 import Polysemy.Hasql.Effect.Database (ConnectionSource, Database)
 import qualified Polysemy.Hasql.Effect.DbConnectionPool as DbConnectionPool
@@ -24,12 +22,12 @@ import Polysemy.Hasql.Interpreter.DbConnectionPool (interpretDbConnectionPool, i
 import Polysemy.Hasql.Session (convertQueryError, runStatement)
 import qualified Polysemy.Hasql.Statement as Statement
 
-suffixedTableSchema ::
-  Text ->
-  TableSchema d ->
-  TableSchema d
-suffixedTableSchema suffix =
-  #pg . #name %~ \ (PgTypeName name) -> pgTableName [exon|#{name}-#{suffix}|]
+-- suffixedTableSchema ::
+--   Text ->
+--   TableSchema d ->
+--   TableSchema d
+-- suffixedTableSchema suffix =
+--   #pg . #name %~ \ (PgTypeName name) -> pgTableName [exon|#{name}-#{suffix}|]
 
 createTestDb ::
   Members [Random UUID, Stop DbError, Embed IO] r =>

@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -25,11 +25,13 @@ source-repository head
 library
   exposed-modules:
       Polysemy.Hasql
+      Polysemy.Hasql.Class.RunStatement
       Polysemy.Hasql.Data.ConnectionState
       Polysemy.Hasql.Data.ConnectionTag
       Polysemy.Hasql.Data.InitDb
       Polysemy.Hasql.Data.MigrateSem
       Polysemy.Hasql.Data.QueueOutputError
+      Polysemy.Hasql.Data.SafeStatement
       Polysemy.Hasql.Database
       Polysemy.Hasql.Effect.Database
       Polysemy.Hasql.Effect.DbConnectionPool
@@ -59,6 +61,7 @@ library
   hs-source-dirs:
       lib
   default-extensions:
+      QualifiedDo
       AllowAmbiguousTypes
       ApplicativeDo
       BlockArguments
@@ -93,20 +96,20 @@ library
       ViewPatterns
       OverloadedRecordDot
       NoFieldSelectors
-  ghc-options: -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages -fplugin=Polysemy.Plugin -Wno-partial-type-signatures -fprint-potential-instances
+  ghc-options: -fplugin=Polysemy.Plugin -fprint-potential-instances -Wall -Widentities -Wincomplete-uni-patterns -Wmissing-deriving-strategies -Wredundant-constraints -Wunused-type-patterns -Wunused-packages
   build-depends:
       async ==2.2.*
     , base ==4.*
     , containers
     , exon ==1.4.*
-    , generics-sop ==0.5.*
     , hasql ==1.6.*
-    , polysemy
+    , polysemy ==1.9.*
     , polysemy-db >=0.0.1.0 && <0.1
-    , polysemy-plugin
+    , polysemy-plugin >=0.4.5 && <0.5
     , postgresql-libpq ==0.9.*
-    , prelate >=0.5.1 && <0.6
+    , prelate ==0.6.*
     , sqel >=0.0.1 && <0.1
+    , sqel-core >=0.0.1 && <0.1
     , stm-chans ==3.0.*
     , torsor ==0.1.*
     , transformers

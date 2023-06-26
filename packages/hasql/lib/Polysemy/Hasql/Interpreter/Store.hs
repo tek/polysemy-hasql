@@ -1,107 +1,143 @@
 module Polysemy.Hasql.Interpreter.Store where
 
 import Hasql.Connection (Connection)
-import Hasql.Statement (Statement)
+import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (QStore, Store)
-import Sqel (QuerySchema, TableSchema, Uid, emptyQuerySchema)
-import Sqel.PgType (toFullProjection)
-import Sqel.ResultShape (ResultShape)
-import Sqel.Statement (delete, insert, selectWhere, upsert)
+import Sqel (Crud, DdType, ResultShape, Sqel, Uid)
+import qualified Sqel.Crud
+import Sqel.Crud (Crud (Crud), crud)
+import Sqel.Exts (Check1)
 
+import Polysemy.Hasql.Class.RunStatement (runStatement)
 import Polysemy.Hasql.Effect.Database (ConnectionSource)
-import qualified Polysemy.Hasql.Effect.DbTable as DbTable
 import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable)
 import Polysemy.Hasql.Transaction (interpretForXa)
 
-handleQStoreDb ::
-  ∀ f q d e r m a .
+handleQStoreDbCrud ::
+  ∀ f q d r m a .
   ResultShape d (f d) =>
-  Members [DbTable d !! e, Stop e] r =>
-  TableSchema d ->
-  QuerySchema q d ->
+  Member (DbTable d !! DbError) r =>
+  Crud q d ->
   QStore f q d m a ->
-  Sem r a
-handleQStoreDb table query = \case
+  Sem (Stop DbError : r) a
+handleQStoreDbCrud Crud {..} = \case
   Store.Insert d ->
-    restop (DbTable.statement d is)
+    runStatement True d insert
   Store.Upsert d ->
-    restop (DbTable.statement d us)
+    runStatement True d upsert
   Store.Delete i ->
-    restop (DbTable.statement i ds)
+    runStatement True i delete
   Store.DeleteAll ->
-    restop (DbTable.statement () das)
+    runStatement True () deleteAll
   Store.Fetch i ->
-    restop (DbTable.statement i qs)
+    runStatement True i fetch
   Store.FetchAll ->
-    restop (DbTable.statement () qas)
-  where
-    is = insert table
-    us = upsert table
-    ds :: Statement q (f d)
-    ds = delete query table
-    qs :: Statement q (f d)
-    qs = selectWhere query full
-    qas :: Statement () [d]
-    qas = selectWhere emptyQuerySchema full
-    das :: Statement () [d]
-    das = delete emptyQuerySchema table
-    full = toFullProjection table
+    runStatement True () fetchAll
+
+handleQStoreDb ::
+  ∀ f q d ds qs r m a .
+  q ~ DdType qs =>
+  d ~ DdType ds =>
+  Check1 ds qs =>
+  ResultShape d (f d) =>
+  Member (DbTable d !! DbError) r =>
+  Sqel qs ->
+  Sqel ds ->
+  QStore f q d m a ->
+  Sem (Stop DbError : r) a
+handleQStoreDb q t =
+  handleQStoreDbCrud (crud q t)
+
+interpretQStoreDbCrud ::
+  ∀ f q d r .
+  ResultShape d (f d) =>
+  Member (DbTable d !! DbError) r =>
+  Crud q d ->
+  InterpreterFor (QStore f q d !! DbError) r
+interpretQStoreDbCrud statements =
+  interpretResumable (handleQStoreDbCrud statements)
 
 interpretQStoreDb ::
-  ∀ f q d e r .
+  ∀ f q d ds qs r .
+  q ~ DdType qs =>
+  d ~ DdType ds =>
   ResultShape d (f d) =>
-  Member (DbTable d !! e) r =>
-  TableSchema d ->
-  QuerySchema q d ->
-  InterpreterFor (QStore f q d !! e) r
-interpretQStoreDb table query =
-  interpretResumable (handleQStoreDb table query)
+  Check1 ds qs =>
+  Member (DbTable d !! DbError) r =>
+  Sqel qs ->
+  Sqel ds ->
+  InterpreterFor (QStore f q d !! DbError) r
+interpretQStoreDb q t =
+  interpretResumable (handleQStoreDb q t)
+
+interpretStoreDbCrud ::
+  ∀ i d r .
+  Member (StoreTable i d !! DbError) r =>
+  Crud i (Uid i d) ->
+  InterpreterFor (Store i d !! DbError) r
+interpretStoreDbCrud =
+  interpretQStoreDbCrud
 
 interpretStoreDb ::
-  ∀ i d e r .
-  Member (StoreTable i d !! e) r =>
-  TableSchema (Uid i d) ->
-  QuerySchema i (Uid i d) ->
-  InterpreterFor (Store i d !! e) r
-interpretStoreDb table query =
-  interpretQStoreDb table query
+  ∀ i d is ds r .
+  i ~ DdType is =>
+  Uid i d ~ DdType ds =>
+  Check1 ds is =>
+  Member (StoreTable i d !! DbError) r =>
+  Sqel is ->
+  Sqel ds ->
+  InterpreterFor (Store i d !! DbError) r
+interpretStoreDb =
+  interpretQStoreDb
 
 interpretQStoreXa ::
-  ∀ f err i d r .
+  ∀ f q d qs ds r .
+  q ~ DdType qs =>
+  d ~ DdType ds =>
+  Check1 ds qs =>
   ResultShape d (f d) =>
-  Members [Scoped ConnectionSource (DbTable d !! err), Log, Embed IO] r =>
-  TableSchema d ->
-  QuerySchema i d ->
-  InterpreterFor (Scoped Connection (QStore f i d !! err) !! err) r
-interpretQStoreXa table query =
-  interpretForXa (handleQStoreDb table query)
+  Members [Scoped ConnectionSource (DbTable d !! DbError), Log, Embed IO] r =>
+  Sqel qs ->
+  Sqel ds ->
+  InterpreterFor (Scoped Connection (QStore f q d !! DbError) !! DbError) r
+interpretQStoreXa q t =
+  interpretForXa (handleQStoreDb q t)
 
 interpretStoreXa ::
-  ∀ err i d r .
-  Members [Scoped ConnectionSource (DbTable (Uid i d) !! err), Log, Embed IO] r =>
-  TableSchema (Uid i d) ->
-  QuerySchema i (Uid i d) ->
-  InterpreterFor (Scoped Connection (Store i d !! err) !! err) r
+  ∀ i d is ds r .
+  i ~ DdType is =>
+  Uid i d ~ DdType ds =>
+  Check1 ds is =>
+  Members [Scoped ConnectionSource (DbTable (Uid i d) !! DbError), Log, Embed IO] r =>
+  Sqel is ->
+  Sqel ds ->
+  InterpreterFor (Scoped Connection (Store i d !! DbError) !! DbError) r
 interpretStoreXa =
   interpretQStoreXa @Maybe
 
 interpretQStores ::
-  ∀ f err q d r .
+  ∀ f q d qs ds r .
+  q ~ DdType qs =>
+  d ~ DdType ds =>
+  Check1 ds qs =>
   ResultShape d (f d) =>
-  Members [Scoped ConnectionSource (DbTable d !! err), DbTable d !! err, Log, Embed IO] r =>
-  TableSchema d ->
-  QuerySchema q d ->
-  InterpretersFor [QStore f q d !! err, Scoped Connection (QStore f q d !! err) !! err] r
-interpretQStores table query =
-  interpretQStoreXa table query .
-  interpretQStoreDb table query
+  Members [Scoped ConnectionSource (DbTable d !! DbError), DbTable d !! DbError, Log, Embed IO] r =>
+  Sqel qs ->
+  Sqel ds ->
+  InterpretersFor [QStore f q d !! DbError, Scoped Connection (QStore f q d !! DbError) !! DbError] r
+interpretQStores q t =
+  interpretQStoreXa q t .
+  interpretQStoreDb q t
 
 interpretStores ::
-  ∀ err i d r .
-  Members [Scoped ConnectionSource (DbTable (Uid i d) !! err), StoreTable i d !! err, Log, Embed IO] r =>
-  TableSchema (Uid i d) ->
-  QuerySchema i (Uid i d) ->
-  InterpretersFor [Store i d !! err, Scoped Connection (Store i d !! err) !! err] r
+  ∀ i d is ds r .
+  i ~ DdType is =>
+  Uid i d ~ DdType ds =>
+  Check1 ds is =>
+  Members [Scoped ConnectionSource (DbTable (Uid i d) !! DbError), StoreTable i d !! DbError, Log, Embed IO] r =>
+  Sqel is ->
+  Sqel ds ->
+  InterpretersFor [Store i d !! DbError, Scoped Connection (Store i d !! DbError) !! DbError] r
 interpretStores =
   interpretQStores @Maybe

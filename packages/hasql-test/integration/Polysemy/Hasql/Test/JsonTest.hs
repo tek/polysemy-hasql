@@ -9,10 +9,7 @@ import Hasql.Encoders (int8, param)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Test (UnitTest, assertJust, assertRight, evalMaybe)
-import qualified Sqel as Sqel
-import Sqel (Dd, TableSchema, Uid (Uid), checkQuery, prim, primAs, prod, uid, type (:>) ((:>)))
-import Sqel.Ext (DdK (DdK))
-import Sqel.PgType (tableSchema)
+import Sqel (Json, Prim, Prod, Sqel, Uid (Uid), UidTable, query_Int, sqel)
 
 import qualified Polysemy.Hasql.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretTable)
@@ -36,18 +33,13 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-table :: Dd ('DdK _ _ (Uid Int64 Dat) _)
-table =
-  uid prim (prod (prim :> prim :> Sqel.json))
-
-ts :: TableSchema (Uid Int64 Dat)
-ts =
-  tableSchema table
+table_Dat :: Sqel (UidTable "dat" Int64 Dat Prim (Prod [Prim, Prim, Json]))
+table_Dat = sqel
 
 test_json :: UnitTest
 test_json = do
   integrationTest do
-    interpretTable ts $ interpretStoreDb ts (checkQuery (primAs @"id") table) do
+    interpretTable table_Dat $ interpretStoreDb query_Int table_Dat do
       restop @DbError do
         Store.insert dat
         raise . assertJust dat =<< Store.fetch 5

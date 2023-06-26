@@ -11,13 +11,18 @@ module Polysemy.Hasql (
   interpretStores,
 
   interpretQuery,
-  interpretQueryDd,
+  interpretQueryWith,
+  interpretQueryStatement,
+  interpretQueryStatementWith,
+  interpretQueryProj,
+  interpretQueryProjWith,
 
   -- * Database effects
   DbConnectionPool,
   Database,
   Databases,
   DbTable,
+  withTable,
   statement,
   StoreTable,
   Transaction,
@@ -37,8 +42,6 @@ module Polysemy.Hasql (
   interpretTableMigrationsScoped,
   interpretTables,
   interpretTable,
-  interpretTableView,
-  interpretTableViewDd,
 
   -- * Misc combinators
   queryVia,
@@ -52,7 +55,7 @@ module Polysemy.Hasql (
 
 import Polysemy.Hasql.Effect.Database (Database, Databases)
 import Polysemy.Hasql.Effect.DbConnectionPool (DbConnectionPool)
-import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable, statement)
+import Polysemy.Hasql.Effect.DbTable (DbTable, StoreTable, statement, withTable)
 import Polysemy.Hasql.Effect.Transaction (Transaction, Transactions, abort)
 import Polysemy.Hasql.Interpreter.AtomicState (interpretAtomicStateDb, interpretAtomicStatesDb)
 import Polysemy.Hasql.Interpreter.Database (interpretDatabase, interpretDatabases, interpretHasql)
@@ -61,12 +64,19 @@ import Polysemy.Hasql.Interpreter.DbTable (
   interpretTable,
   interpretTableMigrations,
   interpretTableMigrationsScoped,
-  interpretTableView,
-  interpretTableViewDd,
   interpretTables,
   interpretTablesMigrations,
   )
-import Polysemy.Hasql.Interpreter.Query (interpretQuery, interpretQueryDd, mapQuery, queryVia)
+import Polysemy.Hasql.Interpreter.Query (
+  interpretQuery,
+  interpretQueryProj,
+  interpretQueryProjWith,
+  interpretQueryStatement,
+  interpretQueryStatementWith,
+  interpretQueryWith,
+  mapQuery,
+  queryVia,
+  )
 import Polysemy.Hasql.Interpreter.Reader (interpretReaderDb)
 import Polysemy.Hasql.Interpreter.Store (
   interpretQStoreDb,

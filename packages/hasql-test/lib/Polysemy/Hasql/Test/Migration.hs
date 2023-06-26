@@ -5,13 +5,13 @@ import Hedgehog.Internal.Property (failWith)
 import Path (reldir)
 import qualified Polysemy.Test as Test
 import Polysemy.Test (Hedgehog, Test, liftH)
-import Sqel.Data.Migration (Migrations)
-import Sqel.Migration.Consistency (migrationConsistency)
+import Sqel (Def)
+import Sqel.Migration (TableDdl, migrationConsistency)
 
 testMigration' ::
-  ∀ migs r .
+  ∀ table migs r .
   Members [Test, Hedgehog IO, Embed IO] r =>
-  Migrations (Sem r) migs ->
+  TableDdl Def (Sem r) table migs ->
   Bool ->
   Sem r ()
 testMigration' migs write =
@@ -23,9 +23,9 @@ testMigration' migs write =
       Nothing -> unit
 
 testMigration ::
-  ∀ migs r .
+  ∀ table migs r .
   Members [Test, Hedgehog IO, Embed IO] r =>
-  Migrations (Sem r) migs ->
+  TableDdl Def (Sem r) table migs ->
   Bool ->
   Sem r ()
 testMigration migs write =

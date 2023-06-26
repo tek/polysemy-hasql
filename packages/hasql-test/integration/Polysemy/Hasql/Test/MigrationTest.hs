@@ -3,37 +3,34 @@ module Polysemy.Hasql.Test.MigrationTest where
 import Lens.Micro.Extras (view)
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Query as Query
-import Polysemy.Db.Effect.Query (Query)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (UnitTest, assertEq)
-import Prelude hiding (sum)
+import Prelude hiding (Default)
 import Sqel (
-  Dd,
-  TableSchema,
+  Def,
+  Default,
+  Delete,
+  Gen,
+  IntTable,
+  Nullable,
+  Prim,
+  PrimAs,
+  Prod,
+  Query,
+  Rename,
+  RenameType,
+  Sqel,
   Uid (Uid),
-  array,
-  checkQuery,
-  migrate,
-  migrateAuto,
-  migrateDef,
-  migrateDelete,
-  migrateRename,
-  migrateRenameType,
-  prim,
-  primAs,
-  primNullable,
-  prod,
-  tableSchema,
-  uidAs,
-  type (:>) ((:>)),
+  query_Int,
+  sqel,
   )
-import Sqel.Ext (AutoMigrations, DdK (DdK))
+import Sqel.Migration (Migrate, (-->))
 
 import Polysemy.Hasql.Data.MigrateSem (MigrateSem)
 import qualified Polysemy.Hasql.Effect.Database as Database
 import Polysemy.Hasql.Interpreter.DbTable (interpretTableMigrations, interpretTables)
-import Polysemy.Hasql.Interpreter.Query (interpretQueryDd)
+import Polysemy.Hasql.Interpreter.Query (interpretQuery)
 import Polysemy.Hasql.Interpreter.Store (interpretStoreDb)
 import Polysemy.Hasql.Test.RunIntegration (integrationTest)
 
@@ -57,6 +54,11 @@ data Dat0 =
   }
   deriving stock (Eq, Show, Generic)
 
+type Table_Dat0 = IntTable "dat" Dat0 (Prod [Delete Prim, Prim])
+
+table_Dat0 :: Sqel Table_Dat0
+table_Dat0 = sqel
+
 data Dat1 =
   Dat1 {
     size :: Int64,
@@ -65,6 +67,11 @@ data Dat1 =
   }
   deriving stock (Eq, Show, Generic)
 
+type Table_Dat1 = IntTable "dat" Dat1  (Prod [Delete (Default "0" Prim), Prim, Prod '[Default "53" Prim]])
+
+table_Dat1 :: Sqel Table_Dat1
+table_Dat1 = sqel
+
 data Dat2 =
   Dat2 {
     number :: Int64,
@@ -72,6 +79,19 @@ data Dat2 =
     pord :: Pord
   }
   deriving stock (Eq, Show, Generic)
+
+type Table_Dat2 =
+  IntTable "dat" Dat2  (Prod [
+    Default "15" Prim,
+    Prim,
+    Rename "pordOld" (RenameType "sqel_type__PordOld" (Prod [
+      Default "53" Prim,
+      Nullable Prim
+    ]))
+  ])
+
+table_Dat2 :: Sqel Table_Dat2
+table_Dat2 = sqel
 
 data Dat =
   Dat {
@@ -82,82 +102,42 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
-data Q =
-  Q {
-    name :: Text
-  }
+type Table_Dat =
+  IntTable "dat" Dat (Prod [
+    Default "'vunqach'" Prim,
+    Prim,
+    Rename "number" Prim,
+    Gen
+  ])
+
+table_Dat :: Sqel Table_Dat
+table_Dat = sqel
+
+data Q = Q { nom :: Text }
   deriving stock (Eq, Show, Generic)
 
-t0 :: Dd ('DdK _ _ (Uid Int64 Dat0) _)
-t0 =
-  uidAs @"dat" prim (prod (migrateDelete prim :> array prim))
+type Query_Q = Query Q (Prod '[PrimAs "name"])
 
-t1 :: Dd ('DdK _ _ (Uid Int64 Dat1) _)
-t1 =
-  uidAs @"dat" prim (prod (
-    migrateDelete (migrateDef 0 prim) :>
-    array prim :>
-    prod (
-      migrateDef 53 prim
-    )
-  ))
-
-t2 :: Dd ('DdK _ _ (Uid Int64 Dat2) _)
-t2 =
-  uidAs @"dat" prim (prod (
-    migrateDef 15 prim :>
-    array prim :>
-    migrateRename @"pordOld" (migrateRenameType @"sqel_type__PordOld" (prod (
-      prim :>
-      primNullable
-    )))
-  ))
-
-tcur :: Dd ('DdK _ _ (Uid Int64 Dat) _)
-tcur =
-  uidAs @"dat" prim (prod (
-    migrateDef ("vunqach" :: Text) prim :>
-    array prim :>
-    migrateRename @"number" prim :>
-    prod (
-      prim :>
-      primNullable
-    )
-  ))
-
-q :: Dd ('DdK _ _ Q _)
-q =
-  prod (primAs @"name")
-
-schemaOld :: TableSchema (Uid Int64 Dat1)
-schemaOld =
-  tableSchema t1
-
-schemaCur :: TableSchema (Uid Int64 Dat)
-schemaCur =
-  tableSchema tcur
+query_Q :: Sqel Query_Q
+query_Q = sqel
 
 migrations ::
-  AutoMigrations (MigrateSem r) [Uid Int64 Dat2, Uid Int64 Dat1, Uid Int64 Dat0] (Uid Int64 Dat)
+  Migrate Def (MigrateSem r) [Table_Dat, Table_Dat2, Table_Dat1, Table_Dat0]
 migrations =
-  migrate (
-    migrateAuto t2 tcur :>
-    migrateAuto t1 t2 :>
-    migrateAuto t0 t1
-  )
+  table_Dat0 --> table_Dat1 --> table_Dat2 --> table_Dat
 
 test_migration :: UnitTest
 test_migration =
   integrationTest do
-    interpretTables schemaOld $ interpretStoreDb schemaOld (checkQuery (primAs @"id") t1) $ restop @DbError do
+    interpretTables table_Dat1 $ interpretStoreDb query_Int table_Dat1 $ restop @DbError do
       Store.insert (Uid 3 (Dat1 11 ["0"] (PordOld 93)))
       Store.insert (Uid 4 (Dat1 55 ["0", "1"] (PordOld 78)))
     restop @DbError Database.release
     restop @DbError Database.resetInit
-    interpretTableMigrations schemaCur migrations $
-      interpretStoreDb schemaCur (checkQuery (primAs @"id") tcur) $
-      interpretQueryDd @[_] tcur tcur q $
-      restop @DbError @(Query _ _) $
+    interpretTableMigrations migrations $
+      interpretStoreDb query_Int table_Dat $
+      interpretQuery @[_] query_Q table_Dat $
+      restop @DbError @(Query.Query _ _) $
       restop @DbError @(Store _ _) do
         Store.insert (Uid 1 (Dat "1" ["11"] 5 (Pord 10 (Just "new 1"))))
         Store.insert (Uid 2 (Dat "2" ["22", "33"] 5 (Pord 10 (Just "new 2"))))

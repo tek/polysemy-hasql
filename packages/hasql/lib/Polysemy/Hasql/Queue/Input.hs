@@ -29,12 +29,12 @@ import qualified Polysemy.Db.Data.DbError as DbError
 import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
+import Polysemy.Db.Symbol (symbolText)
 import Polysemy.Final (withWeavingToFinal)
 import Polysemy.Input (Input (Input))
 import Prelude hiding (Queue, listen)
-import Sqel (Uuid, sql)
-import qualified Sqel.Data.Uid as Uid
-import Sqel.SOP.Constraint (symbolText)
+import Sqel (Uuid)
+import qualified Sqel.Exts
 import qualified Time as Time
 import Torsor (Torsor)
 
@@ -85,7 +85,7 @@ listen ::
 listen = do
   QueueName name <- ask
   Log.debug [exon|executing `listen` for queue ##{name}|]
-  Database.retryingSqlDef [sql|listen "##{name}"|]
+  Database.retryingSqlDef [exon|listen "##{name}"|]
 
 unlisten ::
   ∀ e r .
@@ -94,7 +94,7 @@ unlisten ::
 unlisten = do
   QueueName name <- ask
   Log.debug [exon|executing `unlisten` for queue `##{name}`|]
-  resume_ (Database.retryingSqlDef [sql|unlisten "##{name}"|])
+  resume_ (Database.retryingSqlDef [exon|unlisten "##{name}"|])
 
 processMessages ::
   Ord t =>

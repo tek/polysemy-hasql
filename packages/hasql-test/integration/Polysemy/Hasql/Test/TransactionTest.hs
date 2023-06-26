@@ -8,8 +8,7 @@ import Polysemy.Db.Data.DbError (DbError)
 import qualified Polysemy.Db.Effect.Store as Store
 import Polysemy.Db.Effect.Store (Store)
 import Polysemy.Test (Hedgehog, UnitTest, assertEq, assertLeft)
-import Sqel (Dd, QuerySchema, TableSchema, Uid (Uid), checkQuery, prim, primAs, prod, tableSchema, uid)
-import Sqel.Ext (DdK (DdK))
+import Sqel (Gen, Prim, Sqel, Uid (Uid), UidTable, query_Int, sqel)
 
 import Polysemy.Hasql.Effect.Transaction (Transactions, abort)
 import Polysemy.Hasql.Interpreter.DbTable (interpretTables)
@@ -24,29 +23,17 @@ data Dat =
   }
   deriving stock (Eq, Show, Generic)
 
+table_Dat :: Sqel (UidTable "dat" Int64 Dat Prim Gen)
+table_Dat = sqel
+
 data Rat =
   Rat {
     color :: Text
   }
   deriving stock (Eq, Show, Generic)
 
-ddDat :: Dd ('DdK _ _ (Uid Int64 Dat) _)
-ddDat =
-  uid prim (prod prim)
-
-tableDat :: TableSchema (Uid Int64 Dat)
-tableDat = tableSchema ddDat
-
-queryDat :: QuerySchema Int64 (Uid Int64 Dat)
-queryDat =
-  checkQuery (primAs @"id") ddDat
-
-tableRat :: TableSchema (Uid Int64 Rat)
-queryRat :: QuerySchema Int64 (Uid Int64 Rat)
-(tableRat, queryRat) =
-  (tableSchema ddRat, checkQuery (primAs @"id") ddRat)
-  where
-    ddRat = uid prim (prod prim)
+table_Rat :: Sqel (UidTable "rat" Int64 Rat Prim Gen)
+table_Rat = sqel
 
 prog ::
   Members [XaStore conn DbError Int64 Dat, XaStore conn DbError Int64 Rat] r =>
@@ -68,10 +55,10 @@ prog = do
 test_transaction :: UnitTest
 test_transaction =
   integrationTest $
-  interpretTables tableDat $
-  interpretTables tableRat $
-  interpretQStores tableDat queryDat $
-  interpretQStores tableRat queryRat $
+  interpretTables table_Dat $
+  interpretTables table_Rat $
+  interpretQStores query_Int table_Dat $
+  interpretQStores query_Int table_Rat $
   interpretTransactions do
     restop @DbError @(Store _ Dat) (Store.insert (Uid 1 (Dat "gold")))
     restop @DbError @(Store _ Rat) (Store.insert (Uid 1 (Rat "green")))
