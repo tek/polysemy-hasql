@@ -75,10 +75,10 @@ library
     , polysemy-db >=0.0.1.0 && <0.1
     , polysemy-hasql >=0.0.1.0 && <0.1
     , polysemy-plugin >=0.4.5 && <0.5
-    , prelate ==0.6.*
+    , prelate >=0.6 && <0.8
     , sqel >=0.0.1 && <0.1
     , uuid ==1.3.*
-    , zeugma ==0.8.*
+    , zeugma >=0.8 && <0.10
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)
@@ -146,18 +146,18 @@ test-suite polysemy-hasql-test-integration
   build-depends:
       aeson >=2.0 && <2.2
     , base ==4.*
-    , exon ==1.4.*
+    , exon >=1.4 && <1.6
     , hasql ==1.6.*
     , polysemy ==1.9.*
     , polysemy-db >=0.0.1.0 && <0.1
     , polysemy-hasql >=0.0.1.0 && <0.1
     , polysemy-hasql-test
     , polysemy-plugin >=0.4.5 && <0.5
-    , prelate ==0.6.*
+    , prelate >=0.6 && <0.8
     , sqel >=0.0.1 && <0.1
     , tasty ==1.4.*
-    , vector ==0.12.*
-    , zeugma ==0.8.*
+    , vector >=0.12 && <0.14
+    , zeugma >=0.8 && <0.10
   mixins:
       base hiding (Prelude)
     , prelate (Prelate as Prelude)

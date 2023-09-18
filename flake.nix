@@ -5,15 +5,29 @@
     hix.url = "git+https://git.tryp.io/tek/hix";
     prelate.url = "git+https://git.tryp.io/tek/prelate";
     sqel.url = "git+https://git.tryp.io/tek/sqel";
-    exon.url = "git+https://git.tryp.io/tek/exon";
   };
 
-  outputs = { hix, prelate, sqel, exon, ... }: hix.lib.pro ({config, ...}: {
+  outputs = {hix, prelate, sqel, ...}: hix.lib.pro ({config, lib, ...}: {
+    ghcVersions = lib.mkForce ["ghc92" "ghc94"];
     hackage.versionFile = "ops/version.nix";
     depsFull = [sqel prelate];
     main = "polysemy-hasql-test";
-    compiler = "ghc94";
     gen-overrides.enable = true;
+
+    envs.ghc92.overrides = {hackage, ...}: {
+      polysemy = hackage "1.9.1.2" "01vkiqxcjvvihgg8dvws76sfg0d98z8xyvpnj3g3nz02i078xf8j";
+      polysemy-plugin = hackage "0.4.5.1" "0afmx1vdgmvggk4sb4av91qnm8b3hr2kb4adcj9fhzq2w50393bc";
+    };
+
+    envs.ghc94.overrides = {hackage, ...}: {
+      polysemy = hackage "1.9.1.2" "01vkiqxcjvvihgg8dvws76sfg0d98z8xyvpnj3g3nz02i078xf8j";
+      polysemy-plugin = hackage "0.4.5.1" "0afmx1vdgmvggk4sb4av91qnm8b3hr2kb4adcj9fhzq2w50393bc";
+    };
+
+    overrides = {hackage, ...}: {
+      incipit = hackage "0.9.0.0" "1iqwy0qj178zh8bxz7xkj3h6v9ijkdxm0k66j0gxi4x0kw2ncga0";
+      zeugma = hackage "0.9.0.0" "0gahqhbg6hskq4abg9mg9mwvzif63c22mjkxyvvvk9r3jmg9xj8l";
+    };
 
     cabal = {
       license = "BSD-2-Clause-Patent";
@@ -23,7 +37,7 @@
         enable = true;
         package = {
           name = "prelate";
-          version = "^>= 0.6";
+          version = ">= 0.6 && < 0.8";
         };
         module = "Prelate";
       };
@@ -47,7 +61,7 @@
         library = {
           enable = true;
           dependencies = [
-            "exon ^>= 1.4"
+            "exon >= 1.4 && < 1.6"
             "microlens ^>= 0.4"
             "random ^>= 1.2"
             "sqel ^>= 0.0.1"
@@ -64,7 +78,7 @@
           dependencies = [
             "async ^>= 2.2"
             "containers"
-            "exon ^>= 1.4"
+            "exon >= 1.4 && < 1.6"
             "hasql ^>= 1.6"
             "postgresql-libpq ^>= 0.9"
             "sqel ^>= 0.0.1"
@@ -89,7 +103,7 @@
             "path ^>= 0.9"
             "sqel ^>= 0.0.1"
             "uuid ^>= 1.3"
-            "zeugma ^>= 0.8"
+            "zeugma >= 0.8 && < 0.10"
             config.packages.polysemy-db.dep.minor
             config.packages.polysemy-hasql.dep.minor
           ];
@@ -98,12 +112,12 @@
           source-dirs = "integration";
           dependencies = [
             "aeson >= 2.0 && < 2.2"
-            "exon ^>= 1.4"
+            "exon >= 1.4 && < 1.6"
             "hasql ^>= 1.6"
             "sqel ^>= 0.0.1"
             "tasty ^>= 1.4"
-            "vector ^>= 0.12"
-            "zeugma ^>= 0.8"
+            "vector >= 0.12 && < 0.14"
+            "zeugma >= 0.8 && < 0.10"
             config.packages.polysemy-db.dep.minor
             config.packages.polysemy-hasql.dep.minor
           ];

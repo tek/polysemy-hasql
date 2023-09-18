@@ -101,13 +101,13 @@ library
       async ==2.2.*
     , base ==4.*
     , containers
-    , exon ==1.4.*
+    , exon >=1.4 && <1.6
     , hasql ==1.6.*
     , polysemy ==1.9.*
     , polysemy-db >=0.0.1.0 && <0.1
     , polysemy-plugin >=0.4.5 && <0.5
     , postgresql-libpq ==0.9.*
-    , prelate ==0.6.*
+    , prelate >=0.6 && <0.8
     , sqel >=0.0.1 && <0.1
     , sqel-core >=0.0.1 && <0.1
     , stm-chans ==3.0.*
